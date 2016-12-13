@@ -1,8 +1,8 @@
 #include"stdafx.h"
-
+#include"com.h"
 #include"log.h"
 #include"npi_cmd.h"
-
+#include"npi_evt.h"
 #include <stdio.h>
 
 
@@ -342,11 +342,24 @@ void Log::Analyze_GAP_Event(PUINT8 buf, UINT8 size) {
 	UINT16 event = BUILD_UINT16(pEvt->event_lo, pEvt->event_hi);
 	UINT16 opCode = BUILD_UINT16(pEvt->data[0], pEvt->data[1]);
 	UINT16 msg_type = 0;
+	UINT8 i;
+	gapDeviceInitDoneEvent_t *InitDone_Evt = NULL;
+	gapDevDiscEvent_t *Disc_Evt = NULL;
+	gapDevRec_t *Dev_Rec = NULL;
+	gapEstLinkReqEvent_t *EstLink_Evt = NULL;
+	gapTerminateLinkEvent_t *TerLink_Evt = NULL;
+	gapRandomAddrEvent_t *RanAddr_Evt = NULL;
+	gapSignUpdateEvent_t *SigUpdate_Evt = NULL;
+	gapAuthCompleteEvent_t *AuthComp_Evt = NULL;
+	gapPasskeyNeededEvent_t *PassKeyNeed_Evt = NULL;
+	gapSlaveSecurityReqEvent_t *SlaveSec_Evt = NULL;
+	gapDeviceInfoEvent_t *DevInfo_Evt = NULL;
+	gapPairingReqEvent_t *PairReq_Evt = NULL;
+
 	switch (event) {
 		case HCI_EXT_GAP_CMD_STATUS_EVENT:
 			printf("OpCode			: 0x%04X\n", opCode);
 			printf("Data Length		: 0x%02X\n", pEvt->data[2]);
-
 			/*delete heap buffer ?*/
 			if (pEvt->data[0] != 0) {
 				/*send event message to evt-thread*/
@@ -357,24 +370,54 @@ void Log::Analyze_GAP_Event(PUINT8 buf, UINT8 size) {
 			}
 			break;
 		case HCI_EXT_GAP_DEVICE_INIT_DONE_EVENT:
+			InitDone_Evt = (gapDeviceInitDoneEvent_t *)&pEvt->data[0];
+			printf("DevAddr			: ");
+			Sprintf_HexData(InitDone_Evt->devAddr, BLE_ADDR_LEN);
+			printf("DataPktLen		: 0x%04X\n", InitDone_Evt->dataPktLen);
+			printf("NumDataPkts		: 0x%02X\n", InitDone_Evt->numDataPkts);
+			printf("IRK			: ");
+			Sprintf_HexData(InitDone_Evt->irk, IRK_LEN);
+			printf("CSRK			: ");
+			Sprintf_HexData(InitDone_Evt->csrk, CSRK_LEN);
 			msg_type = HCI_EXT_GAP_DEVICE_INIT_DONE_MSG;
 			break;
 		case HCI_EXT_GAP_DEVICE_DISCOVERY_EVENT:
+			Disc_Evt = (gapDevDiscEvent_t *)&pEvt->data[0];
+			Dev_Rec = (gapDevRec_t *)&pEvt->data[1];
+			printf("NumDevs			: 0x%02X\n", Disc_Evt->numDevs);
+			for (i = 0; i < Disc_Evt->numDevs; i++) {
+				printf("Device #%d\n", i);
+				printf("EventType		: 0x%02X\n", Dev_Rec[i].eventType);
+				printf("AddrType		: 0x%02X\n", Dev_Rec[i].addrType);
+				printf("Addr			: ");
+				Sprintf_HexData(Dev_Rec[i].addr, BLE_ADDR_LEN);
+			}
 			msg_type = HCI_EXT_GAP_DEVICE_DISCOVERY_MSG;
 			break;
 		case HCI_EXT_GAP_ADV_DATA_UPDATE_DONE_EVENT:
+			printf("AdType			: 0x%02X\n", pEvt->data[0]);
 			msg_type = HCI_EXT_GAP_ADV_DATA_UPDATE_DONE_MSG;
 			break;
 		case HCI_EXT_GAP_MAKE_DISCOVERABLE_DONE_EVENT:
-			msg_type = HCI_EXT_GAP_MAKE_DISCOVERABLE_DONE_MSG;
-			break;
 		case HCI_EXT_GAP_END_DISCOVERABLE_DONE_EVENT:
-			msg_type = HCI_EXT_GAP_END_DISCOVERABLE_DONE_MSG;
+			del_flag = TRUE;
 			break;
 		case HCI_EXT_GAP_LINK_ESTABLISHED_EVENT:
+			EstLink_Evt = (gapEstLinkReqEvent_t *)&pEvt->data[0];
+			printf("DevAddrType		: 0x%02X\n", EstLink_Evt->devAddrType);
+			printf("DevAddr			: ");
+			Sprintf_HexData(EstLink_Evt->devAddr, BLE_ADDR_LEN);
+			printf("ConnHandle		: 0x%04X\n", EstLink_Evt->connectionHandle);
+			printf("ConnRole		: 0x%02X\n", EstLink_Evt->connRole);
+			printf("ConnInterval		: 0x%04X\n", EstLink_Evt->connInterval);
+			printf("ConnLatency		: 0x%04X\n", EstLink_Evt->connLatency);
+			printf("ConnTimeout		: 0x%04X\n", EstLink_Evt->connTimeout);
 			msg_type = HCI_EXT_GAP_LINK_ESTABLISHED_MSG;
 			break;
 		case HCI_EXT_GAP_LINK_TERMINATED_EVENT:
+			TerLink_Evt = (gapTerminateLinkEvent_t *)&pEvt->data[0];
+			printf("ConnHandle		: 0x%04X\n", TerLink_Evt->connectionHandle);
+			printf("Reason			: 0x%02X\n", TerLink_Evt->reason);
 			msg_type = HCI_EXT_GAP_LINK_TERMINATED_MSG;
 			break;
 		case HCI_EXT_GAP_LINK_PARAM_UPDATE_EVENT:
@@ -385,27 +428,65 @@ void Log::Analyze_GAP_Event(PUINT8 buf, UINT8 size) {
 			msg_type = HCI_EXT_GAP_LINK_PARAM_UPDATE_MSG;
 			break;
 		case HCI_EXT_GAP_RANDOM_ADDR_CHANGED_EVENT:
+			RanAddr_Evt = (gapRandomAddrEvent_t *)&pEvt->data[0];
+			printf("AddrType		: 0x%02X\n", RanAddr_Evt->addrType);
+			printf("RandAddr		: ");
+			Sprintf_HexData(RanAddr_Evt->newRandomAddr, BLE_ADDR_LEN);
 			msg_type = HCI_EXT_GAP_RANDOM_ADDR_CHANGED_MSG;
 			break;
 		case HCI_EXT_GAP_SIGNATURE_UPDATED_EVENT:
+			SigUpdate_Evt = (gapSignUpdateEvent_t *)&pEvt->data[0];
+			printf("AddrType		: 0x%02X\n", SigUpdate_Evt->addrType);
+			printf("DevAddr		: ");
+			Sprintf_HexData(SigUpdate_Evt->devAddr, BLE_ADDR_LEN);
+			printf("SignCounter		: 0x%08X\n", SigUpdate_Evt->signCounter);
 			msg_type = HCI_EXT_GAP_SIGNATURE_UPDATED_MSG;
 			break;
 		case HCI_EXT_GAP_AUTH_COMPLETE_EVENT:
+			AuthComp_Evt = (gapAuthCompleteEvent_t *)&pEvt->data[0];
+			printf("ConnHandle		: 0x%04X\n", AuthComp_Evt->connectionHandle);
+			printf("AuthState		: 0x%02X\n", AuthComp_Evt->authState);
 			msg_type = HCI_EXT_GAP_AUTH_COMPLETE_MSG;
 			break;
 		case HCI_EXT_GAP_PASSKEY_NEEDED_EVENT:
+			PassKeyNeed_Evt = (gapPasskeyNeededEvent_t *)&pEvt->data[0];
+			printf("DevAddr		: ");
+			Sprintf_HexData(PassKeyNeed_Evt->deviceAddr, BLE_ADDR_LEN);
+			printf("ConnHandle		: 0x%04X\n", PassKeyNeed_Evt->connectionHandle);
+			printf("UIInput		: 0x%02X\n", PassKeyNeed_Evt->uiInputs);
+			printf("UIOutput		: 0x%02X\n", PassKeyNeed_Evt->uiOutputs);
 			msg_type = HCI_EXT_GAP_PASSKEY_NEEDED_MSG;
 			break;
 		case HCI_EXT_GAP_SLAVE_REQUESTED_SECURITY_EVENT:
+			SlaveSec_Evt = (gapSlaveSecurityReqEvent_t *)&pEvt->data[0];
+			printf("ConnHandle		: 0x%04X\n", SlaveSec_Evt->connectionHandle);
+			printf("DevAddr		: ");
+			Sprintf_HexData(SlaveSec_Evt->deviceAddr, BLE_ADDR_LEN);
+			printf("AuthReq		: 0x%02X\n", SlaveSec_Evt->authReq);
 			msg_type = HCI_EXT_GAP_SLAVE_REQUESTED_SECURITY_MSG;
 			break;
 		case HCI_EXT_GAP_DEVICE_INFO_EVENT:
+			DevInfo_Evt = (gapDeviceInfoEvent_t *)&pEvt->data[0];
+			printf("EventType		: 0x%02X\n", DevInfo_Evt->eventType);
+			printf("AddrType		: 0x%02X\n", DevInfo_Evt->addrType);
+			printf("DevAddr		: ");
+			Sprintf_HexData(DevInfo_Evt->addr, BLE_ADDR_LEN);
+			printf("RSSI		: 0x%02X\n", DevInfo_Evt->rssi);
+			printf("DataLen		: 0x%02X\n", DevInfo_Evt->dataLen);
 			msg_type = HCI_EXT_GAP_DEVICE_INFO_MSG;
 			break;
 		case HCI_EXT_GAP_BOND_COMPLETE_EVENT:
+			printf("ConnHandle		: 0x%04X\n", BUILD_UINT16(pEvt->data[0], pEvt->data[1]));
 			msg_type = HCI_EXT_GAP_BOND_COMPLETE_MSG;
 			break;
 		case HCI_EXT_GAP_PAIRING_REQ_EVENT:
+			PairReq_Evt = (gapPairingReqEvent_t *)&pEvt->data[0];
+			printf("ConnHandle		: 0x%04X\n", PairReq_Evt->connectionHandle);
+			printf("IOCap		: 0x%02X\n", PairReq_Evt->pairReq.ioCap);
+			printf("OOBFlag		: 0x%02X\n", PairReq_Evt->pairReq.oobDataFlag);
+			printf("AuthReq		: 0x%02X\n", PairReq_Evt->pairReq.authReq);
+			printf("MaxEncKeySize	: 0x%02X\n", PairReq_Evt->pairReq.maxEncKeySize);
+			printf("KeyDist		: 0x%02X\n", PairReq_Evt->pairReq.keyDist);
 			msg_type = HCI_EXT_GAP_PAIRING_REQ_MSG;
 			break;
 		default:

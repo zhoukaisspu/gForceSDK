@@ -1,2 +1,7 @@
-﻿  GForce_SDK.vcxproj -> C:\Users\asus\Documents\Visual Studio 2015\Projects\SDK_BLE-dev\Debug\GForce_SDK.exe
+﻿  npi_evt.cpp
+  log.cpp
+c:\users\asus\documents\visual studio 2015\projects\sdk_ble-dev\gforce_sdk\npiinterface\log.cpp(489): warning C4477: “printf”: 格式字符串“%02X”需要类型“unsigned int”的参数，但可变参数 1 拥有了类型“keyDist_t”
+  com.cpp
+  正在生成代码...
+  GForce_SDK.vcxproj -> C:\Users\asus\Documents\Visual Studio 2015\Projects\SDK_BLE-dev\Debug\GForce_SDK.exe
   GForce_SDK.vcxproj -> C:\Users\asus\Documents\Visual Studio 2015\Projects\SDK_BLE-dev\Debug\GForce_SDK.pdb (Full PDB)

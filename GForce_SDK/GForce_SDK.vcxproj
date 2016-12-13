@@ -148,6 +148,7 @@
   <ItemGroup>
     <ClInclude Include="Include\app.h" />
     <ClInclude Include="Include\com.h" />
+    <ClInclude Include="Include\gatt.h" />
     <ClInclude Include="Include\hci_tl.h" />
     <ClInclude Include="Include\log.h" />
     <ClInclude Include="Include\npi_cmd.h" />

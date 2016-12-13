@@ -1,6 +1,5 @@
 #include"com.h"
 #include"hci_tl.h"
-#include"npi_evt.h"
 
 #ifndef _NPI_CMD_H_
 #define _NPI_CMD_H_
@@ -9,22 +8,6 @@
 //#define CC26XX
 //#define CC13XX
 #define CC254X
-
-#define BLE_ADDR_LEN		6
-#define IRK_LEN				16
-#define	CSRK_LEN			16
-#define SIGN_COUNT_LEN		4
-#define OOB_DATA_LEN		16
-#define PASSKEY_LEN			16
-#define LTK_LEN				16
-#define LTK_RAND_PAIR_LEN	16
-
-#define FEATURES_LEN		8
-#define ADV_CHANNEL_37		0x01
-#define ADV_CHANNEL_38		0x02
-#define ADV_CHANNEL_39		0x04
-#define ADV_CHANNEL_ALL		(ADV_CHANNEL_37 | ADV_CHANNEL_38 | ADV_CHANNEL_39)
-
 
 #define LL_STATUS_ERROR_PEER_TERM	0x13 // Remote User Terminated Connection
 #pragma pack (1)

@@ -3,8 +3,10 @@
 #define _NPI_EVT_H_
 
 #include"Thread.h"
+#include"npi_cmd.h"
 #include"com.h"
 
+#pragma pack(1)
 /*---------------------------
 /*			EVT				/
 /*-------------------------*/
@@ -164,117 +166,6 @@ typedef struct {
 #define ATT_FLOW_CTRL_VIOLATED_EVENT       (HCI_EXT_ATT_EVENT | 0x7E) //!< Sent when ATT flow control is violated on a connection. 
 #define ATT_MTU_UPDATED_EVENT              (HCI_EXT_ATT_EVENT | 0x7F) //!< Sent when MTU is updated for a connection. 
 
-typedef enum {
-	HCI_SUCCESS = 0x00,
-	HCI_ERROR_CODE_UNKNOWN_HCI_CMD = 0x01,
-	HCI_ERROR_CODE_UNKNOWN_CONN_ID = 0x02,
-	HCI_ERROR_CODE_HW_FAILURE = 0x03,
-	HCI_ERROR_CODE_PAGE_TIMEOUT = 0x04,
-	HCI_ERROR_CODE_AUTH_FAILURE = 0x05,
-	HCI_ERROR_CODE_PIN_KEY_MISSING = 0x06,
-	HCI_ERROR_CODE_MEM_CAP_EXCEEDED = 0x07,
-	HCI_ERROR_CODE_CONN_TIMEOUT = 0x08,
-	HCI_ERROR_CODE_CONN_LIMIT_EXCEEDED = 0x09,
-	HCI_ERROR_CODE_SYNCH_CONN_LIMIT_EXCEEDED = 0x0A,
-	HCI_ERROR_CODE_ACL_CONN_ALREADY_EXISTS = 0x0B,
-	HCI_ERROR_CODE_CMD_DISALLOWED = 0x0C,
-	HCI_ERROR_CODE_CONN_REJ_LIMITED_RESOURCES = 0x0D,
-	HCI_ERROR_CODE_CONN_REJECTED_SECURITY_REASONS = 0x0E,
-	HCI_ERROR_CODE_CONN_REJECTED_UNACCEPTABLE_BDADDR = 0x0F,
-	HCI_ERROR_CODE_CONN_ACCEPT_TIMEOUT_EXCEEDED = 0x10,
-	HCI_ERROR_CODE_UNSUPPORTED_FEATURE_PARAM_VALUE = 0x11,
-	HCI_ERROR_CODE_INVALID_HCI_CMD_PARAMS = 0x12,
-	HCI_ERROR_CODE_REMOTE_USER_TERM_CONN = 0x13,
-	HCI_ERROR_CODE_REMOTE_DEVICE_TERM_CONN_LOW_RESOURCES = 0x14,
-	HCI_ERROR_CODE_REMOTE_DEVICE_TERM_CONN_POWER_OFF = 0x15,
-	HCI_ERROR_CODE_CONN_TERM_BY_LOCAL_HOST = 0x16,
-	HCI_ERROR_CODE_REPEATED_ATTEMPTS = 0x17,
-	HCI_ERROR_CODE_PAIRING_NOT_ALLOWED = 0x18,
-	HCI_ERROR_CODE_UNKNOWN_LMP_PDU = 0x19,
-	HCI_ERROR_CODE_UNSUPPORTED_REMOTE_FEATURE = 0x1A,
-	HCI_ERROR_CODE_SCO_OFFSET_REJ = 0x1B,
-	HCI_ERROR_CODE_SCO_INTERVAL_REJ = 0x1C,
-	HCI_ERROR_CODE_SCO_AIR_MODE_REJ = 0x1D,
-	HCI_ERROR_CODE_INVALID_LMP_PARAMS = 0x1E,
-	HCI_ERROR_CODE_UNSPECIFIED_ERROR = 0x1F,
-	HCI_ERROR_CODE_UNSUPPORTED_LMP_PARAM_VAL = 0x20,
-	HCI_ERROR_CODE_ROLE_CHANGE_NOT_ALLOWED = 0x21,
-	HCI_ERROR_CODE_LMP_LL_RESP_TIMEOUT = 0x22,
-	HCI_ERROR_CODE_LMP_ERR_TRANSACTION_COLLISION = 0x23,
-	HCI_ERROR_CODE_LMP_PDU_NOT_ALLOWED = 0x24,
-	HCI_ERROR_CODE_ENCRYPT_MODE_NOT_ACCEPTABLE = 0x25,
-	HCI_ERROR_CODE_LINK_KEY_CAN_NOT_BE_CHANGED = 0x26,
-	HCI_ERROR_CODE_REQ_QOS_NOT_SUPPORTED = 0x27,
-	HCI_ERROR_CODE_INSTANT_PASSED = 0x28,
-	HCI_ERROR_CODE_PAIRING_WITH_UNIT_KEY_NOT_SUPPORTED = 0x29,
-	HCI_ERROR_CODE_DIFFERENT_TRANSACTION_COLLISION = 0x2A,
-	HCI_ERROR_CODE_RESERVED1 = 0x2B,
-	HCI_ERROR_CODE_QOS_UNACCEPTABLE_PARAM = 0x2C,
-	HCI_ERROR_CODE_QOS_REJ = 0x2D,
-	HCI_ERROR_CODE_CHAN_ASSESSMENT_NOT_SUPPORTED = 0x2E,
-	HCI_ERROR_CODE_INSUFFICIENT_SECURITY = 0x2F,
-	HCI_ERROR_CODE_PARAM_OUT_OF_MANDATORY_RANGE = 0x30,
-	HCI_ERROR_CODE_RESERVED2 = 0x31,
-	HCI_ERROR_CODE_ROLE_SWITCH_PENDING = 0x32,
-	HCI_ERROR_CODE_RESERVED3 = 0x33,
-	HCI_ERROR_CODE_RESERVED_SLOT_VIOLATION = 0x34,
-	HCI_ERROR_CODE_ROLE_SWITCH_FAILED = 0x35,
-	HCI_ERROR_CODE_EXTENDED_INQUIRY_RESP_TOO_LARGE = 0x36,
-	HCI_ERROR_CODE_SIMPLE_PAIRING_NOT_SUPPORTED_BY_HOST = 0x37,
-	HCI_ERROR_CODE_HOST_BUSY_PAIRING = 0x38,
-	HCI_ERROR_CODE_CONN_REJ_NO_SUITABLE_CHAN_FOUND = 0x39,
-	HCI_ERROR_CODE_CONTROLLER_BUSY = 0x3A,
-	HCI_ERROR_CODE_UNACCEPTABLE_CONN_PARAMETERS = 0x3B,
-	HCI_ERROR_CODE_DIRECTED_ADV_TIMEOUT = 0x3C,
-	HCI_ERROR_CODE_CONN_TERM_MIC_FAILURE = 0x3D,
-	HCI_ERROR_CODE_CONN_FAILED_TO_ESTABLISH = 0x3E,
-	HCI_ERROR_CODE_MAC_CONN_FAILED = 0x3F,
-	HCI_ERROR_CODE_COARSE_CLOCK_ADJUST_REJECTED = 0x40
-}eHciRetSta;
-
-typedef enum {
-	/*** Generic Status Return Values ***/
-	SUCCESS =                  0x00,
-	FAILURE =                  0x01,
-	INVALIDPARAMETER =         0x02,
-	INVALID_TASK =             0x03,
-	MSG_BUFFER_NOT_AVAIL =     0x04,
-	INVALID_MSG_POINTER =      0x05,
-	INVALID_EVENT_ID =         0x06,
-	INVALID_INTERRUPT_ID =     0x07,
-	NO_TIMER_AVAIL =           0x08,
-	NV_ITEM_UNINIT =           0x09,
-	NV_OPER_FAILED =           0x0A,
-	INVALID_MEM_SIZE =         0x0B,
-	NV_BAD_ITEM_LEN =          0x0C,
-
-	bleNotReady =					0x10,  //!< Not ready to perform task
-	bleAlreadyInRequestedMode =     0x11,  //!< Already performing that task
-	bleIncorrectMode =              0x12,  //!< Not setup properly to perform that task
-	bleMemAllocError =              0x13,  //!< Memory allocation error occurred
-	bleNotConnected =               0x14,  //!< Can't perform function when not in a connection
-	bleNoResources =                0x15,  //!< There are no resource available
-	blePending =                    0x16,  //!< Waiting
-	bleTimeout =                    0x17,  //!< Timed out performing function
-	bleInvalidRange =               0x18,  //!< A parameter is out of range
-	bleLinkEncrypted =              0x19,  //!< The link is already encrypted
-	bleProcedureComplete =          0x1A,  //!< The Procedure is completed
-	bleInvalidMtuSize =             0x1B,  //!< MTU size is out of range
-
-	// GAP Status Return Values 
-	bleGAPUserCanceled =			0x30,  //!< The user canceled the task
-	bleGAPConnNotAcceptable =       0x31,  //!< The connection was not accepted
-	bleGAPBondRejected =            0x32,  //!< The bound information was rejected.
-
-	// ATT Status Return Values 
-	bleInvalidPDU =                 0x40,  //!< The attribute PDU is invalid
-	bleInsufficientAuthen =         0x41,  //!< The attribute has insufficient authentication
-	bleInsufficientEncrypt =        0x42,  //!< The attribute has insufficient encryption
-	bleInsufficientKeySize =        0x43, //!< The attribute has insufficient encryption key size
-
-	INVALID_RET_STATUS =			0xFF
-}eRetStatus;
-
 /*---------------------------
 /*	L2CAP Event	Struct		/
 /*-------------------------*/
@@ -303,6 +194,231 @@ typedef struct {
 	UINT8 mtu_lo;
 	UINT8 mtu_hi;
 }sAttExMtuRsp;
+
+/*---------------------------
+/*	Gap Event	Struct		/
+/*-------------------------*/
+typedef UINT16 gapParamIDs_t;
+
+typedef struct
+{
+	UINT8 opcode;                    //!< GAP type of command. Ref: @ref GAP_MSG_EVENT_DEFINES
+} gapEventHdr_t;
+
+typedef struct
+{
+	//!< GAP_RANDOM_ADDR_CHANGED_EVENT
+	UINT8 addrType;                     //!< Address type: @ref GAP_ADDR_TYPE_DEFINES
+	UINT8 newRandomAddr[BLE_ADDR_LEN];    //!< the new calculated private addr
+} gapRandomAddrEvent_t;
+
+typedef struct
+{
+	/** Minimum value for the connection event (interval. 0x0006 - 0x0C80 * 1.25 ms) */
+	UINT16 intervalMin;
+	/** Maximum value for the connection event (interval. 0x0006 - 0x0C80 * 1.25 ms) */
+	UINT16 intervalMax;
+	/** Number of LL latency connection events (0x0000 - 0x03e8) */
+	UINT16 latency;
+	/** Connection Timeout (0x000A - 0x0C80 * 10 ms) */
+	UINT16 timeout;
+} gapPeriConnectParams_t;
+
+typedef struct
+{
+	//!< GAP_DEVICE_INIT_DONE_EVENT
+	UINT8 devAddr[BLE_ADDR_LEN];          //!< Device's BD_ADDR
+	UINT16 dataPktLen;                  //!< HC_LE_Data_Packet_Length
+	UINT8 numDataPkts;                  //!< HC_Total_Num_LE_Data_Packets
+	UINT8 irk[IRK_LEN];
+	UINT8 csrk[CSRK_LEN];
+} gapDeviceInitDoneEvent_t;
+
+typedef struct
+{
+	//!< GAP_SIGNATURE_UPDATED_EVENT
+	UINT8 addrType;                     //!< Device's address type for devAddr
+	UINT8 devAddr[BLE_ADDR_LEN];          //!< Device's BD_ADDR, could be own address
+	UINT32 signCounter;                 //!< new Signed Counter
+} gapSignUpdateEvent_t;
+
+typedef struct
+{
+	//!< GAP_DEVICE_INFO_EVENT
+	UINT8 eventType;          //!< Advertisement Type: @ref GAP_ADVERTISEMENT_REPORT_TYPE_DEFINES
+	UINT8 addrType;           //!< address type: @ref GAP_ADDR_TYPE_DEFINES
+	UINT8 addr[BLE_ADDR_LEN];   //!< Address of the advertisement or SCAN_RSP
+	INT8 rssi;                //!< Advertisement or SCAN_RSP RSSI
+	UINT8 dataLen;            //!< Length (in bytes) of the data field (evtData)
+	UINT8 *pEvtData;          //!< Data field of advertisement or SCAN_RSP
+} gapDeviceInfoEvent_t;
+
+typedef struct
+{
+	UINT8 eventType;        //!< Indicates advertising event type used by the advertiser: @ref GAP_ADVERTISEMENT_REPORT_TYPE_DEFINES
+	UINT8 addrType;         //!< Address Type: @ref GAP_ADDR_TYPE_DEFINES
+	UINT8 addr[BLE_ADDR_LEN]; //!< Device's Address
+} gapDevRec_t;
+
+typedef struct
+{
+	//!< GAP_DEVICE_DISCOVERY_EVENT
+	UINT8 numDevs;         //!< Number of devices found during scan
+	gapDevRec_t *DevList; //!< array of device records
+} gapDevDiscEvent_t;
+
+typedef struct
+{
+	UINT8 eventType;          //!< Advertise Event Type: @ref GAP_ADVERTISEMENT_TYPE_DEFINES
+	UINT8 initiatorAddrType;  //!< Initiator's address type: @ref GAP_ADDR_TYPE_DEFINES
+	UINT8 initiatorAddr[BLE_ADDR_LEN];  //!< Initiator's addr - used only with connectable directed eventType (ADV_EVTTYPE_CONNECTABLE_DIRECTED).
+	UINT8 channelMap;         //!< Channel Map: Bit mask @ref GAP_ADVCHAN_DEFINES
+	UINT8 filterPolicy;       //!< Filer Policy: @ref GAP_FILTER_POLICY_DEFINES. Ignored when directed advertising is used.
+} gapAdvertisingParams_t;
+
+typedef struct
+{
+	 //!< GAP_ADV_DATA_UPDATE_DONE_EVENT
+	UINT8 adType;          //!< TRUE if advertising data, FALSE if SCAN_RSP
+} gapAdvDataUpdateEvent_t;
+
+typedef struct
+{
+	//!< GAP_LINK_ESTABLISHED_EVENT
+	UINT8 devAddrType;         //!< Device address type: @ref GAP_ADDR_TYPE_DEFINES
+	UINT8 devAddr[BLE_ADDR_LEN]; //!< Device address of link
+	UINT16 connectionHandle;   //!< Connection Handle from controller used to ref the device
+	UINT8 connRole;            //!< Connection formed as Master or Slave
+	UINT16 connInterval;       //!< Connection Interval
+	UINT16 connLatency;        //!< Connection Latency
+	UINT16 connTimeout;        //!< Connection Timeout
+	UINT8 clockAccuracy;       //!< Clock Accuracy
+} gapEstLinkReqEvent_t;
+
+typedef struct
+{
+	UINT8 opcode;             //!< GAP_LINK_PARAM_UPDATE_EVENT
+	UINT8 status;             //!< bStatus_t
+	UINT16 connectionHandle;  //!< Connection handle of the update
+	UINT16 connInterval;      //!< Requested connection interval
+	UINT16 connLatency;       //!< Requested connection latency
+	UINT16 connTimeout;       //!< Requested connection timeout
+} gapLinkUpdateEvent_t;
+
+typedef struct
+{
+	//!< GAP_LINK_TERMINATED_EVENT
+	UINT16 connectionHandle; //!< connection Handle
+	UINT8 reason;            //!< termination reason from LL
+} gapTerminateLinkEvent_t;
+
+typedef struct
+{
+	//!< GAP_PASSKEY_NEEDED_EVENT
+	UINT8 deviceAddr[BLE_ADDR_LEN]; //!< address of device to pair with, and could be either public or random.
+	UINT16 connectionHandle;      //!< Connection handle
+	UINT8 uiInputs;               //!< Pairing User Interface Inputs - Ask user to input passcode
+	UINT8 uiOutputs;              //!< Pairing User Interface Outputs - Display passcode
+} gapPasskeyNeededEvent_t;
+
+typedef struct
+{
+	UINT8 ltk[PASSKEY_LEN];              //!< Long Term Key (LTK)
+	UINT16 div;                     //!< LTK Diversifier
+	UINT8 rand[B_RANDOM_NUM_SIZE];  //!< LTK random number
+	UINT8 keySize;                  //!< LTK Key Size (7-16 bytes)
+} smSecurityInfo_t;
+
+typedef struct
+{
+	UINT8 irk[PASSKEY_LEN];          //!< Identity Resolving Key (IRK)
+	UINT8 bd_addr[BLE_ADDR_LEN];  //!< The advertiser may set this to zeroes to not disclose its BD_ADDR (public address).
+} smIdentityInfo_t;
+
+typedef struct
+{
+	UINT8  srk[PASSKEY_LEN]; //!< Signature Resolving Key (CSRK)
+	UINT32 signCounter; //!< Sign Counter
+} smSigningInfo_t;
+
+typedef struct
+{
+	UINT8 opcode;                    //!< GAP_AUTHENTICATION_COMPLETE_EVENT
+	UINT16 connectionHandle;         //!< Connection Handle from controller used to ref the device
+	UINT8 authState;                 //!< TRUE if the pairing was authenticated (MITM)
+	smSecurityInfo_t *pSecurityInfo; //!< BOUND - security information from this device
+	smSigningInfo_t *pSigningInfo;   //!< Signing information
+	smSecurityInfo_t *pDevSecInfo;   //!< BOUND - security information from connected device
+	smIdentityInfo_t *pIdentityInfo; //!< BOUND - identity information
+} gapAuthCompleteEvent_t;
+
+typedef struct
+{
+	unsigned int sEncKey : 1;    //!< Set to distribute slave encryption key
+	unsigned int sIdKey : 1;     //!< Set to distribute slave identity key
+	unsigned int sSign : 1;      //!< Set to distribute slave signing key
+	unsigned int sLinkKey : 1;   //!< Set to derive slave link key from slave LTK
+	unsigned int sReserved : 4;  //!< Reserved for slave - don't use
+	unsigned int mEncKey : 1;    //!< Set to distribute master encryption key
+	unsigned int mIdKey : 1;     //!< Set to distribute master identity key
+	unsigned int mSign : 1;      //!< Set to distribute master signing key
+	unsigned int mLinkKey : 1;   //!< Set to derive master link key from master LTK
+	unsigned int mReserved : 4;  //!< Reserved for master - don't use
+} keyDist_t;
+
+typedef struct
+{
+	UINT8 ioCaps;               //!< I/O Capabilities (ie.
+	UINT8 oobAvailable;         //!< True if Out-of-band key available
+	UINT8 oob[PASSKEY_LEN];          //!< Out-Of-Bounds key
+	UINT8 authReq;              //!< Authentication Requirements
+	keyDist_t keyDist;          //!< Key Distribution mask
+	UINT8 maxEncKeySize;        //!< Maximum Encryption Key size (7-16 bytes)
+} smLinkSecurityReq_t;
+
+typedef struct
+{
+	UINT16 connectionHandle;      //!< Connection Handle from controller,
+	smLinkSecurityReq_t  secReqs; //!< Pairing Control info
+} gapAuthParams_t;
+
+typedef struct
+{
+	 //!< GAP_SLAVE_REQUESTED_SECURITY_EVENT
+	UINT16 connectionHandle;      //!< Connection Handle
+	UINT8 deviceAddr[BLE_ADDR_LEN]; //!< address of device requesting security
+	UINT8 authReq;                //!< Authentication Requirements: Bit 2: MITM, Bits 0-1: bonding (0 - no bonding, 1 - bonding)
+} gapSlaveSecurityReqEvent_t;
+
+typedef struct
+{
+	//!< GAP_BOND_COMPLETE_EVENT
+	UINT16 connectionHandle; //!< connection Handle
+} gapBondCompleteEvent_t;
+
+typedef struct
+{
+	UINT8 ioCap;         //!< Pairing Request ioCap field
+	UINT8 oobDataFlag;   //!< Pairing Request OOB Data Flag field
+	UINT8 authReq;       //!< Pairing Request Auth Req field
+	UINT8 maxEncKeySize; //!< Pairing Request Maximum Encryption Key Size field
+	keyDist_t keyDist;   //!< Pairing Request Key Distribution field
+} gapPairingReq_t;
+
+typedef struct
+{
+	//!< GAP_PAIRING_REQ_EVENT
+	UINT16 connectionHandle; //!< connection Handle
+	gapPairingReq_t pairReq; //!< The Pairing Request fields received.
+} gapPairingReqEvent_t;
+
+typedef struct
+{
+	UINT8 adType;     //!< ADTYPE value: @ref GAP_ADTYPE_DEFINES
+	UINT8 attrLen;    //!< Number of bytes in the attribute data
+	UINT8 *pAttrData; //!< pointer to Attribute data
+} gapAdvDataToken_t;
+
 
 class NPI_EVT :public Runnable {
 public:
@@ -367,4 +483,7 @@ private:
 	void HciExt_GapBondComp_Event(PUINT8 pBuf, UINT16 len);
 	void HciExt_GapPairReq_Event(PUINT8 pBuf, UINT16 len);
 };
+
+#pragma pack()
+
 #endif
