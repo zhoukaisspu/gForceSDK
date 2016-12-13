@@ -8,7 +8,7 @@
 
 #pragma pack(1)
 /*---------------------------
-/*			EVT				/
+/*                      EVT                             /
 /*-------------------------*/
 typedef struct {
 	UINT8 type;
@@ -18,7 +18,7 @@ typedef struct {
 	UINT8 event_hi;
 	UINT8 status;
 	UINT8 data[MAX_RX_SIZE];
-}sNpiEvt;
+} sNpiEvt;
 
 typedef struct {
 	UINT8 type;
@@ -29,13 +29,13 @@ typedef struct {
 	UINT8 op_hi;
 	UINT8 status;
 	UINT8 data[MAX_RX_SIZE];
-}sHciEvt;
+} sHciEvt;
 
-#define HCI_EXT_LL_EVENT							0x0400
-#define HCI_EXT_L2CAP_EVENT							0x0480
-#define HCI_EXT_ATT_EVENT							0x0500
-#define HCI_EXT_GATT_EVENT						    0x0580
-#define HCI_EXT_GAP_EVENT						    0x0600
+#define HCI_EXT_LL_EVENT                                                        0x0400
+#define HCI_EXT_L2CAP_EVENT                                                     0x0480
+#define HCI_EXT_ATT_EVENT                                                       0x0500
+#define HCI_EXT_GATT_EVENT                                                  0x0580
+#define HCI_EXT_GAP_EVENT                                                   0x0600
 /*
 ** HCI Event Codes
 */
@@ -144,7 +144,7 @@ typedef struct {
 #define L2CAP_OUT_OF_CREDIT_EVT          (HCI_EXT_L2CAP_EVENT | 0x62)//0x04E2 !< Out Of Credit Event
 #define L2CAP_PEER_CREDIT_THRESHOLD_EVT  (HCI_EXT_L2CAP_EVENT | 0x63)//0x04E3 !< Peer Credit Threshold Event
 #define L2CAP_SEND_SDU_DONE_EVT          (HCI_EXT_L2CAP_EVENT | 0x64)//0x04E4 !< Send SDU Done Event
-#define L2CAP_DATA_EVT					 (HCI_EXT_L2CAP_EVENT | 0x70)//0x04F0 !< L2CAP DATA
+#define L2CAP_DATA_EVT                                   (HCI_EXT_L2CAP_EVENT | 0x70)//0x04F0 !< L2CAP DATA
 
 /*------------------ATT Events-----------------*/
 #define ATT_ERROR_EVENT                    (HCI_EXT_ATT_EVENT | 0x01) //!< ATT Error Response
@@ -167,53 +167,50 @@ typedef struct {
 #define ATT_MTU_UPDATED_EVENT              (HCI_EXT_ATT_EVENT | 0x7F) //!< Sent when MTU is updated for a connection. 
 
 /*---------------------------
-/*	L2CAP Event	Struct		/
+/*      L2CAP Event     Struct          /
 /*-------------------------*/
 typedef enum {
 	L2CAP_REJECT_CMD_NOT_UNDERSTOOD,
 	L2CAP_REJECT_SIGNAL_MTU_EXCEED,
 	L2CAP_REJECT_INVALID_CID
-}eRejectReason;
+} eRejectReason;
 
-typedef struct{
-	UINT8 status;		//refer eRetStatus
+typedef struct {
+	UINT8 status;           //refer eRetStatus
 	UINT8 handle_lo;
 	UINT8 handle_hi;
-	UINT8 reason_lo;	//refer eRejectReason
+	UINT8 reason_lo;        //refer eRejectReason
 	UINT8 reason_hi;
-}sL2capCmdRejEvt;
+} sL2capCmdRejEvt;
 
 /*---------------------------
-/*	ATT Event	Struct		/
+/*      ATT Event       Struct          /
 /*-------------------------*/
 typedef struct {
-	UINT8 status;		//refer eRetStatus
+	UINT8 status;           //refer eRetStatus
 	UINT8 handle_lo;
 	UINT8 handle_hi;
 	UINT8 pdu_len;
 	UINT8 mtu_lo;
 	UINT8 mtu_hi;
-}sAttExMtuRsp;
+} sAttExMtuRsp;
 
 /*---------------------------
-/*	Gap Event	Struct		/
+/*      Gap Event       Struct          /
 /*-------------------------*/
 typedef UINT16 gapParamIDs_t;
 
-typedef struct
-{
+typedef struct {
 	UINT8 opcode;                    //!< GAP type of command. Ref: @ref GAP_MSG_EVENT_DEFINES
 } gapEventHdr_t;
 
-typedef struct
-{
+typedef struct {
 	//!< GAP_RANDOM_ADDR_CHANGED_EVENT
 	UINT8 addrType;                     //!< Address type: @ref GAP_ADDR_TYPE_DEFINES
 	UINT8 newRandomAddr[BLE_ADDR_LEN];    //!< the new calculated private addr
 } gapRandomAddrEvent_t;
 
-typedef struct
-{
+typedef struct {
 	/** Minimum value for the connection event (interval. 0x0006 - 0x0C80 * 1.25 ms) */
 	UINT16 intervalMin;
 	/** Maximum value for the connection event (interval. 0x0006 - 0x0C80 * 1.25 ms) */
@@ -224,8 +221,7 @@ typedef struct
 	UINT16 timeout;
 } gapPeriConnectParams_t;
 
-typedef struct
-{
+typedef struct {
 	//!< GAP_DEVICE_INIT_DONE_EVENT
 	UINT8 devAddr[BLE_ADDR_LEN];          //!< Device's BD_ADDR
 	UINT16 dataPktLen;                  //!< HC_LE_Data_Packet_Length
@@ -234,41 +230,36 @@ typedef struct
 	UINT8 csrk[CSRK_LEN];
 } gapDeviceInitDoneEvent_t;
 
-typedef struct
-{
+typedef struct {
 	//!< GAP_SIGNATURE_UPDATED_EVENT
 	UINT8 addrType;                     //!< Device's address type for devAddr
 	UINT8 devAddr[BLE_ADDR_LEN];          //!< Device's BD_ADDR, could be own address
 	UINT32 signCounter;                 //!< new Signed Counter
 } gapSignUpdateEvent_t;
 
-typedef struct
-{
+typedef struct {
 	//!< GAP_DEVICE_INFO_EVENT
 	UINT8 eventType;          //!< Advertisement Type: @ref GAP_ADVERTISEMENT_REPORT_TYPE_DEFINES
 	UINT8 addrType;           //!< address type: @ref GAP_ADDR_TYPE_DEFINES
 	UINT8 addr[BLE_ADDR_LEN];   //!< Address of the advertisement or SCAN_RSP
 	INT8 rssi;                //!< Advertisement or SCAN_RSP RSSI
 	UINT8 dataLen;            //!< Length (in bytes) of the data field (evtData)
-	UINT8 *pEvtData;          //!< Data field of advertisement or SCAN_RSP
+	UINT8* pEvtData;          //!< Data field of advertisement or SCAN_RSP
 } gapDeviceInfoEvent_t;
 
-typedef struct
-{
+typedef struct {
 	UINT8 eventType;        //!< Indicates advertising event type used by the advertiser: @ref GAP_ADVERTISEMENT_REPORT_TYPE_DEFINES
 	UINT8 addrType;         //!< Address Type: @ref GAP_ADDR_TYPE_DEFINES
 	UINT8 addr[BLE_ADDR_LEN]; //!< Device's Address
 } gapDevRec_t;
 
-typedef struct
-{
+typedef struct {
 	//!< GAP_DEVICE_DISCOVERY_EVENT
 	UINT8 numDevs;         //!< Number of devices found during scan
-	gapDevRec_t *DevList; //!< array of device records
+	gapDevRec_t* DevList; //!< array of device records
 } gapDevDiscEvent_t;
 
-typedef struct
-{
+typedef struct {
 	UINT8 eventType;          //!< Advertise Event Type: @ref GAP_ADVERTISEMENT_TYPE_DEFINES
 	UINT8 initiatorAddrType;  //!< Initiator's address type: @ref GAP_ADDR_TYPE_DEFINES
 	UINT8 initiatorAddr[BLE_ADDR_LEN];  //!< Initiator's addr - used only with connectable directed eventType (ADV_EVTTYPE_CONNECTABLE_DIRECTED).
@@ -276,14 +267,12 @@ typedef struct
 	UINT8 filterPolicy;       //!< Filer Policy: @ref GAP_FILTER_POLICY_DEFINES. Ignored when directed advertising is used.
 } gapAdvertisingParams_t;
 
-typedef struct
-{
-	 //!< GAP_ADV_DATA_UPDATE_DONE_EVENT
+typedef struct {
+	//!< GAP_ADV_DATA_UPDATE_DONE_EVENT
 	UINT8 adType;          //!< TRUE if advertising data, FALSE if SCAN_RSP
 } gapAdvDataUpdateEvent_t;
 
-typedef struct
-{
+typedef struct {
 	//!< GAP_LINK_ESTABLISHED_EVENT
 	UINT8 devAddrType;         //!< Device address type: @ref GAP_ADDR_TYPE_DEFINES
 	UINT8 devAddr[BLE_ADDR_LEN]; //!< Device address of link
@@ -295,8 +284,7 @@ typedef struct
 	UINT8 clockAccuracy;       //!< Clock Accuracy
 } gapEstLinkReqEvent_t;
 
-typedef struct
-{
+typedef struct {
 	UINT8 opcode;             //!< GAP_LINK_PARAM_UPDATE_EVENT
 	UINT8 status;             //!< bStatus_t
 	UINT16 connectionHandle;  //!< Connection handle of the update
@@ -305,15 +293,13 @@ typedef struct
 	UINT16 connTimeout;       //!< Requested connection timeout
 } gapLinkUpdateEvent_t;
 
-typedef struct
-{
+typedef struct {
 	//!< GAP_LINK_TERMINATED_EVENT
 	UINT16 connectionHandle; //!< connection Handle
 	UINT8 reason;            //!< termination reason from LL
 } gapTerminateLinkEvent_t;
 
-typedef struct
-{
+typedef struct {
 	//!< GAP_PASSKEY_NEEDED_EVENT
 	UINT8 deviceAddr[BLE_ADDR_LEN]; //!< address of device to pair with, and could be either public or random.
 	UINT16 connectionHandle;      //!< Connection handle
@@ -321,39 +307,36 @@ typedef struct
 	UINT8 uiOutputs;              //!< Pairing User Interface Outputs - Display passcode
 } gapPasskeyNeededEvent_t;
 
-typedef struct
-{
+typedef struct {
 	UINT8 ltk[PASSKEY_LEN];              //!< Long Term Key (LTK)
 	UINT16 div;                     //!< LTK Diversifier
 	UINT8 rand[B_RANDOM_NUM_SIZE];  //!< LTK random number
 	UINT8 keySize;                  //!< LTK Key Size (7-16 bytes)
 } smSecurityInfo_t;
 
-typedef struct
-{
+typedef struct {
 	UINT8 irk[PASSKEY_LEN];          //!< Identity Resolving Key (IRK)
 	UINT8 bd_addr[BLE_ADDR_LEN];  //!< The advertiser may set this to zeroes to not disclose its BD_ADDR (public address).
 } smIdentityInfo_t;
 
-typedef struct
-{
+typedef struct {
 	UINT8  srk[PASSKEY_LEN]; //!< Signature Resolving Key (CSRK)
 	UINT32 signCounter; //!< Sign Counter
 } smSigningInfo_t;
 
-typedef struct
-{
+typedef struct {
 	UINT8 opcode;                    //!< GAP_AUTHENTICATION_COMPLETE_EVENT
 	UINT16 connectionHandle;         //!< Connection Handle from controller used to ref the device
 	UINT8 authState;                 //!< TRUE if the pairing was authenticated (MITM)
-	smSecurityInfo_t *pSecurityInfo; //!< BOUND - security information from this device
-	smSigningInfo_t *pSigningInfo;   //!< Signing information
-	smSecurityInfo_t *pDevSecInfo;   //!< BOUND - security information from connected device
-	smIdentityInfo_t *pIdentityInfo; //!< BOUND - identity information
+	smSecurityInfo_t*
+	pSecurityInfo; //!< BOUND - security information from this device
+	smSigningInfo_t* pSigningInfo;   //!< Signing information
+	smSecurityInfo_t*
+	pDevSecInfo;   //!< BOUND - security information from connected device
+	smIdentityInfo_t* pIdentityInfo; //!< BOUND - identity information
 } gapAuthCompleteEvent_t;
 
-typedef struct
-{
+typedef struct {
 	unsigned int sEncKey : 1;    //!< Set to distribute slave encryption key
 	unsigned int sIdKey : 1;     //!< Set to distribute slave identity key
 	unsigned int sSign : 1;      //!< Set to distribute slave signing key
@@ -366,8 +349,7 @@ typedef struct
 	unsigned int mReserved : 4;  //!< Reserved for master - don't use
 } keyDist_t;
 
-typedef struct
-{
+typedef struct {
 	UINT8 ioCaps;               //!< I/O Capabilities (ie.
 	UINT8 oobAvailable;         //!< True if Out-of-band key available
 	UINT8 oob[PASSKEY_LEN];          //!< Out-Of-Bounds key
@@ -376,28 +358,24 @@ typedef struct
 	UINT8 maxEncKeySize;        //!< Maximum Encryption Key size (7-16 bytes)
 } smLinkSecurityReq_t;
 
-typedef struct
-{
+typedef struct {
 	UINT16 connectionHandle;      //!< Connection Handle from controller,
 	smLinkSecurityReq_t  secReqs; //!< Pairing Control info
 } gapAuthParams_t;
 
-typedef struct
-{
-	 //!< GAP_SLAVE_REQUESTED_SECURITY_EVENT
+typedef struct {
+	//!< GAP_SLAVE_REQUESTED_SECURITY_EVENT
 	UINT16 connectionHandle;      //!< Connection Handle
 	UINT8 deviceAddr[BLE_ADDR_LEN]; //!< address of device requesting security
 	UINT8 authReq;                //!< Authentication Requirements: Bit 2: MITM, Bits 0-1: bonding (0 - no bonding, 1 - bonding)
 } gapSlaveSecurityReqEvent_t;
 
-typedef struct
-{
+typedef struct {
 	//!< GAP_BOND_COMPLETE_EVENT
 	UINT16 connectionHandle; //!< connection Handle
 } gapBondCompleteEvent_t;
 
-typedef struct
-{
+typedef struct {
 	UINT8 ioCap;         //!< Pairing Request ioCap field
 	UINT8 oobDataFlag;   //!< Pairing Request OOB Data Flag field
 	UINT8 authReq;       //!< Pairing Request Auth Req field
@@ -405,22 +383,21 @@ typedef struct
 	keyDist_t keyDist;   //!< Pairing Request Key Distribution field
 } gapPairingReq_t;
 
-typedef struct
-{
+typedef struct {
 	//!< GAP_PAIRING_REQ_EVENT
 	UINT16 connectionHandle; //!< connection Handle
 	gapPairingReq_t pairReq; //!< The Pairing Request fields received.
 } gapPairingReqEvent_t;
 
-typedef struct
-{
+typedef struct {
 	UINT8 adType;     //!< ADTYPE value: @ref GAP_ADTYPE_DEFINES
 	UINT8 attrLen;    //!< Number of bytes in the attribute data
-	UINT8 *pAttrData; //!< pointer to Attribute data
+	UINT8* pAttrData; //!< pointer to Attribute data
 } gapAdvDataToken_t;
 
 
-class NPI_EVT :public Runnable {
+class NPI_EVT : public Runnable
+{
 public:
 	NPI_EVT();
 	~NPI_EVT();

@@ -9,110 +9,110 @@
 //#define CC13XX
 #define CC254X
 
-#define LL_STATUS_ERROR_PEER_TERM	0x13 // Remote User Terminated Connection
+#define LL_STATUS_ERROR_PEER_TERM       0x13 // Remote User Terminated Connection
 #pragma pack (1)
 /*---------------------------
-/*			CMD				/
+/*                      CMD                             /
 /*-------------------------*/
 typedef struct {
 	UINT8 type;
 	UINT16 opcode;
 	UINT8 len;
 	UINT8 data[MAX_TX_SIZE];
-}sCMD;
+} sCMD;
 
 #define CMD_HEAD_LEN 4
 
 typedef enum {
 	NPI_DISABLE = 0,
 	NPI_ENABLE,
-}eEnDisMode;
+} eEnDisMode;
 
 typedef enum {
 	NPI_FALSE = 0,
 	NPI_TRUE,
-}eBoolMode;
+} eBoolMode;
 
 typedef enum {
 	NPI_NO = 0,
 	NPI_YES,
-}eYesNoMode;
+} eYesNoMode;
 
 /*---------HCI Extended Command------------*/
 typedef enum {
 	HCI_EXT_RX_GAIN_STD,
 	HCI_EXT_RX_GAIN_HIGH
-}eRxGain;
+} eRxGain;
 
 typedef enum {
 #if defined( CC26XX ) || defined( CC13XX )
-	HCI_EXT_TX_POWER_MINUS_21_DBM = 0,              
-	HCI_EXT_TX_POWER_MINUS_18_DBM,                  
-	HCI_EXT_TX_POWER_MINUS_15_DBM,                  
-	HCI_EXT_TX_POWER_MINUS_12_DBM,                  
-	HCI_EXT_TX_POWER_MINUS_9_DBM,                   
-	HCI_EXT_TX_POWER_MINUS_6_DBM,                   
-	HCI_EXT_TX_POWER_MINUS_3_DBM,                   
-	HCI_EXT_TX_POWER_0_DBM,                         
-	HCI_EXT_TX_POWER_1_DBM,                         
-	HCI_EXT_TX_POWER_2_DBM,                         
-	HCI_EXT_TX_POWER_3_DBM,                         
-	HCI_EXT_TX_POWER_4_DBM,                         
-	HCI_EXT_TX_POWER_5_DBM = 12                         
+	HCI_EXT_TX_POWER_MINUS_21_DBM = 0,
+	HCI_EXT_TX_POWER_MINUS_18_DBM,
+	HCI_EXT_TX_POWER_MINUS_15_DBM,
+	HCI_EXT_TX_POWER_MINUS_12_DBM,
+	HCI_EXT_TX_POWER_MINUS_9_DBM,
+	HCI_EXT_TX_POWER_MINUS_6_DBM,
+	HCI_EXT_TX_POWER_MINUS_3_DBM,
+	HCI_EXT_TX_POWER_0_DBM,
+	HCI_EXT_TX_POWER_1_DBM,
+	HCI_EXT_TX_POWER_2_DBM,
+	HCI_EXT_TX_POWER_3_DBM,
+	HCI_EXT_TX_POWER_4_DBM,
+	HCI_EXT_TX_POWER_5_DBM = 12
 #else // CC254x
-	HCI_EXT_TX_POWER_MINUS_23_DBM = 0,                  
-	HCI_EXT_TX_POWER_MINUS_6_DBM,               
-	HCI_EXT_TX_POWER_0_DBM,                         
-	HCI_EXT_TX_POWER_4_DBM = 3                      
+	HCI_EXT_TX_POWER_MINUS_23_DBM = 0,
+	HCI_EXT_TX_POWER_MINUS_6_DBM,
+	HCI_EXT_TX_POWER_0_DBM,
+	HCI_EXT_TX_POWER_4_DBM = 3
 #endif // CC26XX/CC13XX
-}eTxPwr;
+} eTxPwr;
 
 typedef enum {
 	HCI_EXT_DISABLE_ONE_PKT_PER_EVT = 0,
 	HCI_EXT_ENABLE_ONE_PKT_PER_EVT
-}eOnePktPerEvtCtrl;
+} eOnePktPerEvtCtrl;
 
 typedef enum {
 	HCI_EXT_DISABLE_CLK_DIVIDE_ON_HALT = 0,
 	HCI_EXT_ENABLE_CLK_DIVIDE_ON_HALT
-}eClkDivOnHalt;
+} eClkDivOnHalt;
 
 typedef enum {
 	HCI_EXT_NV_NOT_IN_USE = 0,
 	HCI_EXT_NV_IN_USE
-}eNvUsage;
+} eNvUsage;
 
 typedef struct {
 	UINT8 key[16];
 	UINT8 data[16];
-}sDecrypt;
+} sDecrypt;
 
 typedef enum {
 	HCI_EXT_DISABLE_FAST_TX_RESP_TIME = 0,
 	HCI_EXT_ENABLE_FAST_TX_RESP_TIME
-}eFastTxRespTime;
+} eFastTxRespTime;
 
 typedef enum {
 	HCI_EXT_TX_MODULATED_CARRIER = 0,
 	HCI_EXT_TX_UNMODULATED_CARRIER
-}eCwModem;
+} eCwModem;
 
 typedef struct {
 	eCwModem cw;
 	UINT8 tx_channel;
-}sModemTestTx;
+} sModemTestTx;
 
 typedef enum {
 	HCI_PTM_SET_FREQ_TUNE_DOWN = 0,
 	HCI_PTM_SET_FREQ_TUNE_UP
-}eFreqTune;
+} eFreqTune;
 
 typedef enum {
 	HCI_EXT_PM_IO_PORT_P0 = 0,
 	HCI_EXT_PM_IO_PORT_P1,
 	HCI_EXT_PM_IO_PORT_P2,
 	HCI_EXT_PM_IO_PORT_NONE = 0xFF
-}ePmloPort;
+} ePmloPort;
 
 typedef enum {
 	HCI_EXT_PM_IO_PORT_PIN0 = 0,
@@ -123,59 +123,59 @@ typedef enum {
 	HCI_EXT_PM_IO_PORT_PIN5,
 	HCI_EXT_PM_IO_PORT_PIN6,
 	HCI_EXT_PM_IO_PORT_PIN7
-}ePmloPortPin;
+} ePmloPortPin;
 
 typedef struct {
 	ePmloPort port;
 	ePmloPortPin portPin;
-}sPmloPort;
+} sPmloPort;
 
 typedef enum {
 	HCI_EXT_PER_RESET = 0,
 	HCI_EXT_PER_READ,
-}ePerTestCmd;
+} ePerTestCmd;
 
 typedef struct {
 	UINT16 handle;
 	ePerTestCmd cmd;
-}sPerTestCmd;
+} sPerTestCmd;
 
 typedef enum {
 	HCI_EXT_HALT_DURING_RF_DISABLE = 0,
 	HCI_EXT_HALT_DURING_RF_ENSABLE,
-}eHaltDurRF;
+} eHaltDurRF;
 
 typedef enum {
 	HCI_EXT_OVER_RIDE_SL_DIS = 0,
 	HCI_EXT_OVER_RIDE_SL_EN,
-}eOverrideSL;
+} eOverrideSL;
 
 typedef enum {
 	HCI_EXT_SET_USER_REVISION = 0,
 	HCI_EXT_READ_BUILD_REVISION,
-}eBuildRevMode;
+} eBuildRevMode;
 
 typedef enum {
 	HCI_EXT_RESET_SYSTEM_HARD = 0,
 	HCI_EXT_RESET_SYSTEM_SOFT,
-}eResetType;
+} eResetType;
 
 /*-----------L2CAP Command--------------*/
 typedef enum {
 	CONNECTIONLESS_MTU = 1,
 	EXTENDED_FEATURES,
 	FIXED_CHANNELS
-}eInfoType;
+} eInfoType;
 
 typedef enum {
-	L2CAP_CONN_SUCCESS = 0,				//!< Connection successful
-	L2CAP_CONN_PSM_NOT_SUPPORTED = 2,	//!< Connection refused ?LE_PSM not supported
-	L2CAP_CONN_NO_RESOURCES = 4,		//!< Connection refused ?no resources available
-	L2CAP_CONN_INSUFFICIENT_AUTHEN,		//!< Connection refused ?insufficient authentication
-	L2CAP_CONN_INSUFFICIENT_AUTHOR,		//!< Connection refused ?insufficient authorization
-	L2CAP_CONN_INSUFFICIENT_KEY_SIZE,	//!< Connection refused ?insufficient encryption key size
-	L2CAP_CONN_INSUFFICIENT_ENCRYPT		//!< Connection refused ?insufficient encryption
-}eL2capConRes;
+	L2CAP_CONN_SUCCESS = 0,                         //!< Connection successful
+	L2CAP_CONN_PSM_NOT_SUPPORTED = 2,       //!< Connection refused ?LE_PSM not supported
+	L2CAP_CONN_NO_RESOURCES = 4,            //!< Connection refused ?no resources available
+	L2CAP_CONN_INSUFFICIENT_AUTHEN,         //!< Connection refused ?insufficient authentication
+	L2CAP_CONN_INSUFFICIENT_AUTHOR,         //!< Connection refused ?insufficient authorization
+	L2CAP_CONN_INSUFFICIENT_KEY_SIZE,       //!< Connection refused ?insufficient encryption key size
+	L2CAP_CONN_INSUFFICIENT_ENCRYPT         //!< Connection refused ?insufficient encryption
+} eL2capConRes;
 /*-----------ATT Command--------------*/
 typedef enum {
 	ATT_ERR_INVALID_HANDLE =         0x01, //!< Attribute handle value given was not valid on this attribute server
@@ -196,12 +196,12 @@ typedef enum {
 	ATT_ERR_UNSUPPORTED_GRP_TYPE,     //0x10 //!< The attribute type is not a supported grouping attribute as defined by a higher layer specification
 	ATT_ERR_INSUFFICIENT_RESOURCES,   //0x11 //!< Insufficient Resources to complete the request
 	ATT_ERR_INVALID_VALUE = 0x80
-}eAttErrCode;
+} eAttErrCode;
 
 typedef enum {
 	Cancel_All_Prepared_Writes,
 	Immediately_Write_All_Pending_Prepared_Values
-}eAttExeWrFlag;
+} eAttExeWrFlag;
 /*-----------GATT Command--------------*/
 typedef struct {
 	UINT8 value_len;
@@ -210,31 +210,31 @@ typedef struct {
 	UINT8 offset_lo;
 	UINT8 offset_hi;
 	PUINT8 pvalue;
-}sGattWriteVal;
+} sGattWriteVal;
 
 typedef enum {
 	PRIMARY_SERVICE = 0x2800,
 	SECONDARY_SERVICE = 0x2801
-}sGattServiceUUID;
+} sGattServiceUUID;
 /*-----------GAP Command--------------*/
-#define GAP_CENTRAL_ROLE		0x08
-#define GAP_PREFERAL_ROLE		0x04
-#define GAP_OBSERVE_ROLE		0x02
-#define GAP_BROADCAST_ROLE		0x01
+#define GAP_CENTRAL_ROLE                0x08
+#define GAP_PREFERAL_ROLE               0x04
+#define GAP_OBSERVE_ROLE                0x02
+#define GAP_BROADCAST_ROLE              0x01
 
 typedef enum {
 	ADDRTYPE_PUBLIC,
 	ADDRTYPE_STATIC,
 	ADDRTYPE_PRIVATE_NONRESOLVE,
 	ADDRTYPE_PRIVATE_RESOLVE
-}eGapAddrType;
+} eGapAddrType;
 
 typedef enum {
-	DEVDISC_MODE_NONDISCOVERABLE,	//!< No discoverable setting
-	DEVDISC_MODE_GENERAL,			//!< General Discoverable devices
-	DEVDISC_MODE_LIMITED,			//!< Limited Discoverable devices
-	DEVDISC_MODE_ALL				//!< Not filtered
-}eGapDiscMode;
+	DEVDISC_MODE_NONDISCOVERABLE,   //!< No discoverable setting
+	DEVDISC_MODE_GENERAL,                   //!< General Discoverable devices
+	DEVDISC_MODE_LIMITED,                   //!< Limited Discoverable devices
+	DEVDISC_MODE_ALL                                //!< Not filtered
+} eGapDiscMode;
 
 typedef enum {
 	GAP_ADTYPE_ADV_IND =               0x00,  //!< Connectable undirected advertisement
@@ -242,19 +242,19 @@ typedef enum {
 	GAP_ADTYPE_ADV_SCAN_IND =          0x02,  //!< Scannable undirected advertisement
 	GAP_ADTYPE_ADV_NONCONN_IND =       0x03,  //!< Non-Connectable undirected advertisement
 	GAP_ADTYPE_ADV_LDC_DIRECT_IND =    0x04  //!< Connectable low duty cycle directed advertisement
-}eGapEventType;
+} eGapEventType;
 
 typedef enum {
 	GAP_FILTER_POLICY_ALL =        0x00, //!< Allow Scan Request from Any, Allow Connect Request from Any (default).
 	GAP_FILTER_POLICY_WHITE_SCAN = 0x01, //!< Allow Scan Request from White List Only, Allow Connect from Any
 	GAP_FILTER_POLICY_WHITE_CON =  0x02, //!< Allow Scan Request from Any, Connect from White List Only
 	GAP_FILTER_POLICY_WHITE =      0x03 //!< Allow Scan Request and Connect from White List Only
-}eGapFilterPol;
+} eGapFilterPol;
 
 typedef enum {
 	GAP_SCAN_RSP_DATA_TYPE = 0,
 	GAP_ADVERTISEMENT_DATA
-}eGapAdvDataType;
+} eGapAdvDataType;
 
 typedef enum {
 	DISPLAY_ONLY =             0x00,  //!< Display Only Device
@@ -262,23 +262,21 @@ typedef enum {
 	KEYBOARD_ONLY =            0x02,  //!< Keyboard Only
 	NO_INPUT_NO_OUTPUT =       0x03,  //!< No Display or Input Device
 	KEYBOARD_DISPLAY =         0x04  //!< Both Keyboard and Display Capable
-}eGapIOCaps;
+} eGapIOCaps;
 
-typedef struct
-{
+typedef struct {
 	UINT8 bonding : 2;    //!< Bonding flags
 	UINT8 mitm : 1;       //!< Man-In-The-Middle (MITM)
 	UINT8 sc : 1;         //!< LE Secure Connection
 	UINT8 reserved : 4;   //!< Reserved - don't use
-}sAuthReq;
+} sAuthReq;
 
 typedef union {
 	UINT8 oper;
 	sAuthReq req;
-}uAuthReq;
+} uAuthReq;
 
-typedef struct
-{
+typedef struct {
 	UINT8 sEncKey : 1;    //!< Set to distribute slave encryption key
 	UINT8 sIdKey : 1;     //!< Set to distribute slave identity key
 	UINT8 sSign : 1;      //!< Set to distribute slave signing key
@@ -287,12 +285,12 @@ typedef struct
 	UINT8 mIdKey : 1;     //!< Set to distribute master identity key
 	UINT8 mSign : 1;      //!< Set to distribute master signing key
 	UINT8 mLinkKey : 1;   //!< Set to derive master link key from master LTK
-}sKeyDist;
+} sKeyDist;
 
 typedef union {
 	UINT8 oper;
 	sKeyDist dist;
-}uKeyDist;
+} uKeyDist;
 
 typedef struct {
 	eGapIOCaps sec_ioCaps;
@@ -307,7 +305,7 @@ typedef struct {
 	uAuthReq pair_authReq;
 	UINT8 pair_maxEncKeySize;
 	uKeyDist pair_keyDist;
-}sGapAuth;
+} sGapAuth;
 
 typedef enum {
 	// Timers
@@ -316,7 +314,7 @@ typedef enum {
 	TGAP_GEN_DISC_SCAN =             2, //!< Minimum time to perform scanning, when performing General Discovery proc (mSec)
 	TGAP_LIM_DISC_SCAN =             3,//!< Minimum time to perform scanning, when performing Limited Discovery proc (mSec)
 	TGAP_CONN_EST_ADV_TIMEOUT =      4,//!< Advertising timeout, when performing Connection Establishment proc (mSec)
-	TGAP_CONN_PARAM_TIMEOUT=        5,//!< Link Layer connection parameter update notification timer, connection parameter update proc (mSec)
+	TGAP_CONN_PARAM_TIMEOUT =        5, //!< Link Layer connection parameter update notification timer, connection parameter update proc (mSec)
 	// Constants
 	TGAP_LIM_DISC_ADV_INT_MIN =     6,//!< Minimum advertising interval, when in limited discoverable mode (n * 0.625 mSec)
 	TGAP_LIM_DISC_ADV_INT_MAX =     7,//!< Maximum advertising interval, when in limited discoverable mode (n * 0.625 mSec)
@@ -359,7 +357,7 @@ typedef enum {
 	TGAP_ATT_TESTCODE =          101 , //!< ATT TestCodes - puts ATT into a test mode (paramValue maintained by ATT)
 	TGAP_GGS_TESTCODE =          102 , //!< GGS TestCodes - puts GGS into a test mode (paramValue maintained by GGS)
 	TGAP_L2CAP_TESTCODE =        103 , //!< L2CAP TestCodes - puts L2CAP into a test mode (paramValue maintained by L2CAP)
-}eGapParamIDs;
+} eGapParamIDs;
 
 typedef enum {
 	GAP_ADTYPE_FLAGS = 0x01,//!< Discovery Mode: @ref GAP_ADTYPE_FLAGS_MODES
@@ -394,17 +392,17 @@ typedef enum {
 	GAP_ADTYPE_SERVICE_DATA_128BIT = 0x21,//!< Service Data - 128-bit UUID
 	GAP_ADTYPE_3D_INFO_DATA = 0x3D,//!< 3D Information Data
 	GAP_ADTYPE_MANUFACTURER_SPECIFIC = 0xFF //!< Manufacturer Specific Data: first 2 octets contain the Company Identifier Code followed by the additional manufacturer specific data
-}eGapAdvTokenType;
+} eGapAdvTokenType;
 
 /*-----------HCI Command--------------*/
 typedef enum {
 	PUBLIC_DEVICE,
 	RANDOM_DEVICE
-}eHciAddrType;
+} eHciAddrType;
 
 
 /*-----------Class declare--------------*/
-class NPI_CMD:public Com
+class NPI_CMD: public Com
 {
 public:
 	NPI_CMD();
@@ -442,67 +440,90 @@ public:
 	/*---------L2CAP Command---------*/
 	eRetStatus L2CAP_DisconnectReq(UINT16 cid);
 	eRetStatus L2CAP_InfoReq(UINT16 handle, eInfoType type);
-	eRetStatus L2CAP_ConnParamUpdateReq(UINT16 handle, UINT16 intervalMin, UINT16 intervalMax, UINT16 slaveLatency, UINT16 timeout);
+	eRetStatus L2CAP_ConnParamUpdateReq(UINT16 handle, UINT16 intervalMin,
+	                                    UINT16 intervalMax, UINT16 slaveLatency, UINT16 timeout);
 	eRetStatus L2CAP_ConnectReq(UINT16 handle, UINT16 PSM, UINT16 peerPSM);
 	eRetStatus L2CAP_FlowCtrlCredit(UINT16 CID, UINT16 peerCredits);
 	eRetStatus L2CAP_Data(UINT16 CID, PUINT8 pSDU, UINT8 len);
-	eRetStatus L2CAP_RegisterPsm(UINT16 psm, UINT16 mtu, UINT16 InitialPeerCrs, UINT16 PeerCrThreshld, UINT8 MaxNumChannels, UINT8 SecurityVrfctn);
+	eRetStatus L2CAP_RegisterPsm(UINT16 psm, UINT16 mtu, UINT16 InitialPeerCrs,
+	                             UINT16 PeerCrThreshld, UINT8 MaxNumChannels, UINT8 SecurityVrfctn);
 	eRetStatus L2CAP_DeregisterPsm(UINT16 psm);
 	eRetStatus L2CAP_PsmChannels(UINT16 psm);
 
 	/*---------ATT Command---------*/
 	eRetStatus ATT_ExchangeMTUReq(UINT16 con_hdl, UINT16 mtu);
 	eRetStatus ATT_FindInfoReq(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl);
-	eRetStatus ATT_FindByTypeValueReq(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl, UINT16 type, PUINT8 pvalue, UINT8 len);
-	eRetStatus ATT_ReadByTypeReq(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl, PUINT8 pvalue, UINT8 len);
+	eRetStatus ATT_FindByTypeValueReq(UINT16 con_hdl, UINT16 sta_hdl,
+	                                  UINT16 end_hdl, UINT16 type, PUINT8 pvalue, UINT8 len);
+	eRetStatus ATT_ReadByTypeReq(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl,
+	                             PUINT8 pvalue, UINT8 len);
 	eRetStatus ATT_ReadReq(UINT16 con_hdl, UINT16 att_hdl);
 	eRetStatus ATT_ReadBlobReq(UINT16 con_hdl, UINT16 att_hdl, UINT16 offset);
 	eRetStatus ATT_ReadMultiReq(UINT16 con_hdl, PUINT8 att_hdl, UINT8 len);
-	eRetStatus ATT_ReadByGroupTypeReq(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl, PUINT8 pvalue, UINT8 len);
-	eRetStatus ATT_WriteReq(UINT16 con_hdl, eYesNoMode sig, eYesNoMode cmd, UINT16 att_hdl, PUINT8 pvalue, UINT8 len);
-	eRetStatus ATT_PrepareWriteReq(UINT16 con_hdl, UINT16 att_hdl, UINT16 offset, PUINT8 pvalue, UINT8 len);
+	eRetStatus ATT_ReadByGroupTypeReq(UINT16 con_hdl, UINT16 sta_hdl,
+	                                  UINT16 end_hdl, PUINT8 pvalue, UINT8 len);
+	eRetStatus ATT_WriteReq(UINT16 con_hdl, eYesNoMode sig, eYesNoMode cmd,
+	                        UINT16 att_hdl, PUINT8 pvalue, UINT8 len);
+	eRetStatus ATT_PrepareWriteReq(UINT16 con_hdl, UINT16 att_hdl, UINT16 offset,
+	                               PUINT8 pvalue, UINT8 len);
 	eRetStatus ATT_ExecuteWriteReq(UINT16 con_hdl, eAttExeWrFlag flag);
 
 	/*---------GATT Command---------*/
 	eRetStatus GATT_ExchangeMTU(UINT16 con_hdl, UINT16 mtu);
 	eRetStatus GATT_DiscAllPrimaryServices(UINT16 con_hdl);
 	eRetStatus GATT_DiscPrimaryServiceByUUID(UINT16 con_hdl, PUINT8 buf, UINT8 len);
-	eRetStatus GATT_FindIncludedServices(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl);
+	eRetStatus GATT_FindIncludedServices(UINT16 con_hdl, UINT16 sta_hdl,
+	                                     UINT16 end_hdl);
 	eRetStatus GATT_DiscAllChar(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl);
-	eRetStatus GATT_DiscCharByUUID(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl, PUINT8 uuid, UINT8 len);
+	eRetStatus GATT_DiscCharByUUID(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl,
+	                               PUINT8 uuid, UINT8 len);
 	eRetStatus GATT_DiscAllCharDesc(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl);
 	eRetStatus GATT_ReadCharVal(UINT16 con_hdl, UINT16 hdl);
-	eRetStatus GATT_ReadUseCharUUID(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl, PUINT8 uuid, UINT8 len);
+	eRetStatus GATT_ReadUseCharUUID(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl,
+	                                PUINT8 uuid, UINT8 len);
 	eRetStatus GATT_ReadLongCharValue(UINT16 con_hdl, UINT16 hdl, UINT16 offset);
 	eRetStatus GATT_ReadMultiCharValues(UINT16 con_hdl, PUINT8 att_hdl, UINT8 len);
-	eRetStatus GATT_WriteCharValue(UINT16 con_hdl, UINT16 att_hdl, PUINT8 data, UINT8 len);
-	eRetStatus GATT_WriteLongCharValue(UINT16 con_hdl, UINT16 att_hdl, UINT16 offset, PUINT8 data, UINT8 len);
-	eRetStatus GATT_ReliableWrites(UINT16 con_hdl, UINT8 num_req, sGattWriteVal * pval);
+	eRetStatus GATT_WriteCharValue(UINT16 con_hdl, UINT16 att_hdl, PUINT8 data,
+	                               UINT8 len);
+	eRetStatus GATT_WriteLongCharValue(UINT16 con_hdl, UINT16 att_hdl,
+	                                   UINT16 offset, PUINT8 data, UINT8 len);
+	eRetStatus GATT_ReliableWrites(UINT16 con_hdl, UINT8 num_req,
+	                               sGattWriteVal* pval);
 	eRetStatus GATT_ReadCharDesc(UINT16 con_hdl, UINT16 hdl);
 	eRetStatus GATT_ReadLongCharDesc(UINT16 con_hdl, UINT16 hdl, UINT16 offset);
-	eRetStatus GATT_WriteCharDesc(UINT16 con_hdl, UINT16 offset, PUINT8 val, UINT8 len);
-	eRetStatus GATT_WriteLongCharDesc(UINT16 con_hdl, UINT16 att_hdl, UINT16 offset, PUINT8 val, UINT8 len);
-	eRetStatus GATT_AddService(sGattServiceUUID uuid, UINT16 num_attrs, UINT8 enc_keySize);
+	eRetStatus GATT_WriteCharDesc(UINT16 con_hdl, UINT16 offset, PUINT8 val,
+	                              UINT8 len);
+	eRetStatus GATT_WriteLongCharDesc(UINT16 con_hdl, UINT16 att_hdl, UINT16 offset,
+	                                  PUINT8 val, UINT8 len);
+	eRetStatus GATT_AddService(sGattServiceUUID uuid, UINT16 num_attrs,
+	                           UINT8 enc_keySize);
 	eRetStatus GATT_DelService(UINT16 handle);
 	eRetStatus GATT_AddAttribute(PUINT8 uuid, UINT8 len, UINT8 permission);
 
 	/*---------GAP Command---------*/
-	eRetStatus GAP_DeviceInit(UINT8 role, UINT8 max_scanRes, PUINT8 irk, PUINT8 csrk, PUINT8 sign_count);
+	eRetStatus GAP_DeviceInit(UINT8 role, UINT8 max_scanRes, PUINT8 irk,
+	                          PUINT8 csrk, PUINT8 sign_count);
 	eRetStatus GAP_ConfigDeviceAddr(eGapAddrType addr_type, PUINT8 addr);
-	eRetStatus GAP_DeviceDiscoveryRequest(eGapDiscMode disc_mdoe, eEnDisMode act_scan, eEnDisMode white_list);
+	eRetStatus GAP_DeviceDiscoveryRequest(eGapDiscMode disc_mdoe,
+	                                      eEnDisMode act_scan, eEnDisMode white_list);
 	eRetStatus GAP_DeviceDiscoveryCancel(void);
-	eRetStatus GAP_MakeDiscoverable(eGapEventType evt_type, eGapAddrType addr_type, PUINT8 addr, UINT8 chl_map, eGapFilterPol filter_pol);
-	eRetStatus GAP_UpdateAdvertisingData(eGapAdvDataType adv_type, UINT8 len, PUINT8 adv_Data);
+	eRetStatus GAP_MakeDiscoverable(eGapEventType evt_type, eGapAddrType addr_type,
+	                                PUINT8 addr, UINT8 chl_map, eGapFilterPol filter_pol);
+	eRetStatus GAP_UpdateAdvertisingData(eGapAdvDataType adv_type, UINT8 len,
+	                                     PUINT8 adv_Data);
 	eRetStatus GAP_EndDiscoverable(void);
-	eRetStatus GAP_EstablishLinkRequest(eEnDisMode high_duty, eEnDisMode white_list, eGapAddrType addr_type, PUINT8 addr);
+	eRetStatus GAP_EstablishLinkRequest(eEnDisMode high_duty, eEnDisMode white_list,
+	                                    eGapAddrType addr_type, PUINT8 addr);
 	eRetStatus GAP_TerminateLinkRequest(UINT16 handle);
-	eRetStatus GAP_Authenticate(UINT16 con_hdl, sGapAuth * pAuth);
+	eRetStatus GAP_Authenticate(UINT16 con_hdl, sGapAuth* pAuth);
 	eRetStatus GAP_PasskeyUpdate(UINT16 con_hdl, PUINT8 key);
 	eRetStatus GAP_SlaveSecurityRequest(UINT16 con_hdl, uAuthReq auth);
 	eRetStatus GAP_Signable(UINT16 con_hdl, PUINT8 csrk, PUINT8 sign_count);
-	eRetStatus GAP_Bond(UINT16 con_hdl, eEnDisMode auth, PUINT8 ltk, UINT16 div, PUINT8 rand, UINT8 ltk_size);
+	eRetStatus GAP_Bond(UINT16 con_hdl, eEnDisMode auth, PUINT8 ltk, UINT16 div,
+	                    PUINT8 rand, UINT8 ltk_size);
 	eRetStatus GAP_TerminateAuth(UINT16 con_hdl);
-	eRetStatus GAP_UpdateLinkParamReq(UINT16 con_hdl, UINT16 int_min, UINT16 int_max, UINT16 latency, UINT16 timeout);
+	eRetStatus GAP_UpdateLinkParamReq(UINT16 con_hdl, UINT16 int_min,
+	                                  UINT16 int_max, UINT16 latency, UINT16 timeout);
 	eRetStatus GAP_SetParam(eGapParamIDs paraId, UINT16 val);
 	eRetStatus GAP_GetParam(eGapParamIDs paraId);
 	eRetStatus GAP_ResolvePrivateAddr(PUINT8 irk, PUINT8 addr);
@@ -525,7 +546,8 @@ public:
 	eHciRetSta HCI_LEClearWhiteList(void);
 	eHciRetSta HCI_LEAddDeviceToWhiteList(eHciAddrType type, PUINT8 addr);
 	eHciRetSta HCI_LERemoveDeviceFromWhiteList(eHciAddrType type, PUINT8 addr);
-	eHciRetSta HCI_LEConnectionUpdate(UINT16 handle, UINT16 int_min, UINT16 int_max, UINT16 latency, UINT16 timeout, UINT16 min_len, UINT16 max_len);
+	eHciRetSta HCI_LEConnectionUpdate(UINT16 handle, UINT16 int_min, UINT16 int_max,
+	                                  UINT16 latency, UINT16 timeout, UINT16 min_len, UINT16 max_len);
 	eHciRetSta HCI_LEReceiverTest(UINT8 rx_chl);
 	eHciRetSta HCI_LETransmitterTest(UINT8 tx_chl, UINT8 len, PUINT8 data);
 	eHciRetSta HCI_LETestEnd(void);
