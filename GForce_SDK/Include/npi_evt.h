@@ -8,7 +8,7 @@
 
 #pragma pack(1)
 /*---------------------------
-/*                      EVT                             /
+/*           EVT            /
 /*-------------------------*/
 typedef struct {
 	UINT8 type;
@@ -31,9 +31,9 @@ typedef struct {
 	UINT8 data[MAX_RX_SIZE];
 } sHciEvt;
 
-#define HCI_EXT_LL_EVENT                                                        0x0400
-#define HCI_EXT_L2CAP_EVENT                                                     0x0480
-#define HCI_EXT_ATT_EVENT                                                       0x0500
+#define HCI_EXT_LL_EVENT                                                    0x0400
+#define HCI_EXT_L2CAP_EVENT                                                 0x0480
+#define HCI_EXT_ATT_EVENT                                                   0x0500
 #define HCI_EXT_GATT_EVENT                                                  0x0580
 #define HCI_EXT_GAP_EVENT                                                   0x0600
 /*
@@ -167,7 +167,7 @@ typedef struct {
 #define ATT_MTU_UPDATED_EVENT              (HCI_EXT_ATT_EVENT | 0x7F) //!< Sent when MTU is updated for a connection. 
 
 /*---------------------------
-/*      L2CAP Event     Struct          /
+/*      L2CAP Event Struct   /
 /*-------------------------*/
 typedef enum {
 	L2CAP_REJECT_CMD_NOT_UNDERSTOOD,
@@ -184,7 +184,7 @@ typedef struct {
 } sL2capCmdRejEvt;
 
 /*---------------------------
-/*      ATT Event       Struct          /
+/*      ATT Event Struct    /
 /*-------------------------*/
 typedef struct {
 	UINT8 status;           //refer eRetStatus
@@ -196,7 +196,7 @@ typedef struct {
 } sAttExMtuRsp;
 
 /*---------------------------
-/*      Gap Event       Struct          /
+/*      Gap Event  Struct   /
 /*-------------------------*/
 typedef UINT16 gapParamIDs_t;
 

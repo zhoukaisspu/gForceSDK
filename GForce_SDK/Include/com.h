@@ -6,20 +6,20 @@
 #ifndef _COM_H_
 #define _COM_H_
 
-#define MAX_RX_SIZE 255
-#define MAX_TX_SIZE 255
+#define MAX_RX_SIZE     255
+#define MAX_TX_SIZE     255
 
-#define EVT_HEADER_LEN 3
-#define BLE_ADDR_LEN            6
-#define IRK_LEN                         16
-#define CSRK_LEN                        16
-#define SIGN_COUNT_LEN          4
-#define OOB_DATA_LEN            16
-#define PASSKEY_LEN                     16
-#define LTK_LEN                         16
-#define LTK_RAND_PAIR_LEN       16
+#define EVT_HEADER_LEN        3
+#define BLE_ADDR_LEN          6
+#define IRK_LEN               16
+#define CSRK_LEN              16
+#define SIGN_COUNT_LEN        4
+#define OOB_DATA_LEN          16
+#define PASSKEY_LEN           16
+#define LTK_LEN               16
+#define LTK_RAND_PAIR_LEN     16
 
-#define B_RANDOM_NUM_SIZE   8
+#define B_RANDOM_NUM_SIZE       8
 #define FEATURES_LEN            8
 #define ADV_CHANNEL_37          0x01
 #define ADV_CHANNEL_38          0x02
@@ -138,70 +138,70 @@ typedef enum {
 } eRetStatus;
 
 #define RX_STATUS_MSG                                           WM_USER+1
-//#define LOG_MSG                                                               WM_USER+2
+//#define LOG_MSG                                               WM_USER+2
 /*------HCI Message-------*/
 #define HCI_DECRYPT_MSG                                         WM_USER+3
 #define HCI_GAP_STATUS_MSG                                      WM_USER+4
-#define HCI_READ_LOCAL_SUPPORT_FEAT_MSG         WM_USER+5
+#define HCI_READ_LOCAL_SUPPORT_FEAT_MSG                         WM_USER+5
 #define HCI_READ_BDADDR_MSG                                     WM_USER+6
 #define HCI_READ_RSSI_MSG                                       WM_USER+7
-#define HCI_LE_SET_EVENT_MASK_MSG                       WM_USER+8
-#define HCI_LE_READ_LOCAL_SUPPORT_FEAT_MSG      WM_USER+9
-#define HCI_LE_READ_WHITE_LIST_SIZE_MSG         WM_USER+10
-#define HCI_LE_CONNECTION_UPDATE_MSG            WM_USER+11
+#define HCI_LE_SET_EVENT_MASK_MSG                               WM_USER+8
+#define HCI_LE_READ_LOCAL_SUPPORT_FEAT_MSG                      WM_USER+9
+#define HCI_LE_READ_WHITE_LIST_SIZE_MSG                         WM_USER+10
+#define HCI_LE_CONNECTION_UPDATE_MSG                            WM_USER+11
 #define HCI_LE_TEST_END_MSG                                     WM_USER+12
-#define HCI_LE_REM_CONN_PARAM_REQ_REP_MSG       WM_USER+13
-#define HCI_LE_REM_CONN_PARAM_REQ_NEG_REP_MSG   WM_USER+14
+#define HCI_LE_REM_CONN_PARAM_REQ_REP_MSG                       WM_USER+13
+#define HCI_LE_REM_CONN_PARAM_REQ_NEG_REP_MSG                   WM_USER+14
 
 /*------L2CAP Message-----*/
-#define L2CAP_COMMAND_REJECT_MSG                        WM_USER+0x100
-#define L2CAP_DISCONNECT_RSP_MSG                        WM_USER+0x101
+#define L2CAP_COMMAND_REJECT_MSG                                WM_USER+0x100
+#define L2CAP_DISCONNECT_RSP_MSG                                WM_USER+0x101
 #define L2CAP_INFO_RSP_MSG                                      WM_USER+0x102
-#define L2CAP_PARAM_UPDATE_RSP_MSG                      WM_USER+0x103
-#define L2CAP_CONNECT_RSP_MSG                           WM_USER+0x104
-#define L2CAP_CHANNEL_ESTABLISHED_MSG           WM_USER+0x105
-#define L2CAP_CHANNEL_TERMINATED_MSG            WM_USER+0x106
-#define L2CAP_OUT_OF_CREDIT_MSG                         WM_USER+0x107
-#define L2CAP_PEER_CREDIT_THRESHOLD_MSG         WM_USER+0x108
-#define L2CAP_SEND_SDU_DONE_MSG                         WM_USER+0x109
+#define L2CAP_PARAM_UPDATE_RSP_MSG                              WM_USER+0x103
+#define L2CAP_CONNECT_RSP_MSG                                   WM_USER+0x104
+#define L2CAP_CHANNEL_ESTABLISHED_MSG                           WM_USER+0x105
+#define L2CAP_CHANNEL_TERMINATED_MSG                            WM_USER+0x106
+#define L2CAP_OUT_OF_CREDIT_MSG                                 WM_USER+0x107
+#define L2CAP_PEER_CREDIT_THRESHOLD_MSG                         WM_USER+0x108
+#define L2CAP_SEND_SDU_DONE_MSG                                 WM_USER+0x109
 #define L2CAP_DATA_MSG                                          WM_USER+0x10a
 /*------ATT Message-----*/
 #define ATT_ERROR_MSG                                           WM_USER+0x200
-#define ATT_EXCHANGE_MTU_MSG                            WM_USER+0x201
+#define ATT_EXCHANGE_MTU_MSG                                    WM_USER+0x201
 #define ATT_FIND_INFO_MSG                                       WM_USER+0x202
-#define ATT_FIND_BY_TYPE_VALUE_MSG                      WM_USER+0x203
-#define ATT_READ_BY_TYPE_MSG                            WM_USER+0x204
+#define ATT_FIND_BY_TYPE_VALUE_MSG                              WM_USER+0x203
+#define ATT_READ_BY_TYPE_MSG                                    WM_USER+0x204
 #define ATT_READ_MSG                                            WM_USER+0x205
 #define ATT_READ_BLOB_MSG                                       WM_USER+0x206
 #define ATT_READ_MULTI_MSG                                      WM_USER+0x207
-#define ATT_READ_BY_GRP_TYPE_MSG                        WM_USER+0x208
+#define ATT_READ_BY_GRP_TYPE_MSG                                WM_USER+0x208
 #define ATT_WRITE_MSG                                           WM_USER+0x209
-#define ATT_PREPARE_WRITE_MSG                           WM_USER+0x20a
-#define ATT_EXECUTE_WRITE_MSG                           WM_USER+0x20b
-#define ATT_HANDLE_VALUE_NOTI_MSG                       WM_USER+0x20c
-#define ATT_HANDLE_VALUE_IND_MSG                        WM_USER+0x20d
-#define ATT_HANDLE_VALUE_CFM_MSG                        WM_USER+0x20e
-#define ATT_FLOW_CTRL_VIOLATED_MSG                      WM_USER+0x20f
+#define ATT_PREPARE_WRITE_MSG                                   WM_USER+0x20a
+#define ATT_EXECUTE_WRITE_MSG                                   WM_USER+0x20b
+#define ATT_HANDLE_VALUE_NOTI_MSG                               WM_USER+0x20c
+#define ATT_HANDLE_VALUE_IND_MSG                                WM_USER+0x20d
+#define ATT_HANDLE_VALUE_CFM_MSG                                WM_USER+0x20e
+#define ATT_FLOW_CTRL_VIOLATED_MSG                              WM_USER+0x20f
 #define ATT_MTU_UPDATED_MSG                                     WM_USER+0x210
 /*------GAP Message-----*/
-#define HCI_EXT_GAP_DEVICE_INIT_DONE_MSG          WM_USER+0x300
-#define HCI_EXT_GAP_DEVICE_DISCOVERY_MSG          WM_USER+0x301
-#define HCI_EXT_GAP_ADV_DATA_UPDATE_DONE_MSG      WM_USER+0x302
-#define HCI_EXT_GAP_MAKE_DISCOVERABLE_DONE_MSG    WM_USER+0x303
-#define HCI_EXT_GAP_END_DISCOVERABLE_DONE_MSG     WM_USER+0x304
-#define HCI_EXT_GAP_LINK_ESTABLISHED_MSG          WM_USER+0x305
-#define HCI_EXT_GAP_LINK_TERMINATED_MSG           WM_USER+0x306
-#define HCI_EXT_GAP_LINK_PARAM_UPDATE_MSG         WM_USER+0x307
-#define HCI_EXT_GAP_RANDOM_ADDR_CHANGED_MSG       WM_USER+0x308
-#define HCI_EXT_GAP_SIGNATURE_UPDATED_MSG         WM_USER+0x309
-#define HCI_EXT_GAP_AUTH_COMPLETE_MSG             WM_USER+0x30a
-#define HCI_EXT_GAP_PASSKEY_NEEDED_MSG            WM_USER+0x30b
-#define HCI_EXT_GAP_SLAVE_REQUESTED_SECURITY_MSG  WM_USER+0x30c
-#define HCI_EXT_GAP_DEVICE_INFO_MSG               WM_USER+0x30d
-#define HCI_EXT_GAP_BOND_COMPLETE_MSG             WM_USER+0x30e
-#define HCI_EXT_GAP_PAIRING_REQ_MSG               WM_USER+0x30f
+#define HCI_EXT_GAP_DEVICE_INIT_DONE_MSG                        WM_USER+0x300
+#define HCI_EXT_GAP_DEVICE_DISCOVERY_MSG                        WM_USER+0x301
+#define HCI_EXT_GAP_ADV_DATA_UPDATE_DONE_MSG                    WM_USER+0x302
+#define HCI_EXT_GAP_MAKE_DISCOVERABLE_DONE_MSG                  WM_USER+0x303
+#define HCI_EXT_GAP_END_DISCOVERABLE_DONE_MSG                   WM_USER+0x304
+#define HCI_EXT_GAP_LINK_ESTABLISHED_MSG                        WM_USER+0x305
+#define HCI_EXT_GAP_LINK_TERMINATED_MSG                         WM_USER+0x306
+#define HCI_EXT_GAP_LINK_PARAM_UPDATE_MSG                       WM_USER+0x307
+#define HCI_EXT_GAP_RANDOM_ADDR_CHANGED_MSG                     WM_USER+0x308
+#define HCI_EXT_GAP_SIGNATURE_UPDATED_MSG                       WM_USER+0x309
+#define HCI_EXT_GAP_AUTH_COMPLETE_MSG                           WM_USER+0x30a
+#define HCI_EXT_GAP_PASSKEY_NEEDED_MSG                          WM_USER+0x30b
+#define HCI_EXT_GAP_SLAVE_REQUESTED_SECURITY_MSG                WM_USER+0x30c
+#define HCI_EXT_GAP_DEVICE_INFO_MSG                             WM_USER+0x30d
+#define HCI_EXT_GAP_BOND_COMPLETE_MSG                           WM_USER+0x30e
+#define HCI_EXT_GAP_PAIRING_REQ_MSG                             WM_USER+0x30f
 
-#define LOG_MSG                                                                   WM_USER+0x400
+#define LOG_MSG                                                 WM_USER+0x400
 class Com: public Runnable
 {
 public:

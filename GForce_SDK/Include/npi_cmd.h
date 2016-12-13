@@ -12,7 +12,7 @@
 #define LL_STATUS_ERROR_PEER_TERM       0x13 // Remote User Terminated Connection
 #pragma pack (1)
 /*---------------------------
-/*                      CMD                             /
+/*           CMD            /
 /*-------------------------*/
 typedef struct {
 	UINT8 type;
