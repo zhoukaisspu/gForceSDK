@@ -168,6 +168,8 @@ void Com::Run()
 	UINT8 type;
 	UINT8 evtCode;
 	UINT8 dataLen;
+	DWORD offset;
+	DWORD remaining;
 	while (1)
 	{
 		switch (state) {
@@ -199,7 +201,7 @@ void Com::Run()
 				if (ReadFile(com_file, &dataLen, 1, &nLenOut, NULL)) {
 					if (nLenOut) {
 						state = READ_OTHERS;
-						pBuf = new UINT8[dataLen + 3];
+						pBuf = new UINT8[dataLen + EVT_HEADER_LEN];
 						pBuf[0] = type;
 						pBuf[1] = evtCode;
 						pBuf[2] = dataLen;
@@ -212,23 +214,22 @@ void Com::Run()
 				break;
 			case READ_OTHERS:
 				//printf("ST:%d\n",state);
-				if (ReadFile(com_file, &pBuf[EVT_HEADER_LEN], dataLen, &nLenOut, NULL)) {
-					if (nLenOut == dataLen) {
-						while (!PostThreadMessage(logThreadID, GetLogMsg(), (WPARAM)pBuf, nLenOut + EVT_HEADER_LEN)) {
-							printf("Post LOG_MSG Err:%d\n", GetLastError());
-							Sleep(500);
-						}
-						/*clear buffer*/
-						PurgeComm(com_file, PURGE_RXCLEAR);
+				remaining = dataLen;
+				offset = EVT_HEADER_LEN;
+				while ( remaining > 0 )
+				{
+					if (ReadFile(com_file, pBuf+offset, remaining, &nLenOut, NULL)) {
+						remaining -= nLenOut;
+						offset += nLenOut;
 					}
 					else {
-						::LogE(L"Data Len:%d != Read Bytes:%d!\n", dataLen, nLenOut);
-						delete[] pBuf;
+						::LogE(L"read file error, continue reading!\n");
 					}
 				}
-				else {
-					::LogE(L"READ_DATA_LEN!\n");
-					delete[] pBuf;
+
+				while (!PostThreadMessage(logThreadID, GetLogMsg(), (WPARAM)pBuf, dataLen + EVT_HEADER_LEN)) {
+						printf("Post LOG_MSG Err:%d\n", GetLastError());
+						Sleep(500);
 				}
 				state = READ_TYPE_STATE;
 				break;
