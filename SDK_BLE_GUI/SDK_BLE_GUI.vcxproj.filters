@@ -1,0 +1,177 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="源文件\NPI">
+      <UniqueIdentifier>{99ac52ef-0f76-4006-b2f3-7eb913622096}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\NPI">
+      <UniqueIdentifier>{b182f7f1-e1e9-4ac3-8cdf-777ccddac10a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\GUI">
+      <UniqueIdentifier>{40ed2343-bf6b-41c6-b15f-8311f5f1656c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\GUI">
+      <UniqueIdentifier>{df4700af-c571-4b92-9cfb-f63b8914485f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NPI\Include\com.h">
+      <Filter>头文件\NPI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NPI\Include\gatt.h">
+      <Filter>头文件\NPI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NPI\Include\hci_tl.h">
+      <Filter>头文件\NPI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NPI\Include\log.h">
+      <Filter>头文件\NPI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NPI\Include\npi_cmd.h">
+      <Filter>头文件\NPI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NPI\Include\npi_evt.h">
+      <Filter>头文件\NPI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NPI\Include\Thread.h">
+      <Filter>头文件\NPI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NPI\Include\CommonDef.h">
+      <Filter>头文件\NPI</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\ButtGattView.h">
+      <Filter>头文件\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\CmdTab1_Dlg.h">
+      <Filter>头文件\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\CmdTab2_Dlg.h">
+      <Filter>头文件\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\CmdTab3_Dlg.h">
+      <Filter>头文件\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\CmdTab4_Dlg.h">
+      <Filter>头文件\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\CmdView.h">
+      <Filter>头文件\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\GuiEvtHdl.h">
+      <Filter>头文件\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\LogView.h">
+      <Filter>头文件\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\MainFrm.h">
+      <Filter>头文件\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\NewDeviceDlg.h">
+      <Filter>头文件\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\SDK_BLE_GUI.h">
+      <Filter>头文件\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\TopFrame.h">
+      <Filter>头文件\GUI</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\NPI\NpiInterface\com.cpp">
+      <Filter>源文件\NPI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NPI\NpiInterface\log.cpp">
+      <Filter>源文件\NPI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NPI\NpiInterface\npi_cmd.cpp">
+      <Filter>源文件\NPI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NPI\NpiInterface\npi_evt.cpp">
+      <Filter>源文件\NPI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NPI\NpiInterface\Thread.cpp">
+      <Filter>源文件\NPI</Filter>
+    </ClCompile>
+    <ClCompile Include="App\ButtGattView.cpp">
+      <Filter>源文件\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="App\CmdTab1_Dlg.cpp">
+      <Filter>源文件\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="App\CmdTab2_Dlg.cpp">
+      <Filter>源文件\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="App\CmdTab3_Dlg.cpp">
+      <Filter>源文件\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="App\CmdTab4_Dlg.cpp">
+      <Filter>源文件\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="App\CmdView.cpp">
+      <Filter>源文件\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="App\GuiEvtHdl.cpp">
+      <Filter>源文件\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="App\LogView.cpp">
+      <Filter>源文件\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="App\MainFrm.cpp">
+      <Filter>源文件\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="App\NewDeviceDlg.cpp">
+      <Filter>源文件\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="App\SDK_BLE_GUI.cpp">
+      <Filter>源文件\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="App\TopFrame.cpp">
+      <Filter>源文件\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SDK_BLE_GUI.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\SDK_BLE_GUI.rc2">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\SDK_BLE_GUI.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Toolbar.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+</Project>

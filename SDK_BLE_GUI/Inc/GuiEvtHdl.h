@@ -1,0 +1,2 @@
+
+void RegistEvtCallBack(void);
