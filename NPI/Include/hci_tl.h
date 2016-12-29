@@ -2,10 +2,6 @@
 #ifndef HCI_TL_H
 #define HCI_TL_H
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 // HCI Packet Types
 #define HCI_CMD_PACKET                 0x01
@@ -180,6 +176,7 @@ extern "C"
 #define GATT_DISC_ALL_CHAR_DESC							  0xFD84
 #define GATT_DISC_PRI_SERV_BY_UUID						  0xFD86
 #define GATT_DISC_CHAR_BY_UUID							  0xFD88
+#define GATT_READ_CHAR_VAL								  0xFD8A
 #define GATT_READ_LONG_CHAR_VAL							  0xFD8C
 #define GATT_READ_MULTI_CHAR_VAL						  0xFD8E
 #define GATT_DISC_ALL_PRI_SERV							  0xFD90
@@ -193,7 +190,6 @@ extern "C"
 #define GATT_READ_USE_CHAR_UUID							  0xFDB4
 #define GATT_WRITE_NO_RES								  0xFDB6
 #define GATT_SINGLE_WRITE_NO_RES						  0xFDB8
-#define GATT_READ_CHAR_VAL								  0xFDBA
 #define GATT_READ_CHAR_DESC								  0xFDBC
 #define GATT_READ_LONG_CHAR_DESC						  0xFDBE
 #define GATT_WRITE_CHAR_DESC						      0xFDC0
@@ -384,8 +380,8 @@ typedef enum {
 
 typedef enum {
 	/*** Generic Status Return Values ***/
-	SUCCESS = 0x00,
-	FAILURE = 0x01,
+	BLE_SUCCESS = 0x00,
+	BLE_FAILURE = 0x01,
 	INVALIDPARAMETER = 0x02,
 	INVALID_TASK = 0x03,
 	MSG_BUFFER_NOT_AVAIL = 0x04,
@@ -424,8 +420,5 @@ typedef enum {
 
 	INVALID_RET_STATUS = 0xFF
 } eRetStatus;
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* HCI_TL_H */

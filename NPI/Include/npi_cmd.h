@@ -176,26 +176,7 @@ typedef enum {
 	L2CAP_CONN_INSUFFICIENT_ENCRYPT         //!< Connection refused ?insufficient encryption
 } eL2capConRes;
 /*-----------ATT Command--------------*/
-typedef enum {
-	ATT_ERR_INVALID_HANDLE =         0x01, //!< Attribute handle value given was not valid on this attribute server
-	ATT_ERR_READ_NOT_PERMITTED,       //0x02 //!< Attribute cannot be read
-	ATT_ERR_WRITE_NOT_PERMITTED,      //0x03 //!< Attribute cannot be written
-	ATT_ERR_INVALID_PDU,              //0x04 //!< The attribute PDU was invalid
-	ATT_ERR_INSUFFICIENT_AUTHEN,      //0x05 //!< The attribute requires authentication before it can be read or written
-	ATT_ERR_UNSUPPORTED_REQ,          //0x06 //!< Attribute server doesn't support the request received from the attribute client
-	ATT_ERR_INVALID_OFFSET,           //0x07 //!< Offset specified was past the end of the attribute
-	ATT_ERR_INSUFFICIENT_AUTHOR,      //0x08 //!< The attribute requires an authorization before it can be read or written
-	ATT_ERR_PREPARE_QUEUE_FULL,       //0x09 //!< Too many prepare writes have been queued
-	ATT_ERR_ATTR_NOT_FOUND,           //0x0a //!< No attribute found within the given attribute handle range
-	ATT_ERR_ATTR_NOT_LONG,            //0x0b //!< Attribute cannot be read or written using the Read Blob Request or Prepare Write Request
-	ATT_ERR_INSUFFICIENT_KEY_SIZE,    //0x0c //!< The Encryption Key Size used for encrypting this link is insufficient
-	ATT_ERR_INVALID_VALUE_SIZE,       //0x0d //!< The attribute value length is invalid for the operation
-	ATT_ERR_UNLIKELY,                 //0x0e //!< The attribute request that was requested has encountered an error that was very unlikely, and therefore could not be completed as requested
-	ATT_ERR_INSUFFICIENT_ENCRYPT,     //0x0f //!< The attribute requires encryption before it can be read or written
-	ATT_ERR_UNSUPPORTED_GRP_TYPE,     //0x10 //!< The attribute type is not a supported grouping attribute as defined by a higher layer specification
-	ATT_ERR_INSUFFICIENT_RESOURCES,   //0x11 //!< Insufficient Resources to complete the request
-	ATT_ERR_INVALID_VALUE = 0x80
-} eAttErrCode;
+
 
 typedef enum {
 	Cancel_All_Prepared_Writes,

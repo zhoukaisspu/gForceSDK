@@ -66,6 +66,24 @@
 #define IDC_TL_CON_BDA                  1042
 #define IDC_TAB4_TREE                   1042
 #define IDC_COMBO1                      1043
+#define IDC_TAB2_CR_SP                  1043
+#define IDC_TAB2_CR_CVH                 1045
+#define IDC_TAB2_CR_SH                  1046
+#define IDC_TAB2_CR_CU                  1047
+#define IDC_TAB2_CR_EH                  1048
+#define IDC_TAB2_CR_VALUE               1049
+#define IDC_TAB2_CR_READ                1050
+#define IDC_TAB2_CR_ASCII               1051
+#define IDC_TAB2_CR_DEC                 1052
+#define IDC_TAB2_CR_HEX                 1053
+#define IDC_TAB2_CW_CVH                 1054
+#define IDC_TAB2_CR_CH                  1055
+#define IDC_TAB2_CW_CH                  1061
+#define IDC_TAB2_CW_ASCII               1062
+#define IDC_TAB2_CW_DEC                 1063
+#define IDC_TAB2_CW_HEX                 1064
+#define IDC_TAB2_CW_WRITE               1065
+#define IDC_TAB2_CW_VALUE               1066
 #define ID_NEW_DEV                      32771
 #define ID_CLOSE_DEV                    32772
 #define ID_1_COPY                       32781
@@ -76,9 +94,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        324
+#define _APS_NEXT_RESOURCE_VALUE        325
 #define _APS_NEXT_COMMAND_VALUE         32785
-#define _APS_NEXT_CONTROL_VALUE         1044
+#define _APS_NEXT_CONTROL_VALUE         1056
 #define _APS_NEXT_SYMED_VALUE           311
 #endif
 #endif

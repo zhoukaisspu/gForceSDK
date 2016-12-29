@@ -1,14 +1,12 @@
 #pragma once
-
-
-// CButtGattView 视图
+// CButtGattView view
 
 class CButtGattView : public CListView
 {
 	DECLARE_DYNCREATE(CButtGattView)
 	CListCtrl& m_list;
 protected:
-	CButtGattView();           // 动态创建所使用的受保护的构造函数
+	CButtGattView();        
 	virtual ~CButtGattView();
 
 public:

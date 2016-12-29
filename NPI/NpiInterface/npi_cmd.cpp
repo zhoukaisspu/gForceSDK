@@ -1324,7 +1324,7 @@ eRetStatus NPI_CMD::GAP_TerminateAuth(UINT16 con_hdl)
 	cmd.len = 0x03;
 	cmd.data[0] = (UINT8)(con_hdl & 0x00FF);
 	cmd.data[1] = (UINT8)((con_hdl >> 8) & 0x00FF);
-	cmd.data[2] = (UINT8)SUCCESS;
+	cmd.data[2] = (UINT8)BLE_SUCCESS;
 
 	this->write((UINT8 *)&cmd, (CMD_HEAD_LEN + cmd.len));
 	return (eRetStatus)WaitFor_Msg();
@@ -1494,7 +1494,7 @@ eRetStatus NPI_CMD::UTIL_NVRead(UINT8 nv_id, UINT8 data_len)
 eRetStatus NPI_CMD::UTIL_NVWrite(UINT8 nv_id, UINT8 data_len, PUINT8 data)
 {
 	/*This command may invalidate the image, be careful*/
-	return SUCCESS;
+	return BLE_SUCCESS;
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
 	/*Opcode*/

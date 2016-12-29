@@ -31,10 +31,10 @@ protected:
 public:
 	virtual void OnInitialUpdate();
 	CTabCtrl m_tab;
-	CmdTab1_Dlg m_discPage;
-	CmdTab2_Dlg m_rwPage;
-	CmdTab3_Dlg m_pairPage;
-	CmdTab4_Dlg m_cmdPage;
+	CmdTab1_Dlg m_page1;
+	CmdTab2_Dlg m_page2;
+	CmdTab3_Dlg m_page3;
+	CmdTab4_Dlg m_page4;
 	int m_tabCurSel;
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSelchangeTabCmd(NMHDR *pNMHDR, LRESULT *pResult);

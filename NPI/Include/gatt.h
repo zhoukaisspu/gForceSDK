@@ -1,71 +1,582 @@
 /**
   @headerfile:       gatt.h
-  $Date: 2015-07-20 15:51:01 -0700 (Mon, 20 Jul 2015) $
-  $Revision: 44375 $
-
-  @mainpage BLE GATT API
-
-  Description:    This file contains Generic Attribute Profile (GATT)
-                  definitions and prototypes.<BR><BR>
-
-  \image html HighLevelGATT.PNG
-
-  \htmlinclude GATTDesc.html
-
-  Copyright 2009-2015 Texas Instruments Incorporated. All rights reserved.
-
-  IMPORTANT: Your use of this Software is limited to those specific rights
-  granted under the terms of a software license agreement between the user
-  who downloaded the software, his/her employer (which must be your employer)
-  and Texas Instruments Incorporated (the "License").  You may not use this
-  Software unless you agree to abide by the terms of the License. The License
-  limits your use, and you acknowledge, that the Software may not be modified,
-  copied or distributed unless embedded on a Texas Instruments microcontroller
-  or used solely and exclusively in conjunction with a Texas Instruments radio
-  frequency transceiver, which is integrated into your product.  Other than for
-  the foregoing purpose, you may not use, reproduce, copy, prepare derivative
-  works of, modify, distribute, perform, display or sell this Software and/or
-  its documentation for any purpose.
-
-  YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
-  PROVIDED “AS IS?WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
-  INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
-  NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
-  TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
-  NEGLIGENCE, STRICT LIABILITY, CONTRIBUTION, BREACH OF WARRANTY, OR OTHER
-  LEGAL EQUITABLE THEORY ANY DIRECT OR INDIRECT DAMAGES OR EXPENSES
-  INCLUDING BUT NOT LIMITED TO ANY INCIDENTAL, SPECIAL, INDIRECT, PUNITIVE
-  OR CONSEQUENTIAL DAMAGES, LOST PROFITS OR LOST DATA, COST OF PROCUREMENT
-  OF SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
-  (INCLUDING BUT NOT LIMITED TO ANY DEFENSE THEREOF), OR OTHER SIMILAR COSTS.
-
-  Should you have any questions regarding your right to use this Software,
-  contact Texas Instruments Incorporated at www.TI.com.
 */
-
 #ifndef GATT_H
 #define GATT_H
+#pragma pack(1)
+/*********************************************************************
+*		ATT     CONSTANTS
+*/
 
-#ifdef __cplusplus
-extern "C"
-{
+// The Exchanging MTU Size is defined as the maximum size of any packet 
+// transmitted between a client and a server. A higher layer specification
+// defines the default ATT MTU value. The ATT MTU value should be within
+// the range 23 to 517 inclusive.
+#define ATT_MTU_SIZE                     23 //!< Minimum ATT MTU size
+#define ATT_MAX_MTU_SIZE                 517            //!< Maximum ATT MTU size
+
+/** @} End ATT_MSG_EVENT_DEFINES */
+
+/*** Opcode fields: bitmasks ***/
+// Method (bits 5-0)
+#define ATT_METHOD_BITS                  0x3f
+
+// Command Flag (bit 6)
+#define ATT_CMD_FLAG_BIT                 0x40
+
+// Authentication Signature Flag (bit 7)
+#define ATT_AUTHEN_SIG_FLAG_BIT          0x80
+
+// Size of 16-bit Bluetooth UUID
+#define ATT_BT_UUID_SIZE                 2
+
+// Size of 128-bit UUID
+#define ATT_UUID_SIZE                    16
+
+// ATT Response or Confirmation timeout
+#define ATT_MSG_TIMEOUT                  30
+
+// Authentication Signature status for received PDU; it's TRUE or FALSE for PDU to be sent
+#define ATT_SIG_NOT_INCLUDED             0x00 // Signature not included
+#define ATT_SIG_VALID                    0x01 // Included signature valid
+#define ATT_SIG_INVALID                  0x02 // Included signature not valid
+
+/*********************************************************************
+* Error Response: Error Code
+*/
+
+/** @defgroup ATT_ERR_CODE_DEFINES ATT Error Codes
+* @{
+*/
+typedef enum {
+	ATT_ERR_INVALID_HANDLE = 0x01, //!< Attribute handle value given was not valid on this attribute server
+	ATT_ERR_READ_NOT_PERMITTED,       //0x02 //!< Attribute cannot be read
+	ATT_ERR_WRITE_NOT_PERMITTED,      //0x03 //!< Attribute cannot be written
+	ATT_ERR_INVALID_PDU,              //0x04 //!< The attribute PDU was invalid
+	ATT_ERR_INSUFFICIENT_AUTHEN,      //0x05 //!< The attribute requires authentication before it can be read or written
+	ATT_ERR_UNSUPPORTED_REQ,          //0x06 //!< Attribute server doesn't support the request received from the attribute client
+	ATT_ERR_INVALID_OFFSET,           //0x07 //!< Offset specified was past the end of the attribute
+	ATT_ERR_INSUFFICIENT_AUTHOR,      //0x08 //!< The attribute requires an authorization before it can be read or written
+	ATT_ERR_PREPARE_QUEUE_FULL,       //0x09 //!< Too many prepare writes have been queued
+	ATT_ERR_ATTR_NOT_FOUND,           //0x0a //!< No attribute found within the given attribute handle range
+	ATT_ERR_ATTR_NOT_LONG,            //0x0b //!< Attribute cannot be read or written using the Read Blob Request or Prepare Write Request
+	ATT_ERR_INSUFFICIENT_KEY_SIZE,    //0x0c //!< The Encryption Key Size used for encrypting this link is insufficient
+	ATT_ERR_INVALID_VALUE_SIZE,       //0x0d //!< The attribute value length is invalid for the operation
+	ATT_ERR_UNLIKELY,                 //0x0e //!< The attribute request that was requested has encountered an error that was very unlikely, and therefore could not be completed as requested
+	ATT_ERR_INSUFFICIENT_ENCRYPT,     //0x0f //!< The attribute requires encryption before it can be read or written
+	ATT_ERR_UNSUPPORTED_GRP_TYPE,     //0x10 //!< The attribute type is not a supported grouping attribute as defined by a higher layer specification
+	ATT_ERR_INSUFFICIENT_RESOURCES,   //0x11 //!< Insufficient Resources to complete the request
+	ATT_ERR_INVALID_VALUE = 0x80
+} eAttErrCode;
+
+/*** Reserved for future use: 0x12 - 0x7F ***/
+
+/*** Application error code defined by a higher layer specification: 0x80-0x9F ***/
+
+#define ATT_ERR_INVALID_VALUE            0x80 //!< The attribute value is invalid for the operation
+
+/** @} End ATT_ERR_CODE_DEFINES */
+
+/*********************************************************************
+* Find Information Response: UUID Format
+*/
+// Handle and 16-bit Bluetooth UUID
+#define ATT_HANDLE_BT_UUID_TYPE          0x01
+
+// Handle and 128-bit UUID
+#define ATT_HANDLE_UUID_TYPE             0x02
+
+/*********************************************************************
+* Read Multiple Request: Handles
+*/
+// Minimum number of handles in a single Read Multiple Request
+#define ATT_MIN_NUM_HANDLES              2
+
+/*********************************************************************
+* Execute Write Request: Flags
+*/
+// Cancel all prepared writes
+#define ATT_CANCEL_PREPARED_WRITES       0x00
+
+// Immediately write all pending prepared values
+#define ATT_WRITE_PREPARED_VALUES        0x01
+
+#if defined ( TESTMODES )
+// ATT Test Modes
+#define ATT_TESTMODE_OFF               0 // Test mode off
+#define ATT_TESTMODE_UNAUTHEN_SIG      1 // Do not authenticate incoming signature
 #endif
 
 /*********************************************************************
- * INCLUDES
- */
-#include "bcomdef.h"
-#include "OSAL.h"
+* Size of mandatory fields of ATT requests
+*/
 
-#include "att.h"
+// Length of opcode field: Opcode (1)
+#define ATT_OPCODE_SIZE                        1
+
+// Length of Exchange MTU Request: client receive MTU size (2)
+#define ATT_EXCHANGE_MTU_REQ_SIZE              2
+
+// Length of Exchange MTU Response: server receive MTU size (2)
+#define ATT_EXCHANGE_MTU_RSP_SIZE              2
+
+// Length of Error Response: Command opcode in error (1) + Attribute handle in error (2) + Status code (1)
+#define ATT_ERROR_RSP_SIZE                     4  
+
+// Length of Find Information Request's fixed fields: First handle number (2) + Last handle number (2)
+#define ATT_FIND_INFO_REQ_FIXED_SIZE           4
+
+// Length of Find Information Response's fixed field: Format (1)
+#define ATT_FIND_INFO_RSP_FIXED_SIZE           1
+#define ATT_FIND_INFO_RSP_HDR_SIZE             ( ATT_OPCODE_SIZE + ATT_FIND_INFO_RSP_FIXED_SIZE )
+
+// Length of Find By Type Value Request's fixed fields: Start handle (2) + End handle (2) + Type (2)
+#define ATT_FIND_BY_TYPE_VALUE_REQ_FIXED_SIZE  6
+#define ATT_FIND_BY_TYPE_VALUE_REQ_HDR_SIZE    ( ATT_OPCODE_SIZE + ATT_FIND_BY_TYPE_VALUE_REQ_FIXED_SIZE )
+
+// Length of Read By Type Request's fixed fields: First handle number (2) + Last handle number (2)
+#define ATT_READ_BY_TYPE_REQ_FIXED_SIZE        4
+#define ATT_READ_BY_TYPE_REQ_HDR_SIZE          ( ATT_OPCODE_SIZE + ATT_READ_BY_TYPE_REQ_FIXED_SIZE )
+
+// Length of Read By Type Response's fixed fields: Length (1)
+#define ATT_READ_BY_TYPE_RSP_FIXED_SIZE        1
+#define ATT_READ_BY_TYPE_RSP_HDR_SIZE          ( ATT_OPCODE_SIZE + ATT_READ_BY_TYPE_RSP_FIXED_SIZE )
+
+// Length of Read Request: Attribute Handle (2)
+#define ATT_READ_REQ_SIZE                      2
+
+// Length of Read By Type Response's fixed fields: Length (1)
+#define ATT_READ_BY_GRP_TYPE_RSP_FIXED_SIZE    1
+#define ATT_READ_BY_GRP_TYPE_RSP_HDR_SIZE      ( ATT_OPCODE_SIZE + ATT_READ_BY_GRP_TYPE_RSP_FIXED_SIZE )
+
+// Length of Write Request's fixed field: Attribute Handle (2)
+#define ATT_WRITE_REQ_FIXED_SIZE               2
+
+// Length of Read Blob Request: Attribute Handle (2) + Value Offset (2)
+#define ATT_READ_BLOB_REQ_SIZE                 4
+
+// Length of Write Request's fixed field: Attribute Handle (2)
+#define ATT_WRITE_REQ_FIXED_SIZE               2
+#define ATT_WRITE_REQ_HDR_SIZE                 ( ATT_OPCODE_SIZE + ATT_WRITE_REQ_FIXED_SIZE )
+
+// Length of Prepare Write Request's fixed fields: Attribute Handle (2) + Value Offset (2)
+#define ATT_PREPARE_WRITE_REQ_FIXED_SIZE       4
+#define ATT_PREPARE_WRITE_REQ_HDR_SIZE         ( ATT_OPCODE_SIZE + ATT_PREPARE_WRITE_REQ_FIXED_SIZE )
+
+// Length of Prepare Write Response's fixed size: Attribute Handle (2) + Value Offset (2)
+#define ATT_PREPARE_WRITE_RSP_FIXED_SIZE       4
+
+// Length of Execute Write Request: Flags (1)
+#define ATT_EXECUTE_WRITE_REQ_SIZE             1
+
+// Length of Handle Value Indication's fixed size: Attribute Handle (2)
+#define ATT_HANDLE_VALUE_IND_FIXED_SIZE        2
+#define ATT_HANDLE_VALUE_IND_HDR_SIZE          ( ATT_OPCODE_SIZE + ATT_HANDLE_VALUE_IND_FIXED_SIZE )
+
+// Length of Authentication Signature field
+#define ATT_AUTHEN_SIG_LEN                     12
 
 /*********************************************************************
- * CONSTANTS
- */
+* VARIABLES
+*/
+
+extern CONST UINT8 btBaseUUID[ATT_UUID_SIZE];
+
+/*********************************************************************
+* MACROS
+*/
+
+#define ATT_WRITE_COMMAND( method, cmd ) ( ( (method) == ATT_WRITE_REQ ) && ( (cmd) == TRUE ) )
+
+/*********************************************************************
+* ATT Find Info Response macros
+*/
+// Handle and 16-bit Bluetooth UUID pair indexes
+#define ATT_BT_PAIR_HANDLE_IDX( i )        ( (i) * (2 + ATT_BT_UUID_SIZE) )
+#define ATT_BT_PAIR_UUID_IDX( i )          ( ATT_BT_PAIR_HANDLE_IDX( (i) ) + 2 )
+
+#define ATT_BT_PAIR_HANDLE( info, i )      ( BUILD_UINT16( (info)[ATT_BT_PAIR_HANDLE_IDX((i))], \
+                                                           (info)[ATT_BT_PAIR_HANDLE_IDX((i))+1] ) )
+#define ATT_BT_PAIR_UUID( info, i )        ( BUILD_UINT16( (info)[ATT_BT_PAIR_UUID_IDX((i))], \
+                                                           (info)[ATT_BT_PAIR_UUID_IDX((i))+1] ) )
+
+// Handle and 128-bit UUID pair indexes
+#define ATT_PAIR_HANDLE_IDX( i )           ( (i) * (2 + ATT_UUID_SIZE) )
+#define ATT_PAIR_UUID_IDX( i )             ( ATT_PAIR_HANDLE_IDX( (i) ) + 2 )
+
+#define ATT_PAIR_HANDLE( info, i )         ( BUILD_UINT16( (info)[ATT_PAIR_HANDLE_IDX((i))], \
+                                                           (info)[ATT_PAIR_HANDLE_IDX((i))+1] ) )
+
+/*********************************************************************
+* ATT Find By Type Value Response macros
+*/
+// Attribute Handle and Group End Handle pair indexes
+#define ATT_ATTR_HANDLE_IDX( i )           ( (i) * (2 + 2) )
+#define ATT_GRP_END_HANDLE_IDX( i )        ( ATT_ATTR_HANDLE_IDX( (i) ) + 2 )
+
+#define ATT_ATTR_HANDLE( info, i )         ( BUILD_UINT16( (info)[ATT_ATTR_HANDLE_IDX((i))], \
+                                                           (info)[ATT_ATTR_HANDLE_IDX((i))+1] ) )
+#define ATT_GRP_END_HANDLE( info, i )      ( BUILD_UINT16( (info)[ATT_GRP_END_HANDLE_IDX((i))], \
+                                                           (info)[ATT_GRP_END_HANDLE_IDX((i))+1] ) )
+
+/*********************************************************************
+* ATT Read Multiple Request macros
+*/
+// Attribute Handle index
+#define ATT_HANDLE_IDX( i )                ( (i) * 2 )
+
+#define ATT_HANDLE( handles, i )           ( BUILD_UINT16( (handles)[ATT_HANDLE_IDX((i))], \
+                                                           (handles)[ATT_HANDLE_IDX((i))+1] ) )
+
+/*********************************************************************
+* TYPEDEFS
+*/
+
+/**
+* Attribute Protocol PDU format.
+*/
+typedef struct
+{
+	UINT8 sig;      //!< Authentication Signature status (not included (0), valid (1), invalid (2))
+	UINT8 cmd;      //!< Command Flag
+	UINT8 method;   //!< Method
+	UINT16 len;     //!< Length of Attribute Parameters
+	UINT8 *pParams; //!< Attribute Parameters
+} attPacket_t;
+
+/**
+* Attribute Type format (2 or 16 octet UUID).
+*/
+typedef struct
+{
+	UINT8 len;                 //!< Length of UUID (2 or 16)
+	UINT8 uuid[ATT_UUID_SIZE]; //!< 16 or 128 bit UUID
+} attAttrType_t;
+
+/**
+* Attribute Type format (2-octet Bluetooth UUID).
+*/
+typedef struct
+{
+	UINT8 len;                    //!< Length of UUID (2)
+	UINT8 uuid[ATT_BT_UUID_SIZE]; //!< 16 bit UUID
+} attAttrBtType_t;
+
+/**
+* Error Response format.
+*/
+typedef struct
+{
+	UINT8 status;
+	UINT8 reqOpcode; //!< Request that generated this error response
+	UINT16 handle;   //!< Attribute handle that generated error response
+	UINT8 errCode;   //!< Reason why the request has generated error response
+} attErrorRsp_t;
+
+/**
+* Exchange MTU Request format.
+*/
+typedef struct
+{
+	UINT16 clientRxMTU; //!< Client receive MTU size 
+} attExchangeMTUReq_t;
+
+/**
+* Exchange MTU Response format.
+*/
+typedef struct
+{
+	UINT8 status;
+	UINT16 conHandle;   //!connection handle
+	UINT8  pduLen;
+	UINT16 serverRxMTU; //!< Server receive MTU size 
+} attExchangeMTURsp_t;
+
+/**
+* Find Information Request format.
+*/
+typedef struct
+{
+	UINT16 startHandle;       //!< First requested handle number (must be first field)
+	UINT16 endHandle;         //!< Last requested handle number
+} attFindInfoReq_t;
+
+/**
+* Handle and its 16-bit Bluetooth UUIDs.
+*/
+typedef struct
+{
+	UINT16 handle;                //!< Handle
+	UINT8 uuid[ATT_BT_UUID_SIZE]; //!< 2-octet Bluetooth UUID
+} attHandleBtUUID_t;
+
+/**
+* Handle and its 128-bit UUID.
+*/
+typedef struct
+{
+	UINT16 handle;             //!< Handle
+	UINT8 uuid[ATT_UUID_SIZE]; //!< 16-octect UUID
+} attHandleUUID_t;
+
+/**
+* Find Information Response format.
+*/
+typedef struct
+{
+	UINT8 status;
+	UINT16 conHandle;   //!connection handle
+	UINT8  pduLen;
+	UINT8 format;   //!< Format of information data
+	union{
+		attHandleBtUUID_t uuid2[1];
+		attHandleUUID_t uuid16[1];
+	}Info;//!< Information data whose format is determined by format field (4 to ATT_MTU_SIZE-2)
+} attFindInfoRsp_t;
+
+/**
+* Find By Type Value Request format.
+*/
+typedef struct
+{
+	UINT16 startHandle;   //!< First requested handle number (must be first field)
+	UINT16 endHandle;     //!< Last requested handle number
+	attAttrBtType_t type; //!< 2-octet UUID to find
+	UINT16 len;           //!< Length of value
+	UINT8 *pValue;        //!< Attribute value to find (0 to ATT_MTU_SIZE-7)
+} attFindByTypeValueReq_t;
+
+/**
+* Handles Information format.
+*/
+typedef struct
+{
+	UINT16 handle;       //!< Found attribute handle
+	UINT16 grpEndHandle; //!< Group end handle
+} attHandlesInfo_t;
+
+/**
+* Find By Type Value Response format.
+*/
+typedef struct
+{
+	UINT8 status;
+	UINT16 conHandle;   //!connection handle
+	UINT8  pduLen;
+	UINT16 handle[1];//!< List of 1 or more handles information (4 to ATT_MTU_SIZE-1)
+} attFindByTypeValueRsp_t;
+
+/**
+* Read By Type Request format.
+*/
+typedef struct
+{
+	UINT16 startHandle; //!< First requested handle number (must be first field)
+	UINT16 endHandle;   //!< Last requested handle number
+	attAttrType_t type; //!< Requested type (2 or 16 octet UUID)
+} attReadByTypeReq_t;
+
+/**
+* Read By Type Response format.
+*/
+typedef struct
+{
+	UINT8 status;
+	UINT16 conHdl;
+	UINT8 pduLen;
+	UINT8 len;       //!< Length of each attribute handle, end group handle and value set
+	UINT8 data[1]; //!< List of 1 or more attribute handle-value pairs (2 to ATT_MTU_SIZE-2)
+} attReadByTypeRsp_t;
+
+/**
+* Read Request format.
+*/
+typedef struct
+{
+	UINT16 handle; //!< Handle of the attribute to be read (must be first field)
+} attReadReq_t;
+
+/**
+* Read Response format.
+*/
+typedef struct
+{
+	UINT8 status;
+	UINT16 conHdl;
+	UINT8  pduLen;    //!< Length of value
+	UINT8  value[1]; //!< Value of the attribute with the handle given (0 to ATT_MTU_SIZE-1)
+} attReadRsp_t;
+
+/**
+* Read Blob Req format.
+*/
+typedef struct
+{
+	UINT16 handle; //!< Handle of the attribute to be read (must be first field)
+	UINT16 offset; //!< Offset of the first octet to be read
+} attReadBlobReq_t;
+
+/**
+* Read Blob Response format.
+*/
+typedef struct
+{
+	UINT8 status;
+	UINT16 len;    //!< Length of value
+	UINT8 *pValue; //!< Part of the value of the attribute with the handle given (0 to ATT_MTU_SIZE-1)
+} attReadBlobRsp_t;
+
+/**
+* Read Multiple Request format.
+*/
+typedef struct
+{
+	UINT8 *pHandles;   //!< Set of two or more attribute handles (4 to ATT_MTU_SIZE-1) - must be first field
+	UINT16 numHandles; //!< Number of attribute handles
+} attReadMultiReq_t;
+
+/**
+* Read Multiple Response format.
+*/
+typedef struct
+{
+	UINT8 status;
+	UINT16 conHdl;
+	UINT8  pduLen;    //!< Length of value
+	UINT8  value[1]; //!< Set of two or more values (0 to ATT_MTU_SIZE-1)
+} attReadMultiRsp_t;
+
+/**
+* Read By Group Type Request format.
+*/
+typedef struct
+{
+	UINT16 startHandle; //!< First requested handle number (must be first field)
+	UINT16 endHandle;   //!< Last requested handle number
+	attAttrType_t type; //!< Requested group type (2 or 16 octet UUID)
+} attReadByGrpTypeReq_t;
+
+/**
+* Read By Group Type Response format.
+*/
+typedef struct
+{
+	UINT8 status;
+	UINT16 conHdl;
+	UINT8 pduLen;
+	UINT8 len;       //!< Length of each attribute handle, end group handle and value set
+	UINT8 data[1]; //!< List of 1 or more attribute handle, end group handle and value (4 to ATT_MTU_SIZE-2)
+} attReadByGrpTypeRsp_t;
+
+/**
+* Write Request format.
+*/
+typedef struct
+{
+	UINT16 handle; //!< Handle of the attribute to be written (must be first field)
+	UINT16 len;    //!< Length of value
+	UINT8 *pValue; //!< Value of the attribute to be written (0 to ATT_MTU_SIZE-3)
+	UINT8 sig;     //!< Authentication Signature status (not included (0), valid (1), invalid (2))
+	UINT8 cmd;     //!< Command Flag
+} attWriteReq_t;
+
+/**
+* Prepare Write Request format.
+*/
+typedef struct
+{
+	UINT16 handle; //!< Handle of the attribute to be written (must be first field)
+	UINT16 offset; //!< Offset of the first octet to be written
+	UINT16 len;    //!< Length of value
+	UINT8 *pValue; //!< Part of the value of the attribute to be written (0 to ATT_MTU_SIZE-5) - must be allocated
+} attPrepareWriteReq_t;
+
+/**
+* Prepare Write Response format.
+*/
+typedef struct
+{
+	UINT8 status;
+	UINT16 handle; //!< Handle of the attribute that has been read
+	UINT16 offset; //!< Offset of the first octet to be written
+	UINT16 len;    //!< Length of value
+	UINT8 *pValue; //!< Part of the value of the attribute to be written (0 to ATT_MTU_SIZE-5)
+} attPrepareWriteRsp_t;
+
+/**
+* Execute Write Request format.
+*/
+typedef struct
+{
+	UINT8 flags; //!< 0x00 - cancel all prepared writes.
+	//!< 0x01 - immediately write all pending prepared values.
+} attExecuteWriteReq_t;
+
+/**
+* Handle Value Notification format.
+*/
+typedef struct
+{
+	UINT8 status;
+	UINT16 handle; //!< Handle of the attribute that has been changed (must be first field)
+	UINT16 len;    //!< Length of value
+	UINT8 *pValue; //!< Current value of the attribute (0 to ATT_MTU_SIZE-3)
+} attHandleValueNoti_t;
+
+/**
+* Handle Value Indication format.
+*/
+typedef struct
+{
+	UINT8 status;
+	UINT16 handle; //!< Handle of the attribute that has been changed (must be first field)
+	UINT16 len;    //!< Length of value
+	UINT8 *pValue; //!< Current value of the attribute (0 to ATT_MTU_SIZE-3)
+} attHandleValueInd_t;
+
+/**
+* The following two ATT events are generated locally (not received OTA) by
+* the ATT Server or Client.
+*/
+
+/**
+* ATT Flow Control Violated Event message format.  This message is sent to the
+* app by the local ATT Server or Client when a sequential ATT Request-Response
+* or Indication-Confirmation protocol flow control is violated for a connection.
+* All subsequent ATT Requests and Indications received by the local ATT Server
+* and Client respectively will be dropped.
+*
+* This message is to inform the app (that has registered with GAP by calling
+* GAP_RegisterForMsgs()) in case it wants to drop the connection.
+*/
+typedef struct
+{
+	UINT8 status;
+	UINT8 opcode;        //!< opcode of message that caused flow control violation
+	UINT8 pendingOpcode; //!< opcode of pending message
+} attFlowCtrlViolatedEvt_t;
+
+/**
+* ATT MTU Updated Event message format.  This message is sent to the app
+* by the local ATT Server or Client when the ATT MTU size is updated for a
+* connection. The default ATT MTU size is 23 octets.
+*
+* This message is to inform the app (that has registered with GAP by calling
+* GAP_RegisterForMsgs()) about the new ATT MTU size negotiated for a connection.
+*/
+typedef struct
+{
+	UINT8 status;
+	UINT16 MTU; //!< new MTU size
+} attMtuUpdatedEvt_t;
+
+/*********************************************************************
+* CONSTANTS
+*/
 
 /** @defgroup GATT_PERMIT_BITMAPS_DEFINES GATT Attribute Access Permissions Bit Fields
- * @{
- */
+* @{
+*/
 
 #define GATT_PERMIT_READ                 0x01 //!< Attribute is Readable
 #define GATT_PERMIT_WRITE                0x02 //!< Attribute is Writable
@@ -80,8 +591,8 @@ extern "C"
 
 
 /** @defgroup GATT_NUM_PREPARE_WRITES_DEFINES GATT Maximum Number of Prepare Writes
- * @{
- */
+* @{
+*/
 
 #if !defined( GATT_MAX_NUM_PREPARE_WRITES )
 #define GATT_MAX_NUM_PREPARE_WRITES      5 //!< GATT Maximum number of attributes that Attribute Server can prepare for writing per Attribute Client
@@ -91,8 +602,8 @@ extern "C"
 
 
 /** @defgroup GATT_ENCRYPT_KEY_SIZE_DEFINES GATT Encryption Key Size Limits
- * @{
- */
+* @{
+*/
 
 #define GATT_MIN_ENCRYPT_KEY_SIZE          7  //!< GATT Minimum Encryption Key Size
 #define GATT_MAX_ENCRYPT_KEY_SIZE          16 //!< GATT Maximum Encryption Key Size
@@ -101,8 +612,8 @@ extern "C"
 
 
 /** @defgroup GATT_MAX_ATTR_SIZE_DEFINES GATT Maximum Attribute Value Length
- * @{
- */
+* @{
+*/
 
 #define GATT_MAX_ATTR_SIZE               512 //!< GATT Maximum length of an attribute value
 
@@ -119,12 +630,12 @@ extern "C"
 #define GATT_MAX_MTU                     0xFFFF // Maximum MTU size
 
 /*********************************************************************
- * VARIABLES
- */
+* VARIABLES
+*/
 
 /*********************************************************************
- * MACROS
- */
+* MACROS
+*/
 
 // Attribute Access Permissions
 #define gattPermitRead( a )              ( (a) & GATT_PERMIT_READ )
@@ -136,1442 +647,136 @@ extern "C"
 #define gattPermitEncryptRead( a )       ( (a) & GATT_PERMIT_ENCRYPT_READ )
 #define gattPermitEncryptWrite( a )      ( (a) & GATT_PERMIT_ENCRYPT_WRITE )
 
-// Check for different UUID types
-#define gattPrimaryServiceType( t )      ( ATT_CompareUUID( primaryServiceUUID, ATT_BT_UUID_SIZE, \
-                                                            (t).uuid, (t).len ) )
-#define gattSecondaryServiceType( t )    ( ATT_CompareUUID( secondaryServiceUUID, ATT_BT_UUID_SIZE, \
-                                                            (t).uuid, (t).len ) )
-#define gattCharacterType( t )           ( ATT_CompareUUID( characterUUID, ATT_BT_UUID_SIZE, \
-                                                            (t).uuid, (t).len ) )
-#define gattIncludeType( t )             ( ATT_CompareUUID( includeUUID, ATT_BT_UUID_SIZE, \
-                                                            (t).uuid, (t).len ) )
-#define gattServiceType( t )             ( gattPrimaryServiceType( (t) ) || \
-                                           gattSecondaryServiceType( (t) ) )
-
 /*********************************************************************
- * TYPEDEFS
- */
-
+* TYPEDEFS
+*/
 /**
- * GATT Find By Type Value Request format.
- */
-typedef struct {
-	uint16 startHandle;  //!< First requested handle number (must be first field)
-	uint16 endHandle;    //!< Last requested handle number
+* GATT Find By Type Value Request format.
+*/
+typedef struct
+{
+	UINT16 startHandle;  //!< First requested handle number (must be first field)
+	UINT16 endHandle;    //!< Last requested handle number
 	attAttrType_t value; //!< Primary service UUID value (2 or 16 octets)
 } gattFindByTypeValueReq_t;
 
 /**
- * GATT Read By Type Request format.
- */
-typedef struct {
-	uint8 discCharsByUUID;  //!< Whether this is a GATT Discover Characteristics by UUID sub-procedure
+* GATT Read By Type Request format.
+*/
+typedef struct
+{
+	UINT8 discCharsByUUID;  //!< Whether this is a GATT Discover Characteristics by UUID sub-procedure
 	attReadByTypeReq_t req; //!< Read By Type Request
 } gattReadByTypeReq_t;
 
 /**
- * GATT Write Long Request format. Do not change the order of the members.
- */
-typedef struct {
-	uint8 reliable;           //!< Whether reliable writes requested (always FALSE for Write Long)
+* GATT Write Long Request format. Do not change the order of the members.
+*/
+typedef struct
+{
+	UINT8 reliable;           //!< Whether reliable writes requested (always FALSE for Write Long)
 	attPrepareWriteReq_t req; //!< ATT Prepare Write Request
-	uint16 lastOffset;        //!< Offset of last Prepare Write Request sent
+	UINT16 lastOffset;        //!< Offset of last Prepare Write Request sent
 } gattWriteLongReq_t;
 
 /**
- * GATT Reliable Writes Request format. Do not change the order of the members.
- */
-typedef struct {
-	uint8 reliable;              //!< Whether reliable writes requested (always TRUE for Reliable Writes)
-	attPrepareWriteReq_t*
-	pReqs; //!< Array of Prepare Write Requests (must be allocated)
-	uint8 numReqs;               //!< Number of Prepare Write Requests
-	uint8 index;                 //!< Index of last Prepare Write Request sent
-	uint8 flags;                 //!< 0x00 - cancel all prepared writes.
+* GATT Reliable Writes Request format. Do not change the order of the members.
+*/
+typedef struct
+{
+	UINT8 reliable;              //!< Whether reliable writes requested (always TRUE for Reliable Writes)
+	attPrepareWriteReq_t *pReqs; //!< Array of Prepare Write Requests (must be allocated)
+	UINT8 numReqs;               //!< Number of Prepare Write Requests
+	UINT8 index;                 //!< Index of last Prepare Write Request sent
+	UINT8 flags;                 //!< 0x00 - cancel all prepared writes.
 	//!< 0x01 - immediately write all pending prepared values.
 } gattReliableWritesReq_t;
 
 /**
- * GATT Message format. It's a union of all attribute protocol/profile messages
- * and locally-generated events used between the attribute protocol/profile and
- * upper layer application.
- */
-typedef union {
-	// Request messages
-	attExchangeMTUReq_t exchangeMTUReq;              //!< ATT Exchange MTU Request
-	attFindInfoReq_t
-	findInfoReq;                    //!< ATT Find Information Request
-	attFindByTypeValueReq_t
-	findByTypeValueReq;      //!< ATT Find By Type Value Request
-	attReadByTypeReq_t readByTypeReq;                //!< ATT Read By Type Request
-	attReadReq_t readReq;                            //!< ATT Read Request
-	attReadBlobReq_t readBlobReq;                    //!< ATT Read Blob Request
-	attReadMultiReq_t readMultiReq;                  //!< ATT Read Multiple Request
-	attReadByGrpTypeReq_t
-	readByGrpTypeReq;          //!< ATT Read By Group Type Request
-	attWriteReq_t writeReq;                          //!< ATT Write Request
-	attPrepareWriteReq_t prepareWriteReq;            //!< ATT Prepare Write Request
-	attExecuteWriteReq_t executeWriteReq;            //!< ATT Execute Write Request
-	gattFindByTypeValueReq_t
-	gattFindByTypeValueReq; //!< GATT Find By Type Value Request
-	gattReadByTypeReq_t gattReadByTypeReq;           //!< GATT Read By Type Request
-	gattWriteLongReq_t gattWriteLongReq;             //!< GATT Long Write Request
-	gattReliableWritesReq_t
-	gattReliableWritesReq;   //!< GATT Reliable Writes Request
-
-	// Response messages
-	attErrorRsp_t errorRsp;                          //!< ATT Error Response
-	attExchangeMTURsp_t exchangeMTURsp;              //!< ATT Exchange MTU Response
-	attFindInfoRsp_t
-	findInfoRsp;                    //!< ATT Find Information Response
-	attFindByTypeValueRsp_t
-	findByTypeValueRsp;      //!< ATT Find By Type Value Response
-	attReadByTypeRsp_t readByTypeRsp;                //!< ATT Read By Type Response
-	attReadRsp_t readRsp;                            //!< ATT Read Response
-	attReadBlobRsp_t readBlobRsp;                    //!< ATT Read Blob Response
-	attReadMultiRsp_t readMultiRsp;                  //!< ATT Read Multiple Response
-	attReadByGrpTypeRsp_t
-	readByGrpTypeRsp;          //!< ATT Read By Group Type Response
-	attPrepareWriteRsp_t prepareWriteRsp;            //!< ATT Prepare Write Response
-
-	// Indication and Notification messages
-	attHandleValueNoti_t
-	handleValueNoti;            //!< ATT Handle Value Notification
-	attHandleValueInd_t
-	handleValueInd;              //!< ATT Handle Value Indication
-
-	// Locally-generated event messages
-	attFlowCtrlViolatedEvt_t
-	flowCtrlEvt;            //!< ATT Flow Control Violated Event
-	attMtuUpdatedEvt_t mtuEvt;                       //!< ATT MTU Updated Event
-} gattMsg_t;
-
-/**
- * GATT OSAL GATT_MSG_EVENT message format. This message is used to forward an
- * incoming attribute protocol/profile message up to upper layer application.
- */
+* GATT Attribute Type format.
+*/
 typedef struct {
-	osal_event_hdr_t hdr; //!< GATT_MSG_EVENT and status
-	uint16 connHandle;    //!< Connection message was received on
-	uint8 method;         //!< Type of message
-	gattMsg_t msg;        //!< Attribute protocol/profile message
-} gattMsgEvent_t;
-
-/**
- * GATT Attribute Type format.
- */
-typedef struct {
-	uint8 len;         //!< Length of UUID (2 or 6)
-	const uint8* uuid; //!< Pointer to UUID
+	UINT8 len;         //!< Length of UUID (2 or 6)
+	const UINT8* uuid; //!< Pointer to UUID
 } gattAttrType_t;
 
 /**
- * GATT Attribute format.
- */
+* GATT Attribute format.
+*/
 typedef struct attAttribute_t {
 	gattAttrType_t type; //!< Attribute type (2 or 16 octet UUIDs)
-	uint8 permissions;   //!< Attribute permissions
-	uint16 handle;       //!< Attribute handle - assigned internally by attribute server
-	uint8* const
-	pValue; //!< Attribute value - encoding of the octet array is defined in
+	UINT8 permissions;   //!< Attribute permissions
+	UINT16 handle;       //!< Attribute handle - assigned internally by attribute server
+	UINT8* const
+		pValue; //!< Attribute value - encoding of the octet array is defined in
 	//!< the applicable profile. The maximum length of an attribute
 	//!< value shall be 512 octets.
 } gattAttribute_t;
 
 /**
- * GATT Service format.
- */
+* GATT Service format.
+*/
 typedef struct {
-	uint16 numAttrs; //!< Number of attributes in attrs
-	uint8 encKeySize;//!< Minimum encryption key size required by service (7-16 bytes)
+	UINT16 numAttrs; //!< Number of attributes in attrs
+	UINT8 encKeySize;//!< Minimum encryption key size required by service (7-16 bytes)
 
 	/** Array of attribute records.
-	 *  NOTE: The list must start with a Service attribute followed by
-	 *        all attributes associated with this Service attribute.
-	 */
+	*  NOTE: The list must start with a Service attribute followed by
+	*        all attributes associated with this Service attribute.
+	*/
 	gattAttribute_t* attrs;
 } gattService_t;
 
-/*********************************************************************
- * VARIABLES
- */
 
-extern uint8 gattNumConns;
-
-/*********************************************************************
- * API FUNCTIONS
- */
-
-/*-------------------------------------------------------------------
- * GATT Client Public APIs
- */
-
-/**
- * @defgroup GATT_CLIENT_API GATT Client API Functions
- *
- * @{
- */
-
-/**
- * @brief   Initialize the Generic Attribute Profile Client.
- *
- * @return  SUCCESS: Client initialized successfully.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- */
-extern bStatus_t GATT_InitClient(void);
-
-/**
- * @brief   Register to receive incoming ATT Indications or Notifications
- *          of attribute values.
- *
- * @param   taskId ?task to forward indications or notifications to
- *
- * @return  void
- */
-extern void GATT_RegisterForInd(uint8 taskId);
-
-/**
- * @brief   The Prepare Write Request is used to request the server to
- *          prepare to write the value of an attribute.
- *
- *          Note: This function is needed only for GATT testing.
- *
- * @param   connHandle - connection to use
- * @param   pReq - pointer to request to be sent
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_PrepareWriteReq(uint16 connHandle,
-                                      attPrepareWriteReq_t* pReq, uint8 taskId);
-
-/**
- * @brief   The Execute Write Request is used to request the server to
- *          write or cancel the write of all the prepared values currently
- *          held in the prepare queue from this client.
- *
- *          Note: This function is needed only for GATT testing.
- *
- * @param   connHandle - connection to use
- * @param   pReq - pointer to request to be sent
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_ExecuteWriteReq(uint16 connHandle,
-                                      attExecuteWriteReq_t* pReq, uint8 taskId);
-
-/**
- * @}
- */
-
-/*-------------------------------------------------------------------
- * GATT Server Public APIs
- */
-
-/**
- * @defgroup GATT_SERVER_API GATT Server API Functions
- *
- * @{
- */
-
-/**
- * @brief   Initialize the Generic Attribute Profile Server.
- *
- * @return  SUCCESS: Server initialized successfully.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- */
-extern bStatus_t GATT_InitServer(void);
-
-/**
- * @brief   Register a service attribute list with the GATT Server. A service
- *          is composed of characteristics or references to other services.
- *          Each characteristic contains a value and may contain optional
- *          information about the value. There are two types of services:
- *          primary service and secondary service.
- *
- *          A service definition begins with a service declaration and ends
- *          before the next service declaration or the maximum Attribute Handle.
- *
- *          A characteristic definition begins with a characteristic declaration
- *          and ends before the next characteristic or service declaration or
- *          maximum Attribute Handle.
- *
- *          The attribute server will only keep a pointer to the attribute
- *          list, so the calling application will have to maintain the code
- *          and RAM associated with this list.
- *
- * @param   pService - pointer to service attribute list to be registered
- *
- * @return  SUCCESS: Service registered successfully.<BR>
- *          INVALIDPARAMETER: Invalid service field.<BR>
- *          FAILURE: Not enough attribute handles available.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleInvalidRange: Encryption key size's out of range.<BR>
- */
-extern bStatus_t GATT_RegisterService(gattService_t* pService);
-
-/**
- * @brief   Deregister a service attribute list with the GATT Server.
- *
- *          NOTE: It's the caller's responsibility to free the service attribute
- *          list returned from this API.
- *
- * @param   handle - handle of service to be deregistered
- * @param   pService - pointer to deregistered service (to be returned)
- *
- * @return  SUCCESS: Service deregistered successfully.<BR>
- *          FAILURE: Service not found.<BR>
- */
-extern bStatus_t GATT_DeregisterService(uint16 handle, gattService_t* pService);
-
-/**
- * @brief   Register to receive incoming ATT Requests.
- *
- * @param   taskId ?task to forward requests to
- *
- * @return  void
- */
-extern void GATT_RegisterForReq(uint8 taskId);
-
-/**
- * @brief   Verify the permissions of an attribute for reading.
- *
- * @param   connHandle - connection to use
- * @param   permissions - attribute permissions
- * @param   service - service handle
- *
- * @return  SUCCESS: Attribute can be read.<BR>
- *          ATT_ERR_READ_NOT_PERMITTED: Attribute cannot be read.<BR>
- *          ATT_ERR_INSUFFICIENT_AUTHEN: Attribute requires authentication.<BR>
- *          ATT_ERR_INSUFFICIENT_KEY_SIZE: Key Size used for encrypting is insufficient.<BR>
- *          ATT_ERR_INSUFFICIENT_ENCRYPT: Attribute requires encryption.<BR>
- */
-extern bStatus_t GATT_VerifyReadPermissions(uint16 connHandle,
-                uint8 permissions, uint16 service);
-
-/**
- * @brief   Verify the permissions of an attribute for writing.
- *
- * @param   connHandle - connection to use
- * @param   permissions - attribute permissions
- * @param   service - service handle
- * @param   pReq - pointer to write request
- *
- * @return  SUCCESS: Attribute can be written.<BR>
- *          ATT_ERR_READ_NOT_PERMITTED: Attribute cannot be written.<BR>
- *          ATT_ERR_INSUFFICIENT_AUTHEN: Attribute requires authentication.<BR>
- *          ATT_ERR_INSUFFICIENT_KEY_SIZE: Key Size used for encrypting is insufficient.<BR>
- *          ATT_ERR_INSUFFICIENT_ENCRYPT: Attribute requires encryption.<BR>
- */
-extern bStatus_t GATT_VerifyWritePermissions(uint16 connHandle,
-                uint8 permissions,
-                uint16 service, attWriteReq_t* pReq);
-
-/**
- * @brief   Send out a Service Changed Indication.
- *
- * @param   connHandle - connection to use
- * @param   taskId - task to be notified of confirmation
- *
- * @return  SUCCESS: Indication was sent successfully.<BR>
- *          FAILURE: Service Changed attribute not found.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A confirmation is pending with this client.<BR>
- */
-extern uint8 GATT_ServiceChangedInd(uint16 connHandle, uint8 taskId);
-
-/**
- * @brief   Find the attribute record for a given handle and UUID.
- *
- * @param   startHandle - first handle to look for
- * @param   endHandle - last handle to look for
- * @param   pUUID - pointer to UUID to look for
- * @param   len - length of UUID
- * @param   pHandle - handle of owner of attribute (to be returned)
- *
- * @return  Pointer to attribute record. NULL, otherwise.
- */
-extern gattAttribute_t* GATT_FindHandleUUID(uint16 startHandle,
-                uint16 endHandle, const uint8* pUUID,
-                uint16 len, uint16* pHandle);
-/**
- * @brief   Find the attribute record for a given handle
- *
- * @param   handle - handle to look for
- * @param   pHandle - handle of owner of attribute (to be returned)
- *
- * @return  Pointer to attribute record. NULL, otherwise.
- */
-extern gattAttribute_t* GATT_FindHandle(uint16 handle, uint16* pHandle);
-
-/**
- * @brief   Find the next attribute of the same type for a given attribute.
- *
- * @param   pAttr - pointer to attribute to find a next for
- * @param   endHandle - last handle to look for
- * @param   service - handle of owner service
- * @param   pLastHandle - handle of last attribute (to be returned)
- *
- * @return  Pointer to next attribute record. NULL, otherwise.
- */
-extern gattAttribute_t* GATT_FindNextAttr(gattAttribute_t* pAttr,
-                uint16 endHandle,
-                uint16 service, uint16* pLastHandle);
-/**
- * @brief   Get the number of attributes for a given service.
- *
- * @param   handle - service handle to look for
- *
- * @return  Number of attributes if service found. 0, otherwise.
- */
-extern uint16 GATT_ServiceNumAttrs(uint16 handle);
-
-/**
- * @brief   Get the minimum encryption key size required by a given service.
- *
- * @param   handle - service handle to look for
- *
- * @return  Encryption key size if service found. Default key size, otherwise.
- */
-extern uint8 GATT_ServiceEncKeySize(uint16 handle);
-
-/**
- * @brief   Send an ATT Response message out.
- *
- * @param   connHandle - connection to use
- * @param   method - type of response message
- * @param   pRsp - pointer to ATT response to be sent
- *
- * @return  SUCCESS: Response was sent successfully.
- *          INVALIDPARAMETER: Invalid response field.
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.
- *          bleNotConnected: Connection is down.
- *          bleMemAllocError: Memory allocation error occurred.
- *          blePending: In the middle of another transmit.
- *          bleInvalidMtuSize: Packet length is larger than connection's MTU size.
- */
-extern bStatus_t GATT_SendRsp(uint16 connHandle, uint8 method, gattMsg_t* pRsp);
-
-/**
- * @}
- */
-
-/*-------------------------------------------------------------------
- * GATT Server Sub-Procedure APIs
- */
-
-/**
- * @defgroup GATT_SERVER_SUB_PROCEDURE_API GATT Server Sub-Procedure API Functions
- *
- * @{
- */
-
-/**
- * @brief   This sub-procedure is used when a server is configured to
- *          indicate a characteristic value to a client and expects an
- *          attribute protocol layer acknowledgement that the indication
- *          was successfully received.
- *
- *          The ATT Handle Value Indication is used in this sub-procedure.
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive an OSAL GATT_MSG_EVENT message.
- *          The type of the message will be ATT_HANDLE_VALUE_CFM.
- *
- *          Note: This sub-procedure is complete when ATT_HANDLE_VALUE_CFM
- *                (with SUCCESS or bleTimeout status) is received by the
- *                calling application task.
- *
- * @param   connHandle - connection to use
- * @param   pInd - pointer to indication to be sent
- * @param   authenticated - whether an authenticated link is required
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Indication was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A confirmation is pending with this client.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_Indication(uint16 connHandle, attHandleValueInd_t* pInd,
-                                 uint8 authenticated, uint8 taskId);
-/**
- * @brief   This sub-procedure is used when a server is configured to
- *          notify a characteristic value to a client without expecting
- *          any attribute protocol layer acknowledgement that the
- *          notification was successfully received.
- *
- *          The ATT Handle Value Notification is used in this sub-procedure.
- *
- *          Note: A notification may be sent at any time and does not
- *          invoke a confirmation.
- *
- *          No confirmation will be sent to the calling application task for
- *          this sub-procedure.
- *
- * @param   connHandle - connection to use
- * @param   pNoti - pointer to notification to be sent
- * @param   authenticated - whether an authenticated link is required
- *
- * @return  SUCCESS: Notification was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_Notification(uint16 connHandle,
-                                   attHandleValueNoti_t* pNoti,
-                                   uint8 authenticated);
-/**
- * @}
- */
-
-/*-------------------------------------------------------------------
- * GATT Client Sub-Procedure APIs
- */
-
-/**
- * @defgroup GATT_CLIENT_SUB_PROCEDURE_API GATT Client Sub-Procedure API Functions
- *
- * @{
- */
-
-/**
- * @brief   This sub-procedure is used by the client to set the ATT_MTU
- *          to the maximum possible value that can be supported by both
- *          devices when the client supports a value greater than the
- *          default ATT_MTU for the Attribute Protocol. This sub-procedure
- *          shall only be initiated once during a connection.
- *
- *          The ATT Exchange MTU Request is used by this sub-procedure.
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive an OSAL GATT_MSG_EVENT message.
- *          The type of the message will be either ATT_EXCHANGE_MTU_RSP or
- *          ATT_ERROR_RSP (if an error occurred on the server).
- *
- *          Note: This sub-procedure is complete when either ATT_EXCHANGE_MTU_RSP
- *                (with SUCCESS or bleTimeout status) or ATT_ERROR_RSP (with
- *                SUCCESS status) is received by the calling application task.
- *
- * @param   connHandle - connection to use
- * @param   pReq - pointer to request to be sent
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_ExchangeMTU(uint16 connHandle, attExchangeMTUReq_t* pReq,
-                                  uint8 taskId);
-
-/**
- * @brief   This sub-procedure is used by a client to discover all
- *          the primary services on a server.
- *
- *          The ATT Read By Group Type Request is used with the Attribute
- *          Type parameter set to the UUID for "Primary Service". The
- *          Starting Handle is set to 0x0001 and the Ending Handle is
- *          set to 0xFFFF.
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive multiple OSAL GATT_MSG_EVENT messages.
- *          The type of the messages will be either ATT_READ_BY_GRP_TYPE_RSP
- *          or ATT_ERROR_RSP (if an error occurred on the server).
- *
- *          Note: This sub-procedure is complete when either ATT_READ_BY_GRP_TYPE_RSP
- *                (with bleProcedureComplete or bleTimeout status) or ATT_ERROR_RSP
- *                (with SUCCESS status) is received by the calling application
- *                task.
- *
- * @param   connHandle - connection to use
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_DiscAllPrimaryServices(uint16 connHandle, uint8 taskId);
-
-/**
- * @brief   This sub-procedure is used by a client to discover a specific
- *          primary service on a server when only the Service UUID is
- *          known. The primary specific service may exist multiple times
- *          on a server. The primary service being discovered is identified
- *          by the service UUID.
- *
- *          The ATT Find By Type Value Request is used with the Attribute
- *          Type parameter set to the UUID for "Primary Service" and the
- *          Attribute Value set to the 16-bit Bluetooth UUID or 128-bit
- *          UUID for the specific primary service. The Starting Handle shall
- *          be set to 0x0001 and the Ending Handle shall be set to 0xFFFF.
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive multiple OSAL GATT_MSG_EVENT messages.
- *          The type of the messages will be either ATT_FIND_BY_TYPE_VALUE_RSP
- *          or ATT_ERROR_RSP (if an error occurred on the server).
- *
- *          Note: This sub-procedure is complete when either ATT_FIND_BY_TYPE_VALUE_RSP
- *                (with bleProcedureComplete or bleTimeout status) or ATT_ERROR_RSP
- *                (with SUCCESS status) is received by the calling application task.
- *
- * @param   connHandle - connection to use
- * @param   pUUID - pointer to service UUID to look for
- * @param   len - length of value
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_DiscPrimaryServiceByUUID(uint16 connHandle, uint8* pUUID,
-                uint8 len, uint8 taskId);
-/**
- * @brief   This sub-procedure is used by a client to find include
- *          service declarations within a service definition on a
- *          server. The service specified is identified by the service
- *          handle range.
- *
- *          The ATT Read By Type Request is used with the Attribute
- *          Type parameter set to the UUID for "Included Service". The
- *          Starting Handle is set to starting handle of the specified
- *          service and the Ending Handle is set to the ending handle
- *          of the specified service.
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive multiple OSAL GATT_MSG_EVENT messages.
- *          The type of the messages will be either ATT_READ_BY_TYPE_RSP
- *          or ATT_ERROR_RSP (if an error occurred on the server).
- *
- *          Note: This sub-procedure is complete when either ATT_READ_BY_TYPE_RSP
- *                (with bleProcedureComplete or bleTimeout status) or ATT_ERROR_RSP
- *                (with SUCCESS status) is received by the calling application task.
- *
- * @param   connHandle - connection to use
- * @param   startHandle - starting handle
- * @param   endHandle - end handle
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_FindIncludedServices(uint16 connHandle,
-                uint16 startHandle,
-                uint16 endHandle, uint8 taskId);
-/**
- * @brief   This sub-procedure is used by a client to find all the
- *          characteristic declarations within a service definition on
- *          a server when only the service handle range is known. The
- *          service specified is identified by the service handle range.
- *
- *          The ATT Read By Type Request is used with the Attribute Type
- *          parameter set to the UUID for "Characteristic". The Starting
- *          Handle is set to starting handle of the specified service and
- *          the Ending Handle is set to the ending handle of the specified
- *          service.
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive multiple OSAL GATT_MSG_EVENT messages.
- *          The type of the messages will be either ATT_READ_BY_TYPE_RSP
- *          or ATT_ERROR_RSP (if an error occurred on the server).
- *
- *          Note: This sub-procedure is complete when either ATT_READ_BY_TYPE_RSP
- *                (with bleProcedureComplete or bleTimeout status) or ATT_ERROR_RSP
- *                (with SUCCESS status) is received by the calling application task.
- *
- * @param   connHandle - connection to use
- * @param   startHandle - starting handle
- * @param   endHandle - end handle
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_DiscAllChars(uint16 connHandle, uint16 startHandle,
-                                   uint16 endHandle, uint8 taskId);
-/**
- * @brief   This sub-procedure is used by a client to discover service
- *          characteristics on a server when only the service handle
- *          ranges are known and the characteristic UUID is known.
- *          The specific service may exist multiple times on a server.
- *          The characteristic being discovered is identified by the
- *          characteristic UUID.
- *
- *          The ATT Read By Type Request is used with the Attribute Type
- *          is set to the UUID for "Characteristic" and the Starting
- *          Handle and Ending Handle parameters is set to the service
- *          handle range.
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive multiple OSAL GATT_MSG_EVENT messages.
- *          The type of the messages will be either ATT_READ_BY_TYPE_RSP
- *          or ATT_ERROR_RSP (if an error occurred on the server).
- *
- *          Note: This sub-procedure is complete when either ATT_READ_BY_TYPE_RSP
- *                (with bleProcedureComplete or bleTimeout status) or ATT_ERROR_RSP
- *                (with SUCCESS status) is received by the calling application task.
- *
- * @param   connHandle - connection to use
- * @param   pReq - pointer to request to be sent
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_DiscCharsByUUID(uint16 connHandle,
-                                      attReadByTypeReq_t* pReq, uint8 taskId);
-
-/**
- * @brief   This sub-procedure is used by a client to find all the
- *          characteristic descriptor’s Attribute Handles and Attribute
- *          Types within a characteristic definition when only the
- *          characteristic handle range is known. The characteristic
- *          specified is identified by the characteristic handle range.
- *
- *          The ATT Find Information Request is used with the Starting
- *          Handle set to starting handle of the specified characteristic
- *          and the Ending Handle set to the ending handle of the specified
- *          characteristic. The UUID Filter parameter is NULL (zero length).
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive multiple OSAL GATT_MSG_EVENT messages.
- *          The type of the messages will be either ATT_FIND_INFO_RSP or
- *          ATT_ERROR_RSP (if an error occurred on the server).
- *
- *          Note: This sub-procedure is complete when either ATT_FIND_INFO_RSP
- *                (with bleProcedureComplete or bleTimeout status) or ATT_ERROR_RSP
- *                (with SUCCESS status) is received by the calling application task.
- *
- * @param   connHandle - connection to use
- * @param   startHandle - starting handle
- * @param   endHandle - end handle
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_DiscAllCharDescs(uint16 connHandle, uint16 startHandle,
-                                       uint16 endHandle, uint8 taskId);
-/**
- * @brief   This sub-procedure is used to read a Characteristic Value
- *          from a server when the client knows the Characteristic Value
- *          Handle. The ATT Read Request is used with the Attribute Handle
- *          parameter set to the Characteristic Value Handle. The Read
- *          Response returns the Characteristic Value in the Attribute
- *          Value parameter.
- *
- *          The Read Response only contains a Characteristic Value that
- *          is less than or equal to (ATT_MTU ?1) octets in length. If
- *          the Characteristic Value is greater than (ATT_MTU ?1) octets
- *          in length, the Read Long Characteristic Value procedure may
- *          be used if the rest of the Characteristic Value is required.
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive an OSAL GATT_MSG_EVENT message.
- *          The type of the message will be either ATT_READ_RSP or
- *          ATT_ERROR_RSP (if an error occurred on the server).
- *
- *          Note: This sub-procedure is complete when either ATT_READ_RSP
- *                (with SUCCESS or bleTimeout status) or ATT_ERROR_RSP (with
- *                SUCCESS status) is received by the calling application task.
- *
- * @param   connHandle - connection to use
- * @param   pReq - pointer to request to be sent
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_ReadCharValue(uint16 connHandle, attReadReq_t* pReq,
-                                    uint8 taskId);
-
-/**
- * @brief   This sub-procedure is used to read a Characteristic Value
- *          from a server when the client only knows the characteristic
- *          UUID and does not know the handle of the characteristic.
- *
- *          The ATT Read By Type Request is used to perform the sub-procedure.
- *          The Attribute Type is set to the known characteristic UUID and
- *          the Starting Handle and Ending Handle parameters shall be set
- *          to the range over which this read is to be performed. This is
- *          typically the handle range for the service in which the
- *          characteristic belongs.
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive an OSAL GATT_MSG_EVENT messages.
- *          The type of the message will be either ATT_READ_BY_TYPE_RSP
- *          or ATT_ERROR_RSP (if an error occurred on the server).
- *
- *          Note: This sub-procedure is complete when either ATT_READ_BY_TYPE_RSP
- *                (with SUCCESS or bleTimeout status) or ATT_ERROR_RSP (with
- *                SUCCESS status) is received by the calling application task.
- *
- * @param   connHandle - connection to use
- * @param   pReq - pointer to request to be sent
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_ReadUsingCharUUID(uint16 connHandle,
-                                        attReadByTypeReq_t* pReq, uint8 taskId);
-/**
- * @brief   This sub-procedure is used to read a Characteristic Value from
- *          a server when the client knows the Characteristic Value Handle
- *          and the length of the Characteristic Value is longer than can
- *          be sent in a single Read Response Attribute Protocol message.
- *
- *          The ATT Read Blob Request is used in this sub-procedure.
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive multiple OSAL GATT_MSG_EVENT messages.
- *          The type of the messages will be either ATT_READ_BLOB_RSP or
- *          ATT_ERROR_RSP (if an error occurred on the server).
- *
- *          Note: This sub-procedure is complete when either ATT_READ_BLOB_RSP
- *                (with bleProcedureComplete or bleTimeout status) or ATT_ERROR_RSP
- *                (with SUCCESS status) is received by the calling application task.
- *
- * @param   connHandle - connection to use
- * @param   pReq - pointer to request to be sent
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_ReadLongCharValue(uint16 connHandle,
-                                        attReadBlobReq_t* pReq, uint8 taskId);
-
-/**
- * @brief   This sub-procedure is used to read multiple Characteristic Values
- *          from a server when the client knows the Characteristic Value
- *          Handles. The Attribute Protocol Read Multiple Requests is used
- *          with the Set Of Handles parameter set to the Characteristic Value
- *          Handles. The Read Multiple Response returns the Characteristic
- *          Values in the Set Of Values parameter.
- *
- *          The ATT Read Multiple Request is used in this sub-procedure.
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive an OSAL GATT_MSG_EVENT message.
- *          The type of the message will be either ATT_READ_MULTI_RSP
- *          or ATT_ERROR_RSP (if an error occurred on the server).
- *
- *          Note: This sub-procedure is complete when either ATT_READ_MULTI_RSP
- *                (with SUCCESS or bleTimeout status) or ATT_ERROR_RSP (with
- *                SUCCESS status) is received by the calling application task.
- *
- * @param   connHandle - connection to use
- * @param   pReq - pointer to request to be sent
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_ReadMultiCharValues(uint16 connHandle,
-                attReadMultiReq_t* pReq, uint8 taskId);
-
-/**
- * @brief   This sub-procedure is used to write a Characteristic Value
- *          to a server when the client knows the Characteristic Value
- *          Handle and the client does not need an acknowledgement that
- *          the write was successfully performed. This sub-procedure
- *          only writes the first (ATT_MTU ?3) octets of a Characteristic
- *          Value. This sub-procedure can not be used to write a long
- *          characteristic; instead the Write Long Characteristic Values
- *          sub-procedure should be used.
- *
- *          The ATT Write Command is used for this sub-procedure. The
- *          Attribute Handle parameter shall be set to the Characteristic
- *          Value Handle. The Attribute Value parameter shall be set to
- *          the new Characteristic Value.
- *
- *          No response will be sent to the calling application task for this
- *          sub-procedure. If the Characteristic Value write request is the
- *          wrong size, or has an invalid value as defined by the profile,
- *          then the write will not succeed and no error will be generated
- *          by the server.
- *
- * @param   connHandle - connection to use
- * @param   pReq - pointer to command to be sent
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_WriteNoRsp(uint16 connHandle, attWriteReq_t* pReq);
-
-/**
- * @brief   This sub-procedure is used to write a Characteristic Value
- *          to a server when the client knows the Characteristic Value
- *          Handle and the ATT Bearer is not encrypted. This sub-procedure
- *          shall only be used if the Characteristic Properties authenticated
- *          bit is enabled and the client and server device share a bond as
- *          defined in the GAP.
- *
- *          This sub-procedure only writes the first (ATT_MTU ?15) octets
- *          of an Attribute Value. This sub-procedure cannot be used to
- *          write a long Attribute.
- *
- *          The ATT Write Command is used for this sub-procedure. The
- *          Attribute Handle parameter shall be set to the Characteristic
- *          Value Handle. The Attribute Value parameter shall be set to
- *          the new Characteristic Value authenticated by signing the
- *          value, as defined in the Security Manager.
- *
- *          No response will be sent to the calling application task for this
- *          sub-procedure. If the authenticated Characteristic Value that is
- *          written is the wrong size, or has an invalid value as defined by
- *          the profile, or the signed value does not authenticate the client,
- *          then the write will not succeed and no error will be generated by
- *          the server.
- *
- * @param   connHandle - connection to use
- * @param   pReq - pointer to command to be sent
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleLinkEncrypted: Connection is already encrypted.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_SignedWriteNoRsp(uint16 connHandle, attWriteReq_t* pReq);
-
-/**
- * @brief   This sub-procedure is used to write a characteristic value
- *          to a server when the client knows the characteristic value
- *          handle. This sub-procedure only writes the first (ATT_MTU-3)
- *          octets of a characteristic value. This sub-procedure can not
- *          be used to write a long attribute; instead the Write Long
- *          Characteristic Values sub-procedure should be used.
- *
- *          The ATT Write Request is used in this sub-procedure. The
- *          Attribute Handle parameter shall be set to the Characteristic
- *          Value Handle. The Attribute Value parameter shall be set to
- *          the new characteristic.
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive an OSAL GATT_MSG_EVENT message.
- *          The type of the message will be either ATT_WRITE_RSP
- *          or ATT_ERROR_RSP (if an error occurred on the server).
- *
- *          Note: This sub-procedure is complete when either ATT_WRITE_RSP
- *                (with SUCCESS or bleTimeout status) or ATT_ERROR_RSP (with
- *                SUCCESS status) is received by the calling application task.
- *
- * @param   connHandle - connection to use
- * @param   pReq - pointer to request to be sent
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_WriteCharValue(uint16 connHandle, attWriteReq_t* pReq,
-                                     uint8 taskId);
-
-/**
- * @brief   This sub-procedure is used to write a Characteristic Value to
- *          a server when the client knows the Characteristic Value Handle
- *          but the length of the Characteristic Value is longer than can
- *          be sent in a single Write Request Attribute Protocol message.
- *
- *          The ATT Prepare Write Request and Execute Write Request are
- *          used to perform this sub-procedure.
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive multiple OSAL GATT_MSG_EVENT messages.
- *          The type of the messages will be either ATT_PREPARE_WRITE_RSP,
- *          ATT_EXECUTE_WRITE_RSP or ATT_ERROR_RSP (if an error occurred on
- *          the server).
- *
- *          Note: This sub-procedure is complete when either ATT_PREPARE_WRITE_RSP
- *                (with bleTimeout status), ATT_EXECUTE_WRITE_RSP (with SUCCESS
- *                or bleTimeout status), or ATT_ERROR_RSP (with SUCCESS status)
- *                is received by the calling application task.
- *
- *          Note: The 'pReq->pValue' pointer will be freed when the sub-procedure
- *                is complete.
- *
- * @param   connHandle - connection to use
- * @param   pReq - pointer to request to be sent
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_WriteLongCharValue(uint16 connHandle,
-                attPrepareWriteReq_t* pReq, uint8 taskId);
-
-/**
- * @brief   This sub-procedure is used to write a Characteristic Value to
- *          a server when the client knows the Characteristic Value Handle,
- *          and assurance is required that the correct Characteristic Value
- *          is going to be written by transferring the Characteristic Value
- *          to be written in both directions before the write is performed.
- *          This sub-procedure can also be used when multiple values must
- *          be written, in order, in a single operation.
- *
- *          The sub-procedure has two phases, the first phase prepares the
- *          characteristic values to be written.  Once this is complete,
- *          the second phase performs the execution of all of the prepared
- *          characteristic value writes on the server from this client.
- *
- *          In the first phase, the ATT Prepare Write Request is used.
- *          In the second phase, the attribute protocol Execute Write
- *          Request is used.
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive multiple OSAL GATT_MSG_EVENT messages.
- *          The type of the messages will be either ATT_PREPARE_WRITE_RSP,
- *          ATT_EXECUTE_WRITE_RSP or ATT_ERROR_RSP (if an error occurred on
- *          the server).
- *
- *          Note: This sub-procedure is complete when either ATT_PREPARE_WRITE_RSP
- *                (with bleTimeout status), ATT_EXECUTE_WRITE_RSP (with SUCCESS
- *                or bleTimeout status), or ATT_ERROR_RSP (with SUCCESS status)
- *                is received by the calling application task.
- *
- *          Note: The 'pReqs' pointer will be freed when the sub-procedure is
- *                complete.
- *
- * @param   connHandle - connection to use
- * @param   pReqs - pointer to requests to be sent (must be allocated)
- * @param   numReqs - number of requests in pReq
- * @param   flags - execute write request flags
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_ReliableWrites(uint16 connHandle,
-                                     attPrepareWriteReq_t* pReqs,
-                                     uint8 numReqs, uint8 flags, uint8 taskId);
-/**
- * @brief   This sub-procedure is used to read a characteristic descriptor
- *          from a server when the client knows the characteristic descriptor
- *          declaration’s Attribute handle.
- *
- *          The ATT Read Request is used for this sub-procedure. The Read
- *          Request is used with the Attribute Handle parameter set to the
- *          characteristic descriptor handle. The Read Response returns the
- *          characteristic descriptor value in the Attribute Value parameter.
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive an OSAL GATT_MSG_EVENT message.
- *          The type of the message will be either ATT_READ_RSP or
- *          ATT_ERROR_RSP (if an error occurred on the server).
- *
- *          Note: This sub-procedure is complete when either ATT_READ_RSP
- *                (with SUCCESS or bleTimeout status) or ATT_ERROR_RSP (with
- *                SUCCESS status) is received by the calling application task.
- *
- * @param   connHandle - connection to use
- * @param   pReq - pointer to request to be sent
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_ReadCharDesc(uint16 connHandle, attReadReq_t* pReq,
-                                   uint8 taskId);
-
-/**
- * @brief   This sub-procedure is used to read a characteristic descriptor
- *          from a server when the client knows the characteristic descriptor
- *          declaration’s Attribute handle and the length of the characteristic
- *          descriptor declaration is longer than can be sent in a single Read
- *          Response attribute protocol message.
- *
- *          The ATT Read Blob Request is used to perform this sub-procedure.
- *          The Attribute Handle parameter shall be set to the characteristic
- *          descriptor handle. The Value Offset parameter shall be the offset
- *          within the characteristic descriptor to be read.
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive multiple OSAL GATT_MSG_EVENT messages.
- *          The type of the messages will be either ATT_READ_BLOB_RSP or
- *          ATT_ERROR_RSP (if an error occurred on the server).
- *
- *          Note: This sub-procedure is complete when either ATT_READ_BLOB_RSP
- *                (with bleProcedureComplete or bleTimeout status) or ATT_ERROR_RSP
- *                (with SUCCESS status) is received by the calling application task.
- *
- * @param   connHandle - connection to use
- * @param   pReq - pointer to request to be sent
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_ReadLongCharDesc(uint16 connHandle,
-                                       attReadBlobReq_t* pReq, uint8 taskId);
-
-/**
- * @brief   This sub-procedure is used to write a characteristic
- *          descriptor value to a server when the client knows the
- *          characteristic descriptor handle.
- *
- *          The ATT Write Request is used for this sub-procedure. The
- *          Attribute Handle parameter shall be set to the characteristic
- *          descriptor handle. The Attribute Value parameter shall be
- *          set to the new characteristic descriptor value.
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive an OSAL GATT_MSG_EVENT message.
- *          The type of the message will be either ATT_WRITE_RSP
- *          or ATT_ERROR_RSP (if an error occurred on the server).
- *
- *          Note: This sub-procedure is complete when either ATT_WRITE_RSP
- *                (with SUCCESS or bleTimeout status) or ATT_ERROR_RSP (with
- *                SUCCESS status) is received by the calling application task.
- *
- * @param   connHandle - connection to use
- * @param   pReq - pointer to request to be sent
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.<BR>
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_WriteCharDesc(uint16 connHandle, attWriteReq_t* pReq,
-                                    uint8 taskId);
-
-/**
- * @brief   This sub-procedure is used to write a Characteristic Value to
- *          a server when the client knows the Characteristic Value Handle
- *          but the length of the Characteristic Value is longer than can
- *          be sent in a single Write Request Attribute Protocol message.
- *
- *          The ATT Prepare Write Request and Execute Write Request are
- *          used to perform this sub-procedure.
- *
- *          If the return status from this function is SUCCESS, the calling
- *          application task will receive multiple OSAL GATT_MSG_EVENT messages.
- *          The type of the messages will be either ATT_PREPARE_WRITE_RSP,
- *          ATT_EXECUTE_WRITE_RSP or ATT_ERROR_RSP (if an error occurred on
- *          the server).
- *
- *          Note: This sub-procedure is complete when either ATT_PREPARE_WRITE_RSP
- *                (with bleTimeout status), ATT_EXECUTE_WRITE_RSP (with SUCCESS
- *                or bleTimeout status), or ATT_ERROR_RSP (with SUCCESS status)
- *                is received by the calling application task.
- *
- *          Note: The 'pReq->pValue' pointer will be freed when the sub-procedure
- *                is complete.
- *
- * @param   connHandle - connection to use
- * @param   pReq - pointer to request to be sent
- * @param   taskId - task to be notified of response
- *
- * @return  SUCCESS: Request was sent successfully.<BR>
- *          INVALIDPARAMETER: Invalid connection handle or request field.v
- *          MSG_BUFFER_NOT_AVAIL: No HCI buffer is available.<BR>
- *          bleNotConnected: Connection is down.<BR>
- *          blePending: A response is pending with this server.<BR>
- *          bleMemAllocError: Memory allocation error occurred.<BR>
- *          bleTimeout: Previous transaction timed out.<BR>
- */
-extern bStatus_t GATT_WriteLongCharDesc(uint16 connHandle,
-                                        attPrepareWriteReq_t* pReq, uint8 taskId);
-
-/**
- * @}
- */
-
-/*-------------------------------------------------------------------
- * GATT Client and Server Common APIs
- */
-
-/**
- * @defgroup GATT_COMMON_API Client and Server Common API Functions
- *
- * @{
- */
-
-/**
- * @brief   Register your task ID to receive GATT local events and ATT Response
- *          messages pending for transmission. When the GATT Server fails to
- *          respond to an incoming ATT Request due to lack of HCI Tx buffers,
- *          the response will be forwarded the app for retransmission.
- *
- *          Note: A pending ATT Response message forwarded to the app should be
- *                transmitted using GATT_SendRsp(), or its payload freed using
- *                GATT_bm_free() if not transmitted.
- *
- * @param   taskID - Default task ID to send GATT events/pending ATT responses.
- *
- * @return  none
- */
-extern void GATT_RegisterForMsgs(uint8 taskID);
-
-/**
- * @brief   Send an event to upper layer application/protocol.
- *
- * @param   connHandle - connection event belongs to
- * @param   status - status
- * @param   method - type of message
- * @param   pMsg - pointer to message to be sent
- *
- * @return  SUCCESS, INVALIDPARAMETER or bleMemAllocError
- */
-extern bStatus_t GATT_NotifyEvent(uint16 connHandle, uint8 status, uint8 method,
-                                  gattMsg_t* pMsg);
-
-/**
- * @brief   Update ATT_MTU size for a given connection.
- *
- * @param   connHandle - connection handle.<BR>
- * @param   mtuSize - new MTU size.<BR>
- *
- * @return  none.
- */
-extern void GATT_UpdateMTU(uint16 connHandle, uint16 mtuSize);
-
-/**
- * @}
- */
-
-/*-------------------------------------------------------------------
- * GATT Buffer Management APIs
- */
-
-/**
- * @defgroup GATT_BM_API GATT Buffer Management API Functions
- *
- * @{
- */
-
-/**
- * @brief   GATT implementation of the allocator functionality.
- *
- *          Note: This function should only be called by GATT and
- *                the upper layer protocol/application.
- *
- * @param   connHandle - connection that message is to be sent on.
- * @param   opcode - opcode of message that buffer to be allocated for.
- * @param   size - number of bytes to allocate from the heap.
- * @param   pSizeAlloc - number of bytes allocated for the caller from the heap.
- *
- * @return  pointer to the heap allocation; NULL if error or failure.
- */
-extern void* GATT_bm_alloc(uint16 connHandle, uint8 opcode, uint16 size,
-                           uint16* pSizeAlloc);
-
-/**
- * @brief   GATT implementation of the de-allocator functionality.
- *
- * @param   pMsg - pointer to GATT message containing the memory to free.
- * @param   opcode - opcode of the message
- *
- * @return  none
- */
-extern void GATT_bm_free(gattMsg_t* pMsg, uint8 opcode);
-
-/**
- * @}
- */
-
-/*-------------------------------------------------------------------
- * GATT Flow Control APIs
- */
-
-/**
- * @defgroup GATT_FLOW_CTRL_API GATT Flow Control API Functions
- *
- * @{
- */
-
-/**
- * @brief   This API is used by the Application to turn flow control on
- *          or off for GATT messages sent from the Host to the Application.
- *
- *          Note: If the flow control is enabled then the Application must
- *                call the GATT_AppCompletedMsg() API when it completes
- *                processing an incoming GATT message.
- *
- * @param   heapSize - internal heap size
- * @param   flowCtrlMode ?flow control mode: TRUE or FALSE
- *
- * @return  void
- */
-extern void GATT_SetHostToAppFlowCtrl(uint16 heapSize, uint8 flowCtrlMode);
-
-/**
- * @brief   This API is used by the Application to notify GATT that
- *          the processing of a message has been completed.
- *
- * @param   pMsg ?pointer to the processed GATT message
- *
- * @return  void
- */
-extern void GATT_AppCompletedMsg(gattMsgEvent_t* pMsg);
-
-/**
- * @}
- */
-
-/*-------------------------------------------------------------------
- * Internal API - This function is only called from GATT Qualification modules.
- */
-
-/**
- * @internal
- *
- * @brief       Set the next available attribute handle.
- *
- * @param       handle - next attribute handle.
- *
- * @return      none
- */
-extern void GATT_SetNextHandle(uint16 handle);
-
-/**
- * @internal
- *
- * @brief       Return the next available attribute handle.
- *
- * @param       none
- *
- * @return      next attribute handle
- */
-extern uint16 GATT_GetNextHandle(void);
-
-/*-------------------------------------------------------------------
- * TASK API - These functions must only be called by OSAL.
- */
-
-/**
- * @internal
- *
- * @brief   GATT Task initialization function.
- *
- * @param   taskId - GATT task ID.
- *
- * @return  void
- */
-extern void GATT_Init(uint8 taskId);
-
-/**
- * @internal
- *
- * @brief   GATT Task event processing function.
- *
- * @param   taskId - GATT task ID
- * @param   events - GATT events.
- *
- * @return  events not processed
- */
-extern uint16 GATT_ProcessEvent(uint8 taskId, uint16 events);
-
-/*********************************************************************
-*********************************************************************/
-
-#ifdef __cplusplus
-}
+typedef union
+{
+	// Request messages
+	attExchangeMTUReq_t exchangeMTUReq;              //!< ATT Exchange MTU Request
+	attFindInfoReq_t findInfoReq;                    //!< ATT Find Information Request
+	attFindByTypeValueReq_t findByTypeValueReq;      //!< ATT Find By Type Value Request
+	attReadByTypeReq_t readByTypeReq;                //!< ATT Read By Type Request
+	attReadReq_t readReq;                            //!< ATT Read Request
+	attReadBlobReq_t readBlobReq;                    //!< ATT Read Blob Request
+	attReadMultiReq_t readMultiReq;                  //!< ATT Read Multiple Request
+	attReadByGrpTypeReq_t readByGrpTypeReq;          //!< ATT Read By Group Type Request
+	attWriteReq_t writeReq;                          //!< ATT Write Request
+	attPrepareWriteReq_t prepareWriteReq;            //!< ATT Prepare Write Request
+	attExecuteWriteReq_t executeWriteReq;            //!< ATT Execute Write Request
+	gattFindByTypeValueReq_t gattFindByTypeValueReq; //!< GATT Find By Type Value Request
+	gattReadByTypeReq_t gattReadByTypeReq;           //!< GATT Read By Type Request
+	gattWriteLongReq_t gattWriteLongReq;             //!< GATT Long Write Request
+	gattReliableWritesReq_t gattReliableWritesReq;   //!< GATT Reliable Writes Request
+
+	// Response messages
+	attErrorRsp_t errorRsp;                          //!< ATT Error Response
+	attExchangeMTURsp_t exchangeMTURsp;              //!< ATT Exchange MTU Response
+	attFindInfoRsp_t findInfoRsp;                    //!< ATT Find Information Response
+	attFindByTypeValueRsp_t findByTypeValueRsp;      //!< ATT Find By Type Value Response
+	attReadByTypeRsp_t readByTypeRsp;                //!< ATT Read By Type Response
+	attReadRsp_t readRsp;                            //!< ATT Read Response
+	attReadBlobRsp_t readBlobRsp;                    //!< ATT Read Blob Response
+	attReadMultiRsp_t readMultiRsp;                  //!< ATT Read Multiple Response
+	attReadByGrpTypeRsp_t readByGrpTypeRsp;          //!< ATT Read By Group Type Response
+	attPrepareWriteRsp_t prepareWriteRsp;            //!< ATT Prepare Write Response
+
+	// Indication and Notification messages
+	attHandleValueNoti_t handleValueNoti;            //!< ATT Handle Value Notification
+	attHandleValueInd_t handleValueInd;              //!< ATT Handle Value Indication
+
+	// Locally-generated event messages
+	attFlowCtrlViolatedEvt_t flowCtrlEvt;            //!< ATT Flow Control Violated Event
+	attMtuUpdatedEvt_t mtuEvt;                       //!< ATT MTU Updated Event
+} u_GattMsg,u_AttMsg;
+
+/**
+* GATT OSAL GATT_MSG_EVENT message format. This message is used to forward an
+* incoming attribute protocol/profile message up to upper layer application.
+*/
+typedef struct {
+	//!< GATT_MSG_EVENT and status
+	UINT16 connHandle;    //!< Connection message was received on
+	UINT8 method;         //!< Type of message
+	u_GattMsg msg;        //!< Attribute protocol/profile message
+} gattMsgEvent_t;
+#pragma pack()
 #endif
-
-#endif /* GATT_H */

@@ -106,6 +106,7 @@
   <ItemGroup>
     <ClInclude Include="..\NPI\Include\com.h" />
     <ClInclude Include="..\NPI\Include\CommonDef.h" />
+    <ClInclude Include="..\NPI\Include\gap.h" />
     <ClInclude Include="..\NPI\Include\gatt.h" />
     <ClInclude Include="..\NPI\Include\hci_tl.h" />
     <ClInclude Include="..\NPI\Include\log.h" />

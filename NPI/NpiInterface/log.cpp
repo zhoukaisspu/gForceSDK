@@ -206,7 +206,7 @@ void Log::Analyze_LL_Event(PUINT8 buf, UINT8 size)
 		Sprintf_DumpRx(buf, size);
 		/*send status message to com-thread*/
 		while (!PostThreadMessage(comThreadID, RX_STATUS_MSG, pEvt->status, 0)) {
-			Log_printf(L"Post RX_STATUS_MSG Err:%d\n", GetLastError());
+			LogW(L"Post RX_STATUS_MSG Err:%d\n", GetLastError());
 			Sleep(500);
 		}
 		/*delete heap buffer ?*/
@@ -219,13 +219,13 @@ void Log::Analyze_LL_Event(PUINT8 buf, UINT8 size)
 		Sprintf_DumpRx(buf, size);
 		/*send status message to com-thread*/
 		while (!PostThreadMessage(comThreadID, RX_STATUS_MSG, pEvt->status, 0)) {
-			Log_printf(L"Post RX_STATUS_MSG Err:%d\n", GetLastError());
+			LogW(L"Post RX_STATUS_MSG Err:%d\n", GetLastError());
 			Sleep(500);
 		}
 		/*send event message to evt-thread and delete heap in that thread*/
-		while (!PostThreadMessage(evtThreadID, HCI_DECRYPT_MSG, (WPARAM)pEvt->data,
-		                          pEvt->len - 3)) {
-			Log_printf(L"Post HCI_DECRYPT_MSG Err:%d\n", GetLastError());
+		while (!PostThreadMessage(evtThreadID, HCI_DECRYPT_MSG, (WPARAM)&pEvt->status,
+		                          pEvt->len - 2)) {
+			LogW(L"Post HCI_DECRYPT_MSG Err:%d\n", GetLastError());
 			Sleep(500);
 		}
 		break;
@@ -288,7 +288,7 @@ void Log::Analyze_L2CAP_Event(PUINT8 buf, UINT8 size)
 	if (msg_type != 0) {
 		while (!PostThreadMessage(evtThreadID, msg_type, (WPARAM)&pEvt->status,
 		                          pEvt->len - 2)) {
-			Log_printf(L"Post L2CAP_MSG Err:%d, Type:0x%x\n", GetLastError(), msg_type);
+			LogW(L"Post L2CAP_MSG Err:%d, Type:0x%x\n", GetLastError(), msg_type);
 			Sleep(500);
 		}
 	}
@@ -300,43 +300,112 @@ void Log::Analyze_ATT_Event(PUINT8 buf, UINT8 size)
 	BOOL del_flag = TRUE;
 	sNpiEvt* pEvt = (sNpiEvt*)buf;
 	UINT16 event = BUILD_UINT16(pEvt->event_lo, pEvt->event_hi);
-	UINT16 msg_type = 0;
-	sAttExMtuRsp* pExMtuEvt;
+	UINT16 i,msg_type = 0;
+	UINT16 pduLen;
+	UINT8 len, cnt;
+	u_AttMsg *pAttMsg = (u_AttMsg *)&pEvt->status;
 	switch (event) {
 	case ATT_ERROR_EVENT:
+		Log_printf(L"ReqOpCode		: 0x%02X\n", pAttMsg->errorRsp.reqOpcode);
+		Log_printf(L"Handle			: 0x%04X\n", pAttMsg->errorRsp.handle);
+		Log_printf(L"ErrorCode		: 0x%02X\n", pAttMsg->errorRsp.errCode);
 		msg_type = ATT_ERROR_MSG;
 		break;
 	case ATT_EXCHANGE_MTU_EVENT:
-		pExMtuEvt = (sAttExMtuRsp*)&pEvt->status;
-
-		Log_printf(L"connHandle		: 0x%04X\n", BUILD_UINT16(pExMtuEvt->handle_lo,
-		                pExMtuEvt->handle_hi));
-		Log_printf(L"PduLen			: 0x%02X\n", pExMtuEvt->pdu_len);
-		Log_printf(L"ServerRxMtu		: 0x%04X\n", BUILD_UINT16(pExMtuEvt->mtu_lo,
-		                pExMtuEvt->mtu_hi));
+		Log_printf(L"connHandle		: 0x%04X\n", pAttMsg->exchangeMTURsp.conHandle);
+		Log_printf(L"PduLen			: 0x%02X\n", pAttMsg->exchangeMTURsp.pduLen);
+		if (pAttMsg->exchangeMTURsp.pduLen > 0){
+			Log_printf(L"ServerRxMtu		: 0x%04X\n", pAttMsg->exchangeMTURsp.serverRxMTU);
+		}
 		msg_type = ATT_EXCHANGE_MTU_MSG;
 		break;
 	case ATT_FIND_INFO_EVENT:
-		//Log_printf(L"connHandle                    : 0x%04X\n", BUILD_UINT16(pExMtuEvt->handle_lo, pExMtuEvt->handle_hi));
-		//Log_printf(L"PduLen                                : 0x%02X\n", pExMtuEvt->pdu_len);
+		Log_printf(L"connHandle		: 0x%04X\n", pAttMsg->findInfoRsp.conHandle);
+		Log_printf(L"PduLen			: 0x%02X\n", pAttMsg->findInfoRsp.pduLen);
+		if (pAttMsg->findInfoRsp.pduLen > 0){
+			Log_printf(L"Format			: 0x%02X\n", pAttMsg->findInfoRsp.format);
+			if (pAttMsg->findInfoRsp.format == 1){//2-oct uuid
+				for (i = 0; i < (pAttMsg->findInfoRsp.pduLen - 1) / sizeof(attHandleBtUUID_t); i++){
+					Log_printf(L"Handle			: 0x%02X\n", pAttMsg->findInfoRsp.Info.uuid2[i].handle);
+					Log_printf(L"UUID			: ");
+					Sprintf_HexData(pAttMsg->findInfoRsp.Info.uuid2[i].uuid, ATT_BT_UUID_SIZE);
+				}
+			}
+			else{//16-oct uuid
+				for (i = 0; i < (pAttMsg->findInfoRsp.pduLen - 1) / sizeof(attHandleUUID_t); i++){
+					Log_printf(L"Handle			: 0x%02X\n", pAttMsg->findInfoRsp.Info.uuid16[i].handle);
+					Log_printf(L"UUID			: ");
+					Sprintf_HexData(pAttMsg->findInfoRsp.Info.uuid16[i].uuid, ATT_UUID_SIZE);
+				}
+			}
+		}
 		msg_type = ATT_FIND_INFO_MSG;
 		break;
 	case ATT_FIND_BY_TYPE_VALUE_EVENT:
+		Log_printf(L"connHandle		: 0x%04X\n", pAttMsg->findByTypeValueRsp.conHandle);
+		pduLen = pAttMsg->findByTypeValueRsp.pduLen;
+		Log_printf(L"PduLen			: 0x%02X\n", pduLen);
+		if (pduLen > 0){
+			for (i = 0; i < (pduLen / 2);i++){
+				Log_printf(L"Handle			: 0x%02X\n", pAttMsg->findByTypeValueRsp.handle[i]);
+			}
+		}
 		msg_type = ATT_FIND_BY_TYPE_VALUE_MSG;
 		break;
 	case ATT_READ_BY_TYPE_EVENT:
+		pduLen = pAttMsg->readByTypeRsp.pduLen;
+		Log_printf(L"connHandle		: 0x%04X\n", pAttMsg->readByTypeRsp.conHdl);
+		Log_printf(L"PduLen			: 0x%02X\n", pduLen);
+		if (pduLen > 0){
+			len = pAttMsg->readByTypeRsp.len;
+			Log_printf(L"Length			: 0x%02X\n", len);
+			cnt = (pduLen - 1) / len;//loop times
+			for (i = 0; i < cnt; i++){
+				Log_printf(L"Handle			: 0x%04X\n", pAttMsg->readByTypeRsp.data[i*len]);
+				Log_printf(L"Data			: ");
+				Sprintf_HexData(&pAttMsg->readByTypeRsp.data[i*len + 2], len - 2);
+			}
+		}
 		msg_type = ATT_READ_BY_TYPE_MSG;
 		break;
 	case ATT_READ_EVENT:
+		pduLen = pAttMsg->readRsp.pduLen;
+		Log_printf(L"connHandle		: 0x%04X\n", pAttMsg->readRsp.conHdl);
+		Log_printf(L"PduLen			: 0x%02X\n", pduLen);
+		if (pduLen > 0){
+			Log_printf(L"Value			: ");
+			Sprintf_HexData(&pAttMsg->readRsp.value[0], pduLen);
+		}
 		msg_type = ATT_READ_MSG;
 		break;
 	case ATT_READ_BLOB_EVENT:
 		msg_type = ATT_READ_BLOB_MSG;
 		break;
 	case ATT_READ_MULTI_EVENT:
+		pduLen = pAttMsg->readMultiRsp.pduLen;
+		Log_printf(L"connHandle		: 0x%04X\n", pAttMsg->readMultiRsp.conHdl);
+		Log_printf(L"PduLen			: 0x%02X\n", pduLen);
+		if (pduLen > 0){
+			Log_printf(L"Values			: ");
+			Sprintf_HexData(&pAttMsg->readMultiRsp.value[0], pduLen);
+		}
 		msg_type = ATT_READ_MULTI_MSG;
 		break;
 	case ATT_READ_BY_GRP_TYPE_EVENT:
+		pduLen = pAttMsg->readByGrpTypeRsp.pduLen;
+		Log_printf(L"connHandle		: 0x%04X\n", pAttMsg->readByGrpTypeRsp.conHdl);
+		Log_printf(L"PduLen			: 0x%02X\n", pduLen);
+		if (pduLen > 0){
+			len = pAttMsg->readByGrpTypeRsp.len;
+			Log_printf(L"Length			: 0x%02X\n", len);
+			cnt = (pduLen - 1) / len;//loop times
+			for (i = 0; i < cnt; i++){
+				Log_printf(L"AttrHandle		: 0x%04X\n", pAttMsg->readByGrpTypeRsp.data[i*len]);
+				Log_printf(L"EndGrpHandle		: 0x%04X\n", pAttMsg->readByGrpTypeRsp.data[i*len + 2]);
+				Log_printf(L"Value			: ");
+				Sprintf_HexData(&pAttMsg->readByGrpTypeRsp.data[i*len + 4], len - 4);
+			}
+		}
 		msg_type = ATT_READ_BY_GRP_TYPE_MSG;
 		break;
 	case ATT_WRITE_EVENT:
@@ -370,7 +439,7 @@ void Log::Analyze_ATT_Event(PUINT8 buf, UINT8 size)
 	if (msg_type != 0) {
 		while (!PostThreadMessage(evtThreadID, msg_type, (WPARAM)&pEvt->status,
 		                          pEvt->len - 2)) {
-			Log_printf(L"Post L2CAP_MSG Err:%d, Ttpe:0x%x\n", GetLastError(), msg_type);
+			LogW(L"Post ATT_MSG Err:%d, Ttpe:0x%x\n", GetLastError(), msg_type);
 			Sleep(500);
 		}
 	}
@@ -378,7 +447,7 @@ void Log::Analyze_ATT_Event(PUINT8 buf, UINT8 size)
 
 void Log::Analyze_GATT_Event(PUINT8 buf, UINT8 size)
 {
-	/*Nothing*/
+	/*nothing*/
 }
 
 void Log::Analyze_GAP_Event(PUINT8 buf, UINT8 size)
@@ -389,19 +458,8 @@ void Log::Analyze_GAP_Event(PUINT8 buf, UINT8 size)
 	UINT16 opCode = BUILD_UINT16(pEvt->data[0], pEvt->data[1]);
 	UINT16 msg_type = 0;
 	UINT8 i;
-	gapDeviceInitDoneEvent_t* InitDone_Evt = NULL;
-	gapDevDiscEvent_t* Disc_Evt = NULL;
-	gapDevRec_t* Dev_Rec = NULL;
-	gapEstLinkReqEvent_t* EstLink_Evt = NULL;
-	gapTerminateLinkEvent_t* TerLink_Evt = NULL;
-	gapRandomAddrEvent_t* RanAddr_Evt = NULL;
-	gapSignUpdateEvent_t* SigUpdate_Evt = NULL;
-	gapAuthCompleteEvent_t* AuthComp_Evt = NULL;
-	gapPasskeyNeededEvent_t* PassKeyNeed_Evt = NULL;
-	gapSlaveSecurityReqEvent_t* SlaveSec_Evt = NULL;
-	gapDeviceInfoEvent_t* DevInfo_Evt = NULL;
-	gapPairingReqEvent_t* PairReq_Evt = NULL;
 
+	u_GapMsg *gapMsg = (u_GapMsg *)&pEvt->status;
 	switch (event) {
 	case HCI_EXT_GAP_CMD_STATUS_EVENT:
 		Log_printf(L"OpCode		: 0x%04X\n", opCode);
@@ -415,27 +473,24 @@ void Log::Analyze_GAP_Event(PUINT8 buf, UINT8 size)
 		}
 		break;
 	case HCI_EXT_GAP_DEVICE_INIT_DONE_EVENT:
-		InitDone_Evt = (gapDeviceInitDoneEvent_t*)&pEvt->data[0];
 		Log_printf(L"DevAddr		: ");
-		Sprintf_HexData(InitDone_Evt->devAddr, BLE_ADDR_LEN);
-		Log_printf(L"DataPktLen		: 0x%04X\n", InitDone_Evt->dataPktLen);
-		Log_printf(L"NumDataPkts		: 0x%02X\n", InitDone_Evt->numDataPkts);
+		Sprintf_HexData(gapMsg->InitDone_Evt.devAddr, BLE_ADDR_LEN);
+		Log_printf(L"DataPktLen		: 0x%04X\n", gapMsg->InitDone_Evt.dataPktLen);
+		Log_printf(L"NumDataPkts		: 0x%02X\n", gapMsg->InitDone_Evt.numDataPkts);
 		Log_printf(L"IRK			: ");
-		Sprintf_HexData(InitDone_Evt->irk, IRK_LEN);
+		Sprintf_HexData(gapMsg->InitDone_Evt.irk, IRK_LEN);
 		Log_printf(L"CSRK			: ");
-		Sprintf_HexData(InitDone_Evt->csrk, CSRK_LEN);
+		Sprintf_HexData(gapMsg->InitDone_Evt.csrk, CSRK_LEN);
 		msg_type = HCI_EXT_GAP_DEVICE_INIT_DONE_MSG;
 		break;
 	case HCI_EXT_GAP_DEVICE_DISCOVERY_EVENT:
-		Disc_Evt = (gapDevDiscEvent_t*)&pEvt->data[0];
-		Dev_Rec = (gapDevRec_t*)&pEvt->data[1];
-		Log_printf(L"NumDevs		: 0x%02X\n", Disc_Evt->numDevs);
-		for (i = 0; i < Disc_Evt->numDevs; i++) {
+		Log_printf(L"NumDevs		: 0x%02X\n", gapMsg->DiscDone_Evt.numDevs);
+		for (i = 0; i < gapMsg->DiscDone_Evt.numDevs; i++) {
 			Log_printf(L"Device #%d\n", i);
-			Log_printf(L"EventType		: 0x%02X\n", Dev_Rec[i].eventType);
-			Log_printf(L"AddrType		: 0x%02X\n", Dev_Rec[i].addrType);
+			Log_printf(L"EventType		: 0x%02X\n", gapMsg->DiscDone_Evt.DevList[i].eventType);
+			Log_printf(L"AddrType		: 0x%02X\n", gapMsg->DiscDone_Evt.DevList[i].addrType);
 			Log_printf(L"Addr			: ");
-			Sprintf_HexData(Dev_Rec[i].addr, BLE_ADDR_LEN);
+			Sprintf_HexData(gapMsg->DiscDone_Evt.DevList[i].addr, BLE_ADDR_LEN);
 		}
 		msg_type = HCI_EXT_GAP_DEVICE_DISCOVERY_MSG;
 		break;
@@ -448,21 +503,19 @@ void Log::Analyze_GAP_Event(PUINT8 buf, UINT8 size)
 		del_flag = TRUE;
 		break;
 	case HCI_EXT_GAP_LINK_ESTABLISHED_EVENT:
-		EstLink_Evt = (gapEstLinkReqEvent_t*)&pEvt->data[0];
-		Log_printf(L"DevAddrType		: 0x%02X\n", EstLink_Evt->devAddrType);
+		Log_printf(L"DevAddrType		: 0x%02X\n", gapMsg->EstLink_Evt.devAddrType);
 		Log_printf(L"DevAddr			: ");
-		Sprintf_HexData(EstLink_Evt->devAddr, BLE_ADDR_LEN);
-		Log_printf(L"ConnHandle		: 0x%04X\n", EstLink_Evt->connectionHandle);
-		Log_printf(L"ConnRole		: 0x%02X\n", EstLink_Evt->connRole);
-		Log_printf(L"ConnInterval		: 0x%04X\n", EstLink_Evt->connInterval);
-		Log_printf(L"ConnLatency		: 0x%04X\n", EstLink_Evt->connLatency);
-		Log_printf(L"ConnTimeout		: 0x%04X\n", EstLink_Evt->connTimeout);
+		Sprintf_HexData(gapMsg->EstLink_Evt.devAddr, BLE_ADDR_LEN);
+		Log_printf(L"ConnHandle		: 0x%04X\n", gapMsg->EstLink_Evt.connectionHandle);
+		Log_printf(L"ConnRole		: 0x%02X\n", gapMsg->EstLink_Evt.connRole);
+		Log_printf(L"ConnInterval		: 0x%04X\n", gapMsg->EstLink_Evt.connInterval);
+		Log_printf(L"ConnLatency		: 0x%04X\n", gapMsg->EstLink_Evt.connLatency);
+		Log_printf(L"ConnTimeout		: 0x%04X\n", gapMsg->EstLink_Evt.connTimeout);
 		msg_type = HCI_EXT_GAP_LINK_ESTABLISHED_MSG;
 		break;
 	case HCI_EXT_GAP_LINK_TERMINATED_EVENT:
-		TerLink_Evt = (gapTerminateLinkEvent_t*)&pEvt->data[0];
-		Log_printf(L"ConnHandle		: 0x%04X\n", TerLink_Evt->connectionHandle);
-		Log_printf(L"Reason			: 0x%02X\n", TerLink_Evt->reason);
+		Log_printf(L"ConnHandle		: 0x%04X\n", gapMsg->TerLink_Evt.connectionHandle);
+		Log_printf(L"Reason			: 0x%02X\n", gapMsg->TerLink_Evt.reason);
 		msg_type = HCI_EXT_GAP_LINK_TERMINATED_MSG;
 		break;
 	case HCI_EXT_GAP_LINK_PARAM_UPDATE_EVENT:
@@ -473,51 +526,45 @@ void Log::Analyze_GAP_Event(PUINT8 buf, UINT8 size)
 		msg_type = HCI_EXT_GAP_LINK_PARAM_UPDATE_MSG;
 		break;
 	case HCI_EXT_GAP_RANDOM_ADDR_CHANGED_EVENT:
-		RanAddr_Evt = (gapRandomAddrEvent_t*)&pEvt->data[0];
-		Log_printf(L"AddrType		: 0x%02X\n", RanAddr_Evt->addrType);
+		Log_printf(L"AddrType		: 0x%02X\n", gapMsg->RanAddr_Evt.addrType);
 		Log_printf(L"RandAddr		: ");
-		Sprintf_HexData(RanAddr_Evt->newRandomAddr, BLE_ADDR_LEN);
+		Sprintf_HexData(gapMsg->RanAddr_Evt.newRandomAddr, BLE_ADDR_LEN);
 		msg_type = HCI_EXT_GAP_RANDOM_ADDR_CHANGED_MSG;
 		break;
 	case HCI_EXT_GAP_SIGNATURE_UPDATED_EVENT:
-		SigUpdate_Evt = (gapSignUpdateEvent_t*)&pEvt->data[0];
-		Log_printf(L"AddrType		: 0x%02X\n", SigUpdate_Evt->addrType);
+		Log_printf(L"AddrType		: 0x%02X\n", gapMsg->SigUpdate_Evt.addrType);
 		Log_printf(L"DevAddr		: ");
-		Sprintf_HexData(SigUpdate_Evt->devAddr, BLE_ADDR_LEN);
-		Log_printf(L"SignCounter		: 0x%08X\n", SigUpdate_Evt->signCounter);
+		Sprintf_HexData(gapMsg->SigUpdate_Evt.devAddr, BLE_ADDR_LEN);
+		Log_printf(L"SignCounter		: 0x%08X\n", gapMsg->SigUpdate_Evt.signCounter);
 		msg_type = HCI_EXT_GAP_SIGNATURE_UPDATED_MSG;
 		break;
 	case HCI_EXT_GAP_AUTH_COMPLETE_EVENT:
-		AuthComp_Evt = (gapAuthCompleteEvent_t*)&pEvt->data[0];
-		Log_printf(L"ConnHandle		: 0x%04X\n", AuthComp_Evt->connectionHandle);
-		Log_printf(L"AuthState		: 0x%02X\n", AuthComp_Evt->authState);
+		Log_printf(L"ConnHandle		: 0x%04X\n", gapMsg->AuthComp_Evt.connectionHandle);
+		Log_printf(L"AuthState		: 0x%02X\n", gapMsg->AuthComp_Evt.authState);
 		msg_type = HCI_EXT_GAP_AUTH_COMPLETE_MSG;
 		break;
 	case HCI_EXT_GAP_PASSKEY_NEEDED_EVENT:
-		PassKeyNeed_Evt = (gapPasskeyNeededEvent_t*)&pEvt->data[0];
 		Log_printf(L"DevAddr		: ");
-		Sprintf_HexData(PassKeyNeed_Evt->deviceAddr, BLE_ADDR_LEN);
-		Log_printf(L"ConnHandle		: 0x%04X\n", PassKeyNeed_Evt->connectionHandle);
-		Log_printf(L"UIInput		: 0x%02X\n", PassKeyNeed_Evt->uiInputs);
-		Log_printf(L"UIOutput		: 0x%02X\n", PassKeyNeed_Evt->uiOutputs);
+		Sprintf_HexData(gapMsg->PassKeyNeed_Evt.deviceAddr, BLE_ADDR_LEN);
+		Log_printf(L"ConnHandle		: 0x%04X\n", gapMsg->PassKeyNeed_Evt.connectionHandle);
+		Log_printf(L"UIInput		: 0x%02X\n", gapMsg->PassKeyNeed_Evt.uiInputs);
+		Log_printf(L"UIOutput		: 0x%02X\n", gapMsg->PassKeyNeed_Evt.uiOutputs);
 		msg_type = HCI_EXT_GAP_PASSKEY_NEEDED_MSG;
 		break;
 	case HCI_EXT_GAP_SLAVE_REQUESTED_SECURITY_EVENT:
-		SlaveSec_Evt = (gapSlaveSecurityReqEvent_t*)&pEvt->data[0];
-		Log_printf(L"ConnHandle		: 0x%04X\n", SlaveSec_Evt->connectionHandle);
+		Log_printf(L"ConnHandle		: 0x%04X\n", gapMsg->SlaveSec_Evt.connectionHandle);
 		Log_printf(L"DevAddr		: ");
-		Sprintf_HexData(SlaveSec_Evt->deviceAddr, BLE_ADDR_LEN);
-		Log_printf(L"AuthReq		: 0x%02X\n", SlaveSec_Evt->authReq);
+		Sprintf_HexData(gapMsg->SlaveSec_Evt.deviceAddr, BLE_ADDR_LEN);
+		Log_printf(L"AuthReq		: 0x%02X\n", gapMsg->SlaveSec_Evt.authReq);
 		msg_type = HCI_EXT_GAP_SLAVE_REQUESTED_SECURITY_MSG;
 		break;
 	case HCI_EXT_GAP_DEVICE_INFO_EVENT:
-		DevInfo_Evt = (gapDeviceInfoEvent_t*)&pEvt->data[0];
-		Log_printf(L"EventType		: 0x%02X\n", DevInfo_Evt->eventType);
-		Log_printf(L"AddrType		: 0x%02X\n", DevInfo_Evt->addrType);
+		Log_printf(L"EventType		: 0x%02X\n", gapMsg->DevInfo_Evt.eventType);
+		Log_printf(L"AddrType		: 0x%02X\n", gapMsg->DevInfo_Evt.addrType);
 		Log_printf(L"DevAddr		: ");
-		Sprintf_HexData(DevInfo_Evt->addr, BLE_ADDR_LEN);
-		Log_printf(L"RSSI			: 0x%02X\n", DevInfo_Evt->rssi);
-		Log_printf(L"DataLen			: 0x%02X\n", DevInfo_Evt->dataLen);
+		Sprintf_HexData(gapMsg->DevInfo_Evt.addr, BLE_ADDR_LEN);
+		Log_printf(L"RSSI			: 0x%02X\n", gapMsg->DevInfo_Evt.rssi);
+		Log_printf(L"DataLen			: 0x%02X\n", gapMsg->DevInfo_Evt.dataLen);
 		msg_type = HCI_EXT_GAP_DEVICE_INFO_MSG;
 		break;
 	case HCI_EXT_GAP_BOND_COMPLETE_EVENT:
@@ -525,13 +572,12 @@ void Log::Analyze_GAP_Event(PUINT8 buf, UINT8 size)
 		msg_type = HCI_EXT_GAP_BOND_COMPLETE_MSG;
 		break;
 	case HCI_EXT_GAP_PAIRING_REQ_EVENT:
-		PairReq_Evt = (gapPairingReqEvent_t*)&pEvt->data[0];
-		Log_printf(L"ConnHandle		: 0x%04X\n", PairReq_Evt->connectionHandle);
-		Log_printf(L"IOCap		: 0x%02X\n", PairReq_Evt->pairReq.ioCap);
-		Log_printf(L"OOBFlag		: 0x%02X\n", PairReq_Evt->pairReq.oobDataFlag);
-		Log_printf(L"AuthReq		: 0x%02X\n", PairReq_Evt->pairReq.authReq);
-		Log_printf(L"MaxEncKeySize	: 0x%02X\n", PairReq_Evt->pairReq.maxEncKeySize);
-		Log_printf(L"KeyDist		: 0x%02X\n", PairReq_Evt->pairReq.keyDist);
+		Log_printf(L"ConnHandle		: 0x%04X\n", gapMsg->PairReq_Evt.connectionHandle);
+		Log_printf(L"IOCap		: 0x%02X\n", gapMsg->PairReq_Evt.pairReq.ioCap);
+		Log_printf(L"OOBFlag		: 0x%02X\n", gapMsg->PairReq_Evt.pairReq.oobDataFlag);
+		Log_printf(L"AuthReq		: 0x%02X\n", gapMsg->PairReq_Evt.pairReq.authReq);
+		Log_printf(L"MaxEncKeySize	: 0x%02X\n", gapMsg->PairReq_Evt.pairReq.maxEncKeySize);
+		Log_printf(L"KeyDist		: 0x%02X\n", gapMsg->PairReq_Evt.pairReq.keyDist);
 		msg_type = HCI_EXT_GAP_PAIRING_REQ_MSG;
 		break;
 	default:
@@ -540,15 +586,15 @@ void Log::Analyze_GAP_Event(PUINT8 buf, UINT8 size)
 	Sprintf_DumpRx(buf, size);
 	/*send status message to com-thread*/
 	while (!PostThreadMessage(comThreadID, RX_STATUS_MSG, pEvt->status, 0)) {
-		Log_printf(L"Post RX_STATUS_MSG Err:%d\n", GetLastError());
+		LogW(L"Post RX_STATUS_MSG Err:%d\n", GetLastError());
 		Sleep(500);
 	}
 
 	if (msg_type != 0) {
 		/*send event message to evt-thread*/
-		while (!PostThreadMessage(evtThreadID, msg_type, (WPARAM)pEvt->data,
-		                          pEvt->len - 3)) {
-			Log_printf(L"Post GAP EVENT Err:%d, Type:0x%x\n", GetLastError(), msg_type);
+		while (!PostThreadMessage(evtThreadID, msg_type, (WPARAM)&pEvt->status,
+		                          pEvt->len - 2)) {
+			LogW(L"Post GAP EVENT Err:%d, Type:0x%x\n", GetLastError(), msg_type);
 			Sleep(500);
 		}
 	}
@@ -623,15 +669,15 @@ void Log::Analyze_LE_Hci_Event(PUINT8 buf, UINT8 size)
 	Sprintf_DumpRx(buf, size);
 	/*Send status message to Com-thread*/
 	while (!PostThreadMessage(comThreadID, RX_STATUS_MSG, pEvt->status, 0)) {
-		Log_printf(L"Post RX_STATUS_MSG Err:%d\n", GetLastError());
+		LogW(L"Post RX_STATUS_MSG Err:%d\n", GetLastError());
 		Sleep(500);
 	}
 	/*Message to user*/
 	if (msg_type != 0) {
 		/*send event message to evt-thread*/
-		while (!PostThreadMessage(evtThreadID, msg_type, (WPARAM)pEvt->data,
-		                          pEvt->len - 4)) {
-			Log_printf(L"Post HCI LE EVENT Err:%d, Type:0x%x\n", GetLastError(), msg_type);
+		while (!PostThreadMessage(evtThreadID, msg_type, (WPARAM)&pEvt->status,
+		                          pEvt->len - 3)) {
+			LogW(L"Post HCI LE EVENT Err:%d, Type:0x%x\n", GetLastError(), msg_type);
 			Sleep(500);
 		}
 	}

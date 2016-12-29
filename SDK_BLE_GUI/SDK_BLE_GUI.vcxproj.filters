@@ -99,6 +99,9 @@
     <ClInclude Include="Inc\TopFrame.h">
       <Filter>头文件\GUI</Filter>
     </ClInclude>
+    <ClInclude Include="..\NPI\Include\gap.h">
+      <Filter>头文件\NPI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\NPI\NpiInterface\com.cpp">

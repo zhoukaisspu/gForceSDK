@@ -69,24 +69,24 @@ void CCmdView::OnInitialUpdate()
 	rc.left += 2;
 	rc.right -= 4;
 	//Creat discovery page
-	m_discPage.Create(IDD_TAB1_DLG, &m_tab);
-	m_discPage.MoveWindow(&rc);
-	m_discPage.ShowWindow(SW_SHOW);   
+	m_page1.Create(IDD_TAB1_DLG, &m_tab);
+	m_page1.MoveWindow(&rc);
+	m_page1.ShowWindow(SW_SHOW);   
 
 	//Creat read/write page
-	m_rwPage.Create(IDD_TAB2_DLG, &m_tab);
-	m_rwPage.MoveWindow(&rc);
-	m_rwPage.ShowWindow(SW_HIDE);
+	m_page2.Create(IDD_TAB2_DLG, &m_tab);
+	m_page2.MoveWindow(&rc);
+	m_page2.ShowWindow(SW_HIDE);
 
 	//Creat pair/bond page
-	m_pairPage.Create(IDD_TAB3_DLG, &m_tab);
-	m_pairPage.MoveWindow(&rc);
-	m_pairPage.ShowWindow(SW_HIDE);
+	m_page3.Create(IDD_TAB3_DLG, &m_tab);
+	m_page3.MoveWindow(&rc);
+	m_page3.ShowWindow(SW_HIDE);
 
 	//Creat command page
-	m_cmdPage.Create(IDD_TAB4_DLG, &m_tab);
-	m_cmdPage.MoveWindow(&rc);
-	m_cmdPage.ShowWindow(SW_HIDE);
+	m_page4.Create(IDD_TAB4_DLG, &m_tab);
+	m_page4.MoveWindow(&rc);
+	m_page4.ShowWindow(SW_HIDE);
 	
 }
 
@@ -110,32 +110,32 @@ void CCmdView::OnSize(UINT nType, int cx, int cy)
 	rc.bottom -= 2;
 	rc.left += 2;
 	rc.right -= 4;
-	m_discPage.MoveWindow(&rc);
-	m_rwPage.MoveWindow(&rc);
-	m_pairPage.MoveWindow(&rc);
-	m_cmdPage.MoveWindow(&rc);
+	m_page1.MoveWindow(&rc);
+	m_page2.MoveWindow(&rc);
+	m_page3.MoveWindow(&rc);
+	m_page4.MoveWindow(&rc);
 }
 
 
 void CCmdView::OnSelchangeTabCmd(NMHDR *pNMHDR, LRESULT *pResult)
 {
-	m_discPage.ShowWindow(SW_HIDE);
-	m_rwPage.ShowWindow(SW_HIDE);
-	m_pairPage.ShowWindow(SW_HIDE);
-	m_cmdPage.ShowWindow(SW_HIDE);
+	m_page1.ShowWindow(SW_HIDE);
+	m_page2.ShowWindow(SW_HIDE);
+	m_page3.ShowWindow(SW_HIDE);
+	m_page4.ShowWindow(SW_HIDE);
 	switch (m_tab.GetCurSel())
 	{
 		case 0:
-			m_discPage.ShowWindow(SW_SHOW);
+			m_page1.ShowWindow(SW_SHOW);
 			break;
 		case 1:
-			m_rwPage.ShowWindow(SW_SHOW);
+			m_page2.ShowWindow(SW_SHOW);
 			break;
 		case 2:
-			m_pairPage.ShowWindow(SW_SHOW);
+			m_page3.ShowWindow(SW_SHOW);
 			break;
 		case 3:
-			m_cmdPage.ShowWindow(SW_SHOW);
+			m_page4.ShowWindow(SW_SHOW);
 			break;
 		default:
 			break;

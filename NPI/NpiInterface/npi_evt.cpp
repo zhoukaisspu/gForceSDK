@@ -249,7 +249,7 @@ void NPI_EVT::HciExt_Decrypt_Event(const PUINT8 pBuf, UINT16 len) {
 	/*User App Code Block*/
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sNpiEvt, data));
+	delete (pBuf - offsetof(sNpiEvt, status));
 }
 
 /*---------------------------
@@ -261,7 +261,7 @@ void NPI_EVT::Hci_RdLocSuppFeat_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sHciEvt, data));
+	delete (pBuf - offsetof(sHciEvt, status));
 }
 
 void NPI_EVT::Hci_RdBdaddr_Event(const PUINT8 pBuf, UINT16 len)
@@ -270,7 +270,7 @@ void NPI_EVT::Hci_RdBdaddr_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sHciEvt, data));
+	delete (pBuf - offsetof(sHciEvt, status));
 }
 
 void NPI_EVT::Hci_RdRssi_Event(const PUINT8 pBuf, UINT16 len)
@@ -279,7 +279,7 @@ void NPI_EVT::Hci_RdRssi_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sHciEvt, data));
+	delete (pBuf - offsetof(sHciEvt, status));
 }
 
 void NPI_EVT::Hci_LE_SetEvtMsk_Event(const PUINT8 pBuf, UINT16 len)
@@ -288,7 +288,7 @@ void NPI_EVT::Hci_LE_SetEvtMsk_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sHciEvt, data));
+	delete (pBuf - offsetof(sHciEvt, status));
 }
 
 void NPI_EVT::Hci_LE_RdLocSuppFeat_Event(const PUINT8 pBuf, UINT16 len)
@@ -297,7 +297,7 @@ void NPI_EVT::Hci_LE_RdLocSuppFeat_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sHciEvt, data));
+	delete (pBuf - offsetof(sHciEvt, status));
 }
 
 void NPI_EVT::Hci_RdWhiteListSize_Event(const PUINT8 pBuf, UINT16 len)
@@ -306,7 +306,7 @@ void NPI_EVT::Hci_RdWhiteListSize_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sHciEvt, data));
+	delete (pBuf - offsetof(sHciEvt, status));
 }
 
 void NPI_EVT::Hci_LE_ConnUpdate_Event(const PUINT8 pBuf, UINT16 len)
@@ -315,7 +315,7 @@ void NPI_EVT::Hci_LE_ConnUpdate_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sHciEvt, data));
+	delete (pBuf - offsetof(sHciEvt, status));
 }
 
 void NPI_EVT::Hci_LE_TestEnd_Event(const PUINT8 pBuf, UINT16 len)
@@ -324,7 +324,7 @@ void NPI_EVT::Hci_LE_TestEnd_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sHciEvt, data));
+	delete (pBuf - offsetof(sHciEvt, status));
 }
 
 void NPI_EVT::Hci_LE_RemConnParaReqRep_Event(const PUINT8 pBuf, UINT16 len)
@@ -333,7 +333,7 @@ void NPI_EVT::Hci_LE_RemConnParaReqRep_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sHciEvt, data));
+	delete (pBuf - offsetof(sHciEvt, status));
 }
 
 void NPI_EVT::Hci_LE_RemConnParaReqNegRep_Event(const PUINT8 pBuf, UINT16 len)
@@ -342,7 +342,7 @@ void NPI_EVT::Hci_LE_RemConnParaReqNegRep_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sHciEvt, data));
+	delete (pBuf - offsetof(sHciEvt, status));
 }
 
 /*---------------------------
@@ -600,7 +600,7 @@ void NPI_EVT::HciExt_GapStatus_Event(const PUINT8 pBuf, UINT16 len) {
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sNpiEvt, data));
+	delete (pBuf - offsetof(sNpiEvt, status));
 }
 
 void NPI_EVT::HciExt_GapDevInitDone_Event(const PUINT8 pBuf, UINT16 len)
@@ -609,7 +609,7 @@ void NPI_EVT::HciExt_GapDevInitDone_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sNpiEvt, data));
+	delete (pBuf - offsetof(sNpiEvt, status));
 }
 
 void NPI_EVT::HciExt_GapDevDiscovery_Event(const PUINT8 pBuf, UINT16 len)
@@ -618,7 +618,7 @@ void NPI_EVT::HciExt_GapDevDiscovery_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sNpiEvt, data));
+	delete (pBuf - offsetof(sNpiEvt, status));
 }
 
 void NPI_EVT::HciExt_GapAdvDataUpdateDone_Event(const PUINT8 pBuf, UINT16 len)
@@ -627,7 +627,7 @@ void NPI_EVT::HciExt_GapAdvDataUpdateDone_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sNpiEvt, data));
+	delete (pBuf - offsetof(sNpiEvt, status));
 }
 
 void NPI_EVT::HciExt_GapMakeDiscoverableDone_Event(const PUINT8 pBuf, UINT16 len)
@@ -636,7 +636,7 @@ void NPI_EVT::HciExt_GapMakeDiscoverableDone_Event(const PUINT8 pBuf, UINT16 len
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sNpiEvt, data));
+	delete (pBuf - offsetof(sNpiEvt, status));
 }
 
 void NPI_EVT::HciExt_GapEndDiscoverableDone_Event(const PUINT8 pBuf, UINT16 len)
@@ -645,7 +645,7 @@ void NPI_EVT::HciExt_GapEndDiscoverableDone_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sNpiEvt, data));
+	delete (pBuf - offsetof(sNpiEvt, status));
 }
 
 void NPI_EVT::HciExt_GapLinkEstablished_Event(const PUINT8 pBuf, UINT16 len)
@@ -654,7 +654,7 @@ void NPI_EVT::HciExt_GapLinkEstablished_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sNpiEvt, data));
+	delete (pBuf - offsetof(sNpiEvt, status));
 }
 
 void NPI_EVT::HciExt_GapLinkTerminated_Event(const PUINT8 pBuf, UINT16 len)
@@ -663,7 +663,7 @@ void NPI_EVT::HciExt_GapLinkTerminated_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sNpiEvt, data));
+	delete (pBuf - offsetof(sNpiEvt, status));
 }
 
 void NPI_EVT::HciExt_GapLinkParamUpdate_Event(const PUINT8 pBuf, UINT16 len)
@@ -672,7 +672,7 @@ void NPI_EVT::HciExt_GapLinkParamUpdate_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sNpiEvt, data));
+	delete (pBuf - offsetof(sNpiEvt, status));
 }
 
 void NPI_EVT::HciExt_GapRandomAddrChanged_Event(const PUINT8 pBuf, UINT16 len)
@@ -681,7 +681,7 @@ void NPI_EVT::HciExt_GapRandomAddrChanged_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sNpiEvt, data));
+	delete (pBuf - offsetof(sNpiEvt, status));
 }
 
 void NPI_EVT::HciExt_GapSignatureUpdated_Event(const PUINT8 pBuf, UINT16 len)
@@ -690,7 +690,7 @@ void NPI_EVT::HciExt_GapSignatureUpdated_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sNpiEvt, data));
+	delete (pBuf - offsetof(sNpiEvt, status));
 }
 
 void NPI_EVT::HciExt_GapAuthComplete_Event(const PUINT8 pBuf, UINT16 len)
@@ -699,7 +699,7 @@ void NPI_EVT::HciExt_GapAuthComplete_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sNpiEvt, data));
+	delete (pBuf - offsetof(sNpiEvt, status));
 }
 
 void NPI_EVT::HciExt_GapPasskeyNeeded_Event(const PUINT8 pBuf, UINT16 len)
@@ -708,7 +708,7 @@ void NPI_EVT::HciExt_GapPasskeyNeeded_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sNpiEvt, data));
+	delete (pBuf - offsetof(sNpiEvt, status));
 }
 
 void NPI_EVT::HciExt_GapSlaveReqSec_Event(const PUINT8 pBuf, UINT16 len)
@@ -717,7 +717,7 @@ void NPI_EVT::HciExt_GapSlaveReqSec_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sNpiEvt, data));
+	delete (pBuf - offsetof(sNpiEvt, status));
 }
 
 void NPI_EVT::HciExt_GapDevInfo_Event(const PUINT8 pBuf, UINT16 len)
@@ -726,7 +726,7 @@ void NPI_EVT::HciExt_GapDevInfo_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sNpiEvt, data));
+	delete (pBuf - offsetof(sNpiEvt, status));
 }
 
 void NPI_EVT::HciExt_GapBondComp_Event(const PUINT8 pBuf, UINT16 len)
@@ -735,7 +735,7 @@ void NPI_EVT::HciExt_GapBondComp_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sNpiEvt, data));
+	delete (pBuf - offsetof(sNpiEvt, status));
 }
 
 void NPI_EVT::HciExt_GapPairReq_Event(const PUINT8 pBuf, UINT16 len)
@@ -744,6 +744,6 @@ void NPI_EVT::HciExt_GapPairReq_Event(const PUINT8 pBuf, UINT16 len)
 
 
 	/*Do not Modify*/
-	delete (pBuf - offsetof(sNpiEvt, data));
+	delete (pBuf - offsetof(sNpiEvt, status));
 }
 
