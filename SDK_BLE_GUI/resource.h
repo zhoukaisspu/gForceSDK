@@ -67,6 +67,7 @@
 #define IDC_TAB4_TREE                   1042
 #define IDC_COMBO1                      1043
 #define IDC_TAB2_CR_SP                  1043
+#define IDC_VIEW_CONHDL                 1043
 #define IDC_TAB2_CR_CVH                 1045
 #define IDC_TAB2_CR_SH                  1046
 #define IDC_TAB2_CR_CU                  1047
@@ -78,12 +79,26 @@
 #define IDC_TAB2_CR_HEX                 1053
 #define IDC_TAB2_CW_CVH                 1054
 #define IDC_TAB2_CR_CH                  1055
+#define IDC_TAB3_IP_BE                  1056
+#define IDC_TAB3_IP_AE                  1057
+#define IDC_TAB3_IP_SPR                 1059
 #define IDC_TAB2_CW_CH                  1061
+#define IDC_TAB3_PI_PK                  1061
 #define IDC_TAB2_CW_ASCII               1062
+#define IDC_TAB3_PI_SPK                 1062
 #define IDC_TAB2_CW_DEC                 1063
+#define IDC_TAB3_USLTK_AB               1063
 #define IDC_TAB2_CW_HEX                 1064
+#define IDC_TAB3_USLTK_LTK              1064
 #define IDC_TAB2_CW_WRITE               1065
+#define IDC_TAB3_USLTK_LD               1065
 #define IDC_TAB2_CW_VALUE               1066
+#define IDC_TAB3_USLTK_LR               1066
+#define IDC_TAB3_USLTK_EL               1068
+#define IDC_VIEW_CONSTA                 1069
+#define IDC_EDIT2                       1070
+#define IDC_VIEW_BDA                    1070
+#define IDC_VIEW_TERM                   1071
 #define ID_NEW_DEV                      32771
 #define ID_CLOSE_DEV                    32772
 #define ID_1_COPY                       32781
@@ -91,12 +106,12 @@
 #define ID_1_CLR_LOG                    32784
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        325
+#define _APS_NEXT_RESOURCE_VALUE        326
 #define _APS_NEXT_COMMAND_VALUE         32785
-#define _APS_NEXT_CONTROL_VALUE         1056
+#define _APS_NEXT_CONTROL_VALUE         1072
 #define _APS_NEXT_SYMED_VALUE           311
 #endif
 #endif

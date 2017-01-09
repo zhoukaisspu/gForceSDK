@@ -47,10 +47,6 @@ void CmdTab1_Dlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_ES_COMBOX_ADTYPE, m_esAdTypeCbx);
 	DDX_Control(pDX, IDC_ES_COMBOX_SLVBDA, m_esSlvBDACbx);
 	DDX_Control(pDX, IDC_ES_CBOX_WL, m_esWLChbx);
-	//Terminate Link
-	DDX_Control(pDX, IDC_TL_HDL_EDIT, m_tlHandleEdit);
-	DDX_Control(pDX, IDC_TL_CONSTATE, m_tlConStStatic);
-	DDX_Control(pDX, IDC_TL_CON_BDA, m_tlConBDA);
 }
 
 
@@ -66,7 +62,6 @@ BEGIN_MESSAGE_MAP(CmdTab1_Dlg, CDialogEx)
 	ON_BN_CLICKED(IDC_CS_BUT_GET, &CmdTab1_Dlg::OnBnClickedIdcCsButGet)
 	ON_BN_CLICKED(IDC_CS_BUT_SET, &CmdTab1_Dlg::OnBnClickedCsButSet)
 	ON_BN_CLICKED(IDC_ES_BUT_ESTAB, &CmdTab1_Dlg::OnBnClickedEsButEstab)
-	ON_BN_CLICKED(IDC_ES_BUT_CANCEL, &CmdTab1_Dlg::OnBnClickedEsButCancel)
 	ON_BN_CLICKED(IDC_TL_BUT_TERMIN, &CmdTab1_Dlg::OnBnClickedTlButTermin)
 END_MESSAGE_MAP()
 
@@ -77,7 +72,7 @@ END_MESSAGE_MAP()
 BOOL CmdTab1_Dlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
-	
+
 	m_discMode.SetCurSel(3);
 	m_csMinIntEdit.SetWindowText(_T("80"));
 	m_csMinIntSpin.SetBuddy(&m_csMinIntEdit);
@@ -95,7 +90,6 @@ BOOL CmdTab1_Dlg::OnInitDialog()
 	m_esAdTypeCbx.SetCurSel(0);
 	m_esSlvBDACbx.SetCurSel(0);
 
-	m_tlHandleEdit.SetWindowText(_T("0xFFFE"));
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
@@ -113,11 +107,11 @@ void CmdTab1_Dlg::OnBnClickedDiscScan()
 
 	discMode = (eGapDiscMode)m_discMode.GetCurSel();
 	m_discActiveScan.GetCheck() == BST_CHECKED ? \
-		activeScan = NPI_ENABLE : activeScan = NPI_DISABLE;
+	activeScan = NPI_ENABLE : activeScan = NPI_DISABLE;
 	m_discWhiteList.GetCheck() == BST_CHECKED ? \
-		whiteList = NPI_ENABLE : whiteList = NPI_DISABLE;
+	whiteList = NPI_ENABLE : whiteList = NPI_DISABLE;
 
-	if (theApp.m_cmdHandle){
+	if (theApp.m_cmdHandle) {
 		theApp.m_cmdHandle->GAP_DeviceDiscoveryRequest(discMode, activeScan, whiteList);
 		m_discDevFound.SetWindowText(_T("0"));
 		m_discScan.ModifyStyle(0, WS_DISABLED);
@@ -127,7 +121,7 @@ void CmdTab1_Dlg::OnBnClickedDiscScan()
 
 void CmdTab1_Dlg::OnBnClickedDiscCancel()
 {
-	if (theApp.m_cmdHandle){
+	if (theApp.m_cmdHandle) {
 		theApp.m_cmdHandle->GAP_DeviceDiscoveryCancel();
 	}
 }
@@ -139,17 +133,15 @@ void CmdTab1_Dlg::OnChangeConsetMinint()
 	DOUBLE num;
 	m_csMinIntEdit.GetWindowText(cs);
 	num = (DOUBLE)StrToInt(cs);
-	if (num < 6){
+	if (num < 6) {
 		num = 6;
 		m_csMinIntEdit.SetWindowText(_T("6"));
-	}
-	else if (num > 3200){
+	} else if (num > 3200) {
 		num = 3200;
 		m_csMinIntEdit.SetWindowText(_T("3200"));
+	} else {
 	}
-	else{
-	}
-	num = num*1.25;
+	num = num * 1.25;
 	wchar_t buf[20] = { 0 };
 	swprintf_s(buf, 20, _T("("));
 	swprintf_s(&buf[wcslen(buf)], 20 - wcslen(buf), _T("%.2f"), num);
@@ -164,17 +156,15 @@ void CmdTab1_Dlg::OnChangeConsetMaxint()
 	DOUBLE num;
 	m_csMaxIntEdit.GetWindowText(cs);
 	num = (DOUBLE)StrToInt(cs);
-	if (num < 6){
+	if (num < 6) {
 		num = 6;
 		m_csMaxIntEdit.SetWindowText(_T("6"));
-	}
-	else if (num > 3200){
+	} else if (num > 3200) {
 		num = 3200;
 		m_csMaxIntEdit.SetWindowText(_T("3200"));
+	} else {
 	}
-	else{
-	}
-	num = num*1.25;
+	num = num * 1.25;
 	wchar_t buf[20] = { 0 };
 	swprintf_s(buf, 20, _T("("));
 	swprintf_s(&buf[wcslen(buf)], 20 - wcslen(buf), _T("%.2f"), num);
@@ -189,15 +179,13 @@ void CmdTab1_Dlg::OnChangeConsetSlaLat()
 	DOUBLE num;
 	m_csMaxIntEdit.GetWindowText(cs);
 	num = (DOUBLE)StrToInt(cs);
-	if (num < 0){
+	if (num < 0) {
 		num = 0;
 		m_csMaxIntEdit.SetWindowText(_T("0"));
-	}
-	else if (num > 499){
+	} else if (num > 499) {
 		num = 499;
 		m_csMaxIntEdit.SetWindowText(_T("499"));
-	}
-	else{
+	} else {
 	}
 }
 
@@ -208,22 +196,20 @@ void CmdTab1_Dlg::OnChangeConsetSupto()
 	DOUBLE num;
 	m_csSupToEdit.GetWindowText(cs);
 	num = (DOUBLE)StrToInt(cs);
-	if (num < 10){
+	if (num < 10) {
 		num = 10;
 		m_csSupToEdit.SetWindowText(_T("10"));
-	}
-	else if (num > 3200){
+	} else if (num > 3200) {
 		num = 3200;
 		m_csSupToEdit.SetWindowText(_T("3200"));
+	} else {
 	}
-	else{
-	}
-	num = num*1.25;
+	num = num * 1.25;
 	wchar_t buf[20] = { 0 };
 	swprintf_s(buf, 20, _T("("));
 	swprintf_s(&buf[wcslen(buf)], 20 - wcslen(buf), _T("%.2f"), num);
 	wcscat_s(&buf[0], 20 - wcslen(buf), _T("ms)"));
-	
+
 	m_csSupToStatic.SetWindowText((LPCTSTR)buf);
 }
 
@@ -239,7 +225,7 @@ void CmdTab1_Dlg::OnBnClickedCsButLoad()
 
 void CmdTab1_Dlg::OnBnClickedIdcCsButGet()
 {
-	if (theApp.m_cmdHandle){
+	if (theApp.m_cmdHandle) {
 		theApp.m_cmdHandle->GAP_GetParam(TGAP_CONN_EST_INT_MIN);
 		theApp.m_cmdHandle->GAP_GetParam(TGAP_CONN_EST_INT_MAX);
 		theApp.m_cmdHandle->GAP_GetParam(TGAP_CONN_EST_LATENCY);
@@ -252,7 +238,7 @@ void CmdTab1_Dlg::OnBnClickedCsButSet()
 {
 	CString cs;
 	UINT16 minInt, maxInt, slvLat, supTo;
-	if (theApp.m_cmdHandle){
+	if (theApp.m_cmdHandle) {
 		m_csMinIntEdit.GetWindowText(cs);
 		minInt = StrToInt(cs);
 		m_csMaxIntEdit.GetWindowText(cs);
@@ -277,11 +263,11 @@ void CmdTab1_Dlg::OnBnClickedEsButEstab()
 	eEnDisMode whiteList;
 	eGapAddrType addrType;
 	LPCWSTR addr_w16;
-	long long addr_ll;
-	if (theApp.m_cmdHandle){
+	UINT8 dst[20] = { 0 };
+	if (theApp.m_cmdHandle) {
 		//check white list
 		m_esWLChbx.GetCheck() == BST_CHECKED ? \
-			whiteList = NPI_ENABLE : whiteList = NPI_DISABLE;
+		whiteList = NPI_ENABLE : whiteList = NPI_DISABLE;
 		//check address type
 		addrType = (eGapAddrType)m_esAdTypeCbx.GetCurSel();
 		//check addr and convert to long int
@@ -289,11 +275,10 @@ void CmdTab1_Dlg::OnBnClickedEsButEstab()
 		m_esSlvBDACbx.GetLBText(m_esSlvBDACbx.GetCurSel(), addr_str.GetBuffer(len));
 		addr_str.ReleaseBuffer();
 		addr_w16 = addr_str.GetString();
-		addr_ll = wcstoll(addr_w16, NULL, 16);
-		if (addr_ll){
-			theApp.m_cmdHandle->GAP_EstablishLinkRequest(NPI_DISABLE, whiteList, addrType, (PUINT8)&addr_ll);
-		}
-		else{
+		if (wstr2hex(addr_w16, dst, 20, _T("FF:"))) {
+			theApp.m_cmdHandle->GAP_EstablishLinkRequest(NPI_DISABLE, whiteList, addrType,
+			                dst);
+		} else {
 			AfxMessageBox(_T("Slave BDA Error!"));
 		}
 
@@ -301,25 +286,7 @@ void CmdTab1_Dlg::OnBnClickedEsButEstab()
 }
 
 
-void CmdTab1_Dlg::OnBnClickedEsButCancel()
-{
-	WCHAR buf[10];
-	UINT16 handle;
-	if (theApp.m_cmdHandle){
-		m_tlHandleEdit.GetWindowText(buf, 10);
-		handle = (UINT16)wcstol(buf, NULL, 16);
-		theApp.m_cmdHandle->GAP_TerminateLinkRequest(handle);
-	}
-}
-
-
 void CmdTab1_Dlg::OnBnClickedTlButTermin()
 {
-	WCHAR buf[10];
-	UINT16 handle;
-	if (theApp.m_cmdHandle){
-		m_tlHandleEdit.GetWindowText(buf, 10);
-		handle = (UINT16)wcstol(buf, NULL, 16);
-		theApp.m_cmdHandle->GAP_TerminateLinkRequest(handle);
-	}
+
 }

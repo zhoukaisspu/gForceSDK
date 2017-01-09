@@ -10,7 +10,7 @@ class CmdTab1_Dlg : public CDialogEx
 	DECLARE_DYNAMIC(CmdTab1_Dlg)
 
 public:
-	CmdTab1_Dlg(CWnd* pParent = NULL); 
+	CmdTab1_Dlg(CWnd* pParent = NULL);
 	virtual ~CmdTab1_Dlg();
 
 // dialog data
@@ -55,10 +55,10 @@ public:
 	CComboBox m_esSlvBDACbx;
 	CButton m_esWLChbx;
 	afx_msg void OnBnClickedEsButEstab();
-	afx_msg void OnBnClickedEsButCancel();
-	CEdit m_tlHandleEdit;
+//	afx_msg void OnBnClickedEsButCancel();
+//	CEdit m_tlHandleEdit;
 	afx_msg void OnBnClickedTlButTermin();
 
-	CStatic m_tlConStStatic;
-	CStatic m_tlConBDA;
+//	CStatic m_tlConStStatic;
+//	CStatic m_tlConBDA;
 };

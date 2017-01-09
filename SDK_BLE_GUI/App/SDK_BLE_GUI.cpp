@@ -33,7 +33,8 @@ CSDK_BLE_GUIApp::CSDK_BLE_GUIApp()
 	// If the application is built using Common Language Runtime support (/clr):
 	//     1) This additional setting is needed for Restart Manager support to work properly.
 	//     2) In your project, you must add a reference to System.Windows.Forms in order to build.
-	System::Windows::Forms::Application::SetUnhandledExceptionMode(System::Windows::Forms::UnhandledExceptionMode::ThrowException);
+	System::Windows::Forms::Application::SetUnhandledExceptionMode(
+	        System::Windows::Forms::UnhandledExceptionMode::ThrowException);
 #endif
 
 	// TODO: replace application ID string below with unique ID string; recommended
@@ -43,6 +44,10 @@ CSDK_BLE_GUIApp::CSDK_BLE_GUIApp()
 	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance
 	m_cmdHandle = NULL;
+
+	memset(m_state, 0x00, sizeof(m_state));
+	m_state[0].conHdl = 0xFFFE;
+	m_state[0].enable = NPI_TRUE;
 }
 
 // The one and only CSDK_BLE_GUIApp object
@@ -69,7 +74,7 @@ BOOL CSDK_BLE_GUIApp::InitInstance()
 
 	EnableTaskbarInteraction(FALSE);
 
-	// AfxInitRichEdit2() is required to use RichEdit control	
+	// AfxInitRichEdit2() is required to use RichEdit control
 	AfxInitRichEdit2();
 
 	// Standard initialization
@@ -85,15 +90,16 @@ BOOL CSDK_BLE_GUIApp::InitInstance()
 	// To create the main window, this code creates a new frame window
 	// object and then sets it as the application's main window object
 	CMainFrame* pFrame = new CMainFrame;
-	if (!pFrame)
+	if (!pFrame) {
 		return FALSE;
+	}
 	m_pMainWnd = pFrame;
 
 	CCreateContext cc;
 	// create and load the frame with its resources
 	pFrame->LoadFrame(IDR_MAINFRAME,
-		WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL,
-		&cc);
+	                  WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL,
+	                  &cc);
 
 	// The one and only window has been initialized, so show and update it
 	pFrame->ShowWindow(SW_SHOW);

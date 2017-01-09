@@ -125,33 +125,36 @@ typedef struct {
 } gapPasskeyNeededEvent_t;
 
 typedef struct {
+	UINT8 enable;
+	UINT8 keySize;                  //!< LTK Key Size (7-16 bytes)
 	UINT8 ltk[PASSKEY_LEN];              //!< Long Term Key (LTK)
 	UINT16 div;                     //!< LTK Diversifier
 	UINT8 rand[B_RANDOM_NUM_SIZE];  //!< LTK random number
-	UINT8 keySize;                  //!< LTK Key Size (7-16 bytes)
 } smSecurityInfo_t;
 
 typedef struct {
+	UINT8 enable;
 	UINT8 irk[PASSKEY_LEN];          //!< Identity Resolving Key (IRK)
 	UINT8 bd_addr[BLE_ADDR_LEN];  //!< The advertiser may set this to zeroes to not disclose its BD_ADDR (public address).
 } smIdentityInfo_t;
 
 typedef struct {
+	UINT8 enable;
 	UINT8  srk[PASSKEY_LEN]; //!< Signature Resolving Key (CSRK)
 	UINT32 signCounter; //!< Sign Counter
 } smSigningInfo_t;
 
 typedef struct {
+	//!< GAP_AUTHENTICATION_COMPLETE_EVENT
 	UINT8 status;
-	UINT8 opcode;                    //!< GAP_AUTHENTICATION_COMPLETE_EVENT
 	UINT16 connectionHandle;         //!< Connection Handle from controller used to ref the device
 	UINT8 authState;                 //!< TRUE if the pairing was authenticated (MITM)
-	smSecurityInfo_t*
-		pSecurityInfo; //!< BOUND - security information from this device
-	smSigningInfo_t* pSigningInfo;   //!< Signing information
-	smSecurityInfo_t*
-		pDevSecInfo;   //!< BOUND - security information from connected device
-	smIdentityInfo_t* pIdentityInfo; //!< BOUND - identity information
+	smSecurityInfo_t
+	pSecurityInfo; //!< BOUND - security information from this device
+	smSecurityInfo_t
+	pDevSecInfo;   //!< BOUND - security information from connected device
+	smIdentityInfo_t pIdentityInfo; //!< BOUND - identity information
+	smSigningInfo_t pSigningInfo;   //!< Signing information
 } gapAuthCompleteEvent_t;
 
 typedef struct {
@@ -218,7 +221,7 @@ typedef struct {
 /*---------------------------
 /*      Gap Event Union    /
 /*-------------------------*/
-typedef union{
+typedef union {
 	gapDeviceInitDoneEvent_t  InitDone_Evt;
 	gapDevDiscEvent_t  DiscDone_Evt;
 	gapEstLinkReqEvent_t  EstLink_Evt;
@@ -230,7 +233,7 @@ typedef union{
 	gapSlaveSecurityReqEvent_t  SlaveSec_Evt;
 	gapDeviceInfoEvent_t  DevInfo_Evt;
 	gapPairingReqEvent_t  PairReq_Evt;
-}u_GapMsg;
+} u_GapMsg;
 
 #pragma pack()
 #endif

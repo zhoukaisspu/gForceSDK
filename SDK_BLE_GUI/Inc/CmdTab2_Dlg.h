@@ -27,7 +27,7 @@ public:
 	CEdit m_crEndHdl;
 	CEdit m_crCharUUID;
 	CEdit m_crValEdit;
-	CStatic m_crHdlEdit;
+//	CStatic m_crHdlEdit;
 	afx_msg void OnBnClickedTab2CrRead();
 	afx_msg void OnBnClickedTab2CrAscii();
 	afx_msg void OnBnClickedTab2CrDec();
@@ -37,7 +37,7 @@ public:
 	CButton m_crRdButton;
 	afx_msg void OnChangeTab2CrValue();
 	int m_cwRadio;
-	CStatic m_cwHdlEdit;
+//	CStatic m_cwHdlEdit;
 	CEdit m_cwCharValHdl;
 	CEdit m_cwValEdit;
 	CButton m_cwWrButton;

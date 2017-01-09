@@ -4,7 +4,7 @@
 #pragma once
 
 #ifndef __AFXWIN_H__
-	#error "include 'stdafx.h' before including this file for PCH"
+#error "include 'stdafx.h' before including this file for PCH"
 #endif
 
 #include "resource.h"       // main symbols
@@ -14,6 +14,16 @@
 #include "LogView.h"
 #include "npi_cmd.h"
 #include "GuiEvtHdl.h"
+
+#define MAX_CON_DEV        8
+
+typedef struct {
+	UINT16 conHdl;
+	UINT8 enable;
+	UINT8 conFlag;
+	UINT8 bdaddr[6];
+} sBleState;
+
 // CSDK_BLE_GUIApp:
 // See SDK_BLE_GUI.cpp for the implementation of this class
 //
@@ -25,7 +35,7 @@ public:
 	CButtGattView* m_gattView;
 	CCmdView* m_cmdView;
 	CLogView* m_logView;
-
+	sBleState m_state[MAX_CON_DEV];
 // Overrides
 public:
 	virtual BOOL InitInstance();
