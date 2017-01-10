@@ -29,6 +29,7 @@ void CmdTab4_Dlg::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CmdTab4_Dlg, CDialogEx)
+	ON_NOTIFY(TVN_SELCHANGED, IDC_TAB4_TREE, &CmdTab4_Dlg::OnSelchangedTab4Tree)
 END_MESSAGE_MAP()
 
 
@@ -44,7 +45,7 @@ BOOL CmdTab4_Dlg::OnInitDialog()
 	m_cmdTree.InsertItem(_T("GAP_DeviceInit"), h_gap);
 	m_cmdTree.InsertItem(_T("GAP_ConfigDeviceAddr"), h_gap);
 	m_cmdTree.InsertItem(_T("GAP_MakeDiscoverable"), h_gap);
-	m_cmdTree.InsertItem(_T("GAP_EndDiscoverable"),	h_gap);
+	m_cmdTree.InsertItem(_T("GAP_EndDiscoverable"), h_gap);
 	m_cmdTree.InsertItem(_T("GAP_UpdateAdvertisingData"), h_gap);
 	m_cmdTree.InsertItem(_T("GAP_Authenticate"), h_gap);
 	m_cmdTree.InsertItem(_T("GAP_PasskeyUpdate"), h_gap);
@@ -85,5 +86,13 @@ BOOL CmdTab4_Dlg::OnInitDialog()
 	m_cmdTree.InsertItem(_T("GATT_DelService"), h_gatt);
 	m_cmdTree.InsertItem(_T("GATT_AddAttribute"), h_gatt);
 
-	return TRUE;  
+	return TRUE;
+}
+
+void CmdTab4_Dlg::OnSelchangedTab4Tree(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMTREEVIEW pNMTreeView = reinterpret_cast<LPNMTREEVIEW>(pNMHDR);
+	//pNMHDR->code;
+
+	*pResult = 0;
 }

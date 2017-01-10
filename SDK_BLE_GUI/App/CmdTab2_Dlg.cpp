@@ -38,6 +38,7 @@ void CmdTab2_Dlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_TAB2_CW_CVH, m_cwCharValHdl);
 	DDX_Control(pDX, IDC_TAB2_CW_VALUE, m_cwValEdit);
 	DDX_Control(pDX, IDC_TAB2_CW_WRITE, m_cwWrButton);
+	DDX_Control(pDX, IDC_TAB2_MTU_EDIT, m_mtuEdit);
 }
 
 
@@ -52,6 +53,8 @@ BEGIN_MESSAGE_MAP(CmdTab2_Dlg, CDialogEx)
 	ON_BN_CLICKED(IDC_TAB2_CW_ASCII, &CmdTab2_Dlg::OnBnClickedTab2CwAscii)
 	ON_BN_CLICKED(IDC_TAB2_CW_DEC, &CmdTab2_Dlg::OnBnClickedTab2CwDec)
 	ON_BN_CLICKED(IDC_TAB2_CW_HEX, &CmdTab2_Dlg::OnBnClickedTab2CwHex)
+	ON_BN_CLICKED(IDC_TAB2_MTU_BUT, &CmdTab2_Dlg::OnBnClickedTab2MtuBut)
+	ON_BN_CLICKED(IDC_TAB2_CR_SAVE, &CmdTab2_Dlg::OnBnClickedTab2CrSave)
 END_MESSAGE_MAP()
 
 
@@ -321,5 +324,47 @@ void CmdTab2_Dlg::OnBnClickedTab2CwHex()
 		string str_a = UnicodeToANSI(str_w);
 		hex2wstr(temp, (PUINT8)str_a.c_str(), str_a.length());
 		m_cwValEdit.SetWindowText(temp);
+	}
+}
+
+
+void CmdTab2_Dlg::OnBnClickedTab2MtuBut()
+{
+	UINT16 mtu;
+	UINT16 conHdl;
+	WCHAR wBuf[256] = {0};
+
+	if (theApp.m_cmdHandle) {
+		//get connection handle
+		theApp.m_cmdView->m_conHdl.GetWindowText(wBuf, 256);
+		conHdl = (UINT16)wcstol(wBuf, NULL, 16);
+		//get mtu size
+		m_mtuEdit.GetWindowText(wBuf, 256);
+		mtu = (UINT16)wcstol(wBuf, NULL, 10);
+
+		theApp.m_cmdHandle->GATT_ExchangeMTU(conHdl, mtu);
+	}
+}
+
+void CmdTab2_Dlg::OnBnClickedTab2CrSave()
+{
+	BOOL isOpen = FALSE;        //SAVE
+	WCHAR wBuf[256] = { 0 };
+	CString defaultDir = _T("D:\\");
+	CString fileName = _T("char.txt");
+	CString filter = L"нд╪Ч (*.doc; *.ppt; *.txt)";
+	CFileDialog openFileDlg(isOpen, defaultDir, fileName,
+	                        OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, filter, NULL);
+	openFileDlg.GetOFN().lpstrInitialDir = L"D:\\char.txt";
+	INT_PTR result = openFileDlg.DoModal();
+	CString filePath;
+	if (result == IDOK) {
+		filePath = openFileDlg.GetPathName();
+		CFile file;
+		if (file.Open(filePath, CFile::modeCreate || CFile::modeReadWrite)) {
+			string str_a = UnicodeToANSI(m_crValStr.GetString());
+			file.Write(str_a.c_str(), m_crValStr.GetLength());
+			file.Close();
+		}
 	}
 }

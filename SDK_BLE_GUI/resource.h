@@ -79,7 +79,9 @@
 #define IDC_TAB2_CR_HEX                 1053
 #define IDC_TAB2_CW_CVH                 1054
 #define IDC_TAB2_CR_CH                  1055
+#define IDC_TAB2_MTU_EDIT               1055
 #define IDC_TAB3_IP_BE                  1056
+#define IDC_TAB2_CR_SAVE                1056
 #define IDC_TAB3_IP_AE                  1057
 #define IDC_TAB3_IP_SPR                 1059
 #define IDC_TAB2_CW_CH                  1061
@@ -99,6 +101,8 @@
 #define IDC_EDIT2                       1070
 #define IDC_VIEW_BDA                    1070
 #define IDC_VIEW_TERM                   1071
+#define IDC_MFCPROPERTYGRID1            1073
+#define IDC_TAB2_MTU_BUT                1074
 #define ID_NEW_DEV                      32771
 #define ID_CLOSE_DEV                    32772
 #define ID_1_COPY                       32781
@@ -109,9 +113,9 @@
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        326
+#define _APS_NEXT_RESOURCE_VALUE        327
 #define _APS_NEXT_COMMAND_VALUE         32785
-#define _APS_NEXT_CONTROL_VALUE         1072
+#define _APS_NEXT_CONTROL_VALUE         1075
 #define _APS_NEXT_SYMED_VALUE           311
 #endif
 #endif

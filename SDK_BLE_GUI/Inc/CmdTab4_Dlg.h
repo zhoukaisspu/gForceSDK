@@ -9,7 +9,7 @@ class CmdTab4_Dlg : public CDialogEx
 	DECLARE_DYNAMIC(CmdTab4_Dlg)
 
 public:
-	CmdTab4_Dlg(CWnd* pParent = NULL);  
+	CmdTab4_Dlg(CWnd* pParent = NULL);
 	virtual ~CmdTab4_Dlg();
 
 // dialog data
@@ -22,4 +22,5 @@ protected:
 public:
 	CTreeCtrl m_cmdTree;
 	virtual BOOL OnInitDialog();
+	afx_msg void OnSelchangedTab4Tree(NMHDR* pNMHDR, LRESULT* pResult);
 };

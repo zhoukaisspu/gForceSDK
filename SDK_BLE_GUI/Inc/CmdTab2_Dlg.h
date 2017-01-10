@@ -47,4 +47,7 @@ public:
 	afx_msg void OnBnClickedTab2CwHex();
 	CString m_crValStr;
 	CString m_cwValStr;
+	CEdit m_mtuEdit;
+	afx_msg void OnBnClickedTab2MtuBut();
+	afx_msg void OnBnClickedTab2CrSave();
 };
