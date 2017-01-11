@@ -1,7 +1,7 @@
 #ifndef _LOG_H_
-#define	_LOG_H_
+#define _LOG_H_
 
-class Log:public Runnable
+class Log: public Runnable
 {
 public:
 	Log(DWORD com_id, DWORD evt_id);
@@ -26,8 +26,8 @@ private:
 	size_t Log_printf(const wchar_t* fmt, ...);
 };
 
-size_t LogE(const wchar_t *fmt, ...);
-size_t LogW(const wchar_t *fmt, ...);
-size_t LogI(const wchar_t *fmt, ...);
+size_t LogE(const wchar_t* fmt, ...);
+size_t LogW(const wchar_t* fmt, ...);
+size_t LogI(const wchar_t* fmt, ...);
 UINT16 GetLogMsg(void);
 #endif // !_LOG_H_

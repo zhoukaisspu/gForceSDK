@@ -1,5 +1,5 @@
 #ifndef _CMNDEF_H_
-#define	_CMNDEF_H_
+#define _CMNDEF_H_
 
 #include"windows.h"
 #include"npi_queue.h"
@@ -11,7 +11,7 @@
 #define MAX_RX_SIZE     255
 #define MAX_TX_SIZE     255
 
-#define CMD_BUF_SIZE	MAX_TX_SIZE*10
+#define CMD_BUF_SIZE    MAX_TX_SIZE*10
 
 #define EVT_HEADER_LEN        3
 #define BLE_ADDR_LEN          6

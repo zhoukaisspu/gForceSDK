@@ -387,7 +387,8 @@ class NPI_CMD: public Com
 public:
 	NPI_CMD();
 	NPI_CMD(UINT8 port);
-	NPI_CMD(UINT8 nPort, DWORD nBaud, UINT8 nParity, UINT8 nByteSize,UINT8 nStopBit);
+	NPI_CMD(UINT8 nPort, DWORD nBaud, UINT8 nParity, UINT8 nByteSize,
+	        UINT8 nStopBit);
 	~NPI_CMD();
 
 	/*---------HCI Extended CMD---------*/
@@ -423,12 +424,12 @@ public:
 	BOOL L2CAP_DisconnectReq(UINT16 cid);
 	BOOL L2CAP_InfoReq(UINT16 handle, eInfoType type);
 	BOOL L2CAP_ConnParamUpdateReq(UINT16 handle, UINT16 intervalMin,
-	                                    UINT16 intervalMax, UINT16 slaveLatency, UINT16 timeout);
+	                              UINT16 intervalMax, UINT16 slaveLatency, UINT16 timeout);
 	BOOL L2CAP_ConnectReq(UINT16 handle, UINT16 PSM, UINT16 peerPSM);
 	BOOL L2CAP_FlowCtrlCredit(UINT16 CID, UINT16 peerCredits);
 	BOOL L2CAP_Data(UINT16 CID, PUINT8 pSDU, UINT8 len);
 	BOOL L2CAP_RegisterPsm(UINT16 psm, UINT16 mtu, UINT16 InitialPeerCrs,
-	                             UINT16 PeerCrThreshld, UINT8 MaxNumChannels, UINT8 SecurityVrfctn);
+	                       UINT16 PeerCrThreshld, UINT8 MaxNumChannels, UINT8 SecurityVrfctn);
 	BOOL L2CAP_DeregisterPsm(UINT16 psm);
 	BOOL L2CAP_PsmChannels(UINT16 psm);
 
@@ -436,18 +437,18 @@ public:
 	BOOL ATT_ExchangeMTUReq(UINT16 con_hdl, UINT16 mtu);
 	BOOL ATT_FindInfoReq(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl);
 	BOOL ATT_FindByTypeValueReq(UINT16 con_hdl, UINT16 sta_hdl,
-	                                  UINT16 end_hdl, UINT16 type, PUINT8 pvalue, UINT8 len);
+	                            UINT16 end_hdl, UINT16 type, PUINT8 pvalue, UINT8 len);
 	BOOL ATT_ReadByTypeReq(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl,
-	                             PUINT8 pvalue, UINT8 len);
+	                       PUINT8 pvalue, UINT8 len);
 	BOOL ATT_ReadReq(UINT16 con_hdl, UINT16 att_hdl);
 	BOOL ATT_ReadBlobReq(UINT16 con_hdl, UINT16 att_hdl, UINT16 offset);
 	BOOL ATT_ReadMultiReq(UINT16 con_hdl, PUINT8 att_hdl, UINT8 len);
 	BOOL ATT_ReadByGroupTypeReq(UINT16 con_hdl, UINT16 sta_hdl,
-	                                  UINT16 end_hdl, PUINT8 pvalue, UINT8 len);
+	                            UINT16 end_hdl, PUINT8 pvalue, UINT8 len);
 	BOOL ATT_WriteReq(UINT16 con_hdl, eYesNoMode sig, eYesNoMode cmd,
-	                        UINT16 att_hdl, PUINT8 pvalue, UINT8 len);
+	                  UINT16 att_hdl, PUINT8 pvalue, UINT8 len);
 	BOOL ATT_PrepareWriteReq(UINT16 con_hdl, UINT16 att_hdl, UINT16 offset,
-	                               PUINT8 pvalue, UINT8 len);
+	                         PUINT8 pvalue, UINT8 len);
 	BOOL ATT_ExecuteWriteReq(UINT16 con_hdl, eAttExeWrFlag flag);
 
 	/*---------GATT Command---------*/
@@ -455,57 +456,57 @@ public:
 	BOOL GATT_DiscAllPrimaryServices(UINT16 con_hdl);
 	BOOL GATT_DiscPrimaryServiceByUUID(UINT16 con_hdl, PUINT8 buf, UINT8 len);
 	BOOL GATT_FindIncludedServices(UINT16 con_hdl, UINT16 sta_hdl,
-	                                     UINT16 end_hdl);
+	                               UINT16 end_hdl);
 	BOOL GATT_DiscAllChar(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl);
 	BOOL GATT_DiscCharByUUID(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl,
-	                               PUINT8 uuid, UINT8 len);
+	                         PUINT8 uuid, UINT8 len);
 	BOOL GATT_DiscAllCharDesc(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl);
 	BOOL GATT_ReadCharVal(UINT16 con_hdl, UINT16 hdl);
 	BOOL GATT_ReadUseCharUUID(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl,
-	                                PUINT8 uuid, UINT8 len);
+	                          PUINT8 uuid, UINT8 len);
 	BOOL GATT_ReadLongCharValue(UINT16 con_hdl, UINT16 hdl, UINT16 offset);
 	BOOL GATT_ReadMultiCharValues(UINT16 con_hdl, PUINT8 att_hdl, UINT8 len);
 	BOOL GATT_WriteCharValue(UINT16 con_hdl, UINT16 att_hdl, PUINT8 data,
-	                               UINT8 len);
+	                         UINT8 len);
 	BOOL GATT_WriteLongCharValue(UINT16 con_hdl, UINT16 att_hdl,
-	                                   UINT16 offset, PUINT8 data, UINT8 len);
+	                             UINT16 offset, PUINT8 data, UINT8 len);
 	BOOL GATT_ReliableWrites(UINT16 con_hdl, UINT8 num_req,
-	                               sGattWriteVal* pval);
+	                         sGattWriteVal* pval);
 	BOOL GATT_ReadCharDesc(UINT16 con_hdl, UINT16 hdl);
 	BOOL GATT_ReadLongCharDesc(UINT16 con_hdl, UINT16 hdl, UINT16 offset);
 	BOOL GATT_WriteCharDesc(UINT16 con_hdl, UINT16 offset, PUINT8 val,
-	                              UINT8 len);
+	                        UINT8 len);
 	BOOL GATT_WriteLongCharDesc(UINT16 con_hdl, UINT16 att_hdl, UINT16 offset,
-	                                  PUINT8 val, UINT8 len);
+	                            PUINT8 val, UINT8 len);
 	BOOL GATT_AddService(sGattServiceUUID uuid, UINT16 num_attrs,
-	                           UINT8 enc_keySize);
+	                     UINT8 enc_keySize);
 	BOOL GATT_DelService(UINT16 handle);
 	BOOL GATT_AddAttribute(PUINT8 uuid, UINT8 len, UINT8 permission);
 
 	/*---------GAP Command---------*/
 	BOOL GAP_DeviceInit(UINT8 role, UINT8 max_scanRes, PUINT8 irk,
-	                          PUINT8 csrk, PUINT8 sign_count);
+	                    PUINT8 csrk, PUINT8 sign_count);
 	BOOL GAP_ConfigDeviceAddr(eGapAddrType addr_type, PUINT8 addr);
 	BOOL GAP_DeviceDiscoveryRequest(eGapDiscMode disc_mdoe,
-	                                      eEnDisMode act_scan, eEnDisMode white_list);
+	                                eEnDisMode act_scan, eEnDisMode white_list);
 	BOOL GAP_DeviceDiscoveryCancel(void);
 	BOOL GAP_MakeDiscoverable(eGapEventType evt_type, eGapAddrType addr_type,
-	                                PUINT8 addr, UINT8 chl_map, eGapFilterPol filter_pol);
+	                          PUINT8 addr, UINT8 chl_map, eGapFilterPol filter_pol);
 	BOOL GAP_UpdateAdvertisingData(eGapAdvDataType adv_type, UINT8 len,
-	                                     PUINT8 adv_Data);
+	                               PUINT8 adv_Data);
 	BOOL GAP_EndDiscoverable(void);
 	BOOL GAP_EstablishLinkRequest(eEnDisMode high_duty, eEnDisMode white_list,
-	                                    eGapAddrType addr_type, PUINT8 addr);
+	                              eGapAddrType addr_type, PUINT8 addr);
 	BOOL GAP_TerminateLinkRequest(UINT16 handle);
 	BOOL GAP_Authenticate(UINT16 con_hdl, sGapAuth* pAuth);
 	BOOL GAP_PasskeyUpdate(UINT16 con_hdl, PUINT8 key);
 	BOOL GAP_SlaveSecurityRequest(UINT16 con_hdl, uAuthReq auth);
 	BOOL GAP_Signable(UINT16 con_hdl, PUINT8 csrk, PUINT8 sign_count);
 	BOOL GAP_Bond(UINT16 con_hdl, eEnDisMode auth, PUINT8 ltk, UINT16 div,
-	                    PUINT8 rand, UINT8 ltk_size);
+	              PUINT8 rand, UINT8 ltk_size);
 	BOOL GAP_TerminateAuth(UINT16 con_hdl);
 	BOOL GAP_UpdateLinkParamReq(UINT16 con_hdl, UINT16 int_min,
-	                                  UINT16 int_max, UINT16 latency, UINT16 timeout);
+	                            UINT16 int_max, UINT16 latency, UINT16 timeout);
 	BOOL GAP_SetParam(eGapParamIDs paraId, UINT16 val);
 	BOOL GAP_GetParam(eGapParamIDs paraId);
 	BOOL GAP_ResolvePrivateAddr(PUINT8 irk, PUINT8 addr);
@@ -529,7 +530,7 @@ public:
 	BOOL HCI_LEAddDeviceToWhiteList(eHciAddrType type, PUINT8 addr);
 	BOOL HCI_LERemoveDeviceFromWhiteList(eHciAddrType type, PUINT8 addr);
 	BOOL HCI_LEConnectionUpdate(UINT16 handle, UINT16 int_min, UINT16 int_max,
-	                                  UINT16 latency, UINT16 timeout, UINT16 min_len, UINT16 max_len);
+	                            UINT16 latency, UINT16 timeout, UINT16 min_len, UINT16 max_len);
 	BOOL HCI_LEReceiverTest(UINT8 rx_chl);
 	BOOL HCI_LETransmitterTest(UINT8 tx_chl, UINT8 len, PUINT8 data);
 	BOOL HCI_LETestEnd(void);

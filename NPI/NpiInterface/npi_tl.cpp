@@ -14,7 +14,8 @@ NPI_TX::~NPI_TX()
 {
 }
 
-void NPI_TX::Run(void){
+void NPI_TX::Run(void)
+{
 	enum {
 		WR_TYPE_STATE,
 		WR_OPCODE_STATE,
@@ -24,38 +25,39 @@ void NPI_TX::Run(void){
 	UINT8 state = WR_TYPE_STATE;
 	UINT8 buf[MAX_TX_SIZE];
 	INT16 i;
-	while (1){
-		if (m_cmdQue.isEmpty()){
+	while (1) {
+		if (m_cmdQue.isEmpty()) {
 			continue;
 		}
-		switch (state){
-			case WR_TYPE_STATE:
-				buf[0] = m_cmdQue.Pop();
-				state = WR_OPCODE_STATE;
-				break;
-			case WR_OPCODE_STATE:
-				buf[1] = m_cmdQue.Pop();
-				buf[2] = m_cmdQue.Pop();
-				state = WR_LEN_STATE;
-				break;
-			case WR_LEN_STATE:
-				buf[3] = m_cmdQue.Pop();
-				state = WR_OTHERS;
-				break;
-			case WR_OTHERS:
-				for (i = 0; i < buf[3]; i++){
-					buf[4+i] = m_cmdQue.Pop();
-				}
-				this->Write(buf, buf[3] + CMD_HEAD_LEN);
-				state = WR_TYPE_STATE;
-				break;
-			default:
-				break;
+		switch (state) {
+		case WR_TYPE_STATE:
+			buf[0] = m_cmdQue.Pop();
+			state = WR_OPCODE_STATE;
+			break;
+		case WR_OPCODE_STATE:
+			buf[1] = m_cmdQue.Pop();
+			buf[2] = m_cmdQue.Pop();
+			state = WR_LEN_STATE;
+			break;
+		case WR_LEN_STATE:
+			buf[3] = m_cmdQue.Pop();
+			state = WR_OTHERS;
+			break;
+		case WR_OTHERS:
+			for (i = 0; i < buf[3]; i++) {
+				buf[4 + i] = m_cmdQue.Pop();
+			}
+			this->Write(buf, buf[3] + CMD_HEAD_LEN);
+			state = WR_TYPE_STATE;
+			break;
+		default:
+			break;
 		}
 	}
 }
 
-DWORD NPI_TX::Write(PUINT8 buf, UINT8 size) {
+DWORD NPI_TX::Write(PUINT8 buf, UINT8 size)
+{
 	/*write something*/
 	BOOL bErrorFlag = FALSE;
 	DWORD dwBytesWritten = 0;
@@ -65,18 +67,16 @@ DWORD NPI_TX::Write(PUINT8 buf, UINT8 size) {
 	PurgeComm(m_com, PURGE_TXCLEAR);
 
 	bErrorFlag = WriteFile(
-		m_com,           // open file handle
-		buf,      // start of data to write
-		size,  // number of bytes to write
-		&dwBytesWritten, // number of bytes that were written
-		NULL);
+	                     m_com,           // open file handle
+	                     buf,      // start of data to write
+	                     size,  // number of bytes to write
+	                     &dwBytesWritten, // number of bytes that were written
+	                     NULL);
 
-	if (FALSE == bErrorFlag)
-	{
+	if (FALSE == bErrorFlag) {
 		LogE(L"WriteFile()\n");
 		delete buf;
-	}
-	else {
+	} else {
 		while (!PostThreadMessage(m_log, GetLogMsg(), (WPARAM)pBuf, size)) {
 			LogE(L"Post LOG_MSG Err:%d\n", GetLastError());
 			Sleep(500);
@@ -86,7 +86,8 @@ DWORD NPI_TX::Write(PUINT8 buf, UINT8 size) {
 }
 
 
-GForceQueue<UINT8, CMD_BUF_SIZE> *NPI_TX::Get_Queue(void){
+GForceQueue<UINT8, CMD_BUF_SIZE>* NPI_TX::Get_Queue(void)
+{
 	return &m_cmdQue;
 }
 
@@ -105,7 +106,8 @@ NPI_RX::~NPI_RX()
 {
 }
 
-void NPI_RX::Run(void){
+void NPI_RX::Run(void)
+{
 	enum {
 		READ_TYPE_STATE,
 		READ_EVT_CODE,
@@ -121,16 +123,14 @@ void NPI_RX::Run(void){
 	UINT8 dataLen;
 	DWORD offset;
 	DWORD remaining;
-	while (1)
-	{
+	while (1) {
 		switch (state) {
 		case READ_TYPE_STATE:
 			if (ReadFile(m_com, &type, 1, &nLenOut, NULL)) {
 				if (nLenOut) {
 					state = READ_EVT_CODE;
 				}
-			}
-			else {
+			} else {
 				::LogE(L"READ_TYPE_STATE!\n");
 			}
 			break;
@@ -139,8 +139,7 @@ void NPI_RX::Run(void){
 				if (nLenOut) {
 					state = READ_DATA_LEN;
 				}
-			}
-			else {
+			} else {
 				::LogE(L"READ_EVT_CODE\n");
 				state = READ_TYPE_STATE;
 			}
@@ -154,8 +153,7 @@ void NPI_RX::Run(void){
 					pBuf[1] = evtCode;
 					pBuf[2] = dataLen;
 				}
-			}
-			else {
+			} else {
 				::LogE(L"READ_DATA_LEN\n");
 				state = READ_TYPE_STATE;
 			}
@@ -164,18 +162,17 @@ void NPI_RX::Run(void){
 			//printf("ST:%d\n",state);
 			remaining = dataLen;
 			offset = EVT_HEADER_LEN;
-			while (remaining > 0)
-			{
+			while (remaining > 0) {
 				if (ReadFile(m_com, pBuf + offset, remaining, &nLenOut, NULL)) {
 					remaining -= nLenOut;
 					offset += nLenOut;
-				}
-				else {
+				} else {
 					::LogE(L"read file error, continue reading!\n");
 				}
 			}
 
-			while (!PostThreadMessage(m_log, GetLogMsg(), (WPARAM)pBuf, dataLen + EVT_HEADER_LEN)) {
+			while (!PostThreadMessage(m_log, GetLogMsg(), (WPARAM)pBuf,
+			                          dataLen + EVT_HEADER_LEN)) {
 				printf("Post LOG_MSG Err:%d\n", GetLastError());
 				Sleep(500);
 			}

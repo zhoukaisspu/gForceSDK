@@ -3,7 +3,8 @@
 
 
 template<class T, unsigned max>
-class GForceQueue {
+class GForceQueue
+{
 	HANDLE space_avail; // at least one slot empty
 	HANDLE data_avail;  // at least one slot full
 	CRITICAL_SECTION mutex; // protect buffer, in_pos, out_pos
@@ -11,13 +12,15 @@ class GForceQueue {
 	T buffer[max];
 	long in_pos, out_pos;
 public:
-	GForceQueue() : in_pos(0), out_pos(0) {
+	GForceQueue() : in_pos(0), out_pos(0)
+	{
 		space_avail = CreateSemaphore(NULL, max, max, NULL);
 		data_avail = CreateSemaphore(NULL, 0, max, NULL);
 		InitializeCriticalSection(&mutex);
 	}
 
-	void Push(T data) {
+	void Push(T data)
+	{
 		WaitForSingleObject(space_avail, INFINITE);
 		EnterCriticalSection(&mutex);
 		buffer[in_pos] = data;
@@ -26,7 +29,8 @@ public:
 		ReleaseSemaphore(data_avail, 1, NULL);
 	}
 
-	T Pop() {
+	T Pop()
+	{
 		WaitForSingleObject(data_avail, INFINITE);
 		EnterCriticalSection(&mutex);
 		T retval = buffer[out_pos];
@@ -36,10 +40,12 @@ public:
 		return retval;
 	}
 
-	BOOL isEmpty(){
-		return (in_pos == out_pos) ? TRUE:FALSE;
+	BOOL isEmpty()
+	{
+		return (in_pos == out_pos) ? TRUE : FALSE;
 	}
-	~GForceQueue() {
+	~GForceQueue()
+	{
 		DeleteCriticalSection(&mutex);
 		CloseHandle(data_avail);
 		CloseHandle(space_avail);

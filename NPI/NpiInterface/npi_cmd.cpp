@@ -22,8 +22,8 @@ NPI_CMD::~NPI_CMD()
 
 void NPI_CMD::PushToQueue(PUINT8 data, UINT32 size)
 {
-	while (size--){
-		
+	while (size--) {
+
 		m_tx->Get_Queue()->Push(*(data++));
 	}
 }
@@ -37,11 +37,11 @@ DWORD NPI_CMD::WaitFor_Msg(void)
 	DWORD ret = INVALID_RET_STATUS;
 
 	//if (GetMessage(&msg, 0, 0, 0)) { //get msg from message queue
-	//	if (RX_STATUS_MSG == msg.message) {
-	//		ret = (UINT8)msg.wParam;
-	//	} else {
-	//		printf("Err msg type:%4X !\n", msg.message);
-	//	}
+	//      if (RX_STATUS_MSG == msg.message) {
+	//              ret = (UINT8)msg.wParam;
+	//      } else {
+	//              printf("Err msg type:%4X !\n", msg.message);
+	//      }
 	//}
 	return ret;
 }
@@ -417,7 +417,7 @@ BOOL NPI_CMD::L2CAP_InfoReq(UINT16 handle, eInfoType type)
 }
 
 BOOL NPI_CMD::L2CAP_ConnParamUpdateReq(UINT16 handle, UINT16 intervalMin,
-                UINT16 intervalMax, UINT16 slaveLatency, UINT16 timeout)
+                                       UINT16 intervalMax, UINT16 slaveLatency, UINT16 timeout)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -485,8 +485,8 @@ BOOL NPI_CMD::L2CAP_Data(UINT16 CID, PUINT8 pSDU, UINT8 len)
 }
 
 BOOL NPI_CMD::L2CAP_RegisterPsm(UINT16 psm, UINT16 mtu,
-                                      UINT16 InitialPeerCrs,
-                                      UINT16 PeerCrThreshld, UINT8 MaxNumChannels, UINT8 SecurityVrfctn)
+                                UINT16 InitialPeerCrs,
+                                UINT16 PeerCrThreshld, UINT8 MaxNumChannels, UINT8 SecurityVrfctn)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -553,7 +553,7 @@ BOOL NPI_CMD::ATT_ExchangeMTUReq(UINT16 con_hdl, UINT16 mtu)
 }
 
 BOOL NPI_CMD::ATT_FindInfoReq(UINT16 con_hdl, UINT16 sta_hdl,
-                                    UINT16 end_hdl)
+                              UINT16 end_hdl)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -571,8 +571,8 @@ BOOL NPI_CMD::ATT_FindInfoReq(UINT16 con_hdl, UINT16 sta_hdl,
 }
 
 BOOL NPI_CMD::ATT_FindByTypeValueReq(UINT16 con_hdl, UINT16 sta_hdl,
-                UINT16 end_hdl,
-                UINT16 type, PUINT8 pvalue, UINT8 len)
+                                     UINT16 end_hdl,
+                                     UINT16 type, PUINT8 pvalue, UINT8 len)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -593,8 +593,8 @@ BOOL NPI_CMD::ATT_FindByTypeValueReq(UINT16 con_hdl, UINT16 sta_hdl,
 }
 
 BOOL NPI_CMD::ATT_ReadByTypeReq(UINT16 con_hdl, UINT16 sta_hdl,
-                                      UINT16 end_hdl,
-                                      PUINT8 pvalue, UINT8 len)
+                                UINT16 end_hdl,
+                                PUINT8 pvalue, UINT8 len)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -628,7 +628,7 @@ BOOL NPI_CMD::ATT_ReadReq(UINT16 con_hdl, UINT16 att_hdl)
 }
 
 BOOL NPI_CMD::ATT_ReadBlobReq(UINT16 con_hdl, UINT16 att_hdl,
-                                    UINT16 offset)
+                              UINT16 offset)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -660,8 +660,8 @@ BOOL NPI_CMD::ATT_ReadMultiReq(UINT16 con_hdl, PUINT8 att_hdl, UINT8 len)
 }
 
 BOOL NPI_CMD::ATT_ReadByGroupTypeReq(UINT16 con_hdl, UINT16 sta_hdl,
-                UINT16 end_hdl,
-                PUINT8 pvalue, UINT8 len)
+                                     UINT16 end_hdl,
+                                     PUINT8 pvalue, UINT8 len)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -680,8 +680,8 @@ BOOL NPI_CMD::ATT_ReadByGroupTypeReq(UINT16 con_hdl, UINT16 sta_hdl,
 }
 
 BOOL NPI_CMD::ATT_WriteReq(UINT16 con_hdl, eYesNoMode sig,
-                                 eYesNoMode command, UINT16 att_hdl,
-                                 PUINT8 pvalue, UINT8 len)
+                           eYesNoMode command, UINT16 att_hdl,
+                           PUINT8 pvalue, UINT8 len)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -700,8 +700,8 @@ BOOL NPI_CMD::ATT_WriteReq(UINT16 con_hdl, eYesNoMode sig,
 }
 
 BOOL NPI_CMD::ATT_PrepareWriteReq(UINT16 con_hdl, UINT16 att_hdl,
-                                        UINT16 offset,
-                                        PUINT8 pvalue, UINT8 len)
+                                  UINT16 offset,
+                                  PUINT8 pvalue, UINT8 len)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -784,7 +784,7 @@ BOOL NPI_CMD::GATT_DiscPrimaryServiceByUUID(UINT16 con_hdl, PUINT8 buf,
 }
 
 BOOL NPI_CMD::GATT_FindIncludedServices(UINT16 con_hdl, UINT16 sta_hdl,
-                UINT16 end_hdl)
+                                        UINT16 end_hdl)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -803,7 +803,7 @@ BOOL NPI_CMD::GATT_FindIncludedServices(UINT16 con_hdl, UINT16 sta_hdl,
 }
 
 BOOL NPI_CMD::GATT_DiscAllChar(UINT16 con_hdl, UINT16 sta_hdl,
-                                     UINT16 end_hdl)
+                               UINT16 end_hdl)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -822,7 +822,7 @@ BOOL NPI_CMD::GATT_DiscAllChar(UINT16 con_hdl, UINT16 sta_hdl,
 }
 
 BOOL NPI_CMD::GATT_DiscCharByUUID(UINT16 con_hdl, UINT16 sta_hdl,
-                                        UINT16 end_hdl, PUINT8 uuid, UINT8 len)
+                                  UINT16 end_hdl, PUINT8 uuid, UINT8 len)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -842,7 +842,7 @@ BOOL NPI_CMD::GATT_DiscCharByUUID(UINT16 con_hdl, UINT16 sta_hdl,
 }
 
 BOOL NPI_CMD::GATT_DiscAllCharDesc(UINT16 con_hdl, UINT16 sta_hdl,
-                UINT16 end_hdl)
+                                   UINT16 end_hdl)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -877,7 +877,7 @@ BOOL NPI_CMD::GATT_ReadCharVal(UINT16 con_hdl, UINT16 hdl)
 }
 
 BOOL NPI_CMD::GATT_ReadUseCharUUID(UINT16 con_hdl, UINT16 sta_hdl,
-                UINT16 end_hdl, PUINT8 uuid, UINT8 len)
+                                   UINT16 end_hdl, PUINT8 uuid, UINT8 len)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -897,7 +897,7 @@ BOOL NPI_CMD::GATT_ReadUseCharUUID(UINT16 con_hdl, UINT16 sta_hdl,
 }
 
 BOOL NPI_CMD::GATT_ReadLongCharValue(UINT16 con_hdl, UINT16 hdl,
-                UINT16 offset)
+                                     UINT16 offset)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -916,7 +916,7 @@ BOOL NPI_CMD::GATT_ReadLongCharValue(UINT16 con_hdl, UINT16 hdl,
 }
 
 BOOL NPI_CMD::GATT_ReadMultiCharValues(UINT16 con_hdl, PUINT8 att_hdl,
-                UINT8 len)
+                                       UINT8 len)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -931,7 +931,7 @@ BOOL NPI_CMD::GATT_ReadMultiCharValues(UINT16 con_hdl, PUINT8 att_hdl,
 }
 
 BOOL NPI_CMD::GATT_WriteCharValue(UINT16 con_hdl, UINT16 att_hdl,
-                                        PUINT8 data, UINT8 len)
+                                  PUINT8 data, UINT8 len)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -949,7 +949,7 @@ BOOL NPI_CMD::GATT_WriteCharValue(UINT16 con_hdl, UINT16 att_hdl,
 
 
 BOOL NPI_CMD::GATT_WriteLongCharValue(UINT16 con_hdl, UINT16 att_hdl,
-                UINT16 offset, PUINT8 data, UINT8 len)
+                                      UINT16 offset, PUINT8 data, UINT8 len)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -968,7 +968,7 @@ BOOL NPI_CMD::GATT_WriteLongCharValue(UINT16 con_hdl, UINT16 att_hdl,
 }
 
 BOOL NPI_CMD::GATT_ReliableWrites(UINT16 con_hdl, UINT8 num_req,
-                                        sGattWriteVal* pval)
+                                  sGattWriteVal* pval)
 {
 	sCMD cmd;
 	UINT8 i;
@@ -1010,7 +1010,7 @@ BOOL NPI_CMD::GATT_ReadCharDesc(UINT16 con_hdl, UINT16 hdl)
 }
 
 BOOL NPI_CMD::GATT_ReadLongCharDesc(UINT16 con_hdl, UINT16 hdl,
-                UINT16 offset)
+                                    UINT16 offset)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1029,7 +1029,7 @@ BOOL NPI_CMD::GATT_ReadLongCharDesc(UINT16 con_hdl, UINT16 hdl,
 }
 
 BOOL NPI_CMD::GATT_WriteCharDesc(UINT16 con_hdl, UINT16 offset,
-                                       PUINT8 val, UINT8 len)
+                                 PUINT8 val, UINT8 len)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1047,7 +1047,7 @@ BOOL NPI_CMD::GATT_WriteCharDesc(UINT16 con_hdl, UINT16 offset,
 }
 
 BOOL NPI_CMD::GATT_WriteLongCharDesc(UINT16 con_hdl, UINT16 att_hdl,
-                UINT16 offset, PUINT8 val, UINT8 len)
+                                     UINT16 offset, PUINT8 val, UINT8 len)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1067,7 +1067,7 @@ BOOL NPI_CMD::GATT_WriteLongCharDesc(UINT16 con_hdl, UINT16 att_hdl,
 }
 
 BOOL NPI_CMD::GATT_AddService(sGattServiceUUID uuid, UINT16 num_attrs,
-                                    UINT8 enc_keySize)
+                              UINT8 enc_keySize)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1116,7 +1116,7 @@ BOOL NPI_CMD::GATT_AddAttribute(PUINT8 uuid, UINT8 len, UINT8 permission)
 /*      GAP Command     /
 /*-------------------------*/
 BOOL NPI_CMD::GAP_DeviceInit(UINT8 role, UINT8 max_scanRes, PUINT8 irk,
-                                   PUINT8 csrk, PUINT8 sign_count)
+                             PUINT8 csrk, PUINT8 sign_count)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1183,7 +1183,7 @@ BOOL NPI_CMD::GAP_DeviceDiscoveryCancel(void)
 *       #define ADV_CHANNEL_ALL         (ADV_CHANNEL_37 | ADV_CHANNEL_38 | ADV_CHANNEL_39)
 */
 BOOL NPI_CMD::GAP_MakeDiscoverable(eGapEventType evt_type,
-                eGapAddrType addr_type, PUINT8 addr, UINT8 chl_map, eGapFilterPol filter_pol)
+                                   eGapAddrType addr_type, PUINT8 addr, UINT8 chl_map, eGapFilterPol filter_pol)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1201,7 +1201,7 @@ BOOL NPI_CMD::GAP_MakeDiscoverable(eGapEventType evt_type,
 }
 
 BOOL NPI_CMD::GAP_UpdateAdvertisingData(eGapAdvDataType adv_type,
-                UINT8 len, PUINT8 adv_Data)
+                                        UINT8 len, PUINT8 adv_Data)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1229,7 +1229,7 @@ BOOL NPI_CMD::GAP_EndDiscoverable(void)
 }
 
 BOOL NPI_CMD::GAP_EstablishLinkRequest(eEnDisMode high_duty,
-                eEnDisMode white_list, eGapAddrType addr_type, PUINT8 addr)
+                                       eEnDisMode white_list, eGapAddrType addr_type, PUINT8 addr)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1333,7 +1333,7 @@ BOOL NPI_CMD::GAP_Signable(UINT16 con_hdl, PUINT8 csrk, PUINT8 sign_count)
 }
 
 BOOL NPI_CMD::GAP_Bond(UINT16 con_hdl, eEnDisMode auth, PUINT8 ltk,
-                             UINT16 div, PUINT8 rand, UINT8 ltk_size)
+                       UINT16 div, PUINT8 rand, UINT8 ltk_size)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1369,7 +1369,7 @@ BOOL NPI_CMD::GAP_TerminateAuth(UINT16 con_hdl)
 }
 
 BOOL NPI_CMD::GAP_UpdateLinkParamReq(UINT16 con_hdl, UINT16 int_min,
-                UINT16 int_max, UINT16 latency, UINT16 timeout)
+                                     UINT16 int_max, UINT16 latency, UINT16 timeout)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1434,7 +1434,7 @@ BOOL NPI_CMD::GAP_ResolvePrivateAddr(PUINT8 irk, PUINT8 addr)
 }
 
 BOOL NPI_CMD::GAP_SetAdvToken(eGapAdvTokenType type, UINT8 len,
-                                    PUINT8 adv_data)
+                              PUINT8 adv_data)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1655,8 +1655,8 @@ BOOL NPI_CMD::HCI_LERemoveDeviceFromWhiteList(eHciAddrType type,
 }
 
 BOOL NPI_CMD::HCI_LEConnectionUpdate(UINT16 handle, UINT16 int_min,
-                UINT16 int_max,
-                UINT16 latency, UINT16 timeout, UINT16 min_len, UINT16 max_len)
+                                     UINT16 int_max,
+                                     UINT16 latency, UINT16 timeout, UINT16 min_len, UINT16 max_len)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;

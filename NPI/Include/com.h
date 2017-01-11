@@ -14,13 +14,13 @@ public:
 	DWORD rxThreadID;
 	DWORD evtThreadID;
 	HANDLE com_file;
-	NPI_EVT *m_evt;
-	NPI_TX *m_tx;
-	NPI_RX *m_rx;
+	NPI_EVT* m_evt;
+	NPI_TX* m_tx;
+	NPI_RX* m_rx;
 	UINT8 ret_status;
 	Com();
 	Com(UINT8 nPort, DWORD nBaud = 115200, UINT8 nParity = 0, UINT8 nByteSize = 8,
-		UINT8 nStopBit = ONESTOPBIT);
+	    UINT8 nStopBit = ONESTOPBIT);
 	~Com();
 	int Connect();
 	int DisConnect();

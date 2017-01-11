@@ -7,7 +7,8 @@ Com::Com()
 {
 }
 
-Com::Com(UINT8 nPort, DWORD nBaud, UINT8 nParity, UINT8 nByteSize, UINT8 nStopBit)
+Com::Com(UINT8 nPort, DWORD nBaud, UINT8 nParity, UINT8 nByteSize,
+         UINT8 nStopBit)
 {
 	com_threadID = GetCurrentThreadId();
 	port = nPort;
@@ -41,15 +42,14 @@ int Com::Connect()
 	sCom.Format(_T("\\\\.\\COM%d"), port);
 	/*----------------Open Com port----------------*/
 	com_file = CreateFile(sCom.GetBuffer(50),
-		GENERIC_READ | GENERIC_WRITE,
-		0,/* do not share*/
-		NULL,
-		OPEN_EXISTING,
-		FILE_ATTRIBUTE_NORMAL,// | FILE_FLAG_OVERLAPPED,
-		NULL);
+	                      GENERIC_READ | GENERIC_WRITE,
+	                      0,/* do not share*/
+	                      NULL,
+	                      OPEN_EXISTING,
+	                      FILE_ATTRIBUTE_NORMAL,// | FILE_FLAG_OVERLAPPED,
+	                      NULL);
 
-	if (com_file == INVALID_HANDLE_VALUE)
-	{
+	if (com_file == INVALID_HANDLE_VALUE) {
 		printf("CreateFile() error:%d", GetLastError());
 		return false;
 	}
@@ -65,8 +65,7 @@ int Com::Connect()
 	SetCommTimeouts(com_file, &timeouts);
 
 	/*set com state*/
-	if (!GetCommState(com_file, &ndcb))
-	{
+	if (!GetCommState(com_file, &ndcb)) {
 		printf(("GetCommState() failed!\n"));
 		CloseHandle(com_file);
 		return false;
@@ -76,8 +75,7 @@ int Com::Connect()
 	ndcb.Parity = dcb.Parity;
 	ndcb.ByteSize = dcb.ByteSize;
 	ndcb.StopBits = dcb.StopBits;
-	if (!SetCommState(com_file, &ndcb))
-	{
+	if (!SetCommState(com_file, &ndcb)) {
 		printf(("SetCommState() failed!\n"));
 		CloseHandle(com_file);
 		return false;
@@ -86,8 +84,8 @@ int Com::Connect()
 	//static const int g_buffMax = 32768;
 	//if (!SetupComm(com_file, g_buffMax, g_buffMax))
 	//{
-	//	printf(("SetupComm() failed"));
-	//	return false;	
+	//      printf(("SetupComm() failed"));
+	//      return false;
 	//}
 	/*clear buffer*/
 	PurgeComm(com_file, PURGE_RXCLEAR | PURGE_TXCLEAR);
@@ -95,8 +93,7 @@ int Com::Connect()
 	/*clear error*/
 	DWORD dwError;
 	COMSTAT cs;
-	if (!ClearCommError(com_file, &dwError, &cs))
-	{
+	if (!ClearCommError(com_file, &dwError, &cs)) {
 		printf(("ClearCommError() failed"));
 		CloseHandle(com_file);
 		return false;
@@ -113,12 +110,12 @@ int Com::Connect()
 	evtThreadID = evtThread->GetThreadID();
 
 	/*Creat log thread*/
-	Log *log = new Log(com_threadID, evtThreadID);
+	Log* log = new Log(com_threadID, evtThreadID);
 	logThread = new CThread(log);
 	logThread->Start();
 	logThread->Join(100);
 	logThreadID = logThread->GetThreadID();
-	
+
 	/*Creat Tx thread*/
 	m_tx = new NPI_TX(com_file, logThreadID);
 	txThread = new CThread(m_tx);
@@ -127,7 +124,7 @@ int Com::Connect()
 	txThreadID = txThread->GetThreadID();
 
 	/*Creat Rx thread*/
-	m_rx = new NPI_RX(com_file,logThreadID);
+	m_rx = new NPI_RX(com_file, logThreadID);
 	rxThread = new CThread(m_rx);
 	rxThread->Start();
 	rxThread->Join(100);
@@ -136,7 +133,8 @@ int Com::Connect()
 	return true;
 }
 
-int Com::DisConnect(){
+int Com::DisConnect()
+{
 	CloseHandle(com_file);
 	rxThread->Terminate(0);
 	return 0;
