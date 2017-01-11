@@ -112,7 +112,8 @@
     <ClInclude Include="..\NPI\Include\CommonDef.h" />
     <ClInclude Include="..\NPI\Include\gap.h" />
     <ClInclude Include="..\NPI\Include\gatt.h" />
-    <ClInclude Include="..\NPI\Include\hci_tl.h" />
+    <ClInclude Include="..\NPI\Include\npi_queue.h" />
+    <ClInclude Include="..\NPI\Include\npi_tl.h" />
     <ClInclude Include="..\NPI\Include\log.h" />
     <ClInclude Include="..\NPI\Include\npi_cmd.h" />
     <ClInclude Include="..\NPI\Include\npi_evt.h" />
@@ -138,6 +139,7 @@
     <ClCompile Include="..\NPI\NpiInterface\log.cpp" />
     <ClCompile Include="..\NPI\NpiInterface\npi_cmd.cpp" />
     <ClCompile Include="..\NPI\NpiInterface\npi_evt.cpp" />
+    <ClCompile Include="..\NPI\NpiInterface\npi_tl.cpp" />
     <ClCompile Include="..\NPI\NpiInterface\Thread.cpp" />
     <ClCompile Include="App\ButtGattView.cpp" />
     <ClCompile Include="App\CmdTab1_Dlg.cpp" />

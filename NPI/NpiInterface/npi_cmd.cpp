@@ -1,6 +1,6 @@
 #include"stdafx.h"
 #include"npi_cmd.h"
-
+#include"npi_tl.h"
 NPI_CMD::NPI_CMD()
 {
 }
@@ -19,25 +19,34 @@ NPI_CMD::~NPI_CMD()
 {
 }
 
+
+void NPI_CMD::PushToQueue(PUINT8 data, UINT32 size)
+{
+	while (size--){
+		
+		m_tx->Get_Queue()->Push(*(data++));
+	}
+}
+
 /*---------------------------
 /*      HCI Extended Command    /
 /*-------------------------*/
 DWORD NPI_CMD::WaitFor_Msg(void)
 {
-	MSG msg;
+	//MSG msg;
 	DWORD ret = INVALID_RET_STATUS;
 
-	if (GetMessage(&msg, 0, 0, 0)) { //get msg from message queue
-		if (RX_STATUS_MSG == msg.message) {
-			ret = (UINT8)msg.wParam;
-		} else {
-			printf("Err msg type:%4X !\n", msg.message);
-		}
-	}
+	//if (GetMessage(&msg, 0, 0, 0)) { //get msg from message queue
+	//	if (RX_STATUS_MSG == msg.message) {
+	//		ret = (UINT8)msg.wParam;
+	//	} else {
+	//		printf("Err msg type:%4X !\n", msg.message);
+	//	}
+	//}
 	return ret;
 }
 
-eHciRetSta NPI_CMD::HciExt_SetRxGain(eRxGain rxGain)
+BOOL NPI_CMD::HciExt_SetRxGain(eRxGain rxGain)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -46,13 +55,13 @@ eHciRetSta NPI_CMD::HciExt_SetRxGain(eRxGain rxGain)
 	cmd.len = 0x01;
 	cmd.data[0] = (UINT8)rxGain;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HciExt_SetTxPower(eTxPwr txPower)
+BOOL NPI_CMD::HciExt_SetTxPower(eTxPwr txPower)
 {
-	eRetStatus ret = INVALID_RET_STATUS;
+	BOOL ret = INVALID_RET_STATUS;
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
 	/*Opcode*/
@@ -60,11 +69,11 @@ eHciRetSta NPI_CMD::HciExt_SetTxPower(eTxPwr txPower)
 	cmd.len = 0x01;
 	cmd.data[0] = (UINT8)txPower;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HciExt_ClkDivOnHalt(eClkDivOnHalt ctrl)
+BOOL NPI_CMD::HciExt_ClkDivOnHalt(eClkDivOnHalt ctrl)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -73,11 +82,11 @@ eHciRetSta NPI_CMD::HciExt_ClkDivOnHalt(eClkDivOnHalt ctrl)
 	cmd.len = 0x01;
 	cmd.data[0] = (UINT8)ctrl;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HciExt_DecNvUsage(eNvUsage ctrl)
+BOOL NPI_CMD::HciExt_DecNvUsage(eNvUsage ctrl)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -86,11 +95,11 @@ eHciRetSta NPI_CMD::HciExt_DecNvUsage(eNvUsage ctrl)
 	cmd.len = 0x01;
 	cmd.data[0] = (UINT8)ctrl;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HciExt_Decrypt(PUINT8 pkey, PUINT8 pdata)
+BOOL NPI_CMD::HciExt_Decrypt(PUINT8 pkey, PUINT8 pdata)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -100,11 +109,11 @@ eHciRetSta NPI_CMD::HciExt_Decrypt(PUINT8 pkey, PUINT8 pdata)
 	memcpy(&cmd.data[0], pkey, 0x10);
 	memcpy(&cmd.data[16], pdata, 0x10);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HciExt_SetLocalFeatures(PUINT8 ctrl)
+BOOL NPI_CMD::HciExt_SetLocalFeatures(PUINT8 ctrl)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -113,11 +122,11 @@ eHciRetSta NPI_CMD::HciExt_SetLocalFeatures(PUINT8 ctrl)
 	cmd.len = 0x08;
 	memcpy(&cmd.data[0], ctrl, cmd.len);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HciExt_SetFastTxRespTime(eFastTxRespTime ctrl)
+BOOL NPI_CMD::HciExt_SetFastTxRespTime(eFastTxRespTime ctrl)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -126,11 +135,11 @@ eHciRetSta NPI_CMD::HciExt_SetFastTxRespTime(eFastTxRespTime ctrl)
 	cmd.len = 0x01;
 	cmd.data[0] = (UINT8)ctrl;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HciExt_ModemTestTx(eCwModem cw, UINT8 channel)
+BOOL NPI_CMD::HciExt_ModemTestTx(eCwModem cw, UINT8 channel)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -139,22 +148,22 @@ eHciRetSta NPI_CMD::HciExt_ModemTestTx(eCwModem cw, UINT8 channel)
 	cmd.len = 0x02;
 	cmd.data[0] = (UINT8)cw;
 	cmd.data[1] = (UINT8)channel;
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HciExt_ModemHopTestTx(void)
+BOOL NPI_CMD::HciExt_ModemHopTestTx(void)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
 	/*Opcode*/
 	cmd.opcode = HCI_EXT_MODEM_HOP_TEST_TX;
 	cmd.len = 0x00;
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HciExt_ModemTestRx(UINT8 channel)
+BOOL NPI_CMD::HciExt_ModemTestRx(UINT8 channel)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -162,22 +171,22 @@ eHciRetSta NPI_CMD::HciExt_ModemTestRx(UINT8 channel)
 	cmd.opcode = HCI_EXT_MODEM_TEST_RX;
 	cmd.len = 0x01;
 	cmd.data[0] = (UINT8)channel;
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HciExt_EndModemTest(void)
+BOOL NPI_CMD::HciExt_EndModemTest(void)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
 	/*Opcode*/
 	cmd.opcode = HCI_EXT_END_MODEM_TEST;
 	cmd.len = 0x00;
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HciExt_SetBdAddr(PUINT8 addr)
+BOOL NPI_CMD::HciExt_SetBdAddr(PUINT8 addr)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -185,11 +194,11 @@ eHciRetSta NPI_CMD::HciExt_SetBdAddr(PUINT8 addr)
 	cmd.opcode = HCI_EXT_SET_BDADDR;
 	cmd.len = 0x06;
 	memcpy(&cmd.data[0], addr, cmd.len);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HciExt_SetSCA(UINT16 sca)
+BOOL NPI_CMD::HciExt_SetSCA(UINT16 sca)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -198,11 +207,11 @@ eHciRetSta NPI_CMD::HciExt_SetSCA(UINT16 sca)
 	cmd.len = 0x02;
 	cmd.data[0] = (UINT8)(sca & 0x00FF);
 	cmd.data[1] = (UINT8)((sca >> 8) & 0x00FF);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HciExt_SetFreqTune(eFreqTune tune)
+BOOL NPI_CMD::HciExt_SetFreqTune(eFreqTune tune)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -210,22 +219,22 @@ eHciRetSta NPI_CMD::HciExt_SetFreqTune(eFreqTune tune)
 	cmd.opcode = HCI_EXT_SET_FREQ_TUNE;
 	cmd.len = 0x01;
 	cmd.data[0] = (UINT8)tune;
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HciExt_SaveFreqTune(void)
+BOOL NPI_CMD::HciExt_SaveFreqTune(void)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
 	/*Opcode*/
 	cmd.opcode = HCI_EXT_SAVE_FREQ_TUNE;
 	cmd.len = 0x00;
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCIExt_SetMaxDtmTxPower(eTxPwr tx_pwr)
+BOOL NPI_CMD::HCIExt_SetMaxDtmTxPower(eTxPwr tx_pwr)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -233,11 +242,11 @@ eHciRetSta NPI_CMD::HCIExt_SetMaxDtmTxPower(eTxPwr tx_pwr)
 	cmd.opcode = HCI_EXT_SET_MAX_DTM_TX_POWER;
 	cmd.len = 0x01;
 	cmd.data[0] = (UINT8)tx_pwr;
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCIExt_MapPmIoPort(ePmloPort port, ePmloPortPin port_pin)
+BOOL NPI_CMD::HCIExt_MapPmIoPort(ePmloPort port, ePmloPortPin port_pin)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -246,11 +255,11 @@ eHciRetSta NPI_CMD::HCIExt_MapPmIoPort(ePmloPort port, ePmloPortPin port_pin)
 	cmd.len = 0x02;
 	cmd.data[0] = port;
 	cmd.data[1] = port_pin;
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCIExt_DisconnectImmed(UINT16 handle)
+BOOL NPI_CMD::HCIExt_DisconnectImmed(UINT16 handle)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -259,11 +268,11 @@ eHciRetSta NPI_CMD::HCIExt_DisconnectImmed(UINT16 handle)
 	cmd.len = 0x02;
 	cmd.data[0] = (UINT8)(handle & 0x00FF);
 	cmd.data[1] = (UINT8)((handle >> 8) & 0x00FF);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCIExt_PER(UINT16 handle, ePerTestCmd perCmd)
+BOOL NPI_CMD::HCIExt_PER(UINT16 handle, ePerTestCmd perCmd)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -273,22 +282,22 @@ eHciRetSta NPI_CMD::HCIExt_PER(UINT16 handle, ePerTestCmd perCmd)
 	cmd.data[0] = (UINT8)(handle & 0x00FF);
 	cmd.data[1] = (UINT8)((handle >> 8) & 0x00FF);
 	cmd.data[2] = (UINT8)perCmd;
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCIExt_ExtendRfRange(void)
+BOOL NPI_CMD::HCIExt_ExtendRfRange(void)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
 	/*Opcode*/
 	cmd.opcode = HCI_EXT_EXTEND_RF_RANGE;
 	cmd.len = 0x00;
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCIExt_HaltDuringRf(eHaltDurRF halt)
+BOOL NPI_CMD::HCIExt_HaltDuringRf(eHaltDurRF halt)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -296,11 +305,11 @@ eHciRetSta NPI_CMD::HCIExt_HaltDuringRf(eHaltDurRF halt)
 	cmd.opcode = HCI_EXT_HALT_DURING_RF;
 	cmd.len = 0x01;
 	cmd.data[0] = (UINT8)halt;
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCIExt_OverrideSL(eOverrideSL state)
+BOOL NPI_CMD::HCIExt_OverrideSL(eOverrideSL state)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -308,11 +317,11 @@ eHciRetSta NPI_CMD::HCIExt_OverrideSL(eOverrideSL state)
 	cmd.opcode = HCI_EXT_OVERRIDE_SL;
 	cmd.len = 0x01;
 	cmd.data[0] = (UINT8)state;
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCIExt_BuildRevision(eBuildRevMode mode, UINT16 num)
+BOOL NPI_CMD::HCIExt_BuildRevision(eBuildRevMode mode, UINT16 num)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -322,11 +331,11 @@ eHciRetSta NPI_CMD::HCIExt_BuildRevision(eBuildRevMode mode, UINT16 num)
 	cmd.data[0] = (UINT8)mode;
 	cmd.data[1] = (UINT8)(num & 0x00FF);
 	cmd.data[2] = (UINT8)((num >> 8) & 0x00FF);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCIExt_DelaySleep(UINT16 delay)
+BOOL NPI_CMD::HCIExt_DelaySleep(UINT16 delay)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -335,11 +344,11 @@ eHciRetSta NPI_CMD::HCIExt_DelaySleep(UINT16 delay)
 	cmd.len = 0x02;
 	cmd.data[0] = (UINT8)(delay & 0x00FF);
 	cmd.data[1] = (UINT8)((delay >> 8) & 0x00FF);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCIExt_ResetSystem(eResetType type)
+BOOL NPI_CMD::HCIExt_ResetSystem(eResetType type)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -347,11 +356,11 @@ eHciRetSta NPI_CMD::HCIExt_ResetSystem(eResetType type)
 	cmd.opcode = HCI_EXT_RESET_SYSTEM;
 	cmd.len = 0x01;
 	cmd.data[0] = (UINT8)type;
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCIExt_OverlappedProcessing(eEnDisMode mode)
+BOOL NPI_CMD::HCIExt_OverlappedProcessing(eEnDisMode mode)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -359,11 +368,11 @@ eHciRetSta NPI_CMD::HCIExt_OverlappedProcessing(eEnDisMode mode)
 	cmd.opcode = HCI_EXT_OVERLAPPED_PROCESSING;
 	cmd.len = 0x01;
 	cmd.data[0] = (UINT8)mode;
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCIExt_NumComplPktsLimit(UINT8 limit, eEnDisMode mode)
+BOOL NPI_CMD::HCIExt_NumComplPktsLimit(UINT8 limit, eEnDisMode mode)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -372,14 +381,14 @@ eHciRetSta NPI_CMD::HCIExt_NumComplPktsLimit(UINT8 limit, eEnDisMode mode)
 	cmd.len = 0x01;
 	cmd.data[0] = limit;
 	cmd.data[1] = (UINT8)mode;
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
 /*---------------------------
 /*      L2CAP Command   /
 /*-------------------------*/
-eRetStatus NPI_CMD::L2CAP_DisconnectReq(UINT16 cid)
+BOOL NPI_CMD::L2CAP_DisconnectReq(UINT16 cid)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -388,11 +397,11 @@ eRetStatus NPI_CMD::L2CAP_DisconnectReq(UINT16 cid)
 	cmd.len = 0x02;
 	cmd.data[0] = (UINT8)(cid & 0x00FF);
 	cmd.data[1] = (UINT8)((cid >> 8) & 0x00FF);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::L2CAP_InfoReq(UINT16 handle, eInfoType type)
+BOOL NPI_CMD::L2CAP_InfoReq(UINT16 handle, eInfoType type)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -403,11 +412,11 @@ eRetStatus NPI_CMD::L2CAP_InfoReq(UINT16 handle, eInfoType type)
 	cmd.data[1] = (UINT8)((handle >> 8) & 0x00FF);
 	cmd.data[2] = (UINT16)type & 0x00FF;
 	cmd.data[3] = (UINT16)type & 0xFF00;
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::L2CAP_ConnParamUpdateReq(UINT16 handle, UINT16 intervalMin,
+BOOL NPI_CMD::L2CAP_ConnParamUpdateReq(UINT16 handle, UINT16 intervalMin,
                 UINT16 intervalMax, UINT16 slaveLatency, UINT16 timeout)
 {
 	sCMD cmd;
@@ -425,11 +434,11 @@ eRetStatus NPI_CMD::L2CAP_ConnParamUpdateReq(UINT16 handle, UINT16 intervalMin,
 	cmd.data[7] = (UINT8)((slaveLatency >> 8) & 0x00FF);
 	cmd.data[8] = (UINT8)(timeout & 0x00FF);
 	cmd.data[9] = (UINT8)((timeout >> 8) & 0x00FF);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::L2CAP_ConnectReq(UINT16 handle, UINT16 PSM, UINT16 peerPSM)
+BOOL NPI_CMD::L2CAP_ConnectReq(UINT16 handle, UINT16 PSM, UINT16 peerPSM)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -442,11 +451,11 @@ eRetStatus NPI_CMD::L2CAP_ConnectReq(UINT16 handle, UINT16 PSM, UINT16 peerPSM)
 	cmd.data[3] = (UINT8)((PSM >> 8) & 0x00FF);
 	cmd.data[4] = (UINT8)(peerPSM & 0x00FF);
 	cmd.data[5] = (UINT8)((peerPSM >> 8) & 0x00FF);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::L2CAP_FlowCtrlCredit(UINT16 CID, UINT16 peerCredits)
+BOOL NPI_CMD::L2CAP_FlowCtrlCredit(UINT16 CID, UINT16 peerCredits)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -457,11 +466,11 @@ eRetStatus NPI_CMD::L2CAP_FlowCtrlCredit(UINT16 CID, UINT16 peerCredits)
 	cmd.data[1] = (UINT8)((CID >> 8) & 0x00FF);
 	cmd.data[2] = (UINT8)(peerCredits & 0x00FF);
 	cmd.data[3] = (UINT8)((peerCredits >> 8) & 0x00FF);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::L2CAP_Data(UINT16 CID, PUINT8 pSDU, UINT8 len)
+BOOL NPI_CMD::L2CAP_Data(UINT16 CID, PUINT8 pSDU, UINT8 len)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -471,11 +480,11 @@ eRetStatus NPI_CMD::L2CAP_Data(UINT16 CID, PUINT8 pSDU, UINT8 len)
 	cmd.data[0] = (UINT8)(CID & 0x00FF);
 	cmd.data[1] = (UINT8)((CID >> 8) & 0x00FF);
 	memcpy(&cmd.data[2], pSDU, len);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::L2CAP_RegisterPsm(UINT16 psm, UINT16 mtu,
+BOOL NPI_CMD::L2CAP_RegisterPsm(UINT16 psm, UINT16 mtu,
                                       UINT16 InitialPeerCrs,
                                       UINT16 PeerCrThreshld, UINT8 MaxNumChannels, UINT8 SecurityVrfctn)
 {
@@ -494,11 +503,11 @@ eRetStatus NPI_CMD::L2CAP_RegisterPsm(UINT16 psm, UINT16 mtu,
 	cmd.data[7] = (UINT8)((PeerCrThreshld >> 8) & 0x00FF);
 	cmd.data[8] = (UINT8)MaxNumChannels;
 	cmd.data[9] = (UINT8)SecurityVrfctn;
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::L2CAP_DeregisterPsm(UINT16 psm)
+BOOL NPI_CMD::L2CAP_DeregisterPsm(UINT16 psm)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -507,11 +516,11 @@ eRetStatus NPI_CMD::L2CAP_DeregisterPsm(UINT16 psm)
 	cmd.len = 0x02;
 	cmd.data[0] = (UINT8)(psm & 0x00FF);
 	cmd.data[1] = (UINT8)((psm >> 8) & 0x00FF);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::L2CAP_PsmChannels(UINT16 psm)
+BOOL NPI_CMD::L2CAP_PsmChannels(UINT16 psm)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -520,15 +529,15 @@ eRetStatus NPI_CMD::L2CAP_PsmChannels(UINT16 psm)
 	cmd.len = 0x02;
 	cmd.data[0] = (UINT8)(psm & 0x00FF);
 	cmd.data[1] = (UINT8)((psm >> 8) & 0x00FF);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
 
 /*---------------------------
 /*      ATT Command     /
 /*-------------------------*/
-eRetStatus NPI_CMD::ATT_ExchangeMTUReq(UINT16 con_hdl, UINT16 mtu)
+BOOL NPI_CMD::ATT_ExchangeMTUReq(UINT16 con_hdl, UINT16 mtu)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -539,11 +548,11 @@ eRetStatus NPI_CMD::ATT_ExchangeMTUReq(UINT16 con_hdl, UINT16 mtu)
 	cmd.data[1] = (UINT8)((con_hdl >> 8) & 0x00FF);
 	cmd.data[2] = (UINT8)(mtu & 0x00FF);
 	cmd.data[3] = (UINT8)((mtu >> 8) & 0x00FF);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::ATT_FindInfoReq(UINT16 con_hdl, UINT16 sta_hdl,
+BOOL NPI_CMD::ATT_FindInfoReq(UINT16 con_hdl, UINT16 sta_hdl,
                                     UINT16 end_hdl)
 {
 	sCMD cmd;
@@ -557,11 +566,11 @@ eRetStatus NPI_CMD::ATT_FindInfoReq(UINT16 con_hdl, UINT16 sta_hdl,
 	cmd.data[3] = (UINT8)((sta_hdl >> 8) & 0x00FF);
 	cmd.data[4] = (UINT8)(end_hdl & 0x00FF);
 	cmd.data[5] = (UINT8)((end_hdl >> 8) & 0x00FF);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::ATT_FindByTypeValueReq(UINT16 con_hdl, UINT16 sta_hdl,
+BOOL NPI_CMD::ATT_FindByTypeValueReq(UINT16 con_hdl, UINT16 sta_hdl,
                 UINT16 end_hdl,
                 UINT16 type, PUINT8 pvalue, UINT8 len)
 {
@@ -579,11 +588,11 @@ eRetStatus NPI_CMD::ATT_FindByTypeValueReq(UINT16 con_hdl, UINT16 sta_hdl,
 	cmd.data[6] = (UINT8)(type & 0x00FF);
 	cmd.data[7] = (UINT8)((type >> 8) & 0x00FF);
 	memcpy(&cmd.data[8], pvalue, len);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::ATT_ReadByTypeReq(UINT16 con_hdl, UINT16 sta_hdl,
+BOOL NPI_CMD::ATT_ReadByTypeReq(UINT16 con_hdl, UINT16 sta_hdl,
                                       UINT16 end_hdl,
                                       PUINT8 pvalue, UINT8 len)
 {
@@ -599,11 +608,11 @@ eRetStatus NPI_CMD::ATT_ReadByTypeReq(UINT16 con_hdl, UINT16 sta_hdl,
 	cmd.data[4] = (UINT8)(end_hdl & 0x00FF);
 	cmd.data[5] = (UINT8)((end_hdl >> 8) & 0x00FF);
 	memcpy(&cmd.data[6], pvalue, len);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::ATT_ReadReq(UINT16 con_hdl, UINT16 att_hdl)
+BOOL NPI_CMD::ATT_ReadReq(UINT16 con_hdl, UINT16 att_hdl)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -614,11 +623,11 @@ eRetStatus NPI_CMD::ATT_ReadReq(UINT16 con_hdl, UINT16 att_hdl)
 	cmd.data[1] = (UINT8)((con_hdl >> 8) & 0x00FF);
 	cmd.data[2] = (UINT8)(att_hdl & 0x00FF);
 	cmd.data[3] = (UINT8)((att_hdl >> 8) & 0x00FF);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::ATT_ReadBlobReq(UINT16 con_hdl, UINT16 att_hdl,
+BOOL NPI_CMD::ATT_ReadBlobReq(UINT16 con_hdl, UINT16 att_hdl,
                                     UINT16 offset)
 {
 	sCMD cmd;
@@ -632,11 +641,11 @@ eRetStatus NPI_CMD::ATT_ReadBlobReq(UINT16 con_hdl, UINT16 att_hdl,
 	cmd.data[3] = (UINT8)((att_hdl >> 8) & 0x00FF);
 	cmd.data[4] = (UINT8)(offset & 0x00FF);
 	cmd.data[5] = (UINT8)((offset >> 8) & 0x00FF);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::ATT_ReadMultiReq(UINT16 con_hdl, PUINT8 att_hdl, UINT8 len)
+BOOL NPI_CMD::ATT_ReadMultiReq(UINT16 con_hdl, PUINT8 att_hdl, UINT8 len)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -646,11 +655,11 @@ eRetStatus NPI_CMD::ATT_ReadMultiReq(UINT16 con_hdl, PUINT8 att_hdl, UINT8 len)
 	cmd.data[0] = (UINT8)(con_hdl & 0x00FF);
 	cmd.data[1] = (UINT8)((con_hdl >> 8) & 0x00FF);
 	memcpy(&cmd.data[2], (PUINT8)att_hdl, len);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::ATT_ReadByGroupTypeReq(UINT16 con_hdl, UINT16 sta_hdl,
+BOOL NPI_CMD::ATT_ReadByGroupTypeReq(UINT16 con_hdl, UINT16 sta_hdl,
                 UINT16 end_hdl,
                 PUINT8 pvalue, UINT8 len)
 {
@@ -666,11 +675,11 @@ eRetStatus NPI_CMD::ATT_ReadByGroupTypeReq(UINT16 con_hdl, UINT16 sta_hdl,
 	cmd.data[4] = (UINT8)(end_hdl & 0x00FF);
 	cmd.data[5] = (UINT8)((end_hdl >> 8) & 0x00FF);
 	memcpy(&cmd.data[6], pvalue, len);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::ATT_WriteReq(UINT16 con_hdl, eYesNoMode sig,
+BOOL NPI_CMD::ATT_WriteReq(UINT16 con_hdl, eYesNoMode sig,
                                  eYesNoMode command, UINT16 att_hdl,
                                  PUINT8 pvalue, UINT8 len)
 {
@@ -686,11 +695,11 @@ eRetStatus NPI_CMD::ATT_WriteReq(UINT16 con_hdl, eYesNoMode sig,
 	cmd.data[4] = (UINT8)(att_hdl & 0x00FF);
 	cmd.data[5] = (UINT8)((att_hdl >> 8) & 0x00FF);
 	memcpy(&cmd.data[6], pvalue, len);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::ATT_PrepareWriteReq(UINT16 con_hdl, UINT16 att_hdl,
+BOOL NPI_CMD::ATT_PrepareWriteReq(UINT16 con_hdl, UINT16 att_hdl,
                                         UINT16 offset,
                                         PUINT8 pvalue, UINT8 len)
 {
@@ -706,11 +715,11 @@ eRetStatus NPI_CMD::ATT_PrepareWriteReq(UINT16 con_hdl, UINT16 att_hdl,
 	cmd.data[4] = (UINT8)(offset & 0x00FF);
 	cmd.data[5] = (UINT8)((offset >> 8) & 0x00FF);
 	memcpy(&cmd.data[6], pvalue, len);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::ATT_ExecuteWriteReq(UINT16 con_hdl, eAttExeWrFlag flag)
+BOOL NPI_CMD::ATT_ExecuteWriteReq(UINT16 con_hdl, eAttExeWrFlag flag)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -721,14 +730,14 @@ eRetStatus NPI_CMD::ATT_ExecuteWriteReq(UINT16 con_hdl, eAttExeWrFlag flag)
 	cmd.data[1] = (UINT8)((con_hdl >> 8) & 0x00FF);
 	cmd.data[2] = (UINT8)flag;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
 /*---------------------------
 /*      GATT Command    /
 /*-------------------------*/
-eRetStatus NPI_CMD::GATT_ExchangeMTU(UINT16 con_hdl, UINT16 mtu)
+BOOL NPI_CMD::GATT_ExchangeMTU(UINT16 con_hdl, UINT16 mtu)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -740,11 +749,11 @@ eRetStatus NPI_CMD::GATT_ExchangeMTU(UINT16 con_hdl, UINT16 mtu)
 	cmd.data[2] = (UINT8)(mtu & 0x00FF);
 	cmd.data[3] = (UINT8)((mtu >> 8) & 0x00FF);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_DiscAllPrimaryServices(UINT16 con_hdl)
+BOOL NPI_CMD::GATT_DiscAllPrimaryServices(UINT16 con_hdl)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -754,11 +763,11 @@ eRetStatus NPI_CMD::GATT_DiscAllPrimaryServices(UINT16 con_hdl)
 	cmd.data[0] = (UINT8)(con_hdl & 0x00FF);
 	cmd.data[1] = (UINT8)((con_hdl >> 8) & 0x00FF);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_DiscPrimaryServiceByUUID(UINT16 con_hdl, PUINT8 buf,
+BOOL NPI_CMD::GATT_DiscPrimaryServiceByUUID(UINT16 con_hdl, PUINT8 buf,
                 UINT8 len)
 {
 	sCMD cmd;
@@ -770,11 +779,11 @@ eRetStatus NPI_CMD::GATT_DiscPrimaryServiceByUUID(UINT16 con_hdl, PUINT8 buf,
 	cmd.data[1] = (UINT8)((con_hdl >> 8) & 0x00FF);
 	memcpy(&cmd.data[2], buf, len);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_FindIncludedServices(UINT16 con_hdl, UINT16 sta_hdl,
+BOOL NPI_CMD::GATT_FindIncludedServices(UINT16 con_hdl, UINT16 sta_hdl,
                 UINT16 end_hdl)
 {
 	sCMD cmd;
@@ -789,11 +798,11 @@ eRetStatus NPI_CMD::GATT_FindIncludedServices(UINT16 con_hdl, UINT16 sta_hdl,
 	cmd.data[4] = (UINT8)(end_hdl & 0x00FF);
 	cmd.data[5] = (UINT8)((end_hdl >> 8) & 0x00FF);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_DiscAllChar(UINT16 con_hdl, UINT16 sta_hdl,
+BOOL NPI_CMD::GATT_DiscAllChar(UINT16 con_hdl, UINT16 sta_hdl,
                                      UINT16 end_hdl)
 {
 	sCMD cmd;
@@ -808,11 +817,11 @@ eRetStatus NPI_CMD::GATT_DiscAllChar(UINT16 con_hdl, UINT16 sta_hdl,
 	cmd.data[4] = (UINT8)(end_hdl & 0x00FF);
 	cmd.data[5] = (UINT8)((end_hdl >> 8) & 0x00FF);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_DiscCharByUUID(UINT16 con_hdl, UINT16 sta_hdl,
+BOOL NPI_CMD::GATT_DiscCharByUUID(UINT16 con_hdl, UINT16 sta_hdl,
                                         UINT16 end_hdl, PUINT8 uuid, UINT8 len)
 {
 	sCMD cmd;
@@ -828,11 +837,11 @@ eRetStatus NPI_CMD::GATT_DiscCharByUUID(UINT16 con_hdl, UINT16 sta_hdl,
 	cmd.data[5] = (UINT8)((end_hdl >> 8) & 0x00FF);
 	memcpy(&cmd.data[6], uuid, len);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_DiscAllCharDesc(UINT16 con_hdl, UINT16 sta_hdl,
+BOOL NPI_CMD::GATT_DiscAllCharDesc(UINT16 con_hdl, UINT16 sta_hdl,
                 UINT16 end_hdl)
 {
 	sCMD cmd;
@@ -847,11 +856,11 @@ eRetStatus NPI_CMD::GATT_DiscAllCharDesc(UINT16 con_hdl, UINT16 sta_hdl,
 	cmd.data[4] = (UINT8)(end_hdl & 0x00FF);
 	cmd.data[5] = (UINT8)((end_hdl >> 8) & 0x00FF);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_ReadCharVal(UINT16 con_hdl, UINT16 hdl)
+BOOL NPI_CMD::GATT_ReadCharVal(UINT16 con_hdl, UINT16 hdl)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -863,11 +872,11 @@ eRetStatus NPI_CMD::GATT_ReadCharVal(UINT16 con_hdl, UINT16 hdl)
 	cmd.data[2] = (UINT8)(hdl & 0x00FF);
 	cmd.data[3] = (UINT8)((hdl >> 8) & 0x00FF);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_ReadUseCharUUID(UINT16 con_hdl, UINT16 sta_hdl,
+BOOL NPI_CMD::GATT_ReadUseCharUUID(UINT16 con_hdl, UINT16 sta_hdl,
                 UINT16 end_hdl, PUINT8 uuid, UINT8 len)
 {
 	sCMD cmd;
@@ -883,11 +892,11 @@ eRetStatus NPI_CMD::GATT_ReadUseCharUUID(UINT16 con_hdl, UINT16 sta_hdl,
 	cmd.data[5] = (UINT8)((end_hdl >> 8) & 0x00FF);
 	memcpy(&cmd.data[6], uuid, len);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_ReadLongCharValue(UINT16 con_hdl, UINT16 hdl,
+BOOL NPI_CMD::GATT_ReadLongCharValue(UINT16 con_hdl, UINT16 hdl,
                 UINT16 offset)
 {
 	sCMD cmd;
@@ -902,11 +911,11 @@ eRetStatus NPI_CMD::GATT_ReadLongCharValue(UINT16 con_hdl, UINT16 hdl,
 	cmd.data[4] = (UINT8)(offset & 0x00FF);
 	cmd.data[5] = (UINT8)((offset >> 8) & 0x00FF);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_ReadMultiCharValues(UINT16 con_hdl, PUINT8 att_hdl,
+BOOL NPI_CMD::GATT_ReadMultiCharValues(UINT16 con_hdl, PUINT8 att_hdl,
                 UINT8 len)
 {
 	sCMD cmd;
@@ -917,11 +926,11 @@ eRetStatus NPI_CMD::GATT_ReadMultiCharValues(UINT16 con_hdl, PUINT8 att_hdl,
 	cmd.data[0] = (UINT8)(con_hdl & 0x00FF);
 	cmd.data[1] = (UINT8)((con_hdl >> 8) & 0x00FF);
 	memcpy(&cmd.data[2], (PUINT8)att_hdl, len);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_WriteCharValue(UINT16 con_hdl, UINT16 att_hdl,
+BOOL NPI_CMD::GATT_WriteCharValue(UINT16 con_hdl, UINT16 att_hdl,
                                         PUINT8 data, UINT8 len)
 {
 	sCMD cmd;
@@ -934,12 +943,12 @@ eRetStatus NPI_CMD::GATT_WriteCharValue(UINT16 con_hdl, UINT16 att_hdl,
 	cmd.data[2] = (UINT8)(att_hdl & 0x00FF);
 	cmd.data[3] = (UINT8)((att_hdl >> 8) & 0x00FF);
 	memcpy(&cmd.data[4], data, len);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
 
-eRetStatus NPI_CMD::GATT_WriteLongCharValue(UINT16 con_hdl, UINT16 att_hdl,
+BOOL NPI_CMD::GATT_WriteLongCharValue(UINT16 con_hdl, UINT16 att_hdl,
                 UINT16 offset, PUINT8 data, UINT8 len)
 {
 	sCMD cmd;
@@ -954,11 +963,11 @@ eRetStatus NPI_CMD::GATT_WriteLongCharValue(UINT16 con_hdl, UINT16 att_hdl,
 	cmd.data[4] = (UINT8)(offset & 0x00FF);
 	cmd.data[5] = (UINT8)((offset >> 8) & 0x00FF);
 	memcpy(&cmd.data[6], data, len);
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_ReliableWrites(UINT16 con_hdl, UINT8 num_req,
+BOOL NPI_CMD::GATT_ReliableWrites(UINT16 con_hdl, UINT8 num_req,
                                         sGattWriteVal* pval)
 {
 	sCMD cmd;
@@ -980,11 +989,11 @@ eRetStatus NPI_CMD::GATT_ReliableWrites(UINT16 con_hdl, UINT8 num_req,
 	cmd.data[1] = (UINT8)((con_hdl >> 8) & 0x00FF);
 	cmd.data[2] = num_req;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_ReadCharDesc(UINT16 con_hdl, UINT16 hdl)
+BOOL NPI_CMD::GATT_ReadCharDesc(UINT16 con_hdl, UINT16 hdl)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -996,11 +1005,11 @@ eRetStatus NPI_CMD::GATT_ReadCharDesc(UINT16 con_hdl, UINT16 hdl)
 	cmd.data[2] = (UINT8)(hdl & 0x00FF);
 	cmd.data[3] = (UINT8)((hdl >> 8) & 0x00FF);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_ReadLongCharDesc(UINT16 con_hdl, UINT16 hdl,
+BOOL NPI_CMD::GATT_ReadLongCharDesc(UINT16 con_hdl, UINT16 hdl,
                 UINT16 offset)
 {
 	sCMD cmd;
@@ -1015,11 +1024,11 @@ eRetStatus NPI_CMD::GATT_ReadLongCharDesc(UINT16 con_hdl, UINT16 hdl,
 	cmd.data[4] = (UINT8)(offset & 0x00FF);
 	cmd.data[5] = (UINT8)((offset >> 8) & 0x00FF);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_WriteCharDesc(UINT16 con_hdl, UINT16 offset,
+BOOL NPI_CMD::GATT_WriteCharDesc(UINT16 con_hdl, UINT16 offset,
                                        PUINT8 val, UINT8 len)
 {
 	sCMD cmd;
@@ -1033,11 +1042,11 @@ eRetStatus NPI_CMD::GATT_WriteCharDesc(UINT16 con_hdl, UINT16 offset,
 	cmd.data[3] = (UINT8)((offset >> 8) & 0x00FF);
 	memcpy(&cmd.data[4], val, len);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_WriteLongCharDesc(UINT16 con_hdl, UINT16 att_hdl,
+BOOL NPI_CMD::GATT_WriteLongCharDesc(UINT16 con_hdl, UINT16 att_hdl,
                 UINT16 offset, PUINT8 val, UINT8 len)
 {
 	sCMD cmd;
@@ -1053,11 +1062,11 @@ eRetStatus NPI_CMD::GATT_WriteLongCharDesc(UINT16 con_hdl, UINT16 att_hdl,
 	cmd.data[5] = (UINT8)((offset >> 8) & 0x00FF);
 	memcpy(&cmd.data[6], val, len);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_AddService(sGattServiceUUID uuid, UINT16 num_attrs,
+BOOL NPI_CMD::GATT_AddService(sGattServiceUUID uuid, UINT16 num_attrs,
                                     UINT8 enc_keySize)
 {
 	sCMD cmd;
@@ -1071,11 +1080,11 @@ eRetStatus NPI_CMD::GATT_AddService(sGattServiceUUID uuid, UINT16 num_attrs,
 	cmd.data[3] = (UINT8)((num_attrs >> 8) & 0x00FF);
 	cmd.data[4] = enc_keySize;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_DelService(UINT16 handle)
+BOOL NPI_CMD::GATT_DelService(UINT16 handle)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1085,11 +1094,11 @@ eRetStatus NPI_CMD::GATT_DelService(UINT16 handle)
 	cmd.data[0] = (UINT8)(handle & 0x00FF);
 	cmd.data[1] = (UINT8)((handle >> 8) & 0x00FF);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GATT_AddAttribute(PUINT8 uuid, UINT8 len, UINT8 permission)
+BOOL NPI_CMD::GATT_AddAttribute(PUINT8 uuid, UINT8 len, UINT8 permission)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1099,14 +1108,14 @@ eRetStatus NPI_CMD::GATT_AddAttribute(PUINT8 uuid, UINT8 len, UINT8 permission)
 	memcpy(&cmd.data[0], uuid, len);
 	cmd.data[len] = permission;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
 /*---------------------------
 /*      GAP Command     /
 /*-------------------------*/
-eRetStatus NPI_CMD::GAP_DeviceInit(UINT8 role, UINT8 max_scanRes, PUINT8 irk,
+BOOL NPI_CMD::GAP_DeviceInit(UINT8 role, UINT8 max_scanRes, PUINT8 irk,
                                    PUINT8 csrk, PUINT8 sign_count)
 {
 	sCMD cmd;
@@ -1120,11 +1129,11 @@ eRetStatus NPI_CMD::GAP_DeviceInit(UINT8 role, UINT8 max_scanRes, PUINT8 irk,
 	memcpy(&cmd.data[18], csrk, CSRK_LEN);
 	memcpy(&cmd.data[34], sign_count, SIGN_COUNT_LEN);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_ConfigDeviceAddr(eGapAddrType addr_type, PUINT8 addr)
+BOOL NPI_CMD::GAP_ConfigDeviceAddr(eGapAddrType addr_type, PUINT8 addr)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1134,11 +1143,11 @@ eRetStatus NPI_CMD::GAP_ConfigDeviceAddr(eGapAddrType addr_type, PUINT8 addr)
 	cmd.data[0] = (UINT8)addr_type;
 	memcpy(&cmd.data[1], addr, BLE_ADDR_LEN);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_DeviceDiscoveryRequest(eGapDiscMode disc_mdoe,
+BOOL NPI_CMD::GAP_DeviceDiscoveryRequest(eGapDiscMode disc_mdoe,
                 eEnDisMode act_scan, eEnDisMode white_list)
 {
 	sCMD cmd;
@@ -1150,11 +1159,11 @@ eRetStatus NPI_CMD::GAP_DeviceDiscoveryRequest(eGapDiscMode disc_mdoe,
 	cmd.data[1] = (UINT8)act_scan;
 	cmd.data[2] = (UINT8)white_list;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_DeviceDiscoveryCancel(void)
+BOOL NPI_CMD::GAP_DeviceDiscoveryCancel(void)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1162,8 +1171,8 @@ eRetStatus NPI_CMD::GAP_DeviceDiscoveryCancel(void)
 	cmd.opcode = GAP_DEVICE_DISCOVERY_CANCEL;
 	cmd.len = 0x00;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
 /*
@@ -1173,7 +1182,7 @@ eRetStatus NPI_CMD::GAP_DeviceDiscoveryCancel(void)
 *       #define ADV_CHANNEL_39          0x04
 *       #define ADV_CHANNEL_ALL         (ADV_CHANNEL_37 | ADV_CHANNEL_38 | ADV_CHANNEL_39)
 */
-eRetStatus NPI_CMD::GAP_MakeDiscoverable(eGapEventType evt_type,
+BOOL NPI_CMD::GAP_MakeDiscoverable(eGapEventType evt_type,
                 eGapAddrType addr_type, PUINT8 addr, UINT8 chl_map, eGapFilterPol filter_pol)
 {
 	sCMD cmd;
@@ -1187,11 +1196,11 @@ eRetStatus NPI_CMD::GAP_MakeDiscoverable(eGapEventType evt_type,
 	cmd.data[8] = (UINT8)chl_map;
 	cmd.data[9] = (UINT8)filter_pol;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_UpdateAdvertisingData(eGapAdvDataType adv_type,
+BOOL NPI_CMD::GAP_UpdateAdvertisingData(eGapAdvDataType adv_type,
                 UINT8 len, PUINT8 adv_Data)
 {
 	sCMD cmd;
@@ -1203,11 +1212,11 @@ eRetStatus NPI_CMD::GAP_UpdateAdvertisingData(eGapAdvDataType adv_type,
 	cmd.data[1] = (UINT8)len;
 	memcpy(&cmd.data[2], adv_Data, len);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_EndDiscoverable(void)
+BOOL NPI_CMD::GAP_EndDiscoverable(void)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1215,11 +1224,11 @@ eRetStatus NPI_CMD::GAP_EndDiscoverable(void)
 	cmd.opcode = GAP_END_DISCOVERABLE;
 	cmd.len = 0x00;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_EstablishLinkRequest(eEnDisMode high_duty,
+BOOL NPI_CMD::GAP_EstablishLinkRequest(eEnDisMode high_duty,
                 eEnDisMode white_list, eGapAddrType addr_type, PUINT8 addr)
 {
 	sCMD cmd;
@@ -1232,11 +1241,11 @@ eRetStatus NPI_CMD::GAP_EstablishLinkRequest(eEnDisMode high_duty,
 	cmd.data[2] = (UINT8)addr_type;
 	memcpy(&cmd.data[3], addr, BLE_ADDR_LEN);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_TerminateLinkRequest(UINT16 handle)
+BOOL NPI_CMD::GAP_TerminateLinkRequest(UINT16 handle)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1247,11 +1256,11 @@ eRetStatus NPI_CMD::GAP_TerminateLinkRequest(UINT16 handle)
 	cmd.data[1] = (UINT8)((handle >> 8) & 0x00FF);
 	cmd.data[2] = LL_STATUS_ERROR_PEER_TERM;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_Authenticate(UINT16 con_hdl, sGapAuth* pAuth)
+BOOL NPI_CMD::GAP_Authenticate(UINT16 con_hdl, sGapAuth* pAuth)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1273,11 +1282,11 @@ eRetStatus NPI_CMD::GAP_Authenticate(UINT16 con_hdl, sGapAuth* pAuth)
 	cmd.data[27] = (UINT8)(pAuth->pair_maxEncKeySize);
 	cmd.data[28] = (UINT8)(pAuth->pair_keyDist.oper);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_PasskeyUpdate(UINT16 con_hdl, PUINT8 key)
+BOOL NPI_CMD::GAP_PasskeyUpdate(UINT16 con_hdl, PUINT8 key)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1288,11 +1297,11 @@ eRetStatus NPI_CMD::GAP_PasskeyUpdate(UINT16 con_hdl, PUINT8 key)
 	cmd.data[1] = (UINT8)((con_hdl >> 8) & 0x00FF);
 	memcpy(&cmd.data[2], key, PASSKEY_LEN);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_SlaveSecurityRequest(UINT16 con_hdl, uAuthReq auth)
+BOOL NPI_CMD::GAP_SlaveSecurityRequest(UINT16 con_hdl, uAuthReq auth)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1303,11 +1312,11 @@ eRetStatus NPI_CMD::GAP_SlaveSecurityRequest(UINT16 con_hdl, uAuthReq auth)
 	cmd.data[1] = (UINT8)((con_hdl >> 8) & 0x00FF);
 	cmd.data[2] = (UINT8)(auth.oper);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_Signable(UINT16 con_hdl, PUINT8 csrk, PUINT8 sign_count)
+BOOL NPI_CMD::GAP_Signable(UINT16 con_hdl, PUINT8 csrk, PUINT8 sign_count)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1319,11 +1328,11 @@ eRetStatus NPI_CMD::GAP_Signable(UINT16 con_hdl, PUINT8 csrk, PUINT8 sign_count)
 	memcpy(&cmd.data[2], csrk, CSRK_LEN);
 	memcpy(&cmd.data[18], sign_count, SIGN_COUNT_LEN);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_Bond(UINT16 con_hdl, eEnDisMode auth, PUINT8 ltk,
+BOOL NPI_CMD::GAP_Bond(UINT16 con_hdl, eEnDisMode auth, PUINT8 ltk,
                              UINT16 div, PUINT8 rand, UINT8 ltk_size)
 {
 	sCMD cmd;
@@ -1340,11 +1349,11 @@ eRetStatus NPI_CMD::GAP_Bond(UINT16 con_hdl, eEnDisMode auth, PUINT8 ltk,
 	memcpy(&cmd.data[21], rand, LTK_RAND_PAIR_LEN);
 	cmd.data[29] = (UINT8)ltk_size;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_TerminateAuth(UINT16 con_hdl)
+BOOL NPI_CMD::GAP_TerminateAuth(UINT16 con_hdl)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1355,11 +1364,11 @@ eRetStatus NPI_CMD::GAP_TerminateAuth(UINT16 con_hdl)
 	cmd.data[1] = (UINT8)((con_hdl >> 8) & 0x00FF);
 	cmd.data[2] = (UINT8)BLE_SUCCESS;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_UpdateLinkParamReq(UINT16 con_hdl, UINT16 int_min,
+BOOL NPI_CMD::GAP_UpdateLinkParamReq(UINT16 con_hdl, UINT16 int_min,
                 UINT16 int_max, UINT16 latency, UINT16 timeout)
 {
 	sCMD cmd;
@@ -1378,11 +1387,11 @@ eRetStatus NPI_CMD::GAP_UpdateLinkParamReq(UINT16 con_hdl, UINT16 int_min,
 	cmd.data[8] = (UINT8)(timeout & 0x00FF);
 	cmd.data[9] = (UINT8)((timeout >> 8) & 0x00FF);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_SetParam(eGapParamIDs paraId, UINT16 val)
+BOOL NPI_CMD::GAP_SetParam(eGapParamIDs paraId, UINT16 val)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1393,11 +1402,11 @@ eRetStatus NPI_CMD::GAP_SetParam(eGapParamIDs paraId, UINT16 val)
 	cmd.data[1] = (UINT8)(val & 0x00FF);
 	cmd.data[2] = (UINT8)((val >> 8) & 0x00FF);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_GetParam(eGapParamIDs paraId)
+BOOL NPI_CMD::GAP_GetParam(eGapParamIDs paraId)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1406,11 +1415,11 @@ eRetStatus NPI_CMD::GAP_GetParam(eGapParamIDs paraId)
 	cmd.len = 0x01;
 	cmd.data[0] = (UINT8)paraId;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_ResolvePrivateAddr(PUINT8 irk, PUINT8 addr)
+BOOL NPI_CMD::GAP_ResolvePrivateAddr(PUINT8 irk, PUINT8 addr)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1420,11 +1429,11 @@ eRetStatus NPI_CMD::GAP_ResolvePrivateAddr(PUINT8 irk, PUINT8 addr)
 	memcpy(&cmd.data[0], irk, IRK_LEN);
 	memcpy(&cmd.data[16], addr, BLE_ADDR_LEN);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_SetAdvToken(eGapAdvTokenType type, UINT8 len,
+BOOL NPI_CMD::GAP_SetAdvToken(eGapAdvTokenType type, UINT8 len,
                                     PUINT8 adv_data)
 {
 	sCMD cmd;
@@ -1436,11 +1445,11 @@ eRetStatus NPI_CMD::GAP_SetAdvToken(eGapAdvTokenType type, UINT8 len,
 	cmd.data[1] = (UINT8)len;
 	memcpy(&cmd.data[2], adv_data, len);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_RemoveAdvToken(eGapAdvTokenType type)
+BOOL NPI_CMD::GAP_RemoveAdvToken(eGapAdvTokenType type)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1449,11 +1458,11 @@ eRetStatus NPI_CMD::GAP_RemoveAdvToken(eGapAdvTokenType type)
 	cmd.len = 0x01;
 	cmd.data[0] = (UINT8)type;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_UpdateAdvTokens(void)
+BOOL NPI_CMD::GAP_UpdateAdvTokens(void)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1461,11 +1470,11 @@ eRetStatus NPI_CMD::GAP_UpdateAdvTokens(void)
 	cmd.opcode = GAP_UPDATE_ADV_TOKEN;
 	cmd.len = 0x00;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_BondSetParam(UINT8 paramId, UINT8 len, PUINT16 value)
+BOOL NPI_CMD::GAP_BondSetParam(UINT8 paramId, UINT8 len, PUINT16 value)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1476,11 +1485,11 @@ eRetStatus NPI_CMD::GAP_BondSetParam(UINT8 paramId, UINT8 len, PUINT16 value)
 	cmd.data[1] = (UINT8)len;
 	memcpy(&cmd.data[2], value, len);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::GAP_BondGetParam(UINT8 paramId)
+BOOL NPI_CMD::GAP_BondGetParam(UINT8 paramId)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1489,13 +1498,13 @@ eRetStatus NPI_CMD::GAP_BondGetParam(UINT8 paramId)
 	cmd.len = 0x01;
 	cmd.data[0] = (UINT8)paramId;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 /*---------------------------
 /*              UTIL  Command           /
 /*-------------------------*/
-eRetStatus NPI_CMD::UTIL_Reset(eResetType type)
+BOOL NPI_CMD::UTIL_Reset(eResetType type)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1504,11 +1513,11 @@ eRetStatus NPI_CMD::UTIL_Reset(eResetType type)
 	cmd.len = 0x01;
 	cmd.data[0] = (UINT8)type;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::UTIL_NVRead(UINT8 nv_id, UINT8 data_len)
+BOOL NPI_CMD::UTIL_NVRead(UINT8 nv_id, UINT8 data_len)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1518,11 +1527,11 @@ eRetStatus NPI_CMD::UTIL_NVRead(UINT8 nv_id, UINT8 data_len)
 	cmd.data[0] = (UINT8)nv_id;
 	cmd.data[1] = (UINT8)data_len;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eRetStatus NPI_CMD::UTIL_NVWrite(UINT8 nv_id, UINT8 data_len, PUINT8 data)
+BOOL NPI_CMD::UTIL_NVWrite(UINT8 nv_id, UINT8 data_len, PUINT8 data)
 {
 	/*This command may invalidate the image, be careful*/
 	return BLE_SUCCESS;
@@ -1535,14 +1544,14 @@ eRetStatus NPI_CMD::UTIL_NVWrite(UINT8 nv_id, UINT8 data_len, PUINT8 data)
 	cmd.data[1] = (UINT8)data_len;
 	memcpy(&cmd.data[2], data, data_len);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eRetStatus)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
 /*---------------------------
 /*              HCI  Command        /
 /*-------------------------*/
-eHciRetSta NPI_CMD::HCI_ReadLocalSupportedFeatures(void)
+BOOL NPI_CMD::HCI_ReadLocalSupportedFeatures(void)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1550,11 +1559,11 @@ eHciRetSta NPI_CMD::HCI_ReadLocalSupportedFeatures(void)
 	cmd.opcode = HCI_READ_LOCAL_SUPPORTED_FEATURES;
 	cmd.len = 0x00;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCI_ReadBdAddr(void)
+BOOL NPI_CMD::HCI_ReadBdAddr(void)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1562,11 +1571,11 @@ eHciRetSta NPI_CMD::HCI_ReadBdAddr(void)
 	cmd.opcode = HCI_READ_BDADDR;
 	cmd.len = 0x00;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCI_ReadRSSI(UINT16 con_hdl)
+BOOL NPI_CMD::HCI_ReadRSSI(UINT16 con_hdl)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1576,11 +1585,11 @@ eHciRetSta NPI_CMD::HCI_ReadRSSI(UINT16 con_hdl)
 	cmd.data[0] = (UINT8)(con_hdl & 0x00FF);
 	cmd.data[1] = (UINT8)((con_hdl >> 8) & 0x00FF);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCI_LEReadLocalSupportedFeatures(void)
+BOOL NPI_CMD::HCI_LEReadLocalSupportedFeatures(void)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1588,11 +1597,11 @@ eHciRetSta NPI_CMD::HCI_LEReadLocalSupportedFeatures(void)
 	cmd.opcode = HCI_LE_READ_LOCAL_SUPPORTED_FEATURES;
 	cmd.len = 0x00;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCI_LEReadWhiteListSize(void)
+BOOL NPI_CMD::HCI_LEReadWhiteListSize(void)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1600,11 +1609,11 @@ eHciRetSta NPI_CMD::HCI_LEReadWhiteListSize(void)
 	cmd.opcode = HCI_LE_READ_WHITE_LIST_SIZE;
 	cmd.len = 0x00;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCI_LEClearWhiteList(void)
+BOOL NPI_CMD::HCI_LEClearWhiteList(void)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1612,11 +1621,11 @@ eHciRetSta NPI_CMD::HCI_LEClearWhiteList(void)
 	cmd.opcode = HCI_LE_CLEAR_WHITE_LIST;
 	cmd.len = 0x00;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCI_LEAddDeviceToWhiteList(eHciAddrType type, PUINT8 addr)
+BOOL NPI_CMD::HCI_LEAddDeviceToWhiteList(eHciAddrType type, PUINT8 addr)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1626,11 +1635,11 @@ eHciRetSta NPI_CMD::HCI_LEAddDeviceToWhiteList(eHciAddrType type, PUINT8 addr)
 	cmd.data[0] = (UINT8)type;
 	memcpy(&cmd.data[1], addr, BLE_ADDR_LEN);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCI_LERemoveDeviceFromWhiteList(eHciAddrType type,
+BOOL NPI_CMD::HCI_LERemoveDeviceFromWhiteList(eHciAddrType type,
                 PUINT8 addr)
 {
 	sCMD cmd;
@@ -1641,11 +1650,11 @@ eHciRetSta NPI_CMD::HCI_LERemoveDeviceFromWhiteList(eHciAddrType type,
 	cmd.data[0] = (UINT8)type;
 	memcpy(&cmd.data[1], addr, BLE_ADDR_LEN);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCI_LEConnectionUpdate(UINT16 handle, UINT16 int_min,
+BOOL NPI_CMD::HCI_LEConnectionUpdate(UINT16 handle, UINT16 int_min,
                 UINT16 int_max,
                 UINT16 latency, UINT16 timeout, UINT16 min_len, UINT16 max_len)
 {
@@ -1670,11 +1679,11 @@ eHciRetSta NPI_CMD::HCI_LEConnectionUpdate(UINT16 handle, UINT16 int_min,
 	cmd.data[12] = (UINT8)(max_len & 0x00FF);
 	cmd.data[13] = (UINT8)((max_len >> 8) & 0x00FF);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCI_LEReceiverTest(UINT8 rx_chl)
+BOOL NPI_CMD::HCI_LEReceiverTest(UINT8 rx_chl)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1683,11 +1692,11 @@ eHciRetSta NPI_CMD::HCI_LEReceiverTest(UINT8 rx_chl)
 	cmd.len = 0x01;
 	cmd.data[0] = (UINT8)rx_chl;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCI_LETransmitterTest(UINT8 tx_chl, UINT8 len, PUINT8 data)
+BOOL NPI_CMD::HCI_LETransmitterTest(UINT8 tx_chl, UINT8 len, PUINT8 data)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1698,11 +1707,11 @@ eHciRetSta NPI_CMD::HCI_LETransmitterTest(UINT8 tx_chl, UINT8 len, PUINT8 data)
 	cmd.data[1] = (UINT8)len;
 	memcpy(&cmd.data[2], data, len);
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 
-eHciRetSta NPI_CMD::HCI_LETestEnd(void)
+BOOL NPI_CMD::HCI_LETestEnd(void)
 {
 	sCMD cmd;
 	cmd.type = HCI_CMD_PACKET;
@@ -1710,7 +1719,7 @@ eHciRetSta NPI_CMD::HCI_LETestEnd(void)
 	cmd.opcode = HCI_LE_TEST_END;
 	cmd.len = 0x00;
 
-	this->write((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
-	return (eHciRetSta)WaitFor_Msg();
+	this->PushToQueue((UINT8*)&cmd, (CMD_HEAD_LEN + cmd.len));
+	return NPI_TRUE;//(BOOL)WaitFor_Msg();
 }
 

@@ -10,6 +10,7 @@ public:
 	void Analyze_TX(PUINT8 buf, UINT8 size);
 	void Analyze_RX(PUINT8 buf, UINT8 size);
 	CHARFORMAT2 cf;
+
 private:
 	DWORD comThreadID;
 	DWORD evtThreadID;

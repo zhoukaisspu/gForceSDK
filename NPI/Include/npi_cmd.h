@@ -389,154 +389,158 @@ public:
 	NPI_CMD(UINT8 port);
 	NPI_CMD(UINT8 nPort, DWORD nBaud, UINT8 nParity, UINT8 nByteSize,UINT8 nStopBit);
 	~NPI_CMD();
+
 	/*---------HCI Extended CMD---------*/
-	eHciRetSta HciExt_SetRxGain(eRxGain rxGain);
-	eHciRetSta HciExt_SetTxPower(eTxPwr txPower);
-	eHciRetSta HciExt_ClkDivOnHalt(eClkDivOnHalt ctrl);
-	eHciRetSta HciExt_DecNvUsage(eNvUsage ctrl);
-	eHciRetSta HciExt_Decrypt(PUINT8 pkey, PUINT8 pdata);
-	eHciRetSta HciExt_SetLocalFeatures(PUINT8 ctrl);
-	eHciRetSta HciExt_SetFastTxRespTime(eFastTxRespTime ctrl);
-	eHciRetSta HciExt_ModemTestTx(eCwModem cw, UINT8 channel);
-	eHciRetSta HciExt_ModemHopTestTx(void);
-	eHciRetSta HciExt_ModemTestRx(UINT8 channel);
-	eHciRetSta HciExt_EndModemTest(void);
-	eHciRetSta HciExt_SetBdAddr(PUINT8 addr);
-	eHciRetSta HciExt_SetSCA(UINT16 sca);
-	eHciRetSta HciExt_SetFreqTune(eFreqTune tune);
-	eHciRetSta HciExt_SaveFreqTune(void);
-	eHciRetSta HCIExt_SetMaxDtmTxPower(eTxPwr tx_pwr);
-	eHciRetSta HCIExt_MapPmIoPort(ePmloPort port, ePmloPortPin port_pin);
-	eHciRetSta HCIExt_DisconnectImmed(UINT16 handle);
-	eHciRetSta HCIExt_PER(UINT16 handle, ePerTestCmd perCmd);
-	eHciRetSta HCIExt_ExtendRfRange(void);
-	eHciRetSta HCIExt_HaltDuringRf(eHaltDurRF halt);
-	eHciRetSta HCIExt_OverrideSL(eOverrideSL state);
-	eHciRetSta HCIExt_BuildRevision(eBuildRevMode mode, UINT16 num);
-	eHciRetSta HCIExt_DelaySleep(UINT16 delay);
-	eHciRetSta HCIExt_ResetSystem(eResetType type);
-	eHciRetSta HCIExt_OverlappedProcessing(eEnDisMode mode);
-	eHciRetSta HCIExt_NumComplPktsLimit(UINT8 limit, eEnDisMode mode);
+	BOOL HciExt_SetRxGain(eRxGain rxGain);
+	BOOL HciExt_SetTxPower(eTxPwr txPower);
+	BOOL HciExt_ClkDivOnHalt(eClkDivOnHalt ctrl);
+	BOOL HciExt_DecNvUsage(eNvUsage ctrl);
+	BOOL HciExt_Decrypt(PUINT8 pkey, PUINT8 pdata);
+	BOOL HciExt_SetLocalFeatures(PUINT8 ctrl);
+	BOOL HciExt_SetFastTxRespTime(eFastTxRespTime ctrl);
+	BOOL HciExt_ModemTestTx(eCwModem cw, UINT8 channel);
+	BOOL HciExt_ModemHopTestTx(void);
+	BOOL HciExt_ModemTestRx(UINT8 channel);
+	BOOL HciExt_EndModemTest(void);
+	BOOL HciExt_SetBdAddr(PUINT8 addr);
+	BOOL HciExt_SetSCA(UINT16 sca);
+	BOOL HciExt_SetFreqTune(eFreqTune tune);
+	BOOL HciExt_SaveFreqTune(void);
+	BOOL HCIExt_SetMaxDtmTxPower(eTxPwr tx_pwr);
+	BOOL HCIExt_MapPmIoPort(ePmloPort port, ePmloPortPin port_pin);
+	BOOL HCIExt_DisconnectImmed(UINT16 handle);
+	BOOL HCIExt_PER(UINT16 handle, ePerTestCmd perCmd);
+	BOOL HCIExt_ExtendRfRange(void);
+	BOOL HCIExt_HaltDuringRf(eHaltDurRF halt);
+	BOOL HCIExt_OverrideSL(eOverrideSL state);
+	BOOL HCIExt_BuildRevision(eBuildRevMode mode, UINT16 num);
+	BOOL HCIExt_DelaySleep(UINT16 delay);
+	BOOL HCIExt_ResetSystem(eResetType type);
+	BOOL HCIExt_OverlappedProcessing(eEnDisMode mode);
+	BOOL HCIExt_NumComplPktsLimit(UINT8 limit, eEnDisMode mode);
 
 	/*---------L2CAP Command---------*/
-	eRetStatus L2CAP_DisconnectReq(UINT16 cid);
-	eRetStatus L2CAP_InfoReq(UINT16 handle, eInfoType type);
-	eRetStatus L2CAP_ConnParamUpdateReq(UINT16 handle, UINT16 intervalMin,
+	BOOL L2CAP_DisconnectReq(UINT16 cid);
+	BOOL L2CAP_InfoReq(UINT16 handle, eInfoType type);
+	BOOL L2CAP_ConnParamUpdateReq(UINT16 handle, UINT16 intervalMin,
 	                                    UINT16 intervalMax, UINT16 slaveLatency, UINT16 timeout);
-	eRetStatus L2CAP_ConnectReq(UINT16 handle, UINT16 PSM, UINT16 peerPSM);
-	eRetStatus L2CAP_FlowCtrlCredit(UINT16 CID, UINT16 peerCredits);
-	eRetStatus L2CAP_Data(UINT16 CID, PUINT8 pSDU, UINT8 len);
-	eRetStatus L2CAP_RegisterPsm(UINT16 psm, UINT16 mtu, UINT16 InitialPeerCrs,
+	BOOL L2CAP_ConnectReq(UINT16 handle, UINT16 PSM, UINT16 peerPSM);
+	BOOL L2CAP_FlowCtrlCredit(UINT16 CID, UINT16 peerCredits);
+	BOOL L2CAP_Data(UINT16 CID, PUINT8 pSDU, UINT8 len);
+	BOOL L2CAP_RegisterPsm(UINT16 psm, UINT16 mtu, UINT16 InitialPeerCrs,
 	                             UINT16 PeerCrThreshld, UINT8 MaxNumChannels, UINT8 SecurityVrfctn);
-	eRetStatus L2CAP_DeregisterPsm(UINT16 psm);
-	eRetStatus L2CAP_PsmChannels(UINT16 psm);
+	BOOL L2CAP_DeregisterPsm(UINT16 psm);
+	BOOL L2CAP_PsmChannels(UINT16 psm);
 
 	/*---------ATT Command---------*/
-	eRetStatus ATT_ExchangeMTUReq(UINT16 con_hdl, UINT16 mtu);
-	eRetStatus ATT_FindInfoReq(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl);
-	eRetStatus ATT_FindByTypeValueReq(UINT16 con_hdl, UINT16 sta_hdl,
+	BOOL ATT_ExchangeMTUReq(UINT16 con_hdl, UINT16 mtu);
+	BOOL ATT_FindInfoReq(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl);
+	BOOL ATT_FindByTypeValueReq(UINT16 con_hdl, UINT16 sta_hdl,
 	                                  UINT16 end_hdl, UINT16 type, PUINT8 pvalue, UINT8 len);
-	eRetStatus ATT_ReadByTypeReq(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl,
+	BOOL ATT_ReadByTypeReq(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl,
 	                             PUINT8 pvalue, UINT8 len);
-	eRetStatus ATT_ReadReq(UINT16 con_hdl, UINT16 att_hdl);
-	eRetStatus ATT_ReadBlobReq(UINT16 con_hdl, UINT16 att_hdl, UINT16 offset);
-	eRetStatus ATT_ReadMultiReq(UINT16 con_hdl, PUINT8 att_hdl, UINT8 len);
-	eRetStatus ATT_ReadByGroupTypeReq(UINT16 con_hdl, UINT16 sta_hdl,
+	BOOL ATT_ReadReq(UINT16 con_hdl, UINT16 att_hdl);
+	BOOL ATT_ReadBlobReq(UINT16 con_hdl, UINT16 att_hdl, UINT16 offset);
+	BOOL ATT_ReadMultiReq(UINT16 con_hdl, PUINT8 att_hdl, UINT8 len);
+	BOOL ATT_ReadByGroupTypeReq(UINT16 con_hdl, UINT16 sta_hdl,
 	                                  UINT16 end_hdl, PUINT8 pvalue, UINT8 len);
-	eRetStatus ATT_WriteReq(UINT16 con_hdl, eYesNoMode sig, eYesNoMode cmd,
+	BOOL ATT_WriteReq(UINT16 con_hdl, eYesNoMode sig, eYesNoMode cmd,
 	                        UINT16 att_hdl, PUINT8 pvalue, UINT8 len);
-	eRetStatus ATT_PrepareWriteReq(UINT16 con_hdl, UINT16 att_hdl, UINT16 offset,
+	BOOL ATT_PrepareWriteReq(UINT16 con_hdl, UINT16 att_hdl, UINT16 offset,
 	                               PUINT8 pvalue, UINT8 len);
-	eRetStatus ATT_ExecuteWriteReq(UINT16 con_hdl, eAttExeWrFlag flag);
+	BOOL ATT_ExecuteWriteReq(UINT16 con_hdl, eAttExeWrFlag flag);
 
 	/*---------GATT Command---------*/
-	eRetStatus GATT_ExchangeMTU(UINT16 con_hdl, UINT16 mtu);
-	eRetStatus GATT_DiscAllPrimaryServices(UINT16 con_hdl);
-	eRetStatus GATT_DiscPrimaryServiceByUUID(UINT16 con_hdl, PUINT8 buf, UINT8 len);
-	eRetStatus GATT_FindIncludedServices(UINT16 con_hdl, UINT16 sta_hdl,
+	BOOL GATT_ExchangeMTU(UINT16 con_hdl, UINT16 mtu);
+	BOOL GATT_DiscAllPrimaryServices(UINT16 con_hdl);
+	BOOL GATT_DiscPrimaryServiceByUUID(UINT16 con_hdl, PUINT8 buf, UINT8 len);
+	BOOL GATT_FindIncludedServices(UINT16 con_hdl, UINT16 sta_hdl,
 	                                     UINT16 end_hdl);
-	eRetStatus GATT_DiscAllChar(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl);
-	eRetStatus GATT_DiscCharByUUID(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl,
+	BOOL GATT_DiscAllChar(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl);
+	BOOL GATT_DiscCharByUUID(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl,
 	                               PUINT8 uuid, UINT8 len);
-	eRetStatus GATT_DiscAllCharDesc(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl);
-	eRetStatus GATT_ReadCharVal(UINT16 con_hdl, UINT16 hdl);
-	eRetStatus GATT_ReadUseCharUUID(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl,
+	BOOL GATT_DiscAllCharDesc(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl);
+	BOOL GATT_ReadCharVal(UINT16 con_hdl, UINT16 hdl);
+	BOOL GATT_ReadUseCharUUID(UINT16 con_hdl, UINT16 sta_hdl, UINT16 end_hdl,
 	                                PUINT8 uuid, UINT8 len);
-	eRetStatus GATT_ReadLongCharValue(UINT16 con_hdl, UINT16 hdl, UINT16 offset);
-	eRetStatus GATT_ReadMultiCharValues(UINT16 con_hdl, PUINT8 att_hdl, UINT8 len);
-	eRetStatus GATT_WriteCharValue(UINT16 con_hdl, UINT16 att_hdl, PUINT8 data,
+	BOOL GATT_ReadLongCharValue(UINT16 con_hdl, UINT16 hdl, UINT16 offset);
+	BOOL GATT_ReadMultiCharValues(UINT16 con_hdl, PUINT8 att_hdl, UINT8 len);
+	BOOL GATT_WriteCharValue(UINT16 con_hdl, UINT16 att_hdl, PUINT8 data,
 	                               UINT8 len);
-	eRetStatus GATT_WriteLongCharValue(UINT16 con_hdl, UINT16 att_hdl,
+	BOOL GATT_WriteLongCharValue(UINT16 con_hdl, UINT16 att_hdl,
 	                                   UINT16 offset, PUINT8 data, UINT8 len);
-	eRetStatus GATT_ReliableWrites(UINT16 con_hdl, UINT8 num_req,
+	BOOL GATT_ReliableWrites(UINT16 con_hdl, UINT8 num_req,
 	                               sGattWriteVal* pval);
-	eRetStatus GATT_ReadCharDesc(UINT16 con_hdl, UINT16 hdl);
-	eRetStatus GATT_ReadLongCharDesc(UINT16 con_hdl, UINT16 hdl, UINT16 offset);
-	eRetStatus GATT_WriteCharDesc(UINT16 con_hdl, UINT16 offset, PUINT8 val,
+	BOOL GATT_ReadCharDesc(UINT16 con_hdl, UINT16 hdl);
+	BOOL GATT_ReadLongCharDesc(UINT16 con_hdl, UINT16 hdl, UINT16 offset);
+	BOOL GATT_WriteCharDesc(UINT16 con_hdl, UINT16 offset, PUINT8 val,
 	                              UINT8 len);
-	eRetStatus GATT_WriteLongCharDesc(UINT16 con_hdl, UINT16 att_hdl, UINT16 offset,
+	BOOL GATT_WriteLongCharDesc(UINT16 con_hdl, UINT16 att_hdl, UINT16 offset,
 	                                  PUINT8 val, UINT8 len);
-	eRetStatus GATT_AddService(sGattServiceUUID uuid, UINT16 num_attrs,
+	BOOL GATT_AddService(sGattServiceUUID uuid, UINT16 num_attrs,
 	                           UINT8 enc_keySize);
-	eRetStatus GATT_DelService(UINT16 handle);
-	eRetStatus GATT_AddAttribute(PUINT8 uuid, UINT8 len, UINT8 permission);
+	BOOL GATT_DelService(UINT16 handle);
+	BOOL GATT_AddAttribute(PUINT8 uuid, UINT8 len, UINT8 permission);
 
 	/*---------GAP Command---------*/
-	eRetStatus GAP_DeviceInit(UINT8 role, UINT8 max_scanRes, PUINT8 irk,
+	BOOL GAP_DeviceInit(UINT8 role, UINT8 max_scanRes, PUINT8 irk,
 	                          PUINT8 csrk, PUINT8 sign_count);
-	eRetStatus GAP_ConfigDeviceAddr(eGapAddrType addr_type, PUINT8 addr);
-	eRetStatus GAP_DeviceDiscoveryRequest(eGapDiscMode disc_mdoe,
+	BOOL GAP_ConfigDeviceAddr(eGapAddrType addr_type, PUINT8 addr);
+	BOOL GAP_DeviceDiscoveryRequest(eGapDiscMode disc_mdoe,
 	                                      eEnDisMode act_scan, eEnDisMode white_list);
-	eRetStatus GAP_DeviceDiscoveryCancel(void);
-	eRetStatus GAP_MakeDiscoverable(eGapEventType evt_type, eGapAddrType addr_type,
+	BOOL GAP_DeviceDiscoveryCancel(void);
+	BOOL GAP_MakeDiscoverable(eGapEventType evt_type, eGapAddrType addr_type,
 	                                PUINT8 addr, UINT8 chl_map, eGapFilterPol filter_pol);
-	eRetStatus GAP_UpdateAdvertisingData(eGapAdvDataType adv_type, UINT8 len,
+	BOOL GAP_UpdateAdvertisingData(eGapAdvDataType adv_type, UINT8 len,
 	                                     PUINT8 adv_Data);
-	eRetStatus GAP_EndDiscoverable(void);
-	eRetStatus GAP_EstablishLinkRequest(eEnDisMode high_duty, eEnDisMode white_list,
+	BOOL GAP_EndDiscoverable(void);
+	BOOL GAP_EstablishLinkRequest(eEnDisMode high_duty, eEnDisMode white_list,
 	                                    eGapAddrType addr_type, PUINT8 addr);
-	eRetStatus GAP_TerminateLinkRequest(UINT16 handle);
-	eRetStatus GAP_Authenticate(UINT16 con_hdl, sGapAuth* pAuth);
-	eRetStatus GAP_PasskeyUpdate(UINT16 con_hdl, PUINT8 key);
-	eRetStatus GAP_SlaveSecurityRequest(UINT16 con_hdl, uAuthReq auth);
-	eRetStatus GAP_Signable(UINT16 con_hdl, PUINT8 csrk, PUINT8 sign_count);
-	eRetStatus GAP_Bond(UINT16 con_hdl, eEnDisMode auth, PUINT8 ltk, UINT16 div,
+	BOOL GAP_TerminateLinkRequest(UINT16 handle);
+	BOOL GAP_Authenticate(UINT16 con_hdl, sGapAuth* pAuth);
+	BOOL GAP_PasskeyUpdate(UINT16 con_hdl, PUINT8 key);
+	BOOL GAP_SlaveSecurityRequest(UINT16 con_hdl, uAuthReq auth);
+	BOOL GAP_Signable(UINT16 con_hdl, PUINT8 csrk, PUINT8 sign_count);
+	BOOL GAP_Bond(UINT16 con_hdl, eEnDisMode auth, PUINT8 ltk, UINT16 div,
 	                    PUINT8 rand, UINT8 ltk_size);
-	eRetStatus GAP_TerminateAuth(UINT16 con_hdl);
-	eRetStatus GAP_UpdateLinkParamReq(UINT16 con_hdl, UINT16 int_min,
+	BOOL GAP_TerminateAuth(UINT16 con_hdl);
+	BOOL GAP_UpdateLinkParamReq(UINT16 con_hdl, UINT16 int_min,
 	                                  UINT16 int_max, UINT16 latency, UINT16 timeout);
-	eRetStatus GAP_SetParam(eGapParamIDs paraId, UINT16 val);
-	eRetStatus GAP_GetParam(eGapParamIDs paraId);
-	eRetStatus GAP_ResolvePrivateAddr(PUINT8 irk, PUINT8 addr);
-	eRetStatus GAP_SetAdvToken(eGapAdvTokenType type, UINT8 len, PUINT8 adv_data);
-	eRetStatus GAP_RemoveAdvToken(eGapAdvTokenType type);
-	eRetStatus GAP_UpdateAdvTokens(void);
-	eRetStatus GAP_BondSetParam(UINT8 paramId, UINT8 len, PUINT16 value);
-	eRetStatus GAP_BondGetParam(UINT8 paramId);
+	BOOL GAP_SetParam(eGapParamIDs paraId, UINT16 val);
+	BOOL GAP_GetParam(eGapParamIDs paraId);
+	BOOL GAP_ResolvePrivateAddr(PUINT8 irk, PUINT8 addr);
+	BOOL GAP_SetAdvToken(eGapAdvTokenType type, UINT8 len, PUINT8 adv_data);
+	BOOL GAP_RemoveAdvToken(eGapAdvTokenType type);
+	BOOL GAP_UpdateAdvTokens(void);
+	BOOL GAP_BondSetParam(UINT8 paramId, UINT8 len, PUINT16 value);
+	BOOL GAP_BondGetParam(UINT8 paramId);
 
 	/*---------Util Command---------*/
-	eRetStatus UTIL_Reset(eResetType type);
-	eRetStatus UTIL_NVRead(UINT8 nv_id, UINT8 data_len);
-	eRetStatus UTIL_NVWrite(UINT8 nv_id, UINT8 data_len, PUINT8 data);
+	BOOL UTIL_Reset(eResetType type);
+	BOOL UTIL_NVRead(UINT8 nv_id, UINT8 data_len);
+	BOOL UTIL_NVWrite(UINT8 nv_id, UINT8 data_len, PUINT8 data);
 	/*---------Hci Command---------*/
-	eHciRetSta HCI_ReadLocalSupportedFeatures(void);
-	eHciRetSta HCI_ReadBdAddr(void);
-	eHciRetSta HCI_ReadRSSI(UINT16 con_hdl);
-	eHciRetSta HCI_LEReadLocalSupportedFeatures(void);
-	eHciRetSta HCI_LEReadWhiteListSize(void);
-	eHciRetSta HCI_LEClearWhiteList(void);
-	eHciRetSta HCI_LEAddDeviceToWhiteList(eHciAddrType type, PUINT8 addr);
-	eHciRetSta HCI_LERemoveDeviceFromWhiteList(eHciAddrType type, PUINT8 addr);
-	eHciRetSta HCI_LEConnectionUpdate(UINT16 handle, UINT16 int_min, UINT16 int_max,
+	BOOL HCI_ReadLocalSupportedFeatures(void);
+	BOOL HCI_ReadBdAddr(void);
+	BOOL HCI_ReadRSSI(UINT16 con_hdl);
+	BOOL HCI_LEReadLocalSupportedFeatures(void);
+	BOOL HCI_LEReadWhiteListSize(void);
+	BOOL HCI_LEClearWhiteList(void);
+	BOOL HCI_LEAddDeviceToWhiteList(eHciAddrType type, PUINT8 addr);
+	BOOL HCI_LERemoveDeviceFromWhiteList(eHciAddrType type, PUINT8 addr);
+	BOOL HCI_LEConnectionUpdate(UINT16 handle, UINT16 int_min, UINT16 int_max,
 	                                  UINT16 latency, UINT16 timeout, UINT16 min_len, UINT16 max_len);
-	eHciRetSta HCI_LEReceiverTest(UINT8 rx_chl);
-	eHciRetSta HCI_LETransmitterTest(UINT8 tx_chl, UINT8 len, PUINT8 data);
-	eHciRetSta HCI_LETestEnd(void);
+	BOOL HCI_LEReceiverTest(UINT8 rx_chl);
+	BOOL HCI_LETransmitterTest(UINT8 tx_chl, UINT8 len, PUINT8 data);
+	BOOL HCI_LETestEnd(void);
+
 
 
 	/*---------HCI Command---------*/
 private:
 	DWORD WaitFor_Msg(void);
+	void PushToQueue(PUINT8 data, UINT32 size);
+
 };
 
 

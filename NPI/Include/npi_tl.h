@@ -1,7 +1,7 @@
 
-#ifndef HCI_TL_H
-#define HCI_TL_H
-
+#ifndef NPI_TL_H
+#define NPI_TL_H
+#include"commonDef.h"
 
 // HCI Packet Types
 #define HCI_CMD_PACKET                 0x01
@@ -231,8 +231,8 @@
 #define UTIL_NV_WRITE									  0xFE82
 
 
-#define RX_STATUS_MSG                                           (WM_USER+1)
-//#define LOG_MSG                                               (WM_USER+2)
+#define HCI_STATUS_MSG                                          (WM_USER+1)
+#define GAP_STATUS_MSG                                          (WM_USER+2)
 /*------HCI Message-------*/
 #define HCI_DECRYPT_MSG                                         (WM_USER+3)
 #define HCI_GAP_STATUS_MSG                                      (WM_USER+4)
@@ -247,8 +247,8 @@
 #define HCI_LE_REM_CONN_PARAM_REQ_REP_MSG                       (WM_USER+13)
 #define HCI_LE_REM_CONN_PARAM_REQ_NEG_REP_MSG                   (WM_USER+14)
 
-#define HCI_MSG_HEAD                                            HCI_DECRYPT_MSG
-#define HCI_MSG_COUNT                                           12
+#define HCI_MSG_HEAD                                            HCI_STATUS_MSG
+#define HCI_MSG_COUNT                                           14
 /*------L2CAP Message-----*/
 #define L2CAP_COMMAND_REJECT_MSG                                (WM_USER+0x100)
 #define L2CAP_DISCONNECT_RSP_MSG                                (WM_USER+0x101)
@@ -421,4 +421,32 @@ typedef enum {
 	INVALID_RET_STATUS = 0xFF
 } eRetStatus;
 
-#endif /* HCI_TL_H */
+
+class NPI_TX :public Runnable
+{
+public:
+	NPI_TX(HANDLE hdl, DWORD logThread);
+	~NPI_TX();
+
+	void Run(void);
+	GForceQueue<UINT8, CMD_BUF_SIZE> *Get_Queue(void);
+private:
+	HANDLE m_com;
+	DWORD m_log;
+	DWORD Write(PUINT8 buf, UINT8 size);
+	GForceQueue<UINT8, CMD_BUF_SIZE> m_cmdQue;
+};
+
+class NPI_RX:public Runnable
+{
+public:
+	NPI_RX(HANDLE hdl, DWORD logThread);
+	~NPI_RX();
+
+	void Run(void);
+
+private:
+	HANDLE m_com;
+	DWORD m_log;
+};
+#endif /* NPI_TL_H */

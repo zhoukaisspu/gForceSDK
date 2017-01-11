@@ -2,14 +2,16 @@
 #define	_CMNDEF_H_
 
 #include"windows.h"
+#include"npi_queue.h"
 #include"Thread.h"
-#include"hci_tl.h"
 #include"log.h"
 //#define STD_OUT
 #define MFC_GUI
 
 #define MAX_RX_SIZE     255
 #define MAX_TX_SIZE     255
+
+#define CMD_BUF_SIZE	MAX_TX_SIZE*10
 
 #define EVT_HEADER_LEN        3
 #define BLE_ADDR_LEN          6

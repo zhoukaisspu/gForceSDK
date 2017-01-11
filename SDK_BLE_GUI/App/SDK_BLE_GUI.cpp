@@ -164,7 +164,6 @@ void CSDK_BLE_GUIApp::OnNewDevice()
 void CSDK_BLE_GUIApp::OnCloseDevice()
 {
 	theApp.m_cmdHandle->DisConnect();
-	delete[] theApp.m_cmdHandle;
 	theApp.m_cmdHandle = NULL;
 }
 // CSDK_BLE_GUIApp message handlers

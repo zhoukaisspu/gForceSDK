@@ -205,7 +205,7 @@ void Log::Analyze_LL_Event(PUINT8 buf, UINT8 size)
 		Log_printf(L"OpCode			: 0x%04X\n", opCode);
 		Sprintf_DumpRx(buf, size);
 		/*send status message to com-thread*/
-		while (!PostThreadMessage(comThreadID, RX_STATUS_MSG, pEvt->status, 0)) {
+		while (!PostThreadMessage(evtThreadID, HCI_STATUS_MSG, pEvt->status, 0)) {
 			LogW(L"Post RX_STATUS_MSG Err:%d\n", GetLastError());
 			Sleep(500);
 		}
@@ -217,11 +217,6 @@ void Log::Analyze_LL_Event(PUINT8 buf, UINT8 size)
 		Log_printf(L"Decrypted Data		: ");
 		Sprintf_HexData((PUINT8)pEvt->data, pEvt->len - 3);
 		Sprintf_DumpRx(buf, size);
-		/*send status message to com-thread*/
-		while (!PostThreadMessage(comThreadID, RX_STATUS_MSG, pEvt->status, 0)) {
-			LogW(L"Post RX_STATUS_MSG Err:%d\n", GetLastError());
-			Sleep(500);
-		}
 		/*send event message to evt-thread and delete heap in that thread*/
 		while (!PostThreadMessage(evtThreadID, HCI_DECRYPT_MSG, (WPARAM)&pEvt->status,
 		                          pEvt->len - 2)) {
@@ -464,13 +459,8 @@ void Log::Analyze_GAP_Event(PUINT8 buf, UINT8 size)
 	case HCI_EXT_GAP_CMD_STATUS_EVENT:
 		Log_printf(L"OpCode		: 0x%04X\n", opCode);
 		Log_printf(L"Data Length		: 0x%02X\n", pEvt->data[2]);
-		/*delete heap buffer ?*/
-		if (pEvt->data[0] != 0) {
-			/*send event message to evt-thread*/
-			msg_type = HCI_GAP_STATUS_MSG;
-		} else {
-			del_flag = TRUE;
-		}
+		/*send event message to evt-thread*/
+		msg_type = HCI_GAP_STATUS_MSG;
 		break;
 	case HCI_EXT_GAP_DEVICE_INIT_DONE_EVENT:
 		Log_printf(L"DevAddr		: ");
@@ -584,12 +574,6 @@ void Log::Analyze_GAP_Event(PUINT8 buf, UINT8 size)
 		break;
 	}
 	Sprintf_DumpRx(buf, size);
-	/*send status message to com-thread*/
-	while (!PostThreadMessage(comThreadID, RX_STATUS_MSG, pEvt->status, 0)) {
-		LogW(L"Post RX_STATUS_MSG Err:%d\n", GetLastError());
-		Sleep(500);
-	}
-
 	if (msg_type != 0) {
 		/*send event message to evt-thread*/
 		while (!PostThreadMessage(evtThreadID, msg_type, (WPARAM)&pEvt->status,
@@ -667,11 +651,6 @@ void Log::Analyze_LE_Hci_Event(PUINT8 buf, UINT8 size)
 	}
 
 	Sprintf_DumpRx(buf, size);
-	/*Send status message to Com-thread*/
-	while (!PostThreadMessage(comThreadID, RX_STATUS_MSG, pEvt->status, 0)) {
-		LogW(L"Post RX_STATUS_MSG Err:%d\n", GetLastError());
-		Sleep(500);
-	}
 	/*Message to user*/
 	if (msg_type != 0) {
 		/*send event message to evt-thread*/
@@ -780,7 +759,7 @@ size_t LogI(const wchar_t* fmt, ...)
 UINT16 GetLogMsg(void)
 {
 	static UINT16 msg = LOG_MSG;
-	if (msg++ == LOG_MSG + 0xFF) {
+	if (msg++ == (LOG_MSG + 0xFF)) {
 		msg = LOG_MSG;
 	}
 	return msg;

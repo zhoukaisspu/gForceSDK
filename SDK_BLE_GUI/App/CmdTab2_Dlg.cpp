@@ -352,7 +352,7 @@ void CmdTab2_Dlg::OnBnClickedTab2CrSave()
 	WCHAR wBuf[256] = { 0 };
 	CString defaultDir = _T("D:\\");
 	CString fileName = _T("char.txt");
-	CString filter = L"нд╪Ч (*.doc; *.ppt; *.txt)";
+	CString filter = _T("File (*.txt)");
 	CFileDialog openFileDlg(isOpen, defaultDir, fileName,
 	                        OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, filter, NULL);
 	openFileDlg.GetOFN().lpstrInitialDir = L"D:\\char.txt";

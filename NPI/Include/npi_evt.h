@@ -3,6 +3,7 @@
 #define _NPI_EVT_H_
 
 #include "CommonDef.h"
+#include "npi_tl.h"
 #include "gap.h"
 #include "gatt.h"
 #pragma pack(1)
@@ -195,6 +196,8 @@ public:
 
 private:
 	INT16 GetPosFromMsg(INT16 msg);
+	void Hci_Status_Event(const PUINT8 pBuf, UINT16 len);
+	void Gap_Status_Event(const PUINT8 pBuf, UINT16 len);
 	void HciExt_Decrypt_Event(const PUINT8 pBuf, UINT16 len);
 	void HciExt_GapStatus_Event(const PUINT8 pBuf, UINT16 len);
 	void Hci_RdLocSuppFeat_Event(const PUINT8 pBuf, UINT16 len);

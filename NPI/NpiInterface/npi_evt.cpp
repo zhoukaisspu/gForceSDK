@@ -30,6 +30,12 @@ void NPI_EVT::Run()
 			}
 
 			switch (msg.message) {
+				case HCI_STATUS_MSG:
+					Hci_Status_Event(buf, size);
+					break;
+				case GAP_STATUS_MSG:
+					Gap_Status_Event(buf, size);
+					break;
 				case HCI_DECRYPT_MSG:
 					HciExt_Decrypt_Event(buf, size);
 					break;
@@ -245,11 +251,30 @@ BOOL NPI_EVT::RegistCallBack(void(*pFun)(const PUINT8 pBuf, UINT16 len), UINT16 
 /*---------------------------
 /*		HCI Extended Event	/
 /*-------------------------*/
-void NPI_EVT::HciExt_Decrypt_Event(const PUINT8 pBuf, UINT16 len) {
+void NPI_EVT::Hci_Status_Event(const PUINT8 pBuf, UINT16 len) {
+	/*User App Code Block*/
+
+	/*Do not Modify*/
+	delete (pBuf - offsetof(sHciEvt, status));
+}
+/*---------------------------
+/*		Gap Status Event	/
+/*-------------------------*/
+void NPI_EVT::Gap_Status_Event(const PUINT8 pBuf, UINT16 len) {
 	/*User App Code Block*/
 
 	/*Do not Modify*/
 	delete (pBuf - offsetof(sNpiEvt, status));
+}
+
+/*---------------------------
+/*		HCI Extended Event	/
+/*-------------------------*/
+void NPI_EVT::HciExt_Decrypt_Event(const PUINT8 pBuf, UINT16 len) {
+	/*User App Code Block*/
+
+	/*Do not Modify*/
+	delete (pBuf - offsetof(sHciEvt, status));
 }
 
 /*---------------------------

@@ -45,9 +45,6 @@
     <ClInclude Include="..\NPI\Include\gatt.h">
       <Filter>头文件\NPI</Filter>
     </ClInclude>
-    <ClInclude Include="..\NPI\Include\hci_tl.h">
-      <Filter>头文件\NPI</Filter>
-    </ClInclude>
     <ClInclude Include="..\NPI\Include\log.h">
       <Filter>头文件\NPI</Filter>
     </ClInclude>
@@ -100,6 +97,12 @@
       <Filter>头文件\GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\NPI\Include\gap.h">
+      <Filter>头文件\NPI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NPI\Include\npi_queue.h">
+      <Filter>头文件\NPI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NPI\Include\npi_tl.h">
       <Filter>头文件\NPI</Filter>
     </ClInclude>
   </ItemGroup>
@@ -157,6 +160,9 @@
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NPI\NpiInterface\npi_tl.cpp">
+      <Filter>源文件\NPI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
