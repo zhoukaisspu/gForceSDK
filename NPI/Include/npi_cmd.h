@@ -484,7 +484,7 @@ public:
 	BOOL GATT_AddAttribute(PUINT8 uuid, UINT8 len, UINT8 permission);
 
 	/*---------GAP Command---------*/
-	BOOL GAP_DeviceInit(UINT8 role, UINT8 max_scanRes, PUINT8 irk,
+	BOOL GAP_DeviceInit(gapRole_t role, UINT8 max_scanRes, PUINT8 irk,
 	                    PUINT8 csrk, PUINT8 sign_count);
 	BOOL GAP_ConfigDeviceAddr(eGapAddrType addr_type, PUINT8 addr);
 	BOOL GAP_DeviceDiscoveryRequest(eGapDiscMode disc_mdoe,

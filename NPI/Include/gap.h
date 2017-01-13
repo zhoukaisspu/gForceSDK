@@ -9,6 +9,17 @@
 /*-------------------------*/
 typedef UINT16 gapParamIDs_t;
 
+typedef union{
+	UINT8 data;
+	struct{
+		UINT8 broadcast : 1;
+		UINT8 observer : 1;
+		UINT8 peripheral : 1;
+		UINT8 central : 1;
+		UINT8 reserve : 4;
+	}role;
+}gapRole_t;
+
 typedef struct {
 	UINT8 opcode;                    //!< GAP type of command. Ref: @ref GAP_MSG_EVENT_DEFINES
 } gapEventHdr_t;

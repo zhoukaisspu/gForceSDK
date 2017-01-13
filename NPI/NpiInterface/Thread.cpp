@@ -142,3 +142,8 @@ unsigned int CThread::StaticThreadFunc(void * arg)
 	pThread->Run();
 	return 0;
 }
+
+BOOL CThread::SetPriority(int pri)
+{
+	return ::SetThreadPriority(m_handle, pri);
+}

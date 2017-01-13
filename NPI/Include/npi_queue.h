@@ -40,10 +40,6 @@ public:
 		return retval;
 	}
 
-	BOOL isEmpty()
-	{
-		return (in_pos == out_pos) ? TRUE : FALSE;
-	}
 	~GForceQueue()
 	{
 		DeleteCriticalSection(&mutex);

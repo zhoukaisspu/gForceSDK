@@ -58,7 +58,7 @@ public:
 	std::string GetThreadName();
 	void SetThreadName(std::string ThreadName);
 	void SetThreadName(const char* ThreadName);
-
+	BOOL SetPriority(int pri);
 private:
 	static unsigned int WINAPI StaticThreadFunc(void* arg);
 

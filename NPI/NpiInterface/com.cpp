@@ -24,15 +24,28 @@ Com::Com(UINT8 nPort, DWORD nBaud, UINT8 nParity, UINT8 nByteSize,
 }
 Com::~Com()
 {
-	delete[] logThread;
-	delete[] rxThread;
-	delete[] evtThread;
-	delete[] m_rx;
-	delete[] m_tx;
+	if (logThread){
+		delete[] logThread;
+	}
+	if (rxThread){
+		delete[] rxThread;
+	}
+	if (evtThread){
+		delete[] evtThread;
+	}
+	if (m_rx){
+		delete[] m_rx;
+	}
+	if (m_tx){
+		delete[] m_tx;
+	}
+
 	logThread = NULL;
 	txThread = NULL;
 	rxThread = NULL;
 	evtThread = NULL;
+	m_rx = NULL;
+	m_tx = NULL;
 }
 
 int Com::Connect()
@@ -43,30 +56,29 @@ int Com::Connect()
 	/*----------------Open Com port----------------*/
 	com_file = CreateFile(sCom.GetBuffer(50),
 	                      GENERIC_READ | GENERIC_WRITE,
-	                      0,/* do not share*/
+						  0,/* do not share*/
 	                      NULL,
 	                      OPEN_EXISTING,
-	                      FILE_ATTRIBUTE_NORMAL,// | FILE_FLAG_OVERLAPPED,
-	                      NULL);
+	                      FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
+						  NULL);
 
 	if (com_file == INVALID_HANDLE_VALUE) {
-		printf("CreateFile() error:%d", GetLastError());
+		LogE(L"CreateFile() error:%d", GetLastError());
 		return false;
 	}
 
 	/*---------------Configure Com port---------------*/
 	/*set timeouts*/
-	GetCommTimeouts(com_file, &timeouts);
-	timeouts.ReadIntervalTimeout = MAXDWORD;
+	timeouts.ReadIntervalTimeout = 0;
 	timeouts.ReadTotalTimeoutMultiplier = 0;
-	timeouts.ReadTotalTimeoutConstant = 0;
+	timeouts.ReadTotalTimeoutConstant = 5000;
 	timeouts.WriteTotalTimeoutMultiplier = 0;
 	timeouts.WriteTotalTimeoutConstant = 0;
 	SetCommTimeouts(com_file, &timeouts);
 
 	/*set com state*/
 	if (!GetCommState(com_file, &ndcb)) {
-		printf(("GetCommState() failed!\n"));
+		LogE(L"GetCommState() failed!\n");
 		CloseHandle(com_file);
 		return false;
 	}
@@ -75,16 +87,22 @@ int Com::Connect()
 	ndcb.Parity = dcb.Parity;
 	ndcb.ByteSize = dcb.ByteSize;
 	ndcb.StopBits = dcb.StopBits;
+	ndcb.fRtsControl = RTS_CONTROL_DISABLE;
+	ndcb.fDtrControl = DTR_CONTROL_ENABLE;
+	ndcb.fOutxCtsFlow = FALSE;
+	ndcb.fOutxDsrFlow = FALSE;
+	ndcb.fOutX = FALSE;
+	ndcb.fInX = FALSE;
 	if (!SetCommState(com_file, &ndcb)) {
-		printf(("SetCommState() failed!\n"));
+		LogE(L"SetCommState() failed!\n");
 		CloseHandle(com_file);
 		return false;
 	}
 	/*set buffer size*/
-	//static const int g_buffMax = 32768;
+	//const int g_buffMax = 32768;
 	//if (!SetupComm(com_file, g_buffMax, g_buffMax))
 	//{
-	//      printf(("SetupComm() failed"));
+	//	LogE(L"SetupComm() failed");
 	//      return false;
 	//}
 	/*clear buffer*/
@@ -94,13 +112,13 @@ int Com::Connect()
 	DWORD dwError;
 	COMSTAT cs;
 	if (!ClearCommError(com_file, &dwError, &cs)) {
-		printf(("ClearCommError() failed"));
+		LogE(L"ClearCommError() failed");
 		CloseHandle(com_file);
 		return false;
 	}
 
 	/*set mask*/
-	//SetCommMask(com_file, EV_RXFLAG | EV_TXEMPTY);
+	SetCommMask(com_file, EV_RXCHAR);
 
 	/*Cread event thread*/
 	m_evt = new NPI_EVT();
@@ -135,7 +153,13 @@ int Com::Connect()
 
 int Com::DisConnect()
 {
-	CloseHandle(com_file);
-	rxThread->Terminate(0);
+	if (com_file){
+		CloseHandle(com_file);
+		evtThread->Terminate(0);
+		logThread->Terminate(0);
+		txThread->Terminate(0);
+		rxThread->Terminate(0);
+		com_file = NULL;
+	}
 	return 0;
 }

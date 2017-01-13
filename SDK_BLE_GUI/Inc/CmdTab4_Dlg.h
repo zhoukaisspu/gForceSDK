@@ -1,5 +1,6 @@
 #pragma once
 #include "afxcmn.h"
+#include "afxpropertygridctrl.h"
 
 
 // CmdTab4_Dlg dialog
@@ -23,4 +24,12 @@ public:
 	CTreeCtrl m_cmdTree;
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSelchangedTab4Tree(NMHDR* pNMHDR, LRESULT* pResult);
+	CMFCPropertyGridCtrl m_gridCtrl;
+//	afx_msg void OnClickTab4Tree(NMHDR *pNMHDR, LRESULT *pResult);
+
+private:
+	void Show_GAP_DeviceInit(void);
+	void Show_GAP_ConfigDeviceAddr(void);
+public:
+	afx_msg void OnDblclkTab4Tree(NMHDR *pNMHDR, LRESULT *pResult);
 };

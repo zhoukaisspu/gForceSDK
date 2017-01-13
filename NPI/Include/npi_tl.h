@@ -131,104 +131,104 @@
 #define HCI_EXT_LL_TEST_MODE                              0xFC70
 
 // L2CAP Commands
-#define L2CAP_DISCON_REQ                                                                  0xFC86
-#define L2CAP_INFO_REQ                                                                    0xFC8A
-#define L2CAP_CON_PAR_UPDATE                                                      0xFC92
-#define L2CAP_CONNECT_REQ                                                                 0xFC94
-#define L2CAP_CONNECT_RSP                                                                 0xFC95
-#define L2CAP_FLOW_CTRL_CRT                                                               0xFC96
-#define L2CAP_DATA                                                                                0xFCF0
-#define L2CAP_REG_PSM                                                                     0xFCF1
-#define L2CAP_DEREG_PSM                                                                   0xFCF2
-#define L2CAP_PSM_INFO                                                                    0xFCF3
-#define L2CAP_PSM_CHANNEL                                                                 0xFCF4
-#define L2CAP_CHANNEL_INFO                                                                0xFCF5
+#define L2CAP_DISCON_REQ                                  0xFC86
+#define L2CAP_INFO_REQ                                    0xFC8A
+#define L2CAP_CON_PAR_UPDATE                              0xFC92
+#define L2CAP_CONNECT_REQ                                 0xFC94
+#define L2CAP_CONNECT_RSP                                 0xFC95
+#define L2CAP_FLOW_CTRL_CRT                               0xFC96
+#define L2CAP_DATA                                        0xFCF0
+#define L2CAP_REG_PSM                                     0xFCF1
+#define L2CAP_DEREG_PSM                                   0xFCF2
+#define L2CAP_PSM_INFO                                    0xFCF3
+#define L2CAP_PSM_CHANNEL                                 0xFCF4
+#define L2CAP_CHANNEL_INFO                                0xFCF5
 
 //ATT Commands
-#define ATT_ERROR_RSP                                                                     0xFD01
-#define ATT_EXC_MTU_REQ                                                                   0xFD02
-#define ATT_EXC_MTU_RSP                                                                   0xFD03
-#define ATT_FIND_INFO_REQ                                                                 0xFD04
-#define ATT_FIND_INFO_RSP                                                                 0xFD05
-#define ATT_FIND_BY_TYPE                                                                  0xFD06
-#define ATT_FIND_BY_TYPE_RSP                                                      0xFD07
-#define ATT_READ_BY_TYPE_REQ                                                      0xFD08
-#define ATT_READ_BY_TYPE_RSP                                                      0xFD09
-#define ATT_READ_REQ                                                                      0xFD0A
-#define ATT_READ_RSP                                                                      0xFD0B
-#define ATT_READ_BLOB_REQ                                                                 0xFD0C
-#define ATT_READ_BLOB_RSP                                                                 0xFD0D
-#define ATT_READ_MULTI_REQ                                                                0xFD0E
-#define ATT_READ_MULTI_RSP                                                                0xFD0F
-#define ATT_READ_BY_GROUP_TYPE_REQ                                                0xFD10
-#define ATT_READ_BY_GROUP_TYPE_RSP                                                0xFD11
-#define ATT_WRITE_REQ                                                                     0xFD12
-#define ATT_WRITE_RSP                                                                     0xFD13
-#define ATT_PREP_WRITE_REQ                                                                0xFD16
-#define ATT_PREP_WRITE_RSP                                                                0xFD17
-#define ATT_EXE_WRITE_REQ                                                                 0xFD18
-#define ATT_HDL_VALUE_NOTIFY                                                      0xFD19
-#define ATT_HDL_VALUE_IND                                                                 0xFD1B
-#define ATT_HDL_VALUE_CONFIRM                                                     0xFD1E
+#define ATT_ERROR_RSP                                     0xFD01
+#define ATT_EXC_MTU_REQ                                   0xFD02
+#define ATT_EXC_MTU_RSP                                   0xFD03
+#define ATT_FIND_INFO_REQ                                 0xFD04
+#define ATT_FIND_INFO_RSP                                 0xFD05
+#define ATT_FIND_BY_TYPE                                  0xFD06
+#define ATT_FIND_BY_TYPE_RSP                              0xFD07
+#define ATT_READ_BY_TYPE_REQ                              0xFD08
+#define ATT_READ_BY_TYPE_RSP                              0xFD09
+#define ATT_READ_REQ                                      0xFD0A
+#define ATT_READ_RSP                                      0xFD0B
+#define ATT_READ_BLOB_REQ                                 0xFD0C
+#define ATT_READ_BLOB_RSP                                 0xFD0D
+#define ATT_READ_MULTI_REQ                                0xFD0E
+#define ATT_READ_MULTI_RSP                                0xFD0F
+#define ATT_READ_BY_GROUP_TYPE_REQ                        0xFD10
+#define ATT_READ_BY_GROUP_TYPE_RSP                        0xFD11
+#define ATT_WRITE_REQ                                     0xFD12
+#define ATT_WRITE_RSP                                     0xFD13
+#define ATT_PREP_WRITE_REQ                                0xFD16
+#define ATT_PREP_WRITE_RSP                                0xFD17
+#define ATT_EXE_WRITE_REQ                                 0xFD18
+#define ATT_HDL_VALUE_NOTIFY                              0xFD19
+#define ATT_HDL_VALUE_IND                                 0xFD1B
+#define ATT_HDL_VALUE_CONFIRM                             0xFD1E
 
 //GATT Commands
-#define GATT_EXCHANGE_MTU                                                                 0xFD82
-#define GATT_DISC_ALL_CHAR_DESC                                                   0xFD84
-#define GATT_DISC_PRI_SERV_BY_UUID                                                0xFD86
-#define GATT_DISC_CHAR_BY_UUID                                                    0xFD88
-#define GATT_READ_CHAR_VAL                                                                0xFD8A
-#define GATT_READ_LONG_CHAR_VAL                                                   0xFD8C
-#define GATT_READ_MULTI_CHAR_VAL                                                  0xFD8E
-#define GATT_DISC_ALL_PRI_SERV                                                    0xFD90
-#define GATT_WRITE_CHAR_VAL                                                               0xFD92
-#define GATT_WRITE_LONG_CHAR_VAL                                                  0xFD96
-#define GATT_NOTIFY                                                                               0xFD9B
-#define GATT_INDICATION                                                                   0xFD9D
+#define GATT_EXCHANGE_MTU                                 0xFD82
+#define GATT_DISC_ALL_CHAR_DESC                           0xFD84
+#define GATT_DISC_PRI_SERV_BY_UUID                        0xFD86
+#define GATT_DISC_CHAR_BY_UUID                            0xFD88
+#define GATT_READ_CHAR_VAL                                0xFD8A
+#define GATT_READ_LONG_CHAR_VAL                           0xFD8C
+#define GATT_READ_MULTI_CHAR_VAL                          0xFD8E
+#define GATT_DISC_ALL_PRI_SERV                            0xFD90
+#define GATT_WRITE_CHAR_VAL                               0xFD92
+#define GATT_WRITE_LONG_CHAR_VAL                          0xFD96
+#define GATT_NOTIFY                                       0xFD9B
+#define GATT_INDICATION                                   0xFD9D
 
-#define GATT_FIND_INC_SERV                                                                0xFDB0
-#define GATT_DISC_ALL_CHAR                                                                0xFDB2
-#define GATT_READ_USE_CHAR_UUID                                                   0xFDB4
-#define GATT_WRITE_NO_RES                                                                 0xFDB6
-#define GATT_SINGLE_WRITE_NO_RES                                                  0xFDB8
-#define GATT_READ_CHAR_DESC                                                               0xFDBC
-#define GATT_READ_LONG_CHAR_DESC                                                  0xFDBE
-#define GATT_WRITE_CHAR_DESC                                                  0xFDC0
-#define GATT_WRITE_LONG_CHAR_DESC                                             0xFDC2
-#define GATT_ADD_SERVICE                                                              0xFDFC
-#define GATT_DEL_SERVICE                                                              0xFDFD
-#define GATT_ADD_ATTRIBUTE                                                            0xFDFE
+#define GATT_FIND_INC_SERV                                0xFDB0
+#define GATT_DISC_ALL_CHAR                                0xFDB2
+#define GATT_READ_USE_CHAR_UUID                           0xFDB4
+#define GATT_WRITE_NO_RES                                 0xFDB6
+#define GATT_SINGLE_WRITE_NO_RES                          0xFDB8
+#define GATT_READ_CHAR_DESC                               0xFDBC
+#define GATT_READ_LONG_CHAR_DESC                          0xFDBE
+#define GATT_WRITE_CHAR_DESC                              0xFDC0
+#define GATT_WRITE_LONG_CHAR_DESC                         0xFDC2
+#define GATT_ADD_SERVICE                                  0xFDFC
+#define GATT_DEL_SERVICE                                  0xFDFD
+#define GATT_ADD_ATTRIBUTE                                0xFDFE
 
 //GAP Commands
-#define GAP_DEVICE_INIT                                                               0xFE00
-#define GAP_CONFIG_DEVICE_ADDR                                                0xFE03
-#define GAP_DEVICE_DISCOVERY_REQ                                                  0xFE04
-#define GAP_DEVICE_DISCOVERY_CANCEL                                               0xFE05
-#define GAP_MAKE_DISCOVERABLE                                                     0xFE06
-#define GAP_UPDATE_ADV_DATA                                                               0xFE07
-#define GAP_END_DISCOVERABLE                                                      0xFE08
-#define GAP_ESTABLISH_LINK_REQ                                                    0xFE09
-#define GAP_TERMINATE_LINK_REQ                                                    0xFE0A
-#define GAP_AUTHENTIC_REQ                                                                 0xFE0B
-#define GAP_PASSKEY_UPDATE                                                                0xFE0C
-#define GAP_SLAVE_SEC_REQ                                                                 0xFE0D
-#define GAP_SIGNABLE                                                                      0xFE0E
-#define GAP_BOND                                                                                  0xFE0F
-#define GAP_TERMINATE_AUTH                                                                0xFE10
-#define GAP_UPDATE_LINK_PARA_REQ                                                  0xFE11
+#define GAP_DEVICE_INIT                                   0xFE00
+#define GAP_CONFIG_DEVICE_ADDR                            0xFE03
+#define GAP_DEVICE_DISCOVERY_REQ                          0xFE04
+#define GAP_DEVICE_DISCOVERY_CANCEL                       0xFE05
+#define GAP_MAKE_DISCOVERABLE                             0xFE06
+#define GAP_UPDATE_ADV_DATA                               0xFE07
+#define GAP_END_DISCOVERABLE                              0xFE08
+#define GAP_ESTABLISH_LINK_REQ                            0xFE09
+#define GAP_TERMINATE_LINK_REQ                            0xFE0A
+#define GAP_AUTHENTIC_REQ                                 0xFE0B
+#define GAP_PASSKEY_UPDATE                                0xFE0C
+#define GAP_SLAVE_SEC_REQ                                 0xFE0D
+#define GAP_SIGNABLE                                      0xFE0E
+#define GAP_BOND                                          0xFE0F
+#define GAP_TERMINATE_AUTH                                0xFE10
+#define GAP_UPDATE_LINK_PARA_REQ                          0xFE11
 
-#define GAP_SET_PARAM                                                                     0xFE30
-#define GAP_GET_PARAM                                                                     0xFE31
-#define GAP_RESOLVE_PRI_ADDR                                                      0xFE32
-#define GAP_SET_ADV_TOKEN                                                                 0xFE33
-#define GAP_REMOVE_ADV_TOKEN                                                      0xFE34
-#define GAP_UPDATE_ADV_TOKEN                                                      0xFE35
-#define GAP_BOND_SET_PARAM                                                                0xFE36
-#define GAP_BOND_GET_PARAM                                                                0xFE37
+#define GAP_SET_PARAM                                     0xFE30
+#define GAP_GET_PARAM                                     0xFE31
+#define GAP_RESOLVE_PRI_ADDR                              0xFE32
+#define GAP_SET_ADV_TOKEN                                 0xFE33
+#define GAP_REMOVE_ADV_TOKEN                              0xFE34
+#define GAP_UPDATE_ADV_TOKEN                              0xFE35
+#define GAP_BOND_SET_PARAM                                0xFE36
+#define GAP_BOND_GET_PARAM                                0xFE37
 
 //UTIL Commands
-#define UTIL_RESET                                                                                0xFE80
-#define UTIL_NV_READ                                                                      0xFE81
-#define UTIL_NV_WRITE                                                                     0xFE82
+#define UTIL_RESET                                        0xFE80
+#define UTIL_NV_READ                                      0xFE81
+#define UTIL_NV_WRITE                                     0xFE82
 
 
 #define HCI_STATUS_MSG                                          (WM_USER+1)
@@ -433,7 +433,6 @@ public:
 private:
 	HANDLE m_com;
 	DWORD m_log;
-	DWORD Write(PUINT8 buf, UINT8 size);
 	GForceQueue<UINT8, CMD_BUF_SIZE> m_cmdQue;
 };
 
@@ -448,5 +447,6 @@ public:
 private:
 	HANDLE m_com;
 	DWORD m_log;
+	DWORD readBlock(void);
 };
 #endif /* NPI_TL_H */

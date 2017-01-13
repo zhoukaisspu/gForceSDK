@@ -23,7 +23,6 @@ NPI_CMD::~NPI_CMD()
 void NPI_CMD::PushToQueue(PUINT8 data, UINT32 size)
 {
 	while (size--) {
-
 		m_tx->Get_Queue()->Push(*(data++));
 	}
 }
@@ -1115,7 +1114,7 @@ BOOL NPI_CMD::GATT_AddAttribute(PUINT8 uuid, UINT8 len, UINT8 permission)
 /*---------------------------
 /*      GAP Command     /
 /*-------------------------*/
-BOOL NPI_CMD::GAP_DeviceInit(UINT8 role, UINT8 max_scanRes, PUINT8 irk,
+BOOL NPI_CMD::GAP_DeviceInit(gapRole_t role, UINT8 max_scanRes, PUINT8 irk,
                              PUINT8 csrk, PUINT8 sign_count)
 {
 	sCMD cmd;
@@ -1123,7 +1122,7 @@ BOOL NPI_CMD::GAP_DeviceInit(UINT8 role, UINT8 max_scanRes, PUINT8 irk,
 	/*Opcode*/
 	cmd.opcode = GAP_DEVICE_INIT;
 	cmd.len = 0x26;
-	cmd.data[0] = role;
+	cmd.data[0] = role.data;
 	cmd.data[1] = max_scanRes;
 	memcpy(&cmd.data[2], irk, IRK_LEN);
 	memcpy(&cmd.data[18], csrk, CSRK_LEN);

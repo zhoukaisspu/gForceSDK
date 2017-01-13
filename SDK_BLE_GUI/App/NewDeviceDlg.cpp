@@ -52,30 +52,37 @@ END_MESSAGE_MAP()
 void NewDeviceDlg::OnBnClickedOk()
 {
 	
-	UINT8 port[] = { 1, 2, 3, 4, 5 };
 	DWORD baud[] = { 9600, 57600, 38400, 19200, 14400, 115200 };
 	UINT8 parity[] = { NOPARITY, ODDPARITY, EVENPARITY, MARKPARITY, SPACEPARITY };
 	UINT8 stopBit[] = { ONESTOPBIT, TWOSTOPBITS };
 	UINT8 dataBit[] = { 7, 8, 9 };
 	UINT8 key[16] = { 0 };
 	UINT8 signCount[4] = {1, 0, 0, 0};
-	TRACE("Port=%d\n", port[m_port.GetCurSel()]);
-	TRACE("Baud=%d\n", baud[m_baud.GetCurSel()]);
-	TRACE("Flow=%d\n", m_flow.GetCurSel());
-	TRACE("Parity=%d\n", parity[m_parity.GetCurSel()]);
-	TRACE("StopBit=%d\n", stopBit[m_stopbit.GetCurSel()]);
-	TRACE("DataBits=%d\n", dataBit[m_databit.GetCurSel()]);
+	WCHAR port[20] = { 0 };
+	gapRole_t role;
+	role.data = 0;
+	role.role.central = 1;
+
 	/*NPI*/
 	if (!theApp.m_cmdHandle){
-		theApp.m_cmdHandle = new NPI_CMD(port[m_port.GetCurSel()], baud[m_baud.GetCurSel()], \
+		m_port.GetWindowText(port, 20);
+		UINT8 data = (UINT8)wcstod(port, NULL);
+		theApp.m_cmdHandle = new NPI_CMD(data, baud[m_baud.GetCurSel()], \
 			parity[m_parity.GetCurSel()], dataBit[m_databit.GetCurSel()], stopBit[m_stopbit.GetCurSel()]);
 
 		if (!theApp.m_cmdHandle->Connect()){
+			delete theApp.m_cmdHandle;
+			theApp.m_cmdHandle = NULL;
 			AfxMessageBox(L"Can't open port!");
 		}
 		else{
 			RegistEvtCallBack();
-			theApp.m_cmdHandle->GAP_DeviceInit(0x08, 0x05, key, key, signCount);
+			//test!!!!!!!!
+			SYSTEMTIME sys;
+			GetLocalTime(&sys);
+			TRACE(L"ok BUT  %02d:%02d:%02d.%03d\n", sys.wHour, sys.wMinute, sys.wSecond,
+				sys.wMilliseconds);
+			theApp.m_cmdHandle->GAP_DeviceInit(role, 0x05, key, key, signCount);
 		}
 	}
 

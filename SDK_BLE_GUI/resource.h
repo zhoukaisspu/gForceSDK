@@ -102,6 +102,7 @@
 #define IDC_VIEW_BDA                    1070
 #define IDC_VIEW_TERM                   1071
 #define IDC_MFCPROPERTYGRID1            1073
+#define IDC_TAB4_PROPERTYGRID           1073
 #define IDC_TAB2_MTU_BUT                1074
 #define ID_NEW_DEV                      32771
 #define ID_CLOSE_DEV                    32772
@@ -110,7 +111,7 @@
 #define ID_1_CLR_LOG                    32784
 
 // Next default values for new objects
-//
+// 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        327

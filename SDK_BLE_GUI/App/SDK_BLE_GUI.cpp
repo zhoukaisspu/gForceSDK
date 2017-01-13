@@ -163,8 +163,10 @@ void CSDK_BLE_GUIApp::OnNewDevice()
 // App command to run the dialog
 void CSDK_BLE_GUIApp::OnCloseDevice()
 {
-	theApp.m_cmdHandle->DisConnect();
-	theApp.m_cmdHandle = NULL;
+	if (theApp.m_cmdHandle){
+		theApp.m_cmdHandle->DisConnect();
+		theApp.m_cmdHandle = NULL;
+	}
 }
 // CSDK_BLE_GUIApp message handlers
 
