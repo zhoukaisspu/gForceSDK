@@ -24,19 +24,19 @@ Com::Com(UINT8 nPort, DWORD nBaud, UINT8 nParity, UINT8 nByteSize,
 }
 Com::~Com()
 {
-	if (logThread){
+	if (logThread) {
 		delete[] logThread;
 	}
-	if (rxThread){
+	if (rxThread) {
 		delete[] rxThread;
 	}
-	if (evtThread){
+	if (evtThread) {
 		delete[] evtThread;
 	}
-	if (m_rx){
+	if (m_rx) {
 		delete[] m_rx;
 	}
-	if (m_tx){
+	if (m_tx) {
 		delete[] m_tx;
 	}
 
@@ -56,11 +56,11 @@ int Com::Connect()
 	/*----------------Open Com port----------------*/
 	com_file = CreateFile(sCom.GetBuffer(50),
 	                      GENERIC_READ | GENERIC_WRITE,
-						  0,/* do not share*/
+	                      0,/* do not share*/
 	                      NULL,
 	                      OPEN_EXISTING,
 	                      FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
-						  NULL);
+	                      NULL);
 
 	if (com_file == INVALID_HANDLE_VALUE) {
 		LogE(L"CreateFile() error:%d", GetLastError());
@@ -102,7 +102,7 @@ int Com::Connect()
 	//const int g_buffMax = 32768;
 	//if (!SetupComm(com_file, g_buffMax, g_buffMax))
 	//{
-	//	LogE(L"SetupComm() failed");
+	//      LogE(L"SetupComm() failed");
 	//      return false;
 	//}
 	/*clear buffer*/
@@ -153,7 +153,7 @@ int Com::Connect()
 
 int Com::DisConnect()
 {
-	if (com_file){
+	if (com_file) {
 		CloseHandle(com_file);
 		evtThread->Terminate(0);
 		logThread->Terminate(0);

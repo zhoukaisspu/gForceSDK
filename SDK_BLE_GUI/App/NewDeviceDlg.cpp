@@ -51,7 +51,7 @@ END_MESSAGE_MAP()
 
 void NewDeviceDlg::OnBnClickedOk()
 {
-	
+
 	DWORD baud[] = { 9600, 57600, 38400, 19200, 14400, 115200 };
 	UINT8 parity[] = { NOPARITY, ODDPARITY, EVENPARITY, MARKPARITY, SPACEPARITY };
 	UINT8 stopBit[] = { ONESTOPBIT, TWOSTOPBITS };
@@ -64,24 +64,24 @@ void NewDeviceDlg::OnBnClickedOk()
 	role.role.central = 1;
 
 	/*NPI*/
-	if (!theApp.m_cmdHandle){
+	if (!theApp.m_cmdHandle) {
 		m_port.GetWindowText(port, 20);
 		UINT8 data = (UINT8)wcstod(port, NULL);
 		theApp.m_cmdHandle = new NPI_CMD(data, baud[m_baud.GetCurSel()], \
-			parity[m_parity.GetCurSel()], dataBit[m_databit.GetCurSel()], stopBit[m_stopbit.GetCurSel()]);
+		                                 parity[m_parity.GetCurSel()], dataBit[m_databit.GetCurSel()],
+		                                 stopBit[m_stopbit.GetCurSel()]);
 
-		if (!theApp.m_cmdHandle->Connect()){
+		if (!theApp.m_cmdHandle->Connect()) {
 			delete theApp.m_cmdHandle;
 			theApp.m_cmdHandle = NULL;
 			AfxMessageBox(L"Can't open port!");
-		}
-		else{
+		} else {
 			RegistEvtCallBack();
 			//test!!!!!!!!
 			SYSTEMTIME sys;
 			GetLocalTime(&sys);
 			TRACE(L"ok BUT  %02d:%02d:%02d.%03d\n", sys.wHour, sys.wMinute, sys.wSecond,
-				sys.wMilliseconds);
+			      sys.wMilliseconds);
 			theApp.m_cmdHandle->GAP_DeviceInit(role, 0x05, key, key, signCount);
 		}
 	}

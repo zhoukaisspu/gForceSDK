@@ -31,5 +31,5 @@ private:
 	void Show_GAP_DeviceInit(void);
 	void Show_GAP_ConfigDeviceAddr(void);
 public:
-	afx_msg void OnDblclkTab4Tree(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnDblclkTab4Tree(NMHDR* pNMHDR, LRESULT* pResult);
 };

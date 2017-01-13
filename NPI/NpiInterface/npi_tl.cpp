@@ -37,7 +37,7 @@ void NPI_TX::Run(void)
 		case WR_TYPE_STATE:
 			buf[0] = m_cmdQue.Pop();
 			state = WR_OPCODE_STATE;
-			break; 
+			break;
 		case WR_OPCODE_STATE:
 			buf[1] = m_cmdQue.Pop();
 			buf[2] = m_cmdQue.Pop();
@@ -47,14 +47,13 @@ void NPI_TX::Run(void)
 			buf[3] = m_cmdQue.Pop();
 			totalLen = buf[3] + CMD_HEAD_LEN;
 			pBuf = new UINT8[totalLen];
-			if (pBuf){
+			if (pBuf) {
 				pBuf[0] = buf[0];
 				pBuf[1] = buf[1];
 				pBuf[2] = buf[2];
 				pBuf[3] = buf[3];
 				state = WR_OTHERS;
-			}
-			else{
+			} else {
 				state = WR_TYPE_STATE;
 			}
 			break;
@@ -62,9 +61,9 @@ void NPI_TX::Run(void)
 			for (i = 0; i < buf[3]; i++) {
 				pBuf[4 + i] = m_cmdQue.Pop();
 			}
-			
-			if (!WriteFile(m_com, pBuf, totalLen, &dwBytesWritten, &osWrite)){
-				if (GetLastError() == ERROR_IO_PENDING){
+
+			if (!WriteFile(m_com, pBuf, totalLen, &dwBytesWritten, &osWrite)) {
+				if (GetLastError() == ERROR_IO_PENDING) {
 					//GetOverlappedResult(m_com, &osWrite, &dwBytesWritten, true);
 				}
 
@@ -109,25 +108,18 @@ void NPI_RX::Run(void)
 	osWait.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	DWORD dwEvtMask;
 
-	while (1)
-	{
-		if (WaitCommEvent(m_com, &dwEvtMask, &osWait))
-		{
-			if (dwEvtMask & EV_RXCHAR)
-			{
-				if (!this->readBlock()){
+	while (1) {
+		if (WaitCommEvent(m_com, &dwEvtMask, &osWait)) {
+			if (dwEvtMask & EV_RXCHAR) {
+				if (!this->readBlock()) {
 					LogE(L"Read Block£¡");
 				}
 			}
-		}
-		else
-		{
-			if (GetLastError() == ERROR_IO_PENDING)
-			{
+		} else {
+			if (GetLastError() == ERROR_IO_PENDING) {
 				WaitForSingleObject(osWait.hEvent, INFINITE);
-				if (dwEvtMask & EV_RXCHAR)
-				{
-					if (!this->readBlock()){
+				if (dwEvtMask & EV_RXCHAR) {
+					if (!this->readBlock()) {
 						LogE(L"Read Block£¡");
 					}
 				}
@@ -137,7 +129,7 @@ void NPI_RX::Run(void)
 
 
 	while (1) {
-		
+
 	}
 }
 
@@ -163,16 +155,15 @@ DWORD NPI_RX::readBlock(void)
 	memset(&osRead, 0, sizeof(OVERLAPPED));
 	osRead.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
-	while (1){
+	while (1) {
 		switch (state) {
 		case READ_TYPE_STATE:
 			if (ReadFile(m_com, &type, 1, &nLenOut, &osRead)) {
 				if (nLenOut) {
 					state = READ_EVT_CODE;
 				}
-			}
-			else {
-				if (GetLastError() == ERROR_IO_PENDING){
+			} else {
+				if (GetLastError() == ERROR_IO_PENDING) {
 					GetOverlappedResult(m_com, &osRead, &nLenOut, true);
 					if (nLenOut) {
 						state = READ_EVT_CODE;
@@ -185,9 +176,8 @@ DWORD NPI_RX::readBlock(void)
 				if (nLenOut) {
 					state = READ_DATA_LEN;
 				}
-			}
-			else {
-				if (GetLastError() == ERROR_IO_PENDING){
+			} else {
+				if (GetLastError() == ERROR_IO_PENDING) {
 					GetOverlappedResult(m_com, &osRead, &nLenOut, true);
 					if (nLenOut) {
 						state = READ_DATA_LEN;
@@ -204,9 +194,8 @@ DWORD NPI_RX::readBlock(void)
 					pBuf[1] = evtCode;
 					pBuf[2] = dataLen;
 				}
-			}
-			else {
-				if (GetLastError() == ERROR_IO_PENDING){
+			} else {
+				if (GetLastError() == ERROR_IO_PENDING) {
 					GetOverlappedResult(m_com, &osRead, &nLenOut, true);
 					if (nLenOut) {
 						state = READ_OTHERS;
@@ -225,9 +214,8 @@ DWORD NPI_RX::readBlock(void)
 				if (ReadFile(m_com, pBuf + offset, remaining, &nLenOut, &osRead)) {
 					remaining -= nLenOut;
 					offset += nLenOut;
-				}
-				else {
-					if (GetLastError() == ERROR_IO_PENDING){
+				} else {
+					if (GetLastError() == ERROR_IO_PENDING) {
 						GetOverlappedResult(m_com, &osRead, &nLenOut, true);
 						if (nLenOut) {
 							remaining -= nLenOut;
@@ -238,7 +226,7 @@ DWORD NPI_RX::readBlock(void)
 			}
 
 			while (!PostThreadMessage(m_log, GetLogMsg(), (WPARAM)pBuf,
-				dataLen + EVT_HEADER_LEN)) {
+			                          dataLen + EVT_HEADER_LEN)) {
 				LogW(L"Post LOG_MSG Err:%d\n", GetLastError());
 				Sleep(500);
 			}
