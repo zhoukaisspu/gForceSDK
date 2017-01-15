@@ -9,7 +9,9 @@ Log::Log(DWORD com_id, DWORD evt_id)
 {
 	comThreadID = com_id;
 	evtThreadID = evt_id;
+#ifdef MFC_GUI
 	cf.cbSize = sizeof(CHARFORMAT2);
+#endif
 }
 
 Log::~Log()

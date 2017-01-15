@@ -1,6 +1,7 @@
 #include"stdafx.h"
 
 #include"npi_tl.h"
+#include "npi_cmd.h"
 /*---------*/
 /*TX THREAD
 /*---------*/

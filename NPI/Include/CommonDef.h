@@ -5,8 +5,8 @@
 #include"npi_queue.h"
 #include"Thread.h"
 #include"log.h"
-//#define STD_OUT
-#define MFC_GUI
+#define STD_OUT
+//#define MFC_GUI
 
 #define MAX_RX_SIZE     255
 #define MAX_TX_SIZE     255

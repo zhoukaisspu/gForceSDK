@@ -9,8 +9,9 @@ public:
 	void Run();
 	void Analyze_TX(PUINT8 buf, UINT8 size);
 	void Analyze_RX(PUINT8 buf, UINT8 size);
+#ifdef MFC_GUI
 	CHARFORMAT2 cf;
-
+#endif
 private:
 	DWORD comThreadID;
 	DWORD evtThreadID;

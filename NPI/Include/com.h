@@ -22,6 +22,7 @@ public:
 	Com(UINT8 nPort, DWORD nBaud = 115200, UINT8 nParity = 0, UINT8 nByteSize = 8,
 	    UINT8 nStopBit = ONESTOPBIT);
 	~Com();
+	int Connect(DWORD evtthreadID);
 	int Connect();
 	int DisConnect();
 	DWORD write(PUINT8 buf, UINT8 size);
