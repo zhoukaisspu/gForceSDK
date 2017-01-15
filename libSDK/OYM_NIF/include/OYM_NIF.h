@@ -27,7 +27,7 @@ public:
 	OYM_STATUS Connect(OYM_PUINT8 addr, UINT8 addr_type);
 	
 	OYM_STATUS Authenticate(OYM_UINT16 handle);
-	OYM_STATUS Bond(OYM_UINT16 handle, OYM_PUINT8 ltk, OYM_UINT16 div, OYM_PUINT8 rand, OYM_UINT16 ltk_size);
+	OYM_STATUS Bond(OYM_UINT16 handle, OYM_PUINT8 ltk, OYM_UINT16 div, OYM_PUINT8 rand, OYM_UINT8 ltk_size);
 	
 	OYM_STATUS DiscoveryAllPrimaryService(OYM_UINT16 handle);
 	OYM_STATUS DiscoveryIncludedPrimaryService(OYM_UINT16 conn_handle, OYM_UINT16 start_handle, OYM_UINT16 end_handle);
