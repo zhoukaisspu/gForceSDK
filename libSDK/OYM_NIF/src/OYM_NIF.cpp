@@ -156,7 +156,6 @@ OYM_NPI_Interface::OYM_NPI_Interface()
 OYM_STATUS OYM_NPI_Interface::Init()
 {
 	mCommand = new NPI_CMD(COM_PORT_NUM);
-	gapRole_t gap_role;
 	if (mCommand == NULL)
 	{
 		return OYM_FAIL;
@@ -171,16 +170,8 @@ OYM_STATUS OYM_NPI_Interface::Init()
 	if (false == (mCommand->Connect(mEvtThreadID)))
 	{
 		delete mCommand;
-		return OYM_FALSE;
+		return OYM_FAIL;
 	}
-
-	OYM_UINT8 irk[16] = { 0 };
-	OYM_UINT8 csrk[16] = { 0 };
-	OYM_UINT8 ltk[16] = { 0 };
-	OYM_UINT8 rand[8] = { 1, 2, 3, 4, 5, 6, 7, 8 };
-	OYM_UINT8 sign_count = 1;
-	gap_role.data = 0x08;
-	mCommand->GAP_DeviceInit((gapRole_t)gap_role, 5, irk, csrk, (OYM_PUINT8)&sign_count);
 
 	return OYM_SUCCESS;
 }
@@ -191,6 +182,28 @@ OYM_STATUS OYM_NPI_Interface::Deinit()
 	delete mCommand;
 
 	return OYM_SUCCESS;
+}
+
+OYM_STATUS OYM_NPI_Interface::InitDevice()
+{
+	OYM_STATUS result;
+
+	gapRole_t gap_role;
+	OYM_UINT8 irk[16] = { 0 };
+	OYM_UINT8 csrk[16] = { 0 };
+	OYM_UINT8 ltk[16] = { 0 };
+	OYM_UINT8 rand[8] = { 1, 2, 3, 4, 5, 6, 7, 8 };
+	OYM_UINT8 sign_count = 1;
+	gap_role.data = 0x08;
+	if (NPI_TRUE == mCommand->GAP_DeviceInit((gapRole_t)gap_role, 5, irk, csrk, (OYM_PUINT8)&sign_count))
+	{
+		result = OYM_SUCCESS;
+	}
+	else
+	{
+		result = OYM_FAIL;
+	}
+	return result;
 }
 
 OYM_STATUS OYM_NPI_Interface::StartLEScan()

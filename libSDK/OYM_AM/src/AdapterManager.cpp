@@ -2,9 +2,9 @@
 #include "AdapterManager.h"
 #include "RemoteDevice.h"
 
-OYM_AdapterManager::OYM_AdapterManager(OYM_NPI_Interface* nif_interface) :OYM_CallBack(ADAPTER_MANAGER_EVENT)
+OYM_AdapterManager::OYM_AdapterManager() :OYM_CallBack(ADAPTER_MANAGER_EVENT)
 {
-	mInterface = nif_interface;
+	mInterface = new OYM_NPI_Interface;
 	mLog = new OYM_Log(MODUAL_TAG_AM, sizeof(MODUAL_TAG_AM));
 	mDS = new OYM_Discovery_Service(mInterface, this);
 }
@@ -18,20 +18,60 @@ OYM_AdapterManager::~OYM_AdapterManager()
 OYM_STATUS OYM_AdapterManager::Init()
 {
 	OYM_STATUS result = OYM_FAIL;
+
+	if (mInterface != NULL)
+	{
+		result = mInterface->Init();
+	}
+	else
+	{
+		return result;
+	}
 	
-	//register to receive event form NIF
-	mInterface->RegisterCallback(this);
+	if (result == OYM_SUCCESS)
+	{
+		//register to receive event form NIF
+		mInterface->RegisterCallback(this);
+		mInterface->InitDevice();
+	}
 	
 	if (mDS != NULL)
 	{
 		result = mDS->Init();
 	}
+
 	return result;
 }
 
 OYM_STATUS OYM_AdapterManager::Deinit()
 {
 	return OYM_SUCCESS;
+}
+
+OYM_STATUS OYM_AdapterManager::StartScan()
+{
+	if (mDS != NULL)
+	{
+		//start to scan
+		return mDS->StartScan();
+	}
+	else
+	{
+		return OYM_FAIL;
+	}
+}
+
+OYM_STATUS OYM_AdapterManager::StopScan()
+{
+	if (mDS != NULL)
+	{
+		//start to scan
+		return mDS->StopScan();
+	}
+	else
+	{
+		return OYM_FAIL;
+	}
 }
 
 OYM_STATUS OYM_AdapterManager::Connect(OYM_PUINT8 addr, UINT8 addr_type)
@@ -72,7 +112,13 @@ OYM_STATUS OYM_AdapterManager::OnConnect(OYM_PUINT8 data, OYM_UINT16 length)
 {
 	OYM_STATUS result = OYM_FAIL;
 	list<OYM_RemoteDevice*>::iterator ii;
-	OYM_UINT8 addr_type = data[0];
+	OYM_UINT8 status = data[0];
+	if (status != OYM_SUCCESS)
+	{
+		LOGDEBUG("connected with error status = %d \n", status);
+		return OYM_FAIL;
+	}
+	OYM_UINT8 addr_type = data[1];
 	LOGDEBUG("LOGDEBUG with length = %d \n" , length);
 	for (OYM_UINT16 i = 0; i < length; i++)
 	{
@@ -84,7 +130,7 @@ OYM_STATUS OYM_AdapterManager::OnConnect(OYM_PUINT8 data, OYM_UINT16 length)
 	{
 		
 		LOGDEBUG("mAvailabeDevice.size() = %d \n", mAvailabeDevice.size());
-		if (((*ii)->mAddrType == addr_type) && memcmp((*ii)->mAddr, data + 1, BT_ADDRESS_SIZE) == 0)
+		if (((*ii)->mAddrType == addr_type) && memcmp((*ii)->mAddr, data + 2, BT_ADDRESS_SIZE) == 0)
 		{
 			(*ii)->ProcessMessage(OYM_DEVICE_EVENT_DEVICE_CONNECTED, data, length);
 		}
@@ -151,6 +197,34 @@ OYM_STATUS OYM_AdapterManager::OnEvent(OYM_UINT32 event, OYM_PUINT8 data, OYM_UI
 			break;
 		}
 
+		case EVENT_MASK_SLAVE_REQUESTED_SECURITY_MSG:
+		{
+			message = OYM_DEVICE_EVENT_SLAVE_SECURY_REQUEST;
+			handle_offset = 1;
+			break;
+		}
+
+		case EVENT_MASK_AUTH_COMPLETE_MSG:
+		{
+			message = OYM_DEVICE_EVENT_AUTH_COMPLETE;
+			handle_offset = 1;
+			break;
+		}
+
+		case EVENT_MASK_BOND_COMPLETE_MSG:
+		{
+			message = OYM_DEVICE_EVENT_BOND_COMPLETE;
+			handle_offset = 1;
+			break;
+		}
+
+		case EVENT_MASK_LINK_PARA_UPDATE_MSG:
+		{
+			message = OYM_DEVICE_EVENT_LINK_PARA_UPDATE;
+			handle_offset = 1;
+			break;
+		}
+
 		default:
 			break;
 	}
@@ -174,138 +248,15 @@ OYM_STATUS OYM_AdapterManager::OnEvent(OYM_UINT32 event, OYM_PUINT8 data, OYM_UI
 	else 
 	{
 		if (event == EVENT_MASK_GAP_STATUS_MSG)
+		{
+			LOGDEBUG("EVENT_MASK_GAP_STATUS_MSG with length = %d \n", length);
+			for (OYM_UINT16 i = 0; i < length; i++)
 			{
-				LOGDEBUG("EVENT_MASK_GAP_STATUS_MSG with length = %d \n", length);
-				for (OYM_UINT16 i = 0; i < length; i++)
-				{
-					LOGDEBUG("the data of [%d]th bytes is 0x%02x \n", i, data[i]);
-				}
+				LOGDEBUG("the data of [%d]th bytes is 0x%02x \n", i, data[i]);
 			}
-		
-			if (event == EVENT_MASK_SLAVE_REQUESTED_SECURITY_MSG)
-			{
-				LOGDEBUG("EVENT_MASK_SLAVE_REQUESTED_SECURITY_MSG with length = %d\n", length);
-				for (ii = mAvailabeDevice.begin(); ii != mAvailabeDevice.end(); ii++)
-				{
-					OYM_UINT16 handle = data[0] + (data[1] << 8);
-					if ((*ii)->GetHandle() == handle)
-					{
-						(*ii)->ProcessMessage(OYM_DEVICE_EVENT_SLAVE_SECURY_REQUEST, data + 2, length - 2);
-					}
-				}
-			}
-			else if (event == EVENT_MASK_AUTH_COMPLETE_MSG)
-			{
-				LOGDEBUG("EVENT_MASK_AUTH_COMPLETE_MSG with length %d \n", length);
-				for (ii = mAvailabeDevice.begin(); ii != mAvailabeDevice.end(); ii++)
-				{
-					OYM_UINT16 handle = data[0] + (data[1] << 8);
-					if ((*ii)->GetHandle() == handle)
-					{
-						LOGDEBUG("start post event \n");
-						(*ii)->ProcessMessage(OYM_DEVICE_EVENT_AUTH_COMPLETE, data + 2, length - 2);
-						LOGDEBUG("end post event \n");
-					}
-				}
-			}
-			else if (event == EVENT_MASK_BOND_COMPLETE_MSG)
-			{
-				LOGDEBUG("EVENT_MASK_BOND_COMPLETE_MSG with length = %d \n", length);
-				for (ii = mAvailabeDevice.begin(); ii != mAvailabeDevice.end(); ii++)
-				{
-					OYM_UINT16 handle = data[0] + (data[1] << 8);
-					if ((*ii)->GetHandle() == handle)
-					{
-						(*ii)->ProcessMessage(OYM_DEVICE_EVENT_BOND_COMPLETE, data, length);
-					}
-				}
-			}
-			else if (event == EVENT_MASK_LINK_PARA_UPDATE_MSG)
-			{
-				LOGDEBUG("EVENT_MASK_LINK_PARA_UPDATE_MSG with length = %d \n", length);
-			
-				for (ii = mAvailabeDevice.begin(); ii != mAvailabeDevice.end(); ii++)
-				{
-					OYM_UINT16 handle = data[0] + (data[1] << 8);
-					if ((*ii)->GetHandle() == handle)
-					{
-						(*ii)->ProcessMessage(OYM_DEVICE_EVENT_LINK_PARA_UPDATE, data + 2, length - 2);
-					}
-				}
-			}
-
+		}
 	}
 
-#if 0	
-	else if (event == EVENT_MASK_ATT_READ_BY_GRP_TYPE_MSG)
-	{
-		LOGDEBUG("EVENT_MASK_ATT_READ_BY_GRP_TYPE_MSG with length = %d \n", length);
-		for (OYM_UINT16 i = 0; i < length; i++)
-		{
-			LOGDEBUG("the data of [%d]th bytes is 0x%02x \n", i, data[i]);
-		}
-		for (ii = mAvailabeDevice.begin(); ii != mAvailabeDevice.end(); ii++)
-		{
-			OYM_UINT16 handle = data[1] + data[2] << 8;
-			if ((*ii)->GetHandle() == handle)
-			{
-				(*ii)->ProcessMessage(OYM_DEVICE_EVENT_ATT_READ_BY_GRP_TYPE_MSG, data, length);
-			}
-		}
-
-	}
-	else if (event == EVENT_MASK_ATT_READ_BY_TYPE_MSG)
-	{
-		LOGDEBUG("EVENT_MASK_ATT_READ_BY_TYPE_MSG with length = %d \n", length);
-		for (OYM_UINT16 i = 0; i < length; i++)
-		{
-			LOGDEBUG("the data of [%d]th bytes is 0x%02x \n", i, data[i]);
-		}
-		for (ii = mAvailabeDevice.begin(); ii != mAvailabeDevice.end(); ii++)
-		{
-			OYM_UINT16 handle = data[1] + data[2] << 8;
-			if ((*ii)->GetHandle() == handle)
-			{
-				(*ii)->ProcessMessage(OYM_DEVICE_EVENT_ATT_READ_BY_TYPE_MSG, data, length);
-			}
-		}
-
-	}
-	else if (event == EVENT_MASK_ATT_ERROR_MSG)
-	{
-		LOGDEBUG("EVENT_MASK_ATT_ERROR_MSG with length = %d \n", length);
-		for (OYM_UINT16 i = 0; i < length; i++)
-		{
-			LOGDEBUG("the data of [%d]th bytes is 0x%02x \n", i, data[i]);
-		}
-		for (ii = mAvailabeDevice.begin(); ii != mAvailabeDevice.end(); ii++)
-		{
-			OYM_UINT16 handle = data[1] + data[2] << 8;
-			if ((*ii)->GetHandle() == handle)
-			{
-				(*ii)->ProcessMessage(OYM_DEVICE_EVENT_ATT_ERROR_MSG, data, length);
-			}
-		}
-
-	}
-	else if (event == EVENT_MASK_ATT_READ_RESP_MSG)
-	{
-		LOGDEBUG("EVENT_MASK_ATT_READ_RESP_MSG with length = %d \n", length);
-		for (OYM_UINT16 i = 0; i < length; i++)
-		{
-			LOGDEBUG("the data of [%d]th bytes is 0x%02x \n", i, data[i]);
-		}
-		for (ii = mAvailabeDevice.begin(); ii != mAvailabeDevice.end(); ii++)
-		{
-			OYM_UINT16 handle = data[1] + data[2] << 8;
-			if ((*ii)->GetHandle() == handle)
-			{
-				(*ii)->ProcessMessage(OYM_DEVICE_EVENT_ATT_READ_RESP_MSG, data, length);
-			}
-		}
-
-	}
-#endif
 	return result;
 }
 

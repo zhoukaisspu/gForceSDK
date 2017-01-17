@@ -22,6 +22,7 @@ public:
 	OYM_STATUS Init();
 	OYM_STATUS Deinit();
 
+	OYM_STATUS InitDevice();
 	OYM_STATUS StartLEScan();
 	OYM_STATUS StopLEScan();
 	OYM_STATUS Connect(OYM_PUINT8 addr, UINT8 addr_type);

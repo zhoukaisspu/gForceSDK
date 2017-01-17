@@ -232,7 +232,7 @@ DWORD NPI_RX::readBlock(void)
 				Sleep(500);
 			}
 			state = READ_TYPE_STATE;
-			return dataLen + EVT_HEADER_LEN;
+			//return dataLen + EVT_HEADER_LEN;
 			break;
 		default:
 			::LogE(L"Read File Err!\n");

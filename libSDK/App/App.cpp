@@ -11,16 +11,10 @@
 int _tmain(int charc, char* argv[]) {
 	OYM_STATUS status;
 
-	OYM_NPI_Interface NPI_intface;
-	status = NPI_intface.Init();
-	if (status != OYM_SUCCESS)
-	{
-		printf("NPI_intface error!");
-		return 1;
-	}
+	OYM_AdapterManager* am = new OYM_AdapterManager();
+	am->Init();
 
-	OYM_AdapterManager am(&NPI_intface);
-	am.Init();
+	am->StartScan();
 
 	while (1) {
 		Sleep(5000);

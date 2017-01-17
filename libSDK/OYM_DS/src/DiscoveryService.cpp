@@ -25,14 +25,18 @@ OYM_STATUS OYM_Discovery_Service::Init()
 {
 	//register callback to receive event form NIF
 	mInterface->RegisterCallback(this);
-	this->StartScan();
+	
 	return OYM_SUCCESS;
 }
 
 OYM_STATUS OYM_Discovery_Service::Deinit()
 {
+	if (mNeedScan == OYM_TRUE)
+	{
+		this->StopScan();
+	}
+
 	mInterface = NULL;
-	this->StopScan();
 
 	return OYM_SUCCESS;
 }
@@ -90,7 +94,7 @@ OYM_STATUS OYM_Discovery_Service::StopScan()
 OYM_STATUS OYM_Discovery_Service::OnScanFinished()
 {
 	LOGDEBUG("Scan finished... \n");
-	//if (mNeedScan == OYM_TRUE)
+	if (mNeedScan == OYM_TRUE)
 	{
 		//LOGDEBUG("restart scan... \n");
 		mNeedScan = OYM_FALSE;
@@ -146,7 +150,7 @@ OYM_STATUS OYM_Discovery_Service::CheckAdvData(OYM_PUINT8 data, OYM_UINT16 lengt
 				break;
 		}
 
-		offset += (len - 1);
+		offset += len;
 		remaining -= len;
 	}
 
@@ -184,7 +188,7 @@ OYM_BOOL OYM_Discovery_Service::GetDeviceName(OYM_PCHAR out, OYM_PUINT8 data, OY
 			
 		}
 
-		offset += (len - 1);
+		offset += len;
 		remaining -= len;
 	}
 
@@ -217,6 +221,7 @@ OYM_STATUS OYM_Discovery_Service::OnScanResult(OYM_PUINT8 data, OYM_UINT16 lengt
 		if (rssi < LE_ADV_RSSI_THRESHOLD)
 		{
 			LOGDEBUG("The RSSI is too low. \n");
+			return OYM_FAIL;
 		}
 		else
 		{
@@ -227,11 +232,13 @@ OYM_STATUS OYM_Discovery_Service::OnScanResult(OYM_PUINT8 data, OYM_UINT16 lengt
 		if (LE_ADV_UNDISCOVERABEL == result)
 		{
 			LOGDEBUG("device is not discoverabel... \n");
+			return OYM_FAIL;
 		}
 		else if (LE_ADV_WAIT_FOR_DEVICE_NAME == result)
 		{
 			LOGDEBUG("wait for scan response... \n");
 			mAvalbalDevice.push_front(bt_address);
+			return OYM_SUCCESS;
 		}
 		else if (LE_ADV_PROCESS_OK == result)
 		{
@@ -254,6 +261,7 @@ OYM_STATUS OYM_Discovery_Service::OnScanResult(OYM_PUINT8 data, OYM_UINT16 lengt
 		if (rssi < LE_ADV_RSSI_THRESHOLD)
 		{
 			LOGDEBUG("The RSSI is too low. \n");
+			return OYM_FAIL;
 		}
 
 		//process scan response for device name

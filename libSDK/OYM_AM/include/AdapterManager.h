@@ -17,11 +17,14 @@
 class OYM_AdapterManager: public OYM_CallBack
 {
 public:
-	OYM_AdapterManager(OYM_NPI_Interface* nif_interface);
+	//OYM_AdapterManager(OYM_NPI_Interface* nif_interface);
+	OYM_AdapterManager();
 	~OYM_AdapterManager();
 
 	OYM_STATUS Init();
 	OYM_STATUS Deinit();
+	OYM_STATUS StartScan();
+	OYM_STATUS StopScan();
 	OYM_STATUS OnDeviceFound(BLE_DEVICE new_device);
 	OYM_STATUS Connect(OYM_PUINT8 addr, UINT8 addr_type);
 	OYM_STATUS OnConnect(OYM_PUINT8 data, OYM_UINT16 length);
