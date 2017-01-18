@@ -127,6 +127,7 @@ OYM_STATUS OYM_RemoteDevice::IdleStateProcessMessage(OYM_DEVICE_EVENT event, OYM
 OYM_STATUS OYM_RemoteDevice::W4ConnStateProcessMessage(OYM_DEVICE_EVENT event, OYM_PUINT8 data, OYM_UINT16 length)
 {
 	OYM_STATUS result = OYM_FAIL;
+	OYM_STATUS status;
 	LOGDEBUG("W4ConnStateProcessMessage process Message = %d \n", event);
 	switch (event)
 	{
@@ -149,10 +150,47 @@ OYM_STATUS OYM_RemoteDevice::W4ConnStateProcessMessage(OYM_DEVICE_EVENT event, O
 			LOGDEBUG("mSlaveLatency = 0x%02x \n", mSlaveLatency);
 			LOGDEBUG("mConnTimeout = 0x%02x \n", mConnTimeout);
 			LOGDEBUG("mClockAccuracy = 0x%02x \n", mClockAccuracy);
-			mState = OYM_DEVICE_STATE_W4SECU;
+
+			/*start to authentication automatic if we do not have the link key of remote device*/
+			/*check whether we have the link key, if not, start to authenticate, to do...*/
+			status = mInterface->Authenticate(mHandle);
+			if (status == OYM_SUCCESS)
+			{
+				mState = OYM_DEVICE_STATE_W4SECU;
+			}
 			break;
 
 		case OYM_DEVICE_EVENT_SLAVE_SECURY_REQUEST:
+			LOGDEBUG("OYM_DEVICE_EVENT_SLAVE_SECURY_REQUEST with length = %d\n", length);
+
+			status = data[EVENT_SLAVE_SECURY_REQUEST_STATUS_OFFSET];
+			if (status != OYM_SUCCESS)
+			{
+				LOGDEBUG("OYM_DEVICE_EVENT_SLAVE_SECURY_REQUEST with error status = %d\n", status);
+				return result;
+			}
+
+			if (0 == memcmp(data + EVENT_SLAVE_SECURY_REQUEST_ADDRESS_OFFSET, mAddr, BT_ADDRESS_SIZE))
+			{
+				OYM_UINT8 auth_type = data[EVENT_SLAVE_SECURY_REQUEST_AUTH_TYPE_OFFSET];
+				if (auth_type == 1)
+				{
+					LOGDEBUG("---------->mInterface->Authenticate start....\n");
+					mInterface->Authenticate(mHandle);
+					mState = OYM_DEVICE_STATE_W4SECU;
+					LOGDEBUG("---------->mInterface->Authenticate end....\n");
+				}
+				else
+				{
+					LOGDEBUG("---------->mInterface->Authenticate not called....\n");
+				}
+			}
+			else
+			{
+				LOGDEBUG("address is not patch");
+			}
+			break;
+
 		case OYM_DEVICE_EVENT_AUTH_COMPLETE:
 		case OYM_DEVICE_EVENT_BOND_COMPLETE:
 			LOGDEBUG("W4ConnStateProcessMessage with error message!!!");
@@ -172,6 +210,9 @@ OYM_STATUS OYM_RemoteDevice::W4SecuStateProcessMessage(OYM_DEVICE_EVENT event, O
 	switch (event)
 	{
 		case OYM_DEVICE_EVENT_SLAVE_SECURY_REQUEST:
+			LOGDEBUG("OYM_DEVICE_EVENT_SLAVE_SECURY_REQUEST with length = %d\n", length);
+			LOGDEBUG("OYM_DEVICE_EVENT_SLAVE_SECURY_REQUEST skip it--------> \n");
+#if 0
 			LOGDEBUG("OYM_DEVICE_EVENT_SLAVE_SECURY_REQUEST with length = %d\n", length);
 
 			status = data[EVENT_SLAVE_SECURY_REQUEST_STATUS_OFFSET];
@@ -199,6 +240,7 @@ OYM_STATUS OYM_RemoteDevice::W4SecuStateProcessMessage(OYM_DEVICE_EVENT event, O
 			{
 				LOGDEBUG("address is not patch");
 			}
+#endif
 			break;
 
 		case OYM_DEVICE_EVENT_AUTH_COMPLETE:
@@ -235,6 +277,7 @@ OYM_STATUS OYM_RemoteDevice::W4SecuStateProcessMessage(OYM_DEVICE_EVENT event, O
 			LOGDEBUG("---------->mInterface->Bond end....\n");
 			break;
 		}
+
 		case OYM_DEVICE_EVENT_BOND_COMPLETE:
 			LOGDEBUG("OYM_DEVICE_EVENT_AUTH_COMPLETE with length = %d\n", length);
 
@@ -706,7 +749,7 @@ OYM_STATUS OYM_RemoteDevice::W4GattReadCharcValueStateProcessMessage(OYM_DEVICE_
 								for (OYM_UINT8 i = 0; i< num_char_des; i++)
 								{
 									characteristic->AddDescriptorIntoCharacteristic(p, 4);
-									LOGDEBUG("UUID of descriptor = 0x%02x!!!\n", (p[2] + p[3] <<8 ));
+									LOGDEBUG("UUID of descriptor = 0x%02x!!!\n", (p[2] + (p[3] << 8) ));
 									p += 4;
 								}
 							}
@@ -889,6 +932,8 @@ OYM_STATUS OYM_RemoteDevice::DiscoveryDescriptor()
 			WriteClientCharacteristicConfiguration();
 		}
 	}
+
+	return OYM_SUCCESS;
 }
 
 OYM_STATUS OYM_RemoteDevice::StartDiscoveryCharacteristic()
@@ -921,7 +966,6 @@ OYM_STATUS OYM_RemoteDevice::StartDiscoveryCharacteristic()
 
 OYM_STATUS OYM_RemoteDevice::WriteClientCharacteristicConfiguration()
 {
-	OYM_STATUS result;
 	OYM_PRISERVICE* service;
 	OYM_CHARACTERISTIC* characteristic;
 	OYM_CHAR_DESCRIPTOR* descriptor;

@@ -195,7 +195,7 @@ OYM_STATUS OYM_NPI_Interface::InitDevice()
 	OYM_UINT8 rand[8] = { 1, 2, 3, 4, 5, 6, 7, 8 };
 	OYM_UINT8 sign_count = 1;
 	gap_role.data = 0x08;
-	if (NPI_TRUE == mCommand->GAP_DeviceInit((gapRole_t)gap_role, 5, irk, csrk, (OYM_PUINT8)&sign_count))
+	if (OYM_TRUE == mCommand->GAP_DeviceInit((gapRole_t)gap_role, 5, irk, csrk, (OYM_PUINT8)&sign_count))
 	{
 		result = OYM_SUCCESS;
 	}
@@ -217,7 +217,7 @@ OYM_STATUS OYM_NPI_Interface::StartLEScan()
 	}
 		
 
-	return result = (eRetStatus)status;
+	return result = (status == OYM_TRUE) ? OYM_SUCCESS : OYM_FAIL;
 }
 
 OYM_STATUS OYM_NPI_Interface::StopLEScan()
@@ -230,7 +230,7 @@ OYM_STATUS OYM_NPI_Interface::StopLEScan()
 		status = mCommand->GAP_DeviceDiscoveryCancel();
 	}
 		
-	return result = (eRetStatus)status;
+	return result = (status == OYM_TRUE) ? OYM_SUCCESS : OYM_FAIL;
 }
 
 OYM_STATUS OYM_NPI_Interface::Connect(OYM_PUINT8 addr, UINT8 addr_type)
@@ -243,7 +243,7 @@ OYM_STATUS OYM_NPI_Interface::Connect(OYM_PUINT8 addr, UINT8 addr_type)
 		mCommand->GAP_EstablishLinkRequest(NPI_DISABLE, NPI_DISABLE, (eGapAddrType)addr_type, addr);
 	}
 
-	return result = (eRetStatus)status;
+	return result = status;
 }
 
 OYM_STATUS OYM_NPI_Interface::RegisterCallback(OYM_CallBack *callback)
@@ -257,6 +257,8 @@ OYM_STATUS OYM_NPI_Interface::RegisterCallback(OYM_CallBack *callback)
 
 OYM_STATUS OYM_NPI_Interface::Authenticate(OYM_UINT16 handle)
 {
+	OYM_BOOL status = OYM_FAIL;
+
 	sGapAuth auth;
 	memset(&auth, 0, sizeof(auth));
 	auth.sec_authReq.oper = 0x00;
@@ -273,52 +275,58 @@ OYM_STATUS OYM_NPI_Interface::Authenticate(OYM_UINT16 handle)
 	auth.pair_oobFlag = NPI_FALSE;
 
 	LOGDEBUG("#######Authenticate start....\n");
-	mCommand->GAP_Authenticate(handle, &auth);
+	status = mCommand->GAP_Authenticate(handle, &auth);
 	LOGDEBUG("#######Authenticate end....\n");
-	return OYM_SUCCESS;
+	return (status == OYM_TRUE) ? OYM_SUCCESS : OYM_FAIL;
 }
 
 OYM_STATUS OYM_NPI_Interface::Bond(OYM_UINT16 handle, OYM_PUINT8 ltk, OYM_UINT16 div, OYM_PUINT8 rand, OYM_UINT8 ltk_size)
 {
+	OYM_BOOL status = OYM_FAIL;
+	status = mCommand->GAP_Bond(handle, NPI_DISABLE, ltk, div, rand, ltk_size);
 
-	mCommand->GAP_Bond(handle, NPI_DISABLE, ltk, div, rand, ltk_size);
-
-	return OYM_SUCCESS;
+	return (status == OYM_TRUE) ? OYM_SUCCESS : OYM_FAIL;
 }
 
 OYM_STATUS OYM_NPI_Interface::DiscoveryAllPrimaryService(OYM_UINT16 handle)
 {
-	mCommand->GATT_DiscAllPrimaryServices(handle);
+	OYM_BOOL status = OYM_FAIL;
+	status = mCommand->GATT_DiscAllPrimaryServices(handle);
 
-	return OYM_SUCCESS;
+	return (status == OYM_TRUE) ? OYM_SUCCESS : OYM_FAIL;
 }
 
 OYM_STATUS OYM_NPI_Interface::DiscoveryIncludedPrimaryService(OYM_UINT16 conn_handle, OYM_UINT16 start_handle, OYM_UINT16 end_handle)
 {
-	mCommand->GATT_FindIncludedServices(conn_handle, start_handle, end_handle);
-	return OYM_SUCCESS;
+	OYM_BOOL status = OYM_FAIL;
+	status = mCommand->GATT_FindIncludedServices(conn_handle, start_handle, end_handle);
+	return (status == OYM_TRUE) ? OYM_SUCCESS : OYM_FAIL;
 }
 
 OYM_STATUS OYM_NPI_Interface::DiscoveryCharacteristic(OYM_UINT16 conn_handle, OYM_UINT16 start_handle, OYM_UINT16 end_handle)
 {
-	mCommand->GATT_DiscAllChar(conn_handle, start_handle, end_handle);
-	return OYM_SUCCESS;
+	OYM_BOOL status = OYM_FAIL;
+	status = mCommand->GATT_DiscAllChar(conn_handle, start_handle, end_handle);
+	return (status == OYM_TRUE) ? OYM_SUCCESS : OYM_FAIL;
 }
 
 OYM_STATUS OYM_NPI_Interface::ReadCharacteristicValue(OYM_UINT16 conn_handle, OYM_UINT16 att_handle)
 {
-	mCommand->GATT_ReadCharVal(conn_handle, att_handle);
-	return OYM_SUCCESS;	
+	OYM_BOOL status = OYM_FAIL;
+	status = mCommand->GATT_ReadCharVal(conn_handle, att_handle);
+	return (status == OYM_TRUE) ? OYM_SUCCESS : OYM_FAIL;
 }
 
 OYM_STATUS OYM_NPI_Interface::FindCharacteristicDescriptor(OYM_UINT16 conn_handle, OYM_UINT16 start_handle, OYM_UINT16 end_handle)
 {
-	mCommand->GATT_DiscAllCharDesc(conn_handle, start_handle, end_handle);
-	return OYM_SUCCESS;
+	OYM_BOOL status = OYM_FAIL;
+	status = mCommand->GATT_DiscAllCharDesc(conn_handle, start_handle, end_handle);
+	return (status == OYM_TRUE) ? OYM_SUCCESS : OYM_FAIL;
 }
 
 OYM_STATUS OYM_NPI_Interface::WriteCharacVlaue(OYM_UINT16 conn_handle, OYM_UINT16 att_handle, OYM_PUINT8 data, OYM_UINT8 len)
 {
-	mCommand->GATT_WriteCharValue(conn_handle, att_handle, data, len);
-	return OYM_SUCCESS;
+	OYM_BOOL status = OYM_FAIL;
+	status = mCommand->GATT_WriteCharValue(conn_handle, att_handle, data, len);
+	return (status == OYM_TRUE) ? OYM_SUCCESS : OYM_FAIL;
 }

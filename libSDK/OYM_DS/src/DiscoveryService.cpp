@@ -43,7 +43,7 @@ OYM_STATUS OYM_Discovery_Service::Deinit()
 
 OYM_STATUS OYM_Discovery_Service::StartScan()
 {
-	OYM_STATUS result;
+	OYM_STATUS result = OYM_SUCCESS;
 	LOGDEBUG("StartScan... \n");
 
 	if (mInterface == NULL)
@@ -63,13 +63,13 @@ OYM_STATUS OYM_Discovery_Service::StartScan()
 	{
 		mNeedScan = OYM_TRUE;
 	}
-
+	LOGDEBUG("StartScan... with result = %d\n", result);
 	return result;
 }
 
 OYM_STATUS OYM_Discovery_Service::StopScan()
 {
-	OYM_STATUS result;
+	OYM_STATUS result = OYM_SUCCESS;
 	if (mInterface == NULL)
 	{
 		LOGERROR("StartScan failed, interface not available... \n");
@@ -278,7 +278,7 @@ OYM_STATUS OYM_Discovery_Service::OnScanResult(OYM_PUINT8 data, OYM_UINT16 lengt
 			if (((*ii).addr_type == bt_address.addr_type) && (0 == memcmp((*ii).addr, bt_address.addr, BT_ADDRESS_SIZE)))
 			{
 				memset((*ii).dev_name, 0, BLE_DEVICE_NAME_LENGTH);
-				if ( GetDeviceName((*ii).dev_name, adv_data, adv_data_len) == OYM_TRUE)
+				if (GetDeviceName((*ii).dev_name, adv_data, adv_data_len) == OYM_TRUE)
 				{
 					LOGDEBUG("device name is:%s \n", (*ii).dev_name);
 					if (0 != (mCallback->GetEventMask() & EVENT_MASK_INTERNAL_DEVICE_FOUND))

@@ -12,9 +12,18 @@ int _tmain(int charc, char* argv[]) {
 	OYM_STATUS status;
 
 	OYM_AdapterManager* am = new OYM_AdapterManager();
-	am->Init();
+	status = am->Init();
+	if (!OYM_SUCCEEDED)
+	{
+		return OYM_FAIL;
+	}
 
-	am->StartScan();
+	status = am->StartScan();
+	if (!OYM_SUCCEEDED)
+	{
+		return OYM_FAIL;
+		printf("main thread! status = %d\n", status);
+	}
 
 	while (1) {
 		Sleep(5000);

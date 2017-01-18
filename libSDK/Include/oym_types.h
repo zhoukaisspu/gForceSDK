@@ -21,8 +21,8 @@ typedef unsigned int		OYM_UINT32;
 typedef unsigned long long	OYM_UINT64;
 
 typedef OYM_INT				OYM_BOOL;
-#define OYM_FALSE			((OYM_INT)0)
-#define OYM_TRUE			!(OYM_FALSE)
+#define OYM_FALSE			((OYM_BOOL)0)
+#define OYM_TRUE			(OYM_BOOL)(!(OYM_FALSE))
 
 typedef size_t				OYM_SIZE;
 typedef HANDLE				OYM_HANDLE;
