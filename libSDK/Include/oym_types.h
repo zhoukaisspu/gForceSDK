@@ -17,6 +17,7 @@ typedef float				OYM_FLOAT;
 typedef unsigned char		OYM_UINT8;
 typedef unsigned char*		OYM_PUINT8;
 typedef unsigned short		OYM_UINT16;
+typedef unsigned short*		OYM_PUINT16;
 typedef unsigned int		OYM_UINT32;
 typedef unsigned long long	OYM_UINT64;
 

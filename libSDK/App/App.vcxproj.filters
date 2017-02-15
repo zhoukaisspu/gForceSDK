@@ -81,6 +81,12 @@
     <ClInclude Include="..\..\NPI\Include\Thread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\OYM_DB\include\OYM_Database.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\OYM_DB\include\tinyxml2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -123,6 +129,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\OYM_NIF\src\OYM_NIF.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\OYM_DB\src\OYM_Database.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\OYM_DB\src\tinyxml2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

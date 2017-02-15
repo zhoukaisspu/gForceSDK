@@ -175,7 +175,8 @@ OYM_BOOL OYM_Discovery_Service::GetDeviceName(OYM_PCHAR out, OYM_PUINT8 data, OY
 		LOGDEBUG("adv_type %d length = %d\n", adv_type, len);
 		if (adv_type == BLE_AD_TYPE_NAME_CMPL)
 		{
-			if (0 == memcmp(DEVICE_NAME_PATTERN, p + offset + 1, DEVICE_NAME_PATTERN_LENGTH))
+			//if (0 == memcmp(DEVICE_NAME_PATTERN, p + offset + 1, DEVICE_NAME_PATTERN_LENGTH))
+			if (1)
 			{
 				memcpy(out, p + offset + 1, len - 1);
 				out[len-1] = '\0';

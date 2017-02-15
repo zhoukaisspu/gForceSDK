@@ -45,6 +45,29 @@ OYM_CHAR_DESCRIPTOR* OYM_CHARACTERISTIC::FindDescriptorByUUID(OYM_UUID uuid)
 	return result;
 }
 
+OYM_CHAR_DESCRIPTOR* OYM_CHARACTERISTIC::FindDescriptorByIndex(OYM_UINT8 index)
+{
+	OYM_CHAR_DESCRIPTOR* result = NULL;
+	list<OYM_CHAR_DESCRIPTOR*>::iterator ii;
+
+	if (mNumOfDescriptor == 0)
+	{
+		return result;
+	}
+	else
+	{
+		for (ii = mDescriptor.begin(); ii != mDescriptor.end(); ii++)
+		{
+			if (((*ii)->mIndex == index))
+			{
+				return (*ii);
+			}
+		}
+	}
+
+	return result;
+}
+
 OYM_STATUS OYM_CHARACTERISTIC::AddDescriptorIntoCharacteristic(OYM_PUINT8 data, OYM_UINT8 pair_len)
 {
 	OYM_STATUS result = OYM_SUCCESS;
@@ -118,22 +141,21 @@ OYM_STATUS OYM_PRISERVICE::AddIncSvcIntoPriService(OYM_PUINT8 data, OYM_UINT8 pa
 	end_handle = data[4] + (data[5] << 8);
 	//LOGDEBUG("OYM_DEVICE_EVENT_ATT_READ_BY_TYPE_MSG with start_handle = 0x%04x, property = 0x%02x, value_handle = 0x%02x\n", start_handle, property, value_handle);
 	OYM_INCSERVICE* incService = new OYM_INCSERVICE(handle, start_handle, end_handle, mNumOfIncludedService);
-	if (pair_len == 7)
+	if (pair_len == 8)
 	{
 		incService->mUUID.type = OYM_UUID_16;
-		incService->mUUID.value.uuid16 = data[6] + (data[6] << 8);
+		incService->mUUID.value.uuid16 = data[6] + (data[7] << 8);
 		//LOGDEBUG("OYM_DEVICE_EVENT_ATT_READ_BY_GRP_TYPE_MSG with uuid16 = 0x%04x\n", characteristic->mUUID.value.uuid16);
 	}
-	else if (pair_len == 21)
+	else if (pair_len == 22)
 	{
 		incService->mUUID.type = OYM_UUID_128;
 		memcpy(incService->mUUID.value.uuid128, data + 6, 16);
 	}
-	else if (pair_len == 9)
+	else if (pair_len == 10)
 	{
 		incService->mUUID.type = OYM_UUID_32;
 		memcpy(incService->mUUID.value.uuid32, data + 6, 4);
-
 	}
 	else
 	{
@@ -143,6 +165,20 @@ OYM_STATUS OYM_PRISERVICE::AddIncSvcIntoPriService(OYM_PUINT8 data, OYM_UINT8 pa
 	mNumOfIncludedService++;
 	mIncludeService.push_front(incService);
 	return result;
+}
+
+OYM_INCSERVICE* OYM_PRISERVICE::FindIncluSvcbyIndex(OYM_UINT8 index)
+{
+	list<OYM_INCSERVICE*>::iterator ii;
+	for (ii = mIncludeService.begin(); ii != mIncludeService.end(); ii++)
+	{
+		if ((*ii)->mIndex == index)
+		{
+			return (*ii);
+		}
+	}
+
+	return NULL;
 }
 
 OYM_CHARACTERISTIC* OYM_PRISERVICE::FindCharacteristicbyIndex(OYM_UINT8 index)
@@ -209,19 +245,18 @@ OYM_STATUS OYM_Service::AddPriSvcIntoService(OYM_PUINT8 data, OYM_UINT8 pair_len
 	if (pair_len == 6)
 	{
 		service->mUUID.type = OYM_UUID_16;
-		service->mUUID.value.uuid16 = data[6] + (data[6] << 8);
+		service->mUUID.value.uuid16 = data[4] + (data[5] << 8);
 		//LOGDEBUG("OYM_DEVICE_EVENT_ATT_READ_BY_GRP_TYPE_MSG with uuid16 = 0x%04x\n", characteristic->mUUID.value.uuid16);
 	}
 	else if (pair_len == 20)
 	{
 		service->mUUID.type = OYM_UUID_128;
-		memcpy(service->mUUID.value.uuid128, data + 6, 16);
+		memcpy(service->mUUID.value.uuid128, data + 4, 16);
 	}
 	else if (pair_len == 8)
 	{
 		service->mUUID.type = OYM_UUID_32;
-		memcpy(service->mUUID.value.uuid32, data + 6, 4);
-
+		memcpy(service->mUUID.value.uuid32, data + 4, 4);
 	}
 	else
 	{

@@ -119,7 +119,7 @@ OYM_STATUS OYM_AdapterManager::OnConnect(OYM_PUINT8 data, OYM_UINT16 length)
 		return OYM_FAIL;
 	}
 	OYM_UINT8 addr_type = data[1];
-	LOGDEBUG("LOGDEBUG with length = %d \n" , length);
+	LOGDEBUG("OnConnect LOGDEBUG with length = %d \n" , length);
 	for (OYM_UINT16 i = 0; i < length; i++)
 	{
 		LOGDEBUG("the data of [%d]th bytes is 0x%02x \n", i, data[i]);
@@ -132,6 +132,7 @@ OYM_STATUS OYM_AdapterManager::OnConnect(OYM_PUINT8 data, OYM_UINT16 length)
 		LOGDEBUG("mAvailabeDevice.size() = %d \n", mAvailabeDevice.size());
 		if (((*ii)->mAddrType == addr_type) && memcmp((*ii)->mAddr, data + 2, BT_ADDRESS_SIZE) == 0)
 		{
+			(*ii)->Init();
 			(*ii)->ProcessMessage(OYM_DEVICE_EVENT_DEVICE_CONNECTED, data, length);
 		}
 	}
@@ -152,6 +153,12 @@ OYM_STATUS OYM_AdapterManager::OnEvent(OYM_UINT32 event, OYM_PUINT8 data, OYM_UI
 	//}
 	switch(event)
 	{
+		case EVENT_MASK_ATT_EXCHANGE_MTU_MSG:
+		{
+			message = OYM_DEVICE_EVENT_ATT_EXCHANGE_MTU_MSG;
+			handle_offset = 1;
+			break;
+		}
 		case EVENT_MASK_ATT_READ_BY_GRP_TYPE_MSG:
 		{
 			message = OYM_DEVICE_EVENT_ATT_READ_BY_GRP_TYPE_MSG;
@@ -180,9 +187,23 @@ OYM_STATUS OYM_AdapterManager::OnEvent(OYM_UINT32 event, OYM_PUINT8 data, OYM_UI
 			break;
 		}
 
+		case EVENT_MASK_ATT_READ_BLOB_RESP_MSG:
+		{
+			message = OYM_DEVICE_EVENT_ATT_READ_BLOB_RESP_MSG;
+			handle_offset = 1;
+			break;
+		}
+
 		case EVENT_MASK_ATT_READ_BY_INFO_MSG:
 		{
 			message = OYM_DEVICE_EVENT_ATT_READ_BY_INFO_MSG;
+			handle_offset = 1;
+			break;
+		}
+
+		case EVENT_MASK_ATT_WRITE_MSG:
+		{
+			message = OYM_DEVICE_EVENT_ATT_WRITE_MSG;
 			handle_offset = 1;
 			break;
 		}
@@ -225,6 +246,13 @@ OYM_STATUS OYM_AdapterManager::OnEvent(OYM_UINT32 event, OYM_PUINT8 data, OYM_UI
 			break;
 		}
 
+		case EVENT_MASK_GAP_LINK_TERMINATED_MSG:
+		{
+			message = OYM_DEVICE_EVENT_EVICE_DISCONNECTED;
+			handle_offset = 1;
+			break;
+		}
+
 		default:
 			break;
 	}
@@ -241,7 +269,15 @@ OYM_STATUS OYM_AdapterManager::OnEvent(OYM_UINT32 event, OYM_PUINT8 data, OYM_UI
 			OYM_UINT16 handle = data[handle_offset] + (data[handle_offset + 1] << 8);
 			if ((*ii)->GetHandle() == handle)
 			{
-				(*ii)->ProcessMessage(message, data, length);
+				if (event == EVENT_MASK_GAP_LINK_TERMINATED_MSG)
+				{
+					(*ii)->DeInit();
+					//(*ii)->Connect();
+				}
+				else
+				{
+					(*ii)->ProcessMessage(message, data, length);
+				}
 			}
 		}
 	} 

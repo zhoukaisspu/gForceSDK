@@ -30,10 +30,13 @@ public:
 	OYM_STATUS Authenticate(OYM_UINT16 handle);
 	OYM_STATUS Bond(OYM_UINT16 handle, OYM_PUINT8 ltk, OYM_UINT16 div, OYM_PUINT8 rand, OYM_UINT8 ltk_size);
 	
+	OYM_STATUS ExchangeMTUSize(OYM_UINT16 handle, OYM_UINT16 mtu);
+
 	OYM_STATUS DiscoveryAllPrimaryService(OYM_UINT16 handle);
 	OYM_STATUS DiscoveryIncludedPrimaryService(OYM_UINT16 conn_handle, OYM_UINT16 start_handle, OYM_UINT16 end_handle);
 	OYM_STATUS DiscoveryCharacteristic(OYM_UINT16 conn_handle, OYM_UINT16 start_handle, OYM_UINT16 end_handle);
 	OYM_STATUS ReadCharacteristicValue(OYM_UINT16 conn_handle, OYM_UINT16 att_handle);
+	OYM_STATUS ReadCharacteristicLongValue(OYM_UINT16 conn_handle, OYM_UINT16 att_handle, UINT16 offset);
 	OYM_STATUS FindCharacteristicDescriptor(OYM_UINT16 conn_handle, OYM_UINT16 start_handle, OYM_UINT16 end_handle);
 	OYM_STATUS WriteCharacVlaue(OYM_UINT16 conn_handle, OYM_UINT16 att_handle, OYM_PUINT8 data, OYM_UINT8 len);
 
@@ -74,9 +77,11 @@ private:
 #define EVENT_MASK_ATT_READ_BY_TYPE_MSG			(BIT4 << 8)
 #define EVENT_MASK_ATT_READ_BY_INFO_MSG			(BIT5 << 8)
 #define EVENT_MASK_ATT_ERROR_MSG				(BIT6 << 8)
-#define EVENT_MASK_ATT_READ_RESP_MSG			(BIT7<< 8)
+#define EVENT_MASK_ATT_READ_RESP_MSG			(BIT7 << 8)
 
 #define EVENT_MASK_INTERNAL_DEVICE_FOUND		(BIT0 << 16)
 #define EVENT_MASK_INTERNAL_SCAN_FINISHED		(BIT1 << 16)
-
+#define EVENT_MASK_ATT_READ_BLOB_RESP_MSG		(BIT2 << 16)
+#define EVENT_MASK_ATT_EXCHANGE_MTU_MSG			(BIT3 << 16)
+#define EVENT_MASK_ATT_WRITE_MSG				(BIT4 << 16)
 #endif

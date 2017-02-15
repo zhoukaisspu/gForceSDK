@@ -67,6 +67,7 @@ void OYM_NPI_Interface::Run()
 						{
 							(*ii)->OnConnect(buf, size);
 						}
+						
 					}
 					break;
 
@@ -85,7 +86,7 @@ void OYM_NPI_Interface::Run()
 					event = EVENT_MASK_SLAVE_REQUESTED_SECURITY_MSG;
 					break;
 
-				case HCI_EXT_GAP_BOND_COMPLETE_MSG:
+				case HCI_EXT_GAP_BOND_COMPLETE_MSG: //0x70e
 					event = EVENT_MASK_BOND_COMPLETE_MSG;
 					break;
 
@@ -96,6 +97,7 @@ void OYM_NPI_Interface::Run()
 
 				case HCI_EXT_GAP_LINK_TERMINATED_MSG: //0x0706
 					LOGDEBUG("HCI_EXT_GAP_LINK_TERMINATED_MSG \n");
+					event = EVENT_MASK_GAP_LINK_TERMINATED_MSG;
 					break;
 
 				case ATT_READ_BY_GRP_TYPE_MSG: //0x0608
@@ -112,14 +114,29 @@ void OYM_NPI_Interface::Run()
 					LOGDEBUG("ATT_FIND_INFO_MSG \n");
 					event = EVENT_MASK_ATT_READ_BY_INFO_MSG;
 					break;
-					
+				case ATT_EXCHANGE_MTU_MSG: //0x601
+					LOGDEBUG("ATT_EXCHANGE_MTU_MSG \n");
+					event = EVENT_MASK_ATT_EXCHANGE_MTU_MSG;
+					break;
+
 				case ATT_READ_BY_TYPE_MSG: //0x0604
 					LOGDEBUG("ATT_READ_BY_TYPE_MSG \n");
 					event = EVENT_MASK_ATT_READ_BY_TYPE_MSG;
 					break;
+
 				case ATT_READ_MSG: //0x605
 					LOGDEBUG("ATT_READ_MSG \n");
 					event = EVENT_MASK_ATT_READ_RESP_MSG;
+					break;
+
+				case ATT_READ_BLOB_MSG: //0x606
+					LOGDEBUG("ATT_READ_BLOB_MSG \n");
+					event = EVENT_MASK_ATT_READ_BLOB_RESP_MSG;
+					break;
+
+				case ATT_WRITE_MSG: //0x609
+					LOGDEBUG("ATT_WRITE_MSG \n");
+					event = EVENT_MASK_ATT_WRITE_MSG;
 					break;
 
 				case ATT_HANDLE_VALUE_NOTI_MSG:
@@ -134,12 +151,16 @@ void OYM_NPI_Interface::Run()
 
 			for (ii = mCallback.begin(); ii != mCallback.end(); ii++)
 			{
-				OYM_UINT16 result = (((*ii)->GetEventMask()) & event);
+				OYM_UINT32 result = (((*ii)->GetEventMask()) & event);
 
-				LOGDEBUG("result = %d \n", result);
+				LOGDEBUG("event = 0x%x, result = 0x%x \n", event, result);
 				if (result != 0)
 				{
 					(*ii)->OnEvent(event, buf, size);
+				}
+				else
+				{
+					LOGDEBUG("EventMask = 0x%x \n", ((*ii)->GetEventMask()));
 				}
 			}
 
@@ -261,7 +282,7 @@ OYM_STATUS OYM_NPI_Interface::Authenticate(OYM_UINT16 handle)
 
 	sGapAuth auth;
 	memset(&auth, 0, sizeof(auth));
-	auth.sec_authReq.oper = 0x00;
+	auth.sec_authReq.oper = 0x01;
 	auth.sec_ioCaps = (eGapIOCaps)0x04;
 	auth.sec_maxEncKeySize = 0x10;
 	auth.sec_keyDist.oper = 0x77;
@@ -285,6 +306,13 @@ OYM_STATUS OYM_NPI_Interface::Bond(OYM_UINT16 handle, OYM_PUINT8 ltk, OYM_UINT16
 	OYM_BOOL status = OYM_FAIL;
 	status = mCommand->GAP_Bond(handle, NPI_DISABLE, ltk, div, rand, ltk_size);
 
+	return (status == OYM_TRUE) ? OYM_SUCCESS : OYM_FAIL;
+}
+
+OYM_STATUS OYM_NPI_Interface::ExchangeMTUSize(OYM_UINT16 handle, OYM_UINT16 mtu)
+{
+	OYM_BOOL status = OYM_FAIL;
+	status = mCommand->GATT_ExchangeMTU(handle, mtu);
 	return (status == OYM_TRUE) ? OYM_SUCCESS : OYM_FAIL;
 }
 
@@ -314,6 +342,13 @@ OYM_STATUS OYM_NPI_Interface::ReadCharacteristicValue(OYM_UINT16 conn_handle, OY
 {
 	OYM_BOOL status = OYM_FAIL;
 	status = mCommand->GATT_ReadCharVal(conn_handle, att_handle);
+	return (status == OYM_TRUE) ? OYM_SUCCESS : OYM_FAIL;
+}
+
+OYM_STATUS OYM_NPI_Interface::ReadCharacteristicLongValue(OYM_UINT16 conn_handle, OYM_UINT16 att_handle, UINT16 offset)
+{
+	OYM_BOOL status = OYM_FAIL;
+	status = mCommand->GATT_ReadLongCharValue(conn_handle, att_handle, offset);
 	return (status == OYM_TRUE) ? OYM_SUCCESS : OYM_FAIL;
 }
 

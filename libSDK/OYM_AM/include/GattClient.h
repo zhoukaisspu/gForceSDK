@@ -52,6 +52,7 @@ public:
 	
 	OYM_UINT16 mHandle;
 	OYM_UUID mUUID;
+	OYM_UINT8 mDataLen;
 	OYM_UINT8 mData[10];
 	OYM_UINT8 mIndex;
 };
@@ -70,7 +71,8 @@ public:
 	}
 	
 	OYM_UINT16 mHandle;
-	OYM_UINT8 mData[50];
+	OYM_UINT8 mLength;
+	OYM_PUINT8 mData;
 };
 
 class OYM_CHARACTERISTIC
@@ -89,9 +91,11 @@ public:
 		mIndex = index;
 		mAttriValue = new OYM_CHAR_VALUE(mValueHandle);
 		mNumOfDescriptor = 0;
+		mCurrentDescriptor = 0;
 	}
 	OYM_STATUS AddDescriptorIntoCharacteristic(OYM_PUINT8 data, OYM_UINT8 pair_len);
 	OYM_CHAR_DESCRIPTOR* FindDescriptorByUUID(OYM_UUID uuid);
+	OYM_CHAR_DESCRIPTOR* FindDescriptorByIndex(OYM_UINT8 index);
 
 	OYM_UINT16 mHandle;
 	OYM_UINT8 mProperty;
@@ -101,6 +105,7 @@ public:
 
 	OYM_CHAR_VALUE* mAttriValue;
 	OYM_UINT8 mNumOfDescriptor;
+	OYM_UINT8 mCurrentDescriptor;
 	list<OYM_CHAR_DESCRIPTOR*> mDescriptor;
 };
 
@@ -130,6 +135,7 @@ public:
 	OYM_STATUS AddIncSvcIntoPriService(OYM_PUINT8 data, OYM_UINT8 pair_len);
 
 	OYM_CHARACTERISTIC* FindCharacteristicbyIndex(OYM_UINT8 index);
+	OYM_INCSERVICE* FindIncluSvcbyIndex(OYM_UINT8 index);
 	
 	OYM_UINT16 mStartHandle;
 	OYM_UINT16 mEndHandle;

@@ -52,7 +52,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../Include;../../NPI/Include;../OYM_AM/include;../OYM_DS/include;;../OYM_NIF/include;../OYM_LOG/include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../Include;../../NPI/Include;../OYM_AM/include;../OYM_DS/include;../OYM_DB/include;../OYM_NIF/include;../OYM_LOG/include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -96,6 +96,8 @@
     <ClInclude Include="..\OYM_AM\include\AdapterManager.h" />
     <ClInclude Include="..\OYM_AM\include\GattClient.h" />
     <ClInclude Include="..\OYM_AM\include\RemoteDevice.h" />
+    <ClInclude Include="..\OYM_DB\include\OYM_Database.h" />
+    <ClInclude Include="..\OYM_DB\include\tinyxml2.h" />
     <ClInclude Include="..\OYM_DS\include\DiscoveryService.h" />
     <ClInclude Include="..\OYM_LOG\include\OYM_Log.h" />
     <ClInclude Include="..\OYM_NIF\include\OYM_NIF.h" />
@@ -112,6 +114,8 @@
     <ClCompile Include="..\OYM_AM\src\AdapterManager.cpp" />
     <ClCompile Include="..\OYM_AM\src\GattClient.cpp" />
     <ClCompile Include="..\OYM_AM\src\RemoteDevice.cpp" />
+    <ClCompile Include="..\OYM_DB\src\OYM_Database.cpp" />
+    <ClCompile Include="..\OYM_DB\src\tinyxml2.cpp" />
     <ClCompile Include="..\OYM_DS\src\DiscoveryService.cpp" />
     <ClCompile Include="..\OYM_LOG\src\OYM_Log.cpp" />
     <ClCompile Include="..\OYM_NIF\src\OYM_NIF.cpp" />
