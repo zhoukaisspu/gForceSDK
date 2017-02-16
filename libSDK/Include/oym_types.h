@@ -5,8 +5,8 @@
 #include <Windows.h>
 
 typedef void				OYM_VOID;
-typedef wchar_t				OYM_CHAR;
-typedef wchar_t*			OYM_PCHAR;
+typedef char				OYM_CHAR;
+typedef char*				OYM_PCHAR;
 typedef const char*			OYM_CPCHAR;
 typedef unsigned int		OYM_UINT;
 typedef int					OYM_INT;

@@ -35,7 +35,7 @@ OYM_VOID OYM_Log::GetFileName(OYM_PCHAR filename)
 
 OYM_Log::OYM_Log(OYM_CPCHAR modual_name, OYM_UINT8 length)
 {
-	mTag = (OYM_PCHAR)new char(length);
+	mTag = (OYM_PCHAR)new OYM_CHAR(length);
 	memcpy(mTag, modual_name, length);
 
 	mLogLevel = LOG_LEVEL_DEBUG;
@@ -66,8 +66,10 @@ OYM_Log::~OYM_Log()
 	{
 		fclose(mLogFile);
 	}
+
 	delete mTag;
 }
+
 void OYM_Log::SetLogLevel(OYM_UINT8 logLevel)
 {
 	if (logLevel >= LOG_LEVEL_OFF)
@@ -76,7 +78,7 @@ void OYM_Log::SetLogLevel(OYM_UINT8 logLevel)
 	mLogLevel = logLevel;
 }
 
-OYM_INT OYM_Log::PrintLog(OYM_UINT8 loglevel,OYM_CPCHAR fmt, ...)
+OYM_INT OYM_Log::PrintLog(OYM_UINT8 loglevel, OYM_CPCHAR fmt, ...)
 {
 	va_list argp;
 	OYM_INT offset = 0;

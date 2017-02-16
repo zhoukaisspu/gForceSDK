@@ -572,7 +572,7 @@ OYM_CHARACTERISTIC* LoadCharacteristic(XMLElement *chara)
 {
 	OYM_UINT16 value_handle = 0;
 	OYM_UINT16 handle = 0;
-	OYM_UINT8 index = 0, i;
+	OYM_UINT8 index = 0;
 	OYM_UINT8 property = 0;
 	OYM_UINT8 num_of_characteristic_descriptor = 0;
 	XMLAttribute* attribute;
@@ -669,7 +669,7 @@ OYM_INCSERVICE* LoadIncludedService(XMLElement *includeservice)
 	OYM_UINT16 start_handle = 0;
 	OYM_UINT16 end_handle = 0;
 	OYM_UINT16 handle = 0;
-	OYM_UINT8 index = 0, i;
+	OYM_UINT8 index = 0;
 	XMLAttribute* attribute;
 	const char* value;
 	//get start handle
@@ -736,7 +736,7 @@ OYM_PRISERVICE* LoadPrimaryService(XMLElement *primaryservice)
 {	
 	OYM_UINT16 start_handle = 0;
 	OYM_UINT16 end_handle = 0;
-	OYM_UINT8 index = 0, i;
+	OYM_UINT8 index = 0;
 	OYM_UINT8 num_of_included_service = 0;
 	OYM_UINT8 num_of_characteristic = 0;
 	XMLAttribute* attribute;

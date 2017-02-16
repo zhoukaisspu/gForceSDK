@@ -39,9 +39,9 @@ public:
 	void SetLogLevel(OYM_UINT8 mLogLevel);
 	void GetFileName(OYM_PCHAR filename);
 	
-	OYM_INT LogDebug(const OYM_CHAR *fmt, ...);
-	OYM_INT LogWarning(const OYM_CHAR *fmt, ...);
-	OYM_INT LogError(const OYM_CHAR *fmt, ...);
+	OYM_INT LogDebug(OYM_CPCHAR fmt, ...);
+	OYM_INT LogWarning(OYM_CPCHAR fmt, ...);
+	OYM_INT LogError(OYM_CPCHAR fmt, ...);
 private:
 	OYM_CHAR mFileName[LOG_LOG_FILE_NAME_LENGTH];
 	
