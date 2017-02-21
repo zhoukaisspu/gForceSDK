@@ -3,11 +3,14 @@
 #define NPI_TL_H
 #include"commonDef.h"
 
+#pragma pack (1)
 // HCI Packet Types
 #define HCI_CMD_PACKET                 0x01
 #define HCI_ACL_DATA_PACKET            0x02
 #define HCI_SCO_DATA_PACKET            0x03
 #define HCI_EVENT_PACKET               0x04
+
+#define	HCI_EXIT_PACKET                0xFF
 /*
 ** HCI Command Opcodes
 */
@@ -230,6 +233,11 @@
 #define UTIL_NV_READ                                      0xFE81
 #define UTIL_NV_WRITE                                     0xFE82
 
+#define TOTAL_OPCODE_COUNTS                     190
+
+/*
+** Messages
+*/
 
 #define HCI_STATUS_MSG                                          (WM_USER+1)
 #define GAP_STATUS_MSG                                          (WM_USER+2)
@@ -421,32 +429,44 @@ typedef enum {
 	INVALID_RET_STATUS = 0xFF
 } eRetStatus;
 
+typedef struct {
+	UINT8 type;
+	UINT16 opcode;
+	UINT8 len;
+	UINT8 data[1];
+} sCMD;
 
+typedef struct {
+	UINT8 type;
+	UINT8 evtCode;
+	UINT8 len;
+	UINT8 data[1];
+} sEvt;
 class NPI_TX : public Runnable
 {
 public:
-	NPI_TX(HANDLE hdl, DWORD logThread);
+	NPI_TX(HANDLE hdl);
 	~NPI_TX();
 
 	void Run(void);
-	GForceQueue<UINT8, CMD_BUF_SIZE>* Get_Queue(void);
+	NPI_Queue<sCMD*, CMD_QUEUE_SIZE>* Get_Queue(void);
 private:
-	HANDLE m_com;
-	DWORD m_log;
-	GForceQueue<UINT8, CMD_BUF_SIZE> m_cmdQue;
+	HANDLE comHdl;
+	NPI_Queue<sCMD*, CMD_QUEUE_SIZE> m_cmdQue;
 };
 
 class NPI_RX: public Runnable
 {
 public:
-	NPI_RX(HANDLE hdl, DWORD logThread);
+	NPI_RX(HANDLE hdl);
 	~NPI_RX();
 
 	void Run(void);
-
+	NPI_Queue<sEvt*, EVT_QUEUE_SIZE>* NPI_RX::Get_Queue(void);
 private:
-	HANDLE m_com;
-	DWORD m_log;
-	DWORD readBlock(void);
+	HANDLE comHdl;
+	NPI_Queue<sEvt*, EVT_QUEUE_SIZE> m_evtQue;
 };
+
+#pragma pack ()
 #endif /* NPI_TL_H */

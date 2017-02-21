@@ -1,10 +1,10 @@
 #ifndef _LOG_H_
 #define _LOG_H_
-
+#include"stdafx.h"
 class Log: public Runnable
 {
 public:
-	Log(DWORD com_id, DWORD evt_id);
+	Log(HANDLE hdl);
 	~Log();
 	void Run();
 	void Analyze_TX(PUINT8 buf, UINT8 size);
@@ -12,9 +12,9 @@ public:
 #ifdef MFC_GUI
 	CHARFORMAT2 cf;
 #endif
+
 private:
-	DWORD comThreadID;
-	DWORD evtThreadID;
+	HANDLE comHdl;
 	void Sprintf_HexData(PUINT8 pBuf, INT16 len);
 	void Sprintf_DumpRx(PUINT8 pBuf, INT16 len);
 	void Sprintf_DumpTx(PUINT8 pBuf, INT16 len);

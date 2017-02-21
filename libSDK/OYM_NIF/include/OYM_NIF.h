@@ -49,6 +49,13 @@ private:
 	OYM_ULONG mEvtThreadID;
 	CThread *mEvtThread;
 
+	/*event queue.
+	* NPI will push event to this queue,
+	* NIF will pop event from this queue to process.
+	*/
+	NPI_Queue<sEvt*, EVT_QUEUE_SIZE>* mEventQueue;
+	OYM_STATUS OYM_Process_Event(OYM_UINT16 event_code, OYM_PUINT8 data, OYM_UINT8 length);
+
 	//fix Log name to mLog!!
 	OYM_Log *mLog;
 };

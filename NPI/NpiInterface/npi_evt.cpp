@@ -1,210 +1,49 @@
 #include"stdafx.h"
 #include"npi_evt.h"
 #include"com.h"
+#include"log.h"
 
-
-NPI_EVT::NPI_EVT()
+NPI_EVT::NPI_EVT(HANDLE hdl)
 {
-	memset((void*)m_EvtCB, 0, TOTAL_MSG_COUNT * sizeof(m_EvtCB[0]));
+	comHdl = hdl;
 }
 
 NPI_EVT::~NPI_EVT()
 {
+	comHdl = NULL;
 }
 
 void NPI_EVT::Run()
 {
-	MSG     msg;
-	PUINT8  buf;
-	UINT16  size;
-	INT16   pos;
+	UINT16 msg_type = 0;
+	PCallBack pFunc;
+	HANDLE hThread = ((Com *)comHdl)->evtThread;
+	HANDLE hEvent = ((Com *)comHdl)->evtThread->GetEvent();
 	while (1) {
-		if (GetMessage(&msg, 0, 0, 0)) { //get msg from message queue
-			buf = (PUINT8)msg.wParam;
-			size = (UINT16)msg.lParam;
-
-			pos = GetPosFromMsg(msg.message);
-			if ((pos > 0) && (pos < TOTAL_MSG_COUNT)) {
-				m_EvtCB[pos] == NULL ? NULL : m_EvtCB[pos](buf, size);//callback
+		sEvt* pEvt = ((NPI_RX*)((Com*)comHdl)->m_rx)->Get_Queue()->Pop();
+		if (pEvt->type == HCI_EXIT_PACKET){
+			::LogI(_T("Event Thread Exit!\n"));
+			CloseHandle(hEvent);
+			CloseHandle(hThread);
+			delete pEvt;
+			return;
+		}
+		if (pEvt->evtCode == HCI_LE_EVENT_CODE) {
+			sHciEvt* pHciEvt = (sHciEvt*)pEvt;
+			UINT16 opCode = BUILD_UINT16(pHciEvt->op_lo, pHciEvt->op_hi);
+			pFunc = m_EvtCB.get(opCode);
+			if (pFunc) {
+				pFunc(&pHciEvt->status, pHciEvt->len - 3);
 			}
-
-			switch (msg.message) {
-			case HCI_STATUS_MSG:
-				Hci_Status_Event(buf, size);
-				break;
-			case GAP_STATUS_MSG:
-				Gap_Status_Event(buf, size);
-				break;
-			case HCI_DECRYPT_MSG:
-				HciExt_Decrypt_Event(buf, size);
-				break;
-			case HCI_GAP_STATUS_MSG:
-				HciExt_GapStatus_Event(buf, size);
-				break;
-			case HCI_READ_LOCAL_SUPPORT_FEAT_MSG:
-				Hci_RdLocSuppFeat_Event(buf, size);
-				break;
-			case HCI_READ_BDADDR_MSG:
-				Hci_RdBdaddr_Event(buf, size);
-				break;
-			case HCI_READ_RSSI_MSG:
-				Hci_RdRssi_Event(buf, size);
-				break;
-			case HCI_LE_SET_EVENT_MASK_MSG:
-				Hci_LE_SetEvtMsk_Event(buf, size);
-				break;
-			case HCI_LE_READ_LOCAL_SUPPORT_FEAT_MSG:
-				Hci_LE_RdLocSuppFeat_Event(buf, size);
-				break;
-			case HCI_LE_READ_WHITE_LIST_SIZE_MSG:
-				Hci_RdWhiteListSize_Event(buf, size);
-				break;
-			case HCI_LE_CONNECTION_UPDATE_MSG:
-				Hci_LE_ConnUpdate_Event(buf, size);
-				break;
-			case HCI_LE_TEST_END_MSG:
-				Hci_LE_TestEnd_Event(buf, size);
-				break;
-			case HCI_LE_REM_CONN_PARAM_REQ_REP_MSG:
-				Hci_LE_RemConnParaReqRep_Event(buf, size);
-				break;
-			case HCI_LE_REM_CONN_PARAM_REQ_NEG_REP_MSG:
-				Hci_LE_RemConnParaReqNegRep_Event(buf, size);
-				break;
-			case L2CAP_COMMAND_REJECT_MSG:
-				L2cap_CmdReject_Event(buf, size);
-				break;
-			case L2CAP_DISCONNECT_RSP_MSG:
-				L2cap_DiscRsp_Event(buf, size);
-				break;
-			case L2CAP_INFO_RSP_MSG:
-				L2cap_InfoRsp_Event(buf, size);
-				break;
-			case L2CAP_PARAM_UPDATE_RSP_MSG:
-				L2cap_ParamUpdateRsp_Event(buf, size);
-				break;
-			case L2CAP_CONNECT_RSP_MSG:
-				L2cap_ConnRsp_Event(buf, size);
-				break;
-			case L2CAP_CHANNEL_ESTABLISHED_MSG:
-				L2cap_ChannelEstablish_Event(buf, size);
-				break;
-			case L2CAP_CHANNEL_TERMINATED_MSG:
-				L2cap_ChannelTerminate_Event(buf, size);
-				break;
-			case L2CAP_OUT_OF_CREDIT_MSG:
-				L2cap_OutOfCredit_Event(buf, size);
-				break;
-			case L2CAP_PEER_CREDIT_THRESHOLD_MSG:
-				L2cap_PeerCredThreshold_Event(buf, size);
-				break;
-			case L2CAP_SEND_SDU_DONE_MSG:
-				L2cap_SendSduDone_Event(buf, size);
-				break;
-			case L2CAP_DATA_MSG:
-				L2cap_Data_Event(buf, size);
-				break;
-			case ATT_ERROR_MSG:
-				Att_Error_Event(buf, size);
-				break;
-			case ATT_EXCHANGE_MTU_MSG:
-				Att_ExchangeMtu_Event(buf, size);
-				break;
-			case ATT_FIND_INFO_MSG:
-				Att_FindInfo_Event(buf, size);
-				break;
-			case ATT_FIND_BY_TYPE_VALUE_MSG:
-				Att_FindByTypeValue_Event(buf, size);
-				break;
-			case ATT_READ_BY_TYPE_MSG:
-				Att_ReadByType_Event(buf, size);
-				break;
-			case ATT_READ_MSG:
-				Att_Read_Event(buf, size);
-				break;
-			case ATT_READ_BLOB_MSG:
-				Att_ReadBlob_Event(buf, size);
-				break;
-			case ATT_READ_MULTI_MSG:
-				Att_ReadMulti_Event(buf, size);
-				break;
-			case ATT_READ_BY_GRP_TYPE_MSG:
-				Att_ReadByGrpType_Event(buf, size);
-				break;
-			case ATT_WRITE_MSG:
-				Att_Write_Event(buf, size);
-				break;
-			case ATT_PREPARE_WRITE_MSG:
-				Att_PrepareWrite_Event(buf, size);
-				break;
-			case ATT_EXECUTE_WRITE_MSG:
-				Att_ExecuteWrite_Event(buf, size);
-				break;
-			case ATT_HANDLE_VALUE_NOTI_MSG:
-				Att_HanddlValueNoti_Event(buf, size);
-				break;
-			case ATT_HANDLE_VALUE_IND_MSG:
-				Att_HandleValueInd_Event(buf, size);
-				break;
-			case ATT_HANDLE_VALUE_CFM_MSG:
-				Att_HandleValueCfm_Event(buf, size);
-				break;
-			case ATT_MTU_UPDATED_MSG:
-				Att_MtuUpdated_Event(buf, size);
-				break;
-			case HCI_EXT_GAP_DEVICE_INIT_DONE_MSG:
-				HciExt_GapDevInitDone_Event(buf, size);
-				break;
-			case HCI_EXT_GAP_DEVICE_DISCOVERY_MSG:
-				HciExt_GapDevDiscovery_Event(buf, size);
-				break;
-			case HCI_EXT_GAP_ADV_DATA_UPDATE_DONE_MSG:
-				HciExt_GapAdvDataUpdateDone_Event(buf, size);
-				break;
-			case HCI_EXT_GAP_MAKE_DISCOVERABLE_DONE_MSG:
-				HciExt_GapMakeDiscoverableDone_Event(buf, size);
-				break;
-			case HCI_EXT_GAP_END_DISCOVERABLE_DONE_MSG:
-				HciExt_GapEndDiscoverableDone_Event(buf, size);
-				break;
-			case HCI_EXT_GAP_LINK_ESTABLISHED_MSG:
-				HciExt_GapLinkEstablished_Event(buf, size);
-				break;
-			case HCI_EXT_GAP_LINK_TERMINATED_MSG:
-				HciExt_GapLinkTerminated_Event(buf, size);
-				break;
-			case HCI_EXT_GAP_LINK_PARAM_UPDATE_MSG:
-				HciExt_GapLinkParamUpdate_Event(buf, size);
-				break;
-			case HCI_EXT_GAP_RANDOM_ADDR_CHANGED_MSG:
-				HciExt_GapRandomAddrChanged_Event(buf, size);
-				break;
-			case HCI_EXT_GAP_SIGNATURE_UPDATED_MSG:
-				HciExt_GapSignatureUpdated_Event(buf, size);
-				break;
-			case HCI_EXT_GAP_AUTH_COMPLETE_MSG:
-				HciExt_GapAuthComplete_Event(buf, size);
-				break;
-			case HCI_EXT_GAP_PASSKEY_NEEDED_MSG:
-				HciExt_GapPasskeyNeeded_Event(buf, size);
-				break;
-			case HCI_EXT_GAP_SLAVE_REQUESTED_SECURITY_MSG:
-				HciExt_GapSlaveReqSec_Event(buf, size);
-				break;
-			case HCI_EXT_GAP_DEVICE_INFO_MSG:
-				HciExt_GapDevInfo_Event(buf, size);
-				break;
-			case HCI_EXT_GAP_BOND_COMPLETE_MSG:
-				HciExt_GapBondComp_Event(buf, size);
-				break;
-			case HCI_EXT_GAP_PAIRING_REQ_MSG:
-				HciExt_GapPairReq_Event(buf, size);
-				break;
-			default:
-				LogE(L"NPI_EVT£ºErr msg type=%4X !\n", msg.message);
-				break;
+		} else {
+			sNpiEvt* pNpiEvt = (sNpiEvt*)pEvt;
+			UINT16 event = BUILD_UINT16(pEvt->data[0], pEvt->data[1]);
+			pFunc = m_EvtCB.get(event);
+			if (pFunc) {
+				pFunc(&pNpiEvt->status, pNpiEvt->len - 2);
 			}
 		}
+		delete pEvt;
 	}
 }
 INT16 NPI_EVT::GetPosFromMsg(INT16 msg)
@@ -229,19 +68,10 @@ INT16 NPI_EVT::GetPosFromMsg(INT16 msg)
 	}
 	return pos;
 }
-BOOL NPI_EVT::RegistCallBack(void(*pFun)(const PUINT8 pBuf, UINT16 len),
-                             UINT16 msg)
+BOOL NPI_EVT::RegistCallBack(const HANDLE hdl,
+                             UINT16 evt)
 {
-
-	INT16 pos;
-
-	pos = GetPosFromMsg(msg);
-	if ((pos > 0) && (pos < TOTAL_MSG_COUNT)) {
-		m_EvtCB[pos] = pFun;//callback
-	} else {
-		return FALSE;
-	}
-
+	m_EvtCB.put(evt, (PCallBack)hdl);
 	return TRUE;
 }
 

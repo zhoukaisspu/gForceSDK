@@ -4,14 +4,14 @@
 #include"windows.h"
 #include"npi_queue.h"
 #include"Thread.h"
-#include"log.h"
-#define STD_OUT
+//#define STD_OUT
 //#define MFC_GUI
 
 #define MAX_RX_SIZE     255
 #define MAX_TX_SIZE     255
 
-#define CMD_BUF_SIZE    MAX_TX_SIZE*10
+#define CMD_QUEUE_SIZE        1024
+#define EVT_QUEUE_SIZE        1024
 
 #define EVT_HEADER_LEN        3
 #define BLE_ADDR_LEN          6
@@ -21,7 +21,7 @@
 #define OOB_DATA_LEN          16
 #define PASSKEY_LEN           16
 #define LTK_LEN               16
-#define LTK_RAND_PAIR_LEN     16
+#define LTK_RAND_PAIR_LEN     8
 #define B_RANDOM_NUM_SIZE       8
 #define FEATURES_LEN            8
 #define ADV_CHANNEL_37          0x01
@@ -34,4 +34,34 @@
           ((UINT16)(((loByte) & 0x00FF) + (((hiByte) & 0x00FF) << 8)))
 #define HI_UINT16(a) (((a) >> 8) & 0xFF)
 #define LO_UINT16(a) ((a) & 0xFF)
+
+template<class TKey, class TVal, unsigned max>
+class NPI_Dict
+{
+	TKey key[max];
+	TVal val[max];
+	LONG count;
+public:
+	NPI_Dict() : count(0)
+	{
+	}
+	void put(TKey k, TVal v)
+	{
+		key[count] = k;
+		val[count] = v;
+		if ((count++) == max) {
+			count = 0;
+		}
+	}
+	TVal get(TKey k)
+	{
+		for (int i = 0; i < count; i++) {
+			if (key[i] == k) {
+				return val[i];
+			}
+		}
+		return NULL;
+	}
+};
+
 #endif

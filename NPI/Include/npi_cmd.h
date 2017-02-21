@@ -3,23 +3,17 @@
 
 #include "CommonDef.h"
 #include "com.h"
+#include "gap.h"
 /*Dongle Type Define*/
-//#define CC26XX
+#define CC26XX
 //#define CC13XX
-#define CC254X
+//#define CC254X
 
 #define LL_STATUS_ERROR_PEER_TERM       0x13 // Remote User Terminated Connection
 #pragma pack (1)
 /*---------------------------
 /*           CMD            /
 /*-------------------------*/
-typedef struct {
-	UINT8 type;
-	UINT16 opcode;
-	UINT8 len;
-	UINT8 data[MAX_TX_SIZE];
-} sCMD;
-
 #define CMD_HEAD_LEN 4
 
 typedef enum {
@@ -540,7 +534,6 @@ public:
 	/*---------HCI Command---------*/
 private:
 	DWORD WaitFor_Msg(void);
-	void PushToQueue(PUINT8 data, UINT32 size);
 
 };
 

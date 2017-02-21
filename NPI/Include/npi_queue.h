@@ -3,7 +3,7 @@
 
 
 template<class T, unsigned max>
-class GForceQueue
+class NPI_Queue
 {
 	HANDLE space_avail; // at least one slot empty
 	HANDLE data_avail;  // at least one slot full
@@ -12,7 +12,7 @@ class GForceQueue
 	T buffer[max];
 	long in_pos, out_pos;
 public:
-	GForceQueue() : in_pos(0), out_pos(0)
+	NPI_Queue() : in_pos(0), out_pos(0)
 	{
 		space_avail = CreateSemaphore(NULL, max, max, NULL);
 		data_avail = CreateSemaphore(NULL, 0, max, NULL);
@@ -40,7 +40,7 @@ public:
 		return retval;
 	}
 
-	~GForceQueue()
+	~NPI_Queue()
 	{
 		DeleteCriticalSection(&mutex);
 		CloseHandle(data_avail);

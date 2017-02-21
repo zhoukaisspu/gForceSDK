@@ -1,4 +1,4 @@
-#include"stdafx.h"
+#include "stdafx.h"
 #include "OYM_NIF.h"
 #include <oym_types.h>
 #define COM_PORT_NUM 3
@@ -6,165 +6,187 @@
 /* OYM_NIF as a abstract of NPI_Interface, upper level get OYM_NIF instant, which is able send command to  
 lower layer, register callback function to receiver event. the event is masked by eventmask.
 */
-void OYM_NPI_Interface::Run()
+
+OYM_STATUS OYM_NPI_Interface::OYM_Process_Event(OYM_UINT16 event_code, OYM_PUINT8 data, OYM_UINT8 length)
 {
-	MSG	msg;
-	OYM_PUINT8	buf;
-	OYM_UINT16	size;
 	LISTCALLBACK::iterator ii;
 	OYM_UINT32 event = 0x00;
+	OYM_STATUS result = OYM_FAIL;
 
-	while (1) {
-		event = 0x00;
-		if (GetMessage(&msg, 0, 0, 0)) //get msg from message queue
-		{
-			buf = (PUINT8)msg.wParam;
-			size = (UINT16)msg.lParam;
-			
-			LOGDEBUG("received event 0x%x \n", msg.message);
-			switch (msg.message) {
-				case HCI_EXT_GAP_DEVICE_INIT_DONE_MSG: //0x0700
-					LOGDEBUG("HCI_EXT_GAP_DEVICE_INIT_DONE_MSG \n");
-					break;
+	LOGDEBUG("received event 0x%x \n", event_code);
 
-				case HCI_EXT_GAP_DEVICE_DISCOVERY_MSG: //0x0701
-					LOGDEBUG("HCI_EXT_GAP_DEVICE_DISCOVERY_MSG size of callback is %d\n", mCallback.size());
-					for (ii = mCallback.begin(); ii != mCallback.end(); ii++)
-					{
-						OYM_UINT16 result = (((*ii)->GetEventMask()) & EVENT_MASK_GAP_DEVICE_DISCOVERY_MSG);
-						LOGDEBUG("(*ii)->GetEventMask() = %d \n", (*ii)->GetEventMask());
-						LOGDEBUG("result = %d \n", result);
-						if (result != 0)
-						{
-							(*ii)->OnScanFinished();
-						}
-					}
-					break;
+	switch (event_code) {
+		case HCI_EXT_GAP_DEVICE_INIT_DONE_EVENT: //0x0700
+			LOGDEBUG("HCI_EXT_GAP_DEVICE_INIT_DONE_MSG \n");
+			break;
 
-				case HCI_EXT_GAP_DEVICE_INFO_MSG: //0x070D
-					LOGDEBUG("HCI_EXT_GAP_DEVICE_INFO_MSG with size = %d, size of callback is %d\n", size, mCallback.size());
-					for (ii = mCallback.begin(); ii != mCallback.end(); ii++)
-					{
-						OYM_UINT16 result = (((*ii)->GetEventMask()) & EVENT_MASK_GAP_DEVICE_INFO_MSG);
-						LOGDEBUG("(*ii)->GetEventMask() = %d \n", (*ii)->GetEventMask());
-
-						LOGDEBUG("result = %d \n", result);
-						if (result != 0)
-						{
-							(*ii)->OnScanResult(buf, size);
-						}
-					}
-					break;
-
-				case HCI_EXT_GAP_LINK_ESTABLISHED_MSG: //0x0705
-					LOGDEBUG("HCI_EXT_GAP_LINK_ESTABLISHED_MSG \n");
-					for (ii = mCallback.begin(); ii != mCallback.end(); ii++)
-					{
-						OYM_UINT16 result = (((*ii)->GetEventMask()) & EVENT_MASK_GAP_LINK_ESTABLISHED_MSG);
-
-						LOGDEBUG("result = %d \n", result);
-						if (result != 0)
-						{
-							(*ii)->OnConnect(buf, size);
-						}
-						
-					}
-					break;
-
-				case HCI_EXT_GAP_LINK_PARAM_UPDATE_MSG: //0x707
-					LOGDEBUG("HCI_EXT_GAP_LINK_PARAM_UPDATE_MSG \n");
-					event = EVENT_MASK_LINK_PARA_UPDATE_MSG;
-					break;
-
-				case HCI_EXT_GAP_AUTH_COMPLETE_MSG://0x070A
-					LOGDEBUG("HCI_EXT_GAP_AUTH_COMPLETE_MSG \n");
-					event = EVENT_MASK_AUTH_COMPLETE_MSG;
-					break;
-
-				case HCI_EXT_GAP_SLAVE_REQUESTED_SECURITY_MSG: //0x070C
-					LOGDEBUG("HCI_EXT_GAP_SLAVE_REQUESTED_SECURITY_MSG \n");
-					event = EVENT_MASK_SLAVE_REQUESTED_SECURITY_MSG;
-					break;
-
-				case HCI_EXT_GAP_BOND_COMPLETE_MSG: //0x70e
-					event = EVENT_MASK_BOND_COMPLETE_MSG;
-					break;
-
-				case HCI_GAP_STATUS_MSG: //0x404 Gap status msg event only sent to high level with error status
-					LOGDEBUG("HCI_GAP_STATUS_MSG \n");
-					event = EVENT_MASK_GAP_STATUS_MSG;
-					break;
-
-				case HCI_EXT_GAP_LINK_TERMINATED_MSG: //0x0706
-					LOGDEBUG("HCI_EXT_GAP_LINK_TERMINATED_MSG \n");
-					event = EVENT_MASK_GAP_LINK_TERMINATED_MSG;
-					break;
-
-				case ATT_READ_BY_GRP_TYPE_MSG: //0x0608
-					LOGDEBUG("ATT_READ_BY_GRP_TYPE_MSG \n");
-					event = EVENT_MASK_ATT_READ_BY_GRP_TYPE_MSG;
-					break;
-
-				case ATT_ERROR_MSG: //0x0600
-					LOGDEBUG("ATT_ERROR_MSG \n");
-					event = EVENT_MASK_ATT_ERROR_MSG;
-					break;
-
-				case ATT_FIND_INFO_MSG: //0x0602 characteristic descriptor
-					LOGDEBUG("ATT_FIND_INFO_MSG \n");
-					event = EVENT_MASK_ATT_READ_BY_INFO_MSG;
-					break;
-				case ATT_EXCHANGE_MTU_MSG: //0x601
-					LOGDEBUG("ATT_EXCHANGE_MTU_MSG \n");
-					event = EVENT_MASK_ATT_EXCHANGE_MTU_MSG;
-					break;
-
-				case ATT_READ_BY_TYPE_MSG: //0x0604
-					LOGDEBUG("ATT_READ_BY_TYPE_MSG \n");
-					event = EVENT_MASK_ATT_READ_BY_TYPE_MSG;
-					break;
-
-				case ATT_READ_MSG: //0x605
-					LOGDEBUG("ATT_READ_MSG \n");
-					event = EVENT_MASK_ATT_READ_RESP_MSG;
-					break;
-
-				case ATT_READ_BLOB_MSG: //0x606
-					LOGDEBUG("ATT_READ_BLOB_MSG \n");
-					event = EVENT_MASK_ATT_READ_BLOB_RESP_MSG;
-					break;
-
-				case ATT_WRITE_MSG: //0x609
-					LOGDEBUG("ATT_WRITE_MSG \n");
-					event = EVENT_MASK_ATT_WRITE_MSG;
-					break;
-
-				case ATT_HANDLE_VALUE_NOTI_MSG:
-					LOGDEBUG("ATT_HANDLE_VALUE_NOTI_MSG \n");
-					event = EVENT_MASK_ATT_NOTI_MSG;
-					break;
-
-				default:
-					printf("NPI_EVT£ºErr msg type=%4X !\n", msg.message);
-					break;
-			}
-
+		case HCI_EXT_GAP_DEVICE_DISCOVERY_EVENT: //0x0701
+			LOGDEBUG("HCI_EXT_GAP_DEVICE_DISCOVERY_MSG size of callback is %d\n", mCallback.size());
 			for (ii = mCallback.begin(); ii != mCallback.end(); ii++)
 			{
-				OYM_UINT32 result = (((*ii)->GetEventMask()) & event);
-
-				LOGDEBUG("event = 0x%x, result = 0x%x \n", event, result);
+				OYM_UINT16 result = (((*ii)->GetEventMask()) & EVENT_MASK_GAP_DEVICE_DISCOVERY_MSG);
 				if (result != 0)
 				{
-					(*ii)->OnEvent(event, buf, size);
-				}
-				else
-				{
-					LOGDEBUG("EventMask = 0x%x \n", ((*ii)->GetEventMask()));
+					(*ii)->OnScanFinished();
+					result = OYM_SUCCESS;
 				}
 			}
+			break;
 
+		case HCI_EXT_GAP_DEVICE_INFO_EVENT: //0x070D
+			LOGDEBUG("HCI_EXT_GAP_DEVICE_INFO_MSG \n");
+			for (ii = mCallback.begin(); ii != mCallback.end(); ii++)
+			{
+				OYM_UINT16 result = (((*ii)->GetEventMask()) & EVENT_MASK_GAP_DEVICE_INFO_MSG);
+				LOGDEBUG("(*ii)->GetEventMask() = %d \n", (*ii)->GetEventMask());
+
+				LOGDEBUG("result = %d \n", result);
+				if (result != 0)
+				{
+					(*ii)->OnScanResult(data, length);
+					result = OYM_SUCCESS;
+				}
+			}
+			break;
+
+		case HCI_EXT_GAP_LINK_ESTABLISHED_EVENT: //0x0705
+			LOGDEBUG("HCI_EXT_GAP_LINK_ESTABLISHED_MSG \n");
+			for (ii = mCallback.begin(); ii != mCallback.end(); ii++)
+			{
+				OYM_UINT16 result = (((*ii)->GetEventMask()) & EVENT_MASK_GAP_LINK_ESTABLISHED_MSG);
+
+				LOGDEBUG("result = %d \n", result);
+				if (result != 0)
+				{
+					(*ii)->OnConnect(data, length);
+					result = OYM_SUCCESS;
+				}
+
+			}
+			break;
+
+		case HCI_EXT_GAP_LINK_TERMINATED_EVENT: //0x0706
+			LOGDEBUG("HCI_EXT_GAP_LINK_TERMINATED_MSG \n");
+			event = EVENT_MASK_GAP_LINK_TERMINATED_MSG;
+			break;
+
+		case HCI_EXT_GAP_LINK_PARAM_UPDATE_EVENT: //0x707
+			LOGDEBUG("HCI_EXT_GAP_LINK_PARAM_UPDATE_MSG \n");
+			event = EVENT_MASK_LINK_PARA_UPDATE_MSG;
+			break;
+
+		case HCI_EXT_GAP_AUTH_COMPLETE_EVENT://0x070A
+			LOGDEBUG("HCI_EXT_GAP_AUTH_COMPLETE_MSG \n");
+			event = EVENT_MASK_AUTH_COMPLETE_MSG;
+			break;
+
+		case HCI_EXT_GAP_SLAVE_REQUESTED_SECURITY_EVENT: //0x070C
+			LOGDEBUG("HCI_EXT_GAP_SLAVE_REQUESTED_SECURITY_MSG \n");
+			event = EVENT_MASK_SLAVE_REQUESTED_SECURITY_MSG;
+			break;
+
+		case HCI_EXT_GAP_BOND_COMPLETE_EVENT: //0x70E
+			event = EVENT_MASK_BOND_COMPLETE_MSG;
+			break;
+
+		case HCI_EXT_GAP_CMD_STATUS_EVENT: //0x404 Gap status msg event only sent to high level with error status
+			LOGDEBUG("HCI_GAP_STATUS_MSG \n");
+			event = EVENT_MASK_GAP_STATUS_MSG;
+			break;
+
+		case ATT_ERROR_EVENT: //0x0501
+			LOGDEBUG("ATT_ERROR_MSG \n");
+			event = EVENT_MASK_ATT_ERROR_MSG;
+			break;
+
+		case ATT_EXCHANGE_MTU_EVENT: //0x0503
+			LOGDEBUG("ATT_EXCHANGE_MTU_MSG \n");
+			event = EVENT_MASK_ATT_EXCHANGE_MTU_MSG;
+			break;
+
+		case ATT_FIND_INFO_EVENT: //0x0505 characteristic descriptor
+			LOGDEBUG("ATT_FIND_INFO_MSG \n");
+			event = EVENT_MASK_ATT_READ_BY_INFO_MSG;
+			break;
+
+		case ATT_READ_BY_TYPE_EVENT: //0x0509
+			LOGDEBUG("ATT_READ_BY_TYPE_MSG \n");
+			event = EVENT_MASK_ATT_READ_BY_TYPE_MSG;
+			break;
+
+		case ATT_READ_EVENT: //0x050B
+			LOGDEBUG("ATT_READ_MSG \n");
+			event = EVENT_MASK_ATT_READ_RESP_MSG;
+			break;
+
+		case ATT_READ_BLOB_EVENT: //0x050D
+			LOGDEBUG("ATT_READ_BLOB_MSG \n");
+			event = EVENT_MASK_ATT_READ_BLOB_RESP_MSG;
+			break;
+
+		case ATT_READ_BY_GRP_TYPE_EVENT: //0x0511
+			LOGDEBUG("ATT_READ_BY_GRP_TYPE_MSG \n");
+			event = EVENT_MASK_ATT_READ_BY_GRP_TYPE_MSG;
+			break;
+
+		case ATT_WRITE_EVENT: //0x0513
+			LOGDEBUG("ATT_WRITE_MSG \n");
+			event = EVENT_MASK_ATT_WRITE_MSG;
+			break;
+
+		case ATT_HANDLE_VALUE_NOTI://0x051B
+			LOGDEBUG("ATT_HANDLE_VALUE_NOTI_MSG \n");
+			event = EVENT_MASK_ATT_NOTI_MSG;
+			break;
+
+	default:
+		printf("NPI_EVT£ºErr msg type=%4X !\n", event_code);
+		break;
+	}
+
+	for (ii = mCallback.begin(); ii != mCallback.end(); ii++)
+	{
+		OYM_UINT32 result = (((*ii)->GetEventMask()) & event);
+
+		LOGDEBUG("event = 0x%x, result = 0x%x \n", event, result);
+		if (result != 0)
+		{
+			(*ii)->OnEvent(event, data, length);
+			result = OYM_SUCCESS;
 		}
+		else
+		{
+			LOGDEBUG("EventMask = 0x%x \n", ((*ii)->GetEventMask()));
+		}
+	}
+
+	return result;
+}
+void OYM_NPI_Interface::Run()
+{
+	OYM_UINT8 length;
+
+	while (mEventQueue != NULL)
+	{
+		sEvt* pEvt = mEventQueue->Pop();
+		UINT16 opCode;
+
+		if (pEvt->evtCode == HCI_LE_EVENT_CODE)
+		{
+			sHciEvt* pHciEvt = (sHciEvt*)pEvt;
+			opCode = BUILD_UINT16(pHciEvt->op_lo, pHciEvt->op_hi);
+			length = pHciEvt->len - 3;
+			OYM_Process_Event(opCode, &(pHciEvt->status), length);
+		}
+		else 
+		{
+			sNpiEvt* pNpiEvt = (sNpiEvt*)pEvt;
+			UINT16 opCode = (pNpiEvt->event_lo + (pNpiEvt->event_hi << 8));
+			length = pNpiEvt->len - 2;
+			OYM_Process_Event(opCode, &(pNpiEvt->status), length);
+		}
+		
+		delete pEvt;
 	}
 }
 
@@ -182,18 +204,21 @@ OYM_STATUS OYM_NPI_Interface::Init()
 		return OYM_FAIL;
 	}
 
-	/*create the event thread to receive message from controller.*/
+	if (NULL == (mEventQueue = (mCommand->Connect(NULL))))
+	{
+		delete mCommand;
+
+		/*exit thread*/
+		return OYM_FAIL;
+	}
+
+	/*create the event thread to receive message from NPI dongle.*/
 	mEvtThread = new CThread(this);
 	mEvtThread->Start();
 	mEvtThread->Join(100);
 	mEvtThreadID = mEvtThread->GetThreadID();
 
-	if (false == (mCommand->Connect(mEvtThreadID)))
-	{
-		delete mCommand;
-		return OYM_FAIL;
-	}
-
+	//if (false == (mCommand->Connect(mEvtThreadID)))
 	return OYM_SUCCESS;
 }
 

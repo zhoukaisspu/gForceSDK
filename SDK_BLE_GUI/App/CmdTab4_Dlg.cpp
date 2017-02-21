@@ -61,6 +61,8 @@ BOOL CmdTab4_Dlg::OnInitDialog()
 	m_cmdTree.InsertItem(_T("GAP_SetAdvToken"), h_gap);
 	m_cmdTree.InsertItem(_T("GAP_RemoveAdvToken"), h_gap);
 	m_cmdTree.InsertItem(_T("GAP_UpdateAdvTokens"), h_gap);
+	m_cmdTree.InsertItem(_T("GAP_UpdateAdvTokens"), h_gap);
+	m_cmdTree.InsertItem(_T("GAP_Bond"), h_gap);
 	m_cmdTree.InsertItem(_T("GAP_BondSetParam"), h_gap);
 	m_cmdTree.InsertItem(_T("GAP_BondGetParam"), h_gap);
 
@@ -111,6 +113,9 @@ void CmdTab4_Dlg::OnSelchangedTab4Tree(NMHDR* pNMHDR, LRESULT* pResult)
 	if (text == _T("GAP_ConfigDeviceAddr")) {
 		this->Show_GAP_ConfigDeviceAddr();
 	}
+	if (text == _T("GAP_Bond")) {
+		this->Show_GAP_Bond();
+	}
 	*pResult = 0;
 }
 
@@ -130,6 +135,15 @@ void CmdTab4_Dlg::OnDblclkTab4Tree(NMHDR* pNMHDR, LRESULT* pResult)
 	UINT8 csrk[16] = { 0 };
 	UINT8 signCnt[4] = { 0 };
 	CString str;
+	WCHAR buf[20] = { 0 };
+	UINT16 conHandle;
+	if (theApp.m_cmdHandle == NULL){
+		return;
+	}
+	//get connection handle
+	theApp.m_cmdView->m_conHdl.GetWindowText(buf, 10);
+	conHandle = (UINT16)wcstol(buf, NULL, 16);
+
 	if (text == _T("GAP_DeviceInit")) {
 		role.data = 0;
 		CMFCPropertyGridProperty* pProp0 = m_gridCtrl.GetProperty(0);
@@ -163,6 +177,29 @@ void CmdTab4_Dlg::OnDblclkTab4Tree(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 	if (text == _T("GAP_ConfigDeviceAddr")) {
 
+	}
+	if (text == _T("GAP_Bond")){
+		CMFCPropertyGridProperty* pProp0 = m_gridCtrl.GetProperty(0);
+		str = pProp0->GetValue();
+		eEnDisMode auth = NPI_ENABLE;
+		if (str == _T("No")) {
+			auth = NPI_DISABLE;
+		}
+		/*Get LTK*/
+		CMFCPropertyGridProperty* pProp1 = m_gridCtrl.GetProperty(1);
+		str = pProp1->GetValue();
+		UINT8 ltk[128] = { 0 };
+		size_t LtkLen = wstr2hex(str, (PUINT8)ltk, 128, _T("FF:"));
+		/*Get DIV*/
+		CMFCPropertyGridProperty* pProp2 = m_gridCtrl.GetProperty(2);
+		str = pProp2->GetValue();
+		LONG div = wcstol(str, NULL, 16);
+		/*Get RAND*/
+		CMFCPropertyGridProperty* pProp3 = m_gridCtrl.GetProperty(3);
+		str = pProp3->GetValue();
+		UINT8 rand[128] = { 0 };
+		wstr2hex(str, (PUINT8)rand, 128, _T("FF:"));
+		theApp.m_cmdHandle->GAP_Bond(conHandle, auth, ltk, (UINT16)div, rand, LtkLen);
 	}
 	*pResult = 0;
 }
@@ -245,4 +282,33 @@ void CmdTab4_Dlg::Show_GAP_ConfigDeviceAddr(void)
 	        _T("(6 Bytes)-BDA of the intended address."));
 	m_gridCtrl.AddProperty(pProp2);
 
+}
+
+void CmdTab4_Dlg::Show_GAP_Bond(void)
+{
+	CMFCPropertyGridProperty* pProp1 = new CMFCPropertyGridProperty(
+		_T("authenticated"),
+		_T("No"),
+		_T("(1 Byte)-Yes if bond was authenticated."));
+	pProp1->AddOption(_T("Yes"));
+	pProp1->AllowEdit(FALSE);
+	m_gridCtrl.AddProperty(pProp1);
+
+	CMFCPropertyGridProperty* pProp2 = new CMFCPropertyGridProperty(
+		_T("secInfo_LTK"),
+		_T("00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00"),
+		_T("(16 Bytes)-Long Term Key."));
+	m_gridCtrl.AddProperty(pProp2);
+
+	CMFCPropertyGridProperty* pProp3 = new CMFCPropertyGridProperty(
+		_T("secInfo_DIV"),
+		_T("0"),
+		_T("(2 Bytes)-Diversifier."));
+	m_gridCtrl.AddProperty(pProp3);
+
+	CMFCPropertyGridProperty* pProp4 = new CMFCPropertyGridProperty(
+		_T("secInfo_RAND"),
+		_T("11:22:33:44:55:66:77:88"),
+		_T("(8 Bytes)-LTK Random Paring."));
+	m_gridCtrl.AddProperty(pProp4);
 }

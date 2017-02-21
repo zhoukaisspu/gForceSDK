@@ -183,18 +183,20 @@ typedef struct {
 	UINT8 reason_hi;
 } sL2capCmdRejEvt;
 
+typedef void(*PCallBack)(const PUINT8 pdata, UINT16 len);
+
 class NPI_EVT : public Runnable
 {
+private:
+	NPI_Dict < UINT16, PCallBack, TOTAL_OPCODE_COUNTS > m_EvtCB;
 public:
-	void(*m_EvtCB[TOTAL_MSG_COUNT])(const PUINT8 pBuf, UINT16 len);
-
-public:
-	NPI_EVT();
+	NPI_EVT(HANDLE hdl);
 	~NPI_EVT();
 	void Run();
-	BOOL RegistCallBack(void(*pFun)(const PUINT8 pBuf, UINT16 len), UINT16 msg);
+	BOOL RegistCallBack(const HANDLE, UINT16 evt);
 
 private:
+	HANDLE comHdl;
 	INT16 GetPosFromMsg(INT16 msg);
 	void Hci_Status_Event(const PUINT8 pBuf, UINT16 len);
 	void Gap_Status_Event(const PUINT8 pBuf, UINT16 len);

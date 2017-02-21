@@ -1,6 +1,8 @@
 #include"stdafx.h"
 #include "OYM_Database.h"
 #include "oym_types.h"
+using namespace tinyxml2;
+using namespace std;
 
 OYM_CHAR int2char(OYM_UINT8 data)
 {
@@ -33,7 +35,7 @@ OYM_VOID arry2str(OYM_PUINT8 array, OYM_UINT32 length, char* result)
 OYM_UINT8 char2int8(const char* data)
 {
 	OYM_UINT8 result = '#';
-	//printf("input: %c   ", *data);
+	//LOGDEBUG("input: %c   ", *data);
 	if ((*data) >= '0' && (*data) <= '9')
 	{
 		result = (*data) - '0';
@@ -44,7 +46,7 @@ OYM_UINT8 char2int8(const char* data)
 		result = (*data) - 'A' + 10;
 	}
 
-	//printf("output: %x \n", result);
+	//LOGDEBUG("output: %x \n", result);
 	return result;
 }
 
@@ -57,10 +59,7 @@ OYM_VOID str2arry(const char* str, OYM_PUINT8 array)
 	{
 		array[i] = (char2int8(str + 2 * i) << 4);
 		array[i] += char2int8(str + 2 * i + 1);
-		printf("%02x", array[i]);
 	}
-
-	printf("\n");
 }
 
 OYM_Database::OYM_Database(OYM_PUINT8 address, OYM_UINT8 length)
@@ -69,21 +68,24 @@ OYM_Database::OYM_Database(OYM_PUINT8 address, OYM_UINT8 length)
 	mFilename = (char*)malloc(length * 2 + 1);
 	arry2str(address, length, mFilename);
 
+	this->mLog = new OYM_Log(MODUAL_TAG_DB, sizeof(MODUAL_TAG_DB));
 	mDoc = new OYMXMLDocument;
 	status = mDoc->LoadFile((const char*)mFilename);
 	if (status == OYM_SUCCESS)
 	{
-		printf("LoadFile success!!! \n");
+		LOGDEBUG("LoadFile success!!! \n");
 	} 
 	else
 	{
-		printf("LoadFile fail, file not exist!!! \n");
+		LOGDEBUG("LoadFile fail, file not exist!!! \n");
 	}
 }
 
 OYM_Database::~OYM_Database()
 {
 	free(mFilename);
+
+	delete mLog;
 
 	//do not need to delete mDoc.
 }
@@ -95,7 +97,7 @@ OYM_STATUS OYM_Database::DeleteNode(const char* NodeName)
 	status = mDoc->LoadFile((const char*)mFilename);
 	if (status == OYM_FAIL)
 	{
-		printf("Load File Error!! \n");
+		LOGDEBUG("Load File Error!! \n");
 		return status;
 	}
 
@@ -103,7 +105,6 @@ OYM_STATUS OYM_Database::DeleteNode(const char* NodeName)
 	XMLElement *Temp;
 	while (DeletetEle != NULL)
 	{
-		printf("name of Node is %s \n", DeletetEle->Name());
 		if (0 == memcmp(DeletetEle->Name(), NodeName, strlen(NodeName)))
 		{
 			break;
@@ -119,7 +120,7 @@ OYM_STATUS OYM_Database::DeleteNode(const char* NodeName)
 	{
 		XMLNode *DeleteNode = DeletetEle->ToElement();
 
-		printf("name of deleting is %s \n", DeletetEle->Name());
+		LOGDEBUG("name of deleting is %s \n", DeletetEle->Name());
 
 		mDoc->DeleteNode(DeleteNode);
 		mDoc->SaveFile((const char*)mFilename);
@@ -127,7 +128,7 @@ OYM_STATUS OYM_Database::DeleteNode(const char* NodeName)
 	}
 	else
 	{
-		printf("No Node found to delete!! \n");
+		LOGDEBUG("No Node found to delete!! \n");
 	}
 
 	return status;
@@ -163,14 +164,14 @@ OYM_STATUS OYM_Database::LoadLinkKey(OYM_PUINT8 keysize, OYM_PUINT8 key, OYM_PUI
 	status = mDoc->LoadFile((const char*)mFilename);
 	if (status == OYM_SUCCESS)
 	{
-		printf("LoadFile success!!! \n");
+		LOGDEBUG("LoadFile success!!! \n");
 		XMLElement *rootEle = mDoc->RootElement();	
 		XMLElement *Temp;
 		while (rootEle != NULL)
 		{
 			if (0 == memcmp(rootEle->Name(), SECURITYINFOMATION, strlen(SECURITYINFOMATION)))
 			{
-				printf("SecurityInfomation found \n");
+				LOGDEBUG("SecurityInfomation found \n");
 				result = OYM_SUCCESS;
 				XMLElement *child = rootEle->FirstChildElement();
 				XMLElement *next_child;
@@ -188,20 +189,20 @@ OYM_STATUS OYM_Database::LoadLinkKey(OYM_PUINT8 keysize, OYM_PUINT8 key, OYM_PUI
 					else if (0 == memcmp(child->Name(), RAND, strlen(RAND)))
 					{
 						attr = child->FirstAttribute();
-						printf("First child Element attribute name = %s attribute value = %s\n", attr->Name(), attr->Value());
+						LOGDEBUG("attribute name = %s attribute value = %s\n", attr->Name(), attr->Value());
 						str2arry(attr->Value(), rand);
 					}
 					else if (0 == memcmp(child->Name(), LTK, strlen(LTK)))
 					{
 						attr = child->FirstAttribute();
-						printf("First child Element attribute name = %s attribute value = %s\n", attr->Name(), attr->Value());
+						LOGDEBUG("attribute name = %s attribute value = %s\n", attr->Name(), attr->Value());
 						str2arry(attr->Value(), key);
 					}
 
 					next_child = child->NextSiblingElement();
 					child = next_child;
 				}
-				printf("Load link key done!! \n");
+				LOGDEBUG("Load link key done!! \n");
 			}
 
 			Temp = rootEle->NextSiblingElement();
@@ -210,7 +211,7 @@ OYM_STATUS OYM_Database::LoadLinkKey(OYM_PUINT8 keysize, OYM_PUINT8 key, OYM_PUI
 	}
 	else
 	{
-		printf("LoadFile fail, file not exist!!! \n");
+		LOGDEBUG("LoadFile fail, file not exist!!! \n");
 		result = OYM_FAIL;
 	}
 
@@ -240,7 +241,7 @@ OYM_STATUS OYM_Database::SaveLinkKey(OYM_UINT8 keysize, OYM_PUINT8 key, OYM_UINT
 	XMLElement * SecurityInfomation = mDoc->NewElement(SECURITYINFOMATION);
 	mDoc->LinkEndChild(SecurityInfomation);
 
-	printf("start to save linkkey... \n");
+	LOGDEBUG("start to save linkkey... \n");
 	XMLElement * KeySize = mDoc->NewElement(KEYSIZE);
 	KeySize->SetAttribute(KEYSIZE, keysize);
 	KeySize->SetAttribute(DIV, div);
@@ -258,7 +259,7 @@ OYM_STATUS OYM_Database::SaveLinkKey(OYM_UINT8 keysize, OYM_PUINT8 key, OYM_UINT
 
 	mDoc->SaveFile((const char*)mFilename);
 
-	printf("linkkey successful... \n");
+	LOGDEBUG("linkkey successful... \n");
 	return OYM_SUCCESS;
 }
 
@@ -425,7 +426,7 @@ OYM_STATUS OYM_Database::SaveService(OYM_Service* service)
 	OYM_PRISERVICE* PrimaryService;
 	for (int i = 0; i < service->mNumOfPrivateService; i++ )
 	{
-		printf("SaveService index = %d", i);
+		LOGDEBUG("SaveService index = %d \n", i);
 		PrimaryService = service->FindPriSvcbyIndex(i);
 		SavePrimaryService(GattSvc, PrimaryService);
 	}
@@ -434,12 +435,10 @@ OYM_STATUS OYM_Database::SaveService(OYM_Service* service)
 	return OYM_SUCCESS;
 }
 
-void GetUUIDFromChar(OYM_UUID *uuid, const char* value)
+void OYM_Database::GetUUIDFromChar(OYM_UUID *uuid, const char* value)
 {
 	UINT8 len = strlen(value);
 	UINT8 data[2];
-	printf("string = %s \n", value);
-	printf("len = %d \n", len);
 
 	if (len == 0x04)
 	{
@@ -460,7 +459,7 @@ void GetUUIDFromChar(OYM_UUID *uuid, const char* value)
 	}
 }
 
-XMLAttribute* GetAttibuteByName(XMLElement *element, const char* name)
+XMLAttribute* OYM_Database::GetAttibuteByName(XMLElement *element, const char* name)
 {
 	XMLAttribute* result = NULL;
 	const XMLAttribute* a = 0;
@@ -472,7 +471,7 @@ XMLAttribute* GetAttibuteByName(XMLElement *element, const char* name)
 	return result;
 }
 
-void GetCharacteristicDescriptor(XMLElement *chara, OYM_CHARACTERISTIC* charcteristic)
+void OYM_Database::GetCharacteristicDescriptor(XMLElement *chara, OYM_CHARACTERISTIC* charcteristic)
 {
 	OYM_UINT8 index = 0;
 	OYM_UINT16 handle = 0;
@@ -483,7 +482,6 @@ void GetCharacteristicDescriptor(XMLElement *chara, OYM_CHARACTERISTIC* charcter
 
 	while (chrades != NULL)
 	{
-		printf(" %s \n", chrades->Name());
 		if (0 == memcmp(chrades->Name(), CHARACTERISTICDES, strlen(CHARACTERISTICDES)))
 		{
 			attribute = chrades->FirstAttribute();
@@ -500,7 +498,7 @@ void GetCharacteristicDescriptor(XMLElement *chara, OYM_CHARACTERISTIC* charcter
 			if (attribute != NULL)
 			{
 				handle = attribute->IntValue();
-				printf("descriptor handle = %d \n", handle);
+				LOGDEBUG("descriptor handle = %d \n", handle);
 			}
 
 			OYM_CHAR_DESCRIPTOR * descriptor = new OYM_CHAR_DESCRIPTOR(handle, index);
@@ -533,17 +531,15 @@ void GetCharacteristicDescriptor(XMLElement *chara, OYM_CHARACTERISTIC* charcter
 	return;
 }
 
-void GetCharacteristicValue(XMLElement *chara, OYM_CHARACTERISTIC* charcteristic)
+void OYM_Database::GetCharacteristicValue(XMLElement *chara, OYM_CHARACTERISTIC* charcteristic)
 {
 	XMLElement *chracvalue = chara;
 	XMLElement *temp;
 	const XMLAttribute* attribute;
 	const char* value;
 
-	printf("GetCharacteristicValue \n");
 	while (chracvalue != NULL)
 	{
-		printf("Node name is %s", chracvalue->Name());
 		if (0 == memcmp(chracvalue->Name(), CHARACTERISTICVALUE, strlen(CHARACTERISTICVALUE)))
 		{
 			attribute = chracvalue->FirstAttribute();
@@ -568,7 +564,7 @@ void GetCharacteristicValue(XMLElement *chara, OYM_CHARACTERISTIC* charcteristic
 	}
 }
 
-OYM_CHARACTERISTIC* LoadCharacteristic(XMLElement *chara)
+OYM_CHARACTERISTIC* OYM_Database::LoadCharacteristic(XMLElement *chara)
 {
 	OYM_UINT16 value_handle = 0;
 	OYM_UINT16 handle = 0;
@@ -641,15 +637,13 @@ OYM_CHARACTERISTIC* LoadCharacteristic(XMLElement *chara)
 	return charcteristic;
 }
 
-void GetCharacteristic(OYM_PRISERVICE* service, XMLElement *primaryservice)
+void OYM_Database::GetCharacteristic(OYM_PRISERVICE* service, XMLElement *primaryservice)
 {
 	XMLElement *child = primaryservice;
 	XMLElement *temp;
 
-	printf("GetCharacteristic \n");
 	while (child != NULL)
 	{
-		printf("Node name is %s \n", child->Name());
 		if (0 == memcmp(child->Name(), CHARACTERISTIC, strlen(CHARACTERISTIC)))
 		{
 			OYM_CHARACTERISTIC* characterisc = LoadCharacteristic(child);
@@ -664,7 +658,7 @@ void GetCharacteristic(OYM_PRISERVICE* service, XMLElement *primaryservice)
 	}
 }
 
-OYM_INCSERVICE* LoadIncludedService(XMLElement *includeservice)
+OYM_INCSERVICE* OYM_Database::LoadIncludedService(XMLElement *includeservice)
 {
 	OYM_UINT16 start_handle = 0;
 	OYM_UINT16 end_handle = 0;
@@ -712,15 +706,14 @@ OYM_INCSERVICE* LoadIncludedService(XMLElement *includeservice)
 	return included_service;
 }
 
-void GetIncludedService(OYM_PRISERVICE* service, XMLElement *element)
+void OYM_Database::GetIncludedService(OYM_PRISERVICE* service, XMLElement *element)
 {
 	XMLElement *child = element;
 	XMLElement *temp;
-	printf("get included service \n");
+	LOGDEBUG("get included service \n");
 	
 	while (child != NULL)
 	{
-		printf("Node name = %s \n", child->Name());
 		if (0 == memcmp(child->Name(), INCLUDEDSERVICE, strlen(INCLUDEDSERVICE)))
 		{
 			OYM_INCSERVICE* includedsevice = LoadIncludedService(child);
@@ -732,7 +725,7 @@ void GetIncludedService(OYM_PRISERVICE* service, XMLElement *element)
 	}
 }
 
-OYM_PRISERVICE* LoadPrimaryService(XMLElement *primaryservice)
+OYM_PRISERVICE* OYM_Database::LoadPrimaryService(XMLElement *primaryservice)
 {	
 	OYM_UINT16 start_handle = 0;
 	OYM_UINT16 end_handle = 0;
@@ -800,14 +793,14 @@ OYM_PRISERVICE* LoadPrimaryService(XMLElement *primaryservice)
 	return service;
 }
 
-XMLElement *FindElementByName(XMLElement *element, const char* name)
+XMLElement* OYM_Database::FindElementByName(XMLElement *element, const char* name)
 {
 	XMLElement *Element = element;
 	XMLElement *Temp;
 	XMLElement *result = NULL;
 	while (Element != NULL)
 	{
-		printf("name of Node is %s \n", Element->Name());
+		LOGDEBUG("name of Node is %s \n", Element->Name());
 		if (0 == memcmp(Element->Name(), name, strlen(name)))
 		{
 			result = Element;
@@ -845,7 +838,7 @@ OYM_STATUS OYM_Database::LoadService(OYM_Service* service)
 	XMLElement *TempPrimaryService;
 	while (PrimaryService != NULL)
 	{
-		printf("Process the %d th primaryservice\n", index);
+		LOGDEBUG("Process the %d th primaryservice \n", index);
 		OYM_PRISERVICE* priSvc = LoadPrimaryService(PrimaryService);
 		service->mPrivateService.push_front(priSvc);
 

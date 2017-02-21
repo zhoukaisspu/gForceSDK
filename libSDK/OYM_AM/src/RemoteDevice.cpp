@@ -451,6 +451,7 @@ OYM_STATUS OYM_RemoteDevice::W4GattPriSvcStateProcessMessage(OYM_DEVICE_EVENT ev
 			mCCD = 0;
 			ProcessCharacteristicConfiguration(mCPS, mCC, mCCD);
 			mState = OYM_DEVICE_STATE_GATT_READ_CHARC_DESCRIPTOR_VALUE;
+			mNeedSaveService = OYM_FALSE;
 		}
 		else
 		{
@@ -1007,7 +1008,10 @@ OYM_STATUS OYM_RemoteDevice::W4GattReadCharcDesValueStateProcessMessage(OYM_DEVI
 			mCCD += 1;
 			if (OYM_SUCCESS == ProcessCharacteristicConfiguration(mCPS, mCC, mCCD))
 			{
-				mDatabase->SaveService(&mService);
+				if (mNeedSaveService == OYM_TRUE)
+				{
+					mDatabase->SaveService(&mService);
+				}	
 			}
 			break;
 		}
@@ -1018,7 +1022,10 @@ OYM_STATUS OYM_RemoteDevice::W4GattReadCharcDesValueStateProcessMessage(OYM_DEVI
 			mCCD += 1;
 			if (OYM_SUCCESS == ProcessCharacteristicConfiguration(mCPS, mCC, mCCD))
 			{
-				mDatabase->SaveService(&mService);
+				if (mNeedSaveService == OYM_TRUE)
+				{
+					mDatabase->SaveService(&mService);
+				}
 			}
 			break;
 		}

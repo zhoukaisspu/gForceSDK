@@ -55,6 +55,7 @@ public:
 	bool Terminate(unsigned long ExitCode);
 
 	unsigned int GetThreadID();
+	HANDLE GetEvent(void);
 	std::string GetThreadName();
 	void SetThreadName(std::string ThreadName);
 	void SetThreadName(const char* ThreadName);
@@ -64,6 +65,7 @@ private:
 
 private:
 	HANDLE m_handle;
+	HANDLE m_event;
 	Runnable* const m_pRunnable;
 	unsigned int m_ThreadID;
 	std::string m_ThreadName;

@@ -4,18 +4,19 @@
 #include"npi_cmd.h"
 #include"npi_evt.h"
 
-
-Log::Log(DWORD com_id, DWORD evt_id)
+Log::Log(HANDLE hdl)
 {
-	comThreadID = com_id;
-	evtThreadID = evt_id;
+	comHdl = hdl;
 #ifdef MFC_GUI
 	cf.cbSize = sizeof(CHARFORMAT2);
 #endif
+
 }
+
 
 Log::~Log()
 {
+	comHdl = NULL;
 }
 
 void Log::Run()
@@ -23,8 +24,12 @@ void Log::Run()
 	MSG     msg;
 	PUINT8  buf;
 	UINT8   size;
+	HANDLE hThread = ((Com *)comHdl)->logThread;
+	HANDLE hEvent = ((Com *)comHdl)->logThread->GetEvent();
+	HANDLE hndEvts[] = { hEvent };
 	while (1) {
-		if (GetMessage(&msg, 0, 0, 0)) { //get msg from message queue
+
+		if (GetMessage(&msg, 0, 0, 0)){//, PM_REMOVE)) { //get msg from message queue
 			if ((msg.message >= LOG_MSG) && (msg.message <= LOG_MSG + 0xFF)) {
 				buf = (PUINT8)msg.wParam;
 				size = (UINT8)msg.lParam;
@@ -35,10 +40,18 @@ void Log::Run()
 				case HCI_EVENT_PACKET:
 					Analyze_RX(buf, size);
 					break;
+				case HCI_EXIT_PACKET:
+					::LogI(_T("Log Thread Exit!\n"));
+					delete buf;
+					CloseHandle(hEvent);
+					CloseHandle(hThread);
+					return;
+					break;
 				default:
 					Log_printf(L"LOG Err\n");
 					break;
 				}
+				delete buf;
 			} else {
 				Log_printf(L"Log:Err msg type=%4X !\n", msg.message);
 			}
@@ -68,7 +81,6 @@ void Log::Analyze_TX(PUINT8 buf, UINT8 size)
 	Log_printf(L"Data Lenth		: 0x%02X\n", pCmd->len);
 
 	Sprintf_DumpTx(buf, size);
-	delete buf;
 }
 
 void Log::Analyze_RX(PUINT8 buf, UINT8 size)
@@ -118,6 +130,7 @@ void Log::Analyze_RX(PUINT8 buf, UINT8 size)
 			Analyze_GAP_Event(buf, size);
 			break;
 		default:
+			LogE(L"Analyze_RX:event type error!\n");
 			break;
 		}
 	}
@@ -206,25 +219,12 @@ void Log::Analyze_LL_Event(PUINT8 buf, UINT8 size)
 	case HCI_EXT_GET_CONNECTION_INFO_EVENT:
 		Log_printf(L"OpCode			: 0x%04X\n", opCode);
 		Sprintf_DumpRx(buf, size);
-		/*send status message to com-thread*/
-		while (!PostThreadMessage(evtThreadID, HCI_STATUS_MSG, pEvt->status, 0)) {
-			LogW(L"Post RX_STATUS_MSG Err:%d\n", GetLastError());
-			Sleep(500);
-		}
-		/*delete heap buffer ?*/
-		delete buf;
 		break;
 
 	case HCI_EXT_DECRYPT_EVENT:
 		Log_printf(L"Decrypted Data		: ");
 		Sprintf_HexData((PUINT8)pEvt->data, pEvt->len - 3);
 		Sprintf_DumpRx(buf, size);
-		/*send event message to evt-thread and delete heap in that thread*/
-		while (!PostThreadMessage(evtThreadID, HCI_DECRYPT_MSG, (WPARAM)&pEvt->status,
-		                          pEvt->len - 2)) {
-			LogW(L"Post HCI_DECRYPT_MSG Err:%d\n", GetLastError());
-			Sleep(500);
-		}
 		break;
 	default:
 		break;
@@ -282,19 +282,10 @@ void Log::Analyze_L2CAP_Event(PUINT8 buf, UINT8 size)
 		break;
 	}
 	Sprintf_DumpRx(buf, size);
-	if (msg_type != 0) {
-		while (!PostThreadMessage(evtThreadID, msg_type, (WPARAM)&pEvt->status,
-		                          pEvt->len - 2)) {
-			LogW(L"Post L2CAP_MSG Err:%d, Type:0x%x\n", GetLastError(), msg_type);
-			Sleep(500);
-		}
-	}
-
 }
 
 void Log::Analyze_ATT_Event(PUINT8 buf, UINT8 size)
 {
-	BOOL del_flag = TRUE;
 	sNpiEvt* pEvt = (sNpiEvt*)buf;
 	UINT16 event = BUILD_UINT16(pEvt->event_lo, pEvt->event_hi);
 	UINT16 i, msg_type = 0;
@@ -435,13 +426,6 @@ void Log::Analyze_ATT_Event(PUINT8 buf, UINT8 size)
 		break;
 	}
 	Sprintf_DumpRx(buf, size);
-	if (msg_type != 0) {
-		while (!PostThreadMessage(evtThreadID, msg_type, (WPARAM)&pEvt->status,
-		                          pEvt->len - 2)) {
-			LogW(L"Post ATT_MSG Err:%d, Ttpe:0x%x\n", GetLastError(), msg_type);
-			Sleep(500);
-		}
-	}
 }
 
 void Log::Analyze_GATT_Event(PUINT8 buf, UINT8 size)
@@ -451,7 +435,6 @@ void Log::Analyze_GATT_Event(PUINT8 buf, UINT8 size)
 
 void Log::Analyze_GAP_Event(PUINT8 buf, UINT8 size)
 {
-	BOOL del_flag = FALSE;
 	sNpiEvt* pEvt = (sNpiEvt*)buf;
 	UINT16 event = BUILD_UINT16(pEvt->event_lo, pEvt->event_hi);
 	UINT16 opCode = BUILD_UINT16(pEvt->data[0], pEvt->data[1]);
@@ -494,7 +477,6 @@ void Log::Analyze_GAP_Event(PUINT8 buf, UINT8 size)
 		break;
 	case HCI_EXT_GAP_MAKE_DISCOVERABLE_DONE_EVENT:
 	case HCI_EXT_GAP_END_DISCOVERABLE_DONE_EVENT:
-		del_flag = TRUE;
 		break;
 	case HCI_EXT_GAP_LINK_ESTABLISHED_EVENT:
 		Log_printf(L"DevAddrType		: 0x%02X\n", gapMsg->EstLink_Evt.devAddrType);
@@ -584,22 +566,10 @@ void Log::Analyze_GAP_Event(PUINT8 buf, UINT8 size)
 		break;
 	}
 	Sprintf_DumpRx(buf, size);
-	if (msg_type != 0) {
-		/*send event message to evt-thread*/
-		while (!PostThreadMessage(evtThreadID, msg_type, (WPARAM)&pEvt->status,
-		                          pEvt->len - 2)) {
-			LogW(L"Post GAP EVENT Err:%d, Type:0x%x\n", GetLastError(), msg_type);
-			Sleep(500);
-		}
-	}
-	if (del_flag) {
-		delete buf;
-	}
 }
 
 void Log::Analyze_LE_Hci_Event(PUINT8 buf, UINT8 size)
 {
-	BOOL del_flag = FALSE;
 	sHciEvt* pEvt = (sHciEvt*)buf;
 	UINT16 opCode = BUILD_UINT16(pEvt->op_lo, pEvt->op_hi);
 	UINT16 msg_type = 0;
@@ -612,8 +582,6 @@ void Log::Analyze_LE_Hci_Event(PUINT8 buf, UINT8 size)
 	case HCI_LE_REMOVE_WHITE_LIST:
 	case HCI_LE_RECEIVER_TEST:
 	case HCI_LE_TRANSMITTER_TEST:
-		/*delete heap buffer ?*/
-		del_flag = TRUE;
 		break;
 	case HCI_READ_LOCAL_SUPPORTED_FEATURES:
 		Log_printf(L"Feature Set		: ");
@@ -661,18 +629,6 @@ void Log::Analyze_LE_Hci_Event(PUINT8 buf, UINT8 size)
 	}
 
 	Sprintf_DumpRx(buf, size);
-	/*Message to user*/
-	if (msg_type != 0) {
-		/*send event message to evt-thread*/
-		while (!PostThreadMessage(evtThreadID, msg_type, (WPARAM)&pEvt->status,
-		                          pEvt->len - 3)) {
-			LogW(L"Post HCI LE EVENT Err:%d, Type:0x%x\n", GetLastError(), msg_type);
-			Sleep(500);
-		}
-	}
-	if (del_flag) {
-		delete buf;
-	}
 }
 
 size_t Log::Log_printf(const wchar_t* fmt, ...)
@@ -759,7 +715,15 @@ size_t LogI(const wchar_t* fmt, ...)
 	fwprintf_s(stdout, buf);
 #endif
 #ifdef MFC_GUI
-	AfxMessageBox(buf);
+	//CHARFORMAT2 format;
+	//format.cbSize = sizeof(CHARFORMAT2);
+	//format.dwMask = CFM_COLOR | CFM_SIZE;// | CFM_BOLD | CFM_BACKCOLOR;
+	//format.dwEffects &= ~CFE_AUTOCOLOR;
+	//format.crTextColor = RGB(120, 120, 120);
+	//format.yHeight = 200;
+	theApp.m_logView->m_richEdit.SetSel(-1, -1);
+	//theApp.m_logView->m_richEdit.SetSelectionCharFormat(format);
+	theApp.m_logView->m_richEdit.ReplaceSel((LPCTSTR)buf);
 #endif
 
 	va_end(argp);

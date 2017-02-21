@@ -45,6 +45,7 @@ bool CThread::Start(bool bSuspend)
 		m_handle = (HANDLE)_beginthreadex(NULL, 0, StaticThreadFunc, this, 0,
 		                                  &m_ThreadID);
 	}
+	m_event = CreateEvent(NULL, TRUE, FALSE, NULL);
 	m_bRun = (NULL != m_handle);
 	return m_bRun;
 }
@@ -92,8 +93,9 @@ bool CThread::Terminate(unsigned long ExitCode)
 	if (NULL == m_handle || !m_bRun) {
 		return true;
 	}
-	if (::TerminateThread(m_handle, ExitCode)) {
-		::CloseHandle(m_handle);
+	if (::SetEvent(m_event)) {
+		//::CloseHandle(m_event);
+		//::CloseHandle(m_handle);
 		return true;
 	}
 	return false;
@@ -104,6 +106,10 @@ unsigned int CThread::GetThreadID()
 	return m_ThreadID;
 }
 
+HANDLE CThread::GetEvent(void)
+{
+	return m_event;
+}
 std::string CThread::GetThreadName()
 {
 	return m_ThreadName;

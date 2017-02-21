@@ -1,87 +1,64 @@
 #include"stdafx.h"
-
+#include"npi_cmd.h"
 #include"npi_tl.h"
-#include "npi_cmd.h"
+#include"log.h"
 /*---------*/
 /*TX THREAD
 /*---------*/
-NPI_TX::NPI_TX(HANDLE hdl, DWORD logThread)
+NPI_TX::NPI_TX(HANDLE hdl)
 {
-	m_com = hdl;
-	m_log = logThread;
+	comHdl = hdl;
 }
 
 NPI_TX::~NPI_TX()
 {
+	comHdl = NULL;
 }
 
 void NPI_TX::Run(void)
 {
-	enum {
-		WR_TYPE_STATE,
-		WR_OPCODE_STATE,
-		WR_LEN_STATE,
-		WR_OTHERS
-	};
-	UINT8 state = WR_TYPE_STATE;
-	UINT8 buf[MAX_TX_SIZE];
-	INT16 i;
 	INT8 totalLen;
 	DWORD dwBytesWritten = 0;
-	PUINT8 pBuf = NULL;
+	sCMD* pCmd = NULL;
+	HANDLE hThread = ((Com *)comHdl)->txThread;
+	HANDLE hEvent = ((Com *)comHdl)->txThread->GetEvent();
 
 	OVERLAPPED osWrite;
 	memset(&osWrite, 0, sizeof(OVERLAPPED));
 	osWrite.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	while (1) {
-		switch (state) {
-		case WR_TYPE_STATE:
-			buf[0] = m_cmdQue.Pop();
-			state = WR_OPCODE_STATE;
-			break;
-		case WR_OPCODE_STATE:
-			buf[1] = m_cmdQue.Pop();
-			buf[2] = m_cmdQue.Pop();
-			state = WR_LEN_STATE;
-			break;
-		case WR_LEN_STATE:
-			buf[3] = m_cmdQue.Pop();
-			totalLen = buf[3] + CMD_HEAD_LEN;
-			pBuf = new UINT8[totalLen];
-			if (pBuf) {
-				pBuf[0] = buf[0];
-				pBuf[1] = buf[1];
-				pBuf[2] = buf[2];
-				pBuf[3] = buf[3];
-				state = WR_OTHERS;
-			} else {
-				state = WR_TYPE_STATE;
-			}
-			break;
-		case WR_OTHERS:
-			for (i = 0; i < buf[3]; i++) {
-				pBuf[4 + i] = m_cmdQue.Pop();
-			}
-
-			if (!WriteFile(m_com, pBuf, totalLen, &dwBytesWritten, &osWrite)) {
-				if (GetLastError() == ERROR_IO_PENDING) {
-					//GetOverlappedResult(m_com, &osWrite, &dwBytesWritten, true);
-				}
-
-			}
-			while (!PostThreadMessage(m_log, GetLogMsg(), (WPARAM)pBuf, totalLen)) {
-				LogE(L"Post LOG_MSG Err:%d\n", GetLastError());
-				Sleep(500);
-			}
-			state = WR_TYPE_STATE;
-			break;
-		default:
-			break;
+		pCmd = m_cmdQue.Pop();
+		totalLen = pCmd->len + CMD_HEAD_LEN;
+		/*send to log thread*/
+		PUINT8 pLog = new UINT8[totalLen];
+		memcpy_s(pLog, totalLen, pCmd, totalLen);
+		while (!PostThreadMessage(((Com*)comHdl)->logThreadID, GetLogMsg(),
+			(WPARAM)pLog, totalLen)) {
+			LogE(L"TX:Post LOG_MSG Err:%d\n", GetLastError());
+			Sleep(500);
 		}
+		if (pCmd->type == HCI_EXIT_PACKET){
+			::LogI(_T("TX Thread Exit!\n"));
+			CloseHandle(hEvent);
+			CloseHandle(hThread);
+			delete pCmd;
+			return;
+		}
+		/*write to uart*/
+		if (!WriteFile(((Com*)comHdl)->com_file, pCmd, totalLen, &dwBytesWritten,
+		               &osWrite)) {
+			if (GetLastError() == ERROR_IO_PENDING) {
+				GetOverlappedResult(((Com*)comHdl)->com_file, &osWrite, &dwBytesWritten, true);
+				if (dwBytesWritten != totalLen){
+					LogW(_T("Written Bytes != Total Len\n"));
+				}
+			}				
+		}
+		delete pCmd;
 	}
 }
 
-GForceQueue<UINT8, CMD_BUF_SIZE>* NPI_TX::Get_Queue(void)
+NPI_Queue<sCMD*, CMD_QUEUE_SIZE>* NPI_TX::Get_Queue(void)
 {
 	return &m_cmdQue;
 }
@@ -91,50 +68,17 @@ GForceQueue<UINT8, CMD_BUF_SIZE>* NPI_TX::Get_Queue(void)
 /*RX THREAD
 /*---------*/
 
-NPI_RX::NPI_RX(HANDLE hdl, DWORD logThread)
+NPI_RX::NPI_RX(HANDLE hdl)
 {
-	m_com = hdl;
-	m_log = logThread;
+	comHdl = hdl;
 }
 
 NPI_RX::~NPI_RX()
 {
+	comHdl = NULL;
 }
 
 void NPI_RX::Run(void)
-{
-
-	OVERLAPPED osWait;
-	memset(&osWait, 0, sizeof(OVERLAPPED));
-	osWait.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	DWORD dwEvtMask;
-
-	while (1) {
-		if (WaitCommEvent(m_com, &dwEvtMask, &osWait)) {
-			if (dwEvtMask & EV_RXCHAR) {
-				if (!this->readBlock()) {
-					LogE(L"Read Block£¡");
-				}
-			}
-		} else {
-			if (GetLastError() == ERROR_IO_PENDING) {
-				WaitForSingleObject(osWait.hEvent, INFINITE);
-				if (dwEvtMask & EV_RXCHAR) {
-					if (!this->readBlock()) {
-						LogE(L"Read Block£¡");
-					}
-				}
-			}
-		}
-	}
-
-
-	while (1) {
-
-	}
-}
-
-DWORD NPI_RX::readBlock(void)
 {
 	enum {
 		READ_TYPE_STATE,
@@ -151,21 +95,30 @@ DWORD NPI_RX::readBlock(void)
 	UINT8 dataLen;
 	DWORD offset;
 	DWORD remaining;
-
+	sEvt*  pEvt = NULL;
+	HANDLE hThread = ((Com *)comHdl)->rxThread;
+	HANDLE hEvent = ((Com *)comHdl)->rxThread->GetEvent();
 	OVERLAPPED osRead;
 	memset(&osRead, 0, sizeof(OVERLAPPED));
 	osRead.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
 	while (1) {
+		if (WaitForSingleObject(hEvent, 0) == WAIT_OBJECT_0){
+			::LogI(_T("RX Thread Exit!\n"));
+			CloseHandle(hEvent);
+			CloseHandle(hThread);
+			return;
+		}
+
 		switch (state) {
 		case READ_TYPE_STATE:
-			if (ReadFile(m_com, &type, 1, &nLenOut, &osRead)) {
+			if (ReadFile(((Com*)comHdl)->com_file, &type, 1, &nLenOut, &osRead)) {
 				if (nLenOut) {
 					state = READ_EVT_CODE;
 				}
 			} else {
 				if (GetLastError() == ERROR_IO_PENDING) {
-					GetOverlappedResult(m_com, &osRead, &nLenOut, true);
+					GetOverlappedResult(((Com*)comHdl)->com_file, &osRead, &nLenOut, true);
 					if (nLenOut) {
 						state = READ_EVT_CODE;
 					}
@@ -173,13 +126,13 @@ DWORD NPI_RX::readBlock(void)
 			}
 			break;
 		case READ_EVT_CODE:
-			if (ReadFile(m_com, &evtCode, 1, &nLenOut, &osRead)) {
+			if (ReadFile(((Com*)comHdl)->com_file, &evtCode, 1, &nLenOut, &osRead)) {
 				if (nLenOut) {
 					state = READ_DATA_LEN;
 				}
 			} else {
 				if (GetLastError() == ERROR_IO_PENDING) {
-					GetOverlappedResult(m_com, &osRead, &nLenOut, true);
+					GetOverlappedResult(((Com*)comHdl)->com_file, &osRead, &nLenOut, true);
 					if (nLenOut) {
 						state = READ_DATA_LEN;
 					}
@@ -187,23 +140,23 @@ DWORD NPI_RX::readBlock(void)
 			}
 			break;
 		case READ_DATA_LEN:
-			if (ReadFile(m_com, &dataLen, 1, &nLenOut, &osRead)) {
+			if (ReadFile(((Com*)comHdl)->com_file, &dataLen, 1, &nLenOut, &osRead)) {
 				if (nLenOut) {
 					state = READ_OTHERS;
-					pBuf = new UINT8[dataLen + EVT_HEADER_LEN];
-					pBuf[0] = type;
-					pBuf[1] = evtCode;
-					pBuf[2] = dataLen;
+					pEvt = (sEvt*)new UINT8[dataLen + EVT_HEADER_LEN];
+					pEvt->type = type;
+					pEvt->evtCode = evtCode;
+					pEvt->len = dataLen;
 				}
 			} else {
 				if (GetLastError() == ERROR_IO_PENDING) {
-					GetOverlappedResult(m_com, &osRead, &nLenOut, true);
+					GetOverlappedResult(((Com*)comHdl)->com_file, &osRead, &nLenOut, true);
 					if (nLenOut) {
 						state = READ_OTHERS;
-						pBuf = new UINT8[dataLen + EVT_HEADER_LEN];
-						pBuf[0] = type;
-						pBuf[1] = evtCode;
-						pBuf[2] = dataLen;
+						pEvt = (sEvt*)new UINT8[dataLen + EVT_HEADER_LEN];
+						pEvt->type = type;
+						pEvt->evtCode = evtCode;
+						pEvt->len = dataLen;
 					}
 				}
 			}
@@ -212,12 +165,13 @@ DWORD NPI_RX::readBlock(void)
 			remaining = dataLen;
 			offset = EVT_HEADER_LEN;
 			while (remaining > 0) {
-				if (ReadFile(m_com, pBuf + offset, remaining, &nLenOut, &osRead)) {
+				if (ReadFile(((Com*)comHdl)->com_file, (PUINT8)pEvt + offset, remaining,
+				             &nLenOut, &osRead)) {
 					remaining -= nLenOut;
 					offset += nLenOut;
 				} else {
 					if (GetLastError() == ERROR_IO_PENDING) {
-						GetOverlappedResult(m_com, &osRead, &nLenOut, true);
+						GetOverlappedResult(((Com*)comHdl)->com_file, &osRead, &nLenOut, true);
 						if (nLenOut) {
 							remaining -= nLenOut;
 							offset += nLenOut;
@@ -226,17 +180,25 @@ DWORD NPI_RX::readBlock(void)
 				}
 			}
 
-			while (!PostThreadMessage(m_log, GetLogMsg(), (WPARAM)pBuf,
+			pBuf = new UINT8[dataLen + EVT_HEADER_LEN];
+			memcpy_s(pBuf, dataLen + EVT_HEADER_LEN, pEvt, dataLen + EVT_HEADER_LEN);
+			while (!PostThreadMessage(((Com*)comHdl)->logThreadID, GetLogMsg(),
+			                          (WPARAM)pBuf,
 			                          dataLen + EVT_HEADER_LEN)) {
-				LogW(L"Post LOG_MSG Err:%d\n", GetLastError());
+				LogW(L"RX:Post LOG_MSG Err:%d\n", GetLastError());
 				Sleep(500);
 			}
+			m_evtQue.Push(pEvt);
 			state = READ_TYPE_STATE;
-			//return dataLen + EVT_HEADER_LEN;
 			break;
 		default:
 			::LogE(L"Read File Err!\n");
 			break;
 		}
 	}
+}
+
+NPI_Queue<sEvt*, EVT_QUEUE_SIZE>* NPI_RX::Get_Queue(void)
+{
+	return &m_evtQue;
 }

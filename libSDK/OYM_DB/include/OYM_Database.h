@@ -1,11 +1,13 @@
 #ifndef __OYM_DATABASE_H__
 #define __OYM_DATABASE_H__
-
+#include <OYM_Log.h>
 #include "oym_types.h"
 #include "tinyxml2.h"
 #include "GattClient.h"
 using namespace tinyxml2;
 using namespace std;
+
+#define MODUAL_TAG_DB "DataBase"
 
 #define SECURITYINFOMATION  "SecurityInfomation"
 #define KEYSIZE				"KeySize"
@@ -55,9 +57,20 @@ public:
 	OYM_STATUS DeleteLinkKey();
 	OYM_STATUS DeleteGattService();
 	OYM_STATUS DeleteNode(const char* NodeName);
-
 private:
+
+	void GetUUIDFromChar(OYM_UUID *uuid, const char* value);
+	XMLAttribute* GetAttibuteByName(XMLElement *element, const char* name);
+	void GetCharacteristicDescriptor(XMLElement *chara, OYM_CHARACTERISTIC* charcteristic);
+	void GetCharacteristicValue(XMLElement *chara, OYM_CHARACTERISTIC* charcteristic);
+	OYM_CHARACTERISTIC* LoadCharacteristic(XMLElement *chara);
+	void GetCharacteristic(OYM_PRISERVICE* service, XMLElement *primaryservice);
+	OYM_INCSERVICE* LoadIncludedService(XMLElement *includeservice);
+	void GetIncludedService(OYM_PRISERVICE* service, XMLElement *element);
+	OYM_PRISERVICE* LoadPrimaryService(XMLElement *primaryservice);
+	XMLElement* FindElementByName(XMLElement *element, const char* name);
 	char* mFilename;
 	OYMXMLDocument* mDoc;
+	OYM_Log* mLog;
 };
 #endif

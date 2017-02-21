@@ -85,7 +85,7 @@
 </GATTService>
 
 <SecurityInfomation>
-    <KeySize KeySize="16" Div="36806"/>
-    <Rand Rand="55E76FF76D103235"/>
-    <Key Key="7F53D65452331D32A6551EF9DB28AE94"/>
+    <KeySize KeySize="16" Div="37856"/>
+    <Rand Rand="CA07A9E0B213CF6D"/>
+    <Key Key="94F34BCCDF742815131DF1F99F09DFB0"/>
 </SecurityInfomation>

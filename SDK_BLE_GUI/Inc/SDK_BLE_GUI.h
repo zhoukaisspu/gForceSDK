@@ -14,9 +14,11 @@
 #include "LogView.h"
 #include "npi_cmd.h"
 #include "GuiEvtHdl.h"
+#include "gap.h"
+#include "gatt.h"
 
 #define MAX_CON_DEV        8
-
+#define MFC_GUI
 typedef struct {
 	UINT16 conHdl;
 	UINT8 enable;

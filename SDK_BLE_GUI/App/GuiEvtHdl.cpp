@@ -2,7 +2,7 @@
 #include "GuiEvtHdl.h"
 #include "npi_evt.h"
 #include "com.h"
-
+#include "log.h"
 //Gap function declaration
 static void discoveryDone(const PUINT8 pdata, UINT16 len);
 static void deviceInfo(const PUINT8 pdata, UINT16 len);
@@ -17,18 +17,19 @@ static void attReadRsp(const PUINT8 pdata, UINT16 len);
 void RegistEvtCallBack()
 {
 	//GAP Callback
-	theApp.m_cmdHandle->m_evt->RegistCallBack(discoveryDone,
-	                HCI_EXT_GAP_DEVICE_DISCOVERY_MSG);
-	theApp.m_cmdHandle->m_evt->RegistCallBack(deviceInfo,
-	                HCI_EXT_GAP_DEVICE_INFO_MSG);
-	theApp.m_cmdHandle->m_evt->RegistCallBack(linkEstablished,
-	                HCI_EXT_GAP_LINK_ESTABLISHED_MSG);
-	theApp.m_cmdHandle->m_evt->RegistCallBack(linkTerminated,
-	                HCI_EXT_GAP_LINK_TERMINATED_MSG);
-	theApp.m_cmdHandle->m_evt->RegistCallBack(authComplete,
-	                HCI_EXT_GAP_AUTH_COMPLETE_MSG);
+	((NPI_EVT*)theApp.m_cmdHandle->m_evt)->RegistCallBack(discoveryDone,
+	                HCI_EXT_GAP_DEVICE_DISCOVERY_EVENT);
+	((NPI_EVT*)theApp.m_cmdHandle->m_evt)->RegistCallBack(deviceInfo,
+	                HCI_EXT_GAP_DEVICE_INFO_EVENT);
+	((NPI_EVT*)theApp.m_cmdHandle->m_evt)->RegistCallBack(linkEstablished,
+	                HCI_EXT_GAP_LINK_ESTABLISHED_EVENT);
+	((NPI_EVT*)theApp.m_cmdHandle->m_evt)->RegistCallBack(linkTerminated,
+	                HCI_EXT_GAP_LINK_TERMINATED_EVENT);
+	((NPI_EVT*)theApp.m_cmdHandle->m_evt)->RegistCallBack(authComplete,
+	                HCI_EXT_GAP_AUTH_COMPLETE_EVENT);
 	//ATT Callback
-	theApp.m_cmdHandle->m_evt->RegistCallBack(attReadRsp, ATT_READ_MSG);
+	((NPI_EVT*)theApp.m_cmdHandle->m_evt)->RegistCallBack(attReadRsp,
+	                ATT_READ_EVENT);
 }
 
 
@@ -50,6 +51,7 @@ static void discoveryDone(const PUINT8 pdata, UINT16 len)
 
 	if (msg->DiscDone_Evt.status != BLE_SUCCESS) {
 		::LogW(L"Discovery Error:%x!", msg->DiscDone_Evt.status);
+		theApp.m_cmdView->m_page1.m_discScan.ModifyStyle(WS_DISABLED, 0);
 		return;
 	}
 	_itow_s(numDevs, (wchar_t*)devNum, 5, 10);

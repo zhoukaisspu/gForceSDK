@@ -52,7 +52,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../Include;../../NPI/Include;../OYM_AM/include;../OYM_DS/include;../OYM_DB/include;../OYM_NIF/include;../OYM_LOG/include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);../Include;../../NPI/Include;../OYM_AM/include;../OYM_DS/include;../OYM_DB/include;../OYM_NIF/include;../OYM_LOG/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -68,6 +68,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir);../Include;../../NPI/Include;../OYM_AM/include;../OYM_DS/include;../OYM_DB/include;../OYM_NIF/include;../OYM_LOG/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

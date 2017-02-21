@@ -1,8 +1,9 @@
 #include"stdafx.h"
-
+#include "npi_cmd.h"
 #include"npi_evt.h"
-#include "CommonDef.h"
-#include "com.h"
+#include"CommonDef.h"
+#include"com.h"
+#include"log.h"
 Com::Com()
 {
 }
@@ -39,32 +40,36 @@ Com::~Com()
 	if (m_tx) {
 		delete[] m_tx;
 	}
+	if (m_log) {
+		delete[] m_log;
+	}
 
 	logThread = NULL;
 	txThread = NULL;
 	rxThread = NULL;
 	evtThread = NULL;
+	m_log = NULL;
 	m_rx = NULL;
 	m_tx = NULL;
 }
 
-int Com::Connect(DWORD evtthreadID)
+NPI_Queue<sEvt*, EVT_QUEUE_SIZE>* Com::Connect(HANDLE evtHdl)
 {
 	DCB ndcb;
 	CString sCom;
 	sCom.Format(_T("\\\\.\\COM%d"), port);
 	/*----------------Open Com port----------------*/
 	com_file = CreateFile(sCom.GetBuffer(50),
-		GENERIC_READ | GENERIC_WRITE,
-		0,/* do not share*/
-		NULL,
-		OPEN_EXISTING,
-		FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
-		NULL);
+	                      GENERIC_READ | GENERIC_WRITE,
+	                      0,/* do not share*/
+	                      NULL,
+	                      OPEN_EXISTING,
+	                      FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
+	                      NULL);
 
 	if (com_file == INVALID_HANDLE_VALUE) {
 		LogE(L"CreateFile() error:%d", GetLastError());
-		return false;
+		return NULL;
 	}
 
 	/*---------------Configure Com port---------------*/
@@ -80,7 +85,7 @@ int Com::Connect(DWORD evtthreadID)
 	if (!GetCommState(com_file, &ndcb)) {
 		LogE(L"GetCommState() failed!\n");
 		CloseHandle(com_file);
-		return false;
+		return NULL;
 	}
 	ndcb.DCBlength = sizeof(DCB);
 	ndcb.BaudRate = dcb.BaudRate;
@@ -96,7 +101,7 @@ int Com::Connect(DWORD evtthreadID)
 	if (!SetCommState(com_file, &ndcb)) {
 		LogE(L"SetCommState() failed!\n");
 		CloseHandle(com_file);
-		return false;
+		return NULL;
 	}
 	/*set buffer size*/
 	//const int g_buffMax = 32768;
@@ -120,39 +125,32 @@ int Com::Connect(DWORD evtthreadID)
 	/*set mask*/
 	SetCommMask(com_file, EV_RXCHAR);
 
-#if 0
-	/*Cread event thread*/
-	m_evt = new NPI_EVT();
-	evtThread = new CThread(m_evt);
-	evtThread->Start();
-	evtThread->Join(100);
-	evtThreadID = evtThread->GetThreadID();
-#endif
-
 	/*Creat log thread*/
-	Log* log = new Log(com_threadID, evtthreadID);
-	logThread = new CThread(log);
+	m_log = new Log(this);
+	logThread = new CThread((Log*)m_log);
 	logThread->Start();
 	logThread->Join(100);
 	logThreadID = logThread->GetThreadID();
 
 	/*Creat Tx thread*/
-	m_tx = new NPI_TX(com_file, logThreadID);
-	txThread = new CThread(m_tx);
+	m_tx = new NPI_TX(this);
+	txThread = new CThread((NPI_TX*)m_tx);
 	txThread->Start();
 	txThread->Join(100);
 	txThreadID = txThread->GetThreadID();
 
 	/*Creat Rx thread*/
-	m_rx = new NPI_RX(com_file, logThreadID);
-	rxThread = new CThread(m_rx);
+	m_rx = new NPI_RX(this);
+	rxThread = new CThread((NPI_RX*)m_rx);
 	rxThread->Start();
 	rxThread->Join(100);
 	rxThreadID = rxThread->GetThreadID();
 
-	return true;
-}
+	/*Event thread*/
+	m_evt = evtHdl;
 
+	return ((NPI_RX*)m_rx)->Get_Queue();
+}
 int Com::Connect()
 {
 	DCB ndcb;
@@ -225,33 +223,33 @@ int Com::Connect()
 	/*set mask*/
 	SetCommMask(com_file, EV_RXCHAR);
 
-	/*Cread event thread*/
-	m_evt = new NPI_EVT();
-	evtThread = new CThread(m_evt);
-	evtThread->Start();
-	evtThread->Join(100);
-	evtThreadID = evtThread->GetThreadID();
-
 	/*Creat log thread*/
-	Log* log = new Log(com_threadID, evtThreadID);
-	logThread = new CThread(log);
+	m_log = new Log(this);
+	logThread = new CThread((Log*)m_log);
 	logThread->Start();
 	logThread->Join(100);
 	logThreadID = logThread->GetThreadID();
 
 	/*Creat Tx thread*/
-	m_tx = new NPI_TX(com_file, logThreadID);
-	txThread = new CThread(m_tx);
+	m_tx = new NPI_TX(this);
+	txThread = new CThread((NPI_TX*)m_tx);
 	txThread->Start();
 	txThread->Join(100);
 	txThreadID = txThread->GetThreadID();
 
 	/*Creat Rx thread*/
-	m_rx = new NPI_RX(com_file, logThreadID);
-	rxThread = new CThread(m_rx);
+	m_rx = new NPI_RX(this);
+	rxThread = new CThread((NPI_RX*)m_rx);
 	rxThread->Start();
 	rxThread->Join(100);
 	rxThreadID = rxThread->GetThreadID();
+
+	/*Cread event thread*/
+	m_evt = new NPI_EVT(this);
+	evtThread = new CThread((NPI_EVT*)m_evt);
+	evtThread->Start();
+	evtThread->Join(100);
+	evtThreadID = evtThread->GetThreadID();
 
 	return true;
 }
@@ -259,11 +257,21 @@ int Com::Connect()
 int Com::DisConnect()
 {
 	if (com_file) {
-		CloseHandle(com_file);
 		evtThread->Terminate(0);
 		logThread->Terminate(0);
 		txThread->Terminate(0);
 		rxThread->Terminate(0);
+		/*Send exit code to exit tx thread.*/
+		sCMD* pcmd = (sCMD*)new UINT8[CMD_HEAD_LEN];
+		pcmd->type = HCI_EXIT_PACKET;
+		pcmd->len = 0;
+		((NPI_TX*)m_tx)->Get_Queue()->Push(pcmd);
+		/*Send exit code to exit event thread.*/
+		sEvt* pEvt = (sEvt*)new UINT8[EVT_HEADER_LEN];
+		pEvt->type = HCI_EXIT_PACKET;		
+		pcmd->len = 0;
+		((NPI_RX*)m_rx)->Get_Queue()->Push(pEvt);
+		CloseHandle(com_file);
 		com_file = NULL;
 	}
 	return 0;

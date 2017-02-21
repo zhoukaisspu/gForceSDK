@@ -9,7 +9,7 @@
 
 #include <stdio.h>
 #include <tchar.h>
-
+#include "app.h"
 
 
 // TODO: reference additional headers your program requires here
