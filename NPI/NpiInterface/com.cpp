@@ -256,21 +256,40 @@ int Com::Connect()
 
 int Com::DisConnect()
 {
+	printf("DisConnect sizeof(sCMD) = %d\n", sizeof(sCMD));
 	if (com_file) {
-		evtThread->Terminate(0);
-		logThread->Terminate(0);
-		txThread->Terminate(0);
-		rxThread->Terminate(0);
+		if(evtThread != NULL)
+		{
+			evtThread->Terminate(0);
+		}
+		
+		if(logThread != NULL)
+		{
+			logThread->Terminate(0);
+		}
+
+		if(txThread != NULL)
+		{
+			txThread->Terminate(0);
+		}
+
+		if(rxThread != NULL)
+		{
+			rxThread->Terminate(0);
+		}
+
 		/*Send exit code to exit tx thread.*/
 		sCMD* pcmd = (sCMD*)new UINT8[CMD_HEAD_LEN];
 		pcmd->type = HCI_EXIT_PACKET;
 		pcmd->len = 0;
 		((NPI_TX*)m_tx)->Get_Queue()->Push(pcmd);
+#if 1
 		/*Send exit code to exit event thread.*/
 		sEvt* pEvt = (sEvt*)new UINT8[EVT_HEADER_LEN];
 		pEvt->type = HCI_EXIT_PACKET;		
 		pcmd->len = 0;
 		((NPI_RX*)m_rx)->Get_Queue()->Push(pEvt);
+#endif
 		CloseHandle(com_file);
 		com_file = NULL;
 	}

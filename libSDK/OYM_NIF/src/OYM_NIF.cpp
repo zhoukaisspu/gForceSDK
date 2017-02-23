@@ -170,7 +170,15 @@ void OYM_NPI_Interface::Run()
 	{
 		sEvt* pEvt = mEventQueue->Pop();
 		UINT16 opCode;
-
+		if (pEvt->type == HCI_EXIT_PACKET)
+		{
+			LOGDEBUG("com disconnected terminate event thread!! \n");
+			delete pEvt;
+			//terminate thread
+			mEvtThread->Terminate(0);
+			return;
+		}
+		
 		if (pEvt->evtCode == HCI_LE_EVENT_CODE)
 		{
 			sHciEvt* pHciEvt = (sHciEvt*)pEvt;
@@ -208,7 +216,6 @@ OYM_STATUS OYM_NPI_Interface::Init()
 	{
 		delete mCommand;
 
-		/*exit thread*/
 		return OYM_FAIL;
 	}
 
@@ -218,14 +225,19 @@ OYM_STATUS OYM_NPI_Interface::Init()
 	mEvtThread->Join(100);
 	mEvtThreadID = mEvtThread->GetThreadID();
 
-	//if (false == (mCommand->Connect(mEvtThreadID)))
 	return OYM_SUCCESS;
 }
 
 OYM_STATUS OYM_NPI_Interface::Deinit()
 {
+	LOGDEBUG("Deinit!! \n");
 	//no need to close com port??
-	delete mCommand;
+	if (mCommand != NULL)
+	{
+		mCommand->DisConnect();
+		delete mCommand;
+		mCommand = NULL;
+	}
 
 	return OYM_SUCCESS;
 }
@@ -233,6 +245,10 @@ OYM_STATUS OYM_NPI_Interface::Deinit()
 OYM_STATUS OYM_NPI_Interface::InitDevice()
 {
 	OYM_STATUS result;
+	if (mCommand == NULL)
+	{
+		return OYM_FAIL;
+	}
 
 	gapRole_t gap_role;
 	OYM_UINT8 irk[16] = { 0 };
@@ -297,6 +313,26 @@ OYM_STATUS OYM_NPI_Interface::RegisterCallback(OYM_CallBack *callback)
 	LOGDEBUG("before register, num of callback is %d \n", mCallback.size());
 	mCallback.push_front(callback);
 	LOGDEBUG("after register, num of callback is %d \n", mCallback.size());
+
+	return OYM_SUCCESS;
+}
+
+OYM_STATUS OYM_NPI_Interface::UnRegisterCallback(OYM_CallBack *callback)
+{
+	LOGDEBUG("before unregister, num of callback is %d \n", mCallback.size());
+	LISTCALLBACK::iterator ii;
+	for (ii = mCallback.begin(); ii != mCallback.end(); )
+	{
+		if ((*ii)->GetIndex() == callback->GetIndex())
+		{
+			ii == mCallback.erase(ii);  
+		}
+		else
+		{
+			ii++;
+		}
+	}
+	LOGDEBUG("after unregister, num of callback is %d \n", mCallback.size());
 
 	return OYM_SUCCESS;
 }

@@ -9,6 +9,7 @@
 #define LOG_LEVEL_ERROR 3
 #define LOG_LEVEL_OFF 4
 
+#define TAG_NAME_LENGTH 50
 #define LOG_BUFFER_LENGTH 256
 #define LOG_MODUAL_NAME_LENGTH 50
 #define LOG_LOG_FILE_NAME_LENGTH 20
@@ -37,16 +38,16 @@ public:
 	
 	OYM_INT PrintLog(OYM_UINT8 mLogLevel, OYM_CPCHAR fmt, ...);
 	void SetLogLevel(OYM_UINT8 mLogLevel);
-	void GetFileName(OYM_PCHAR filename);
 	
 	OYM_INT LogDebug(OYM_CPCHAR fmt, ...);
 	OYM_INT LogWarning(OYM_CPCHAR fmt, ...);
 	OYM_INT LogError(OYM_CPCHAR fmt, ...);
 private:
 	OYM_CHAR mFileName[LOG_LOG_FILE_NAME_LENGTH];
+	void GetFileName(OYM_PCHAR filename);
 	
 	OYM_UINT8 mLogLevel;
-	OYM_PCHAR mTag; //modual name
+	OYM_CHAR mTag[TAG_NAME_LENGTH]; //modual name
 	OYM_CHAR mBuffer[LOG_BUFFER_LENGTH];
 };
 #endif

@@ -42,6 +42,7 @@ public:
 
 	//call this function to register callback function to process event.
 	OYM_STATUS RegisterCallback(OYM_CallBack *callback);
+	OYM_STATUS UnRegisterCallback(OYM_CallBack *callback);
 	
 private:
 	NPI_CMD* mCommand;

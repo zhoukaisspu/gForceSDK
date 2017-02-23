@@ -44,7 +44,7 @@ void Log::Run()
 					::LogI(_T("Log Thread Exit!\n"));
 					delete buf;
 					CloseHandle(hEvent);
-					CloseHandle(hThread);
+					//CloseHandle(hThread);
 					return;
 					break;
 				default:

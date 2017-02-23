@@ -26,7 +26,8 @@ void NPI_EVT::Run()
 			CloseHandle(hEvent);
 			CloseHandle(hThread);
 			delete pEvt;
-			return;
+			ExitThread(0);
+			//return;
 		}
 		if (pEvt->evtCode == HCI_LE_EVENT_CODE) {
 			sHciEvt* pHciEvt = (sHciEvt*)pEvt;

@@ -36,6 +36,7 @@
 #define DEVICE_NAME_PATTERN_LENGTH 9
 const char DEVICE_NAME_PATTERN[DEVICE_NAME_PATTERN_LENGTH] = { 0x67, 0x46, 0x6F, 0x72, 0x63, 0x65, 0x4A, 0x4F, 0x59 };
 
+#define DISCOVERY_SERVICE_CALLBACK_INDEX 2
 #define DISCOVERY_SERVICE_EVENT_MASK (EVENT_MASK_GAP_DEVICE_INFO_MSG | EVENT_MASK_GAP_DEVICE_DISCOVERY_MSG)
 	
 #define MODUAL_TAG_DS "DiscoveryService"
@@ -75,7 +76,7 @@ public:
 
 private:
 	OYM_NPI_Interface *mInterface;
-	OYM_BOOL mNeedScan;
+	OYM_BOOL mIsScanning;
 	//OYM_AdapterManager* mAdapterManager;
 
 	//fix Log name to mLog!!

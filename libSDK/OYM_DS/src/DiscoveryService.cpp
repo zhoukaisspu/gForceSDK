@@ -8,12 +8,12 @@ using namespace std;
 * report the filted device to upper level.
 */
 
-OYM_Discovery_Service::OYM_Discovery_Service(OYM_NPI_Interface* minterface, OYM_CallBack* callback) : OYM_CallBack(DISCOVERY_SERVICE_EVENT_MASK)
+OYM_Discovery_Service::OYM_Discovery_Service(OYM_NPI_Interface* minterface, OYM_CallBack* callback) : OYM_CallBack(DISCOVERY_SERVICE_EVENT_MASK, DISCOVERY_SERVICE_CALLBACK_INDEX)
 {
 	mInterface = minterface;
 	mCallback = callback;
 	mLog = new OYM_Log(MODUAL_TAG_DS, sizeof(MODUAL_TAG_DS));
-	mNeedScan = OYM_FALSE;
+	mIsScanning = OYM_FALSE;
 }
 
 OYM_Discovery_Service::~OYM_Discovery_Service()
@@ -24,19 +24,31 @@ OYM_Discovery_Service::~OYM_Discovery_Service()
 OYM_STATUS OYM_Discovery_Service::Init()
 {
 	//register callback to receive event form NIF
-	mInterface->RegisterCallback(this);
-	
-	return OYM_SUCCESS;
+	if (mInterface != NULL)
+	{
+		mInterface->RegisterCallback(this);
+		return OYM_SUCCESS;
+	}
+	else
+	{
+		return OYM_FAIL;
+	}
 }
 
 OYM_STATUS OYM_Discovery_Service::Deinit()
 {
-	if (mNeedScan == OYM_TRUE)
+	if (mIsScanning == OYM_TRUE)
 	{
 		this->StopScan();
 	}
 
+	if (mInterface == NULL)
+	{
+		mInterface->UnRegisterCallback(this);
+	}
+
 	mInterface = NULL;
+	mCallback = NULL;
 
 	return OYM_SUCCESS;
 }
@@ -52,7 +64,7 @@ OYM_STATUS OYM_Discovery_Service::StartScan()
 		return OYM_ERR_CODE_NO_RESOURCE;
 	}
 
-	if (mNeedScan == OYM_TRUE)
+	if (mIsScanning == OYM_TRUE)
 	{
 		LOGWARNING("StartScan failed, scan is ongoing... \n");
 		return OYM_ERR_CODE_SCAN_BUSY;
@@ -61,7 +73,7 @@ OYM_STATUS OYM_Discovery_Service::StartScan()
 	result = mInterface->StartLEScan();
 	if (result == OYM_SUCCESS)
 	{
-		mNeedScan = OYM_TRUE;
+		mIsScanning = OYM_TRUE;
 	}
 	LOGDEBUG("StartScan... with result = %d\n", result);
 	return result;
@@ -76,7 +88,7 @@ OYM_STATUS OYM_Discovery_Service::StopScan()
 		return OYM_ERR_CODE_NO_RESOURCE;
 	}
 
-	if (mNeedScan == OYM_FALSE)
+	if (mIsScanning == OYM_FALSE)
 	{
 		LOGWARNING("StartScan failed, scan is not ongoing... \n");
 		return OYM_ERR_CODE_SCAN_BUSY;
@@ -85,7 +97,7 @@ OYM_STATUS OYM_Discovery_Service::StopScan()
 	result = mInterface->StopLEScan();
 	if (result == OYM_SUCCESS)
 	{
-		mNeedScan = OYM_FALSE;
+		mIsScanning = OYM_FALSE;
 	}
 
 	return result;
@@ -94,11 +106,11 @@ OYM_STATUS OYM_Discovery_Service::StopScan()
 OYM_STATUS OYM_Discovery_Service::OnScanFinished()
 {
 	LOGDEBUG("Scan finished... \n");
-	if (mNeedScan == OYM_TRUE)
+	if (mIsScanning == OYM_TRUE)
 	{
 		//LOGDEBUG("restart scan... \n");
-		mNeedScan = OYM_FALSE;
-		if (0 != (mCallback->GetEventMask() & EVENT_MASK_INTERNAL_SCAN_FINISHED))
+		mIsScanning = OYM_FALSE;
+		if ((mCallback != NULL) && (0 != (mCallback->GetEventMask() & EVENT_MASK_INTERNAL_SCAN_FINISHED)))
 		{
 			mCallback->OnScanFinished();
 		}
@@ -247,7 +259,7 @@ OYM_STATUS OYM_Discovery_Service::OnScanResult(OYM_PUINT8 data, OYM_UINT16 lengt
 			if (GetDeviceName(bt_address.dev_name, adv_data, adv_data_len) == OYM_TRUE)
 			{
 				LOGDEBUG("device name is:%s \n", bt_address.dev_name);
-				if (0 != (mCallback->GetEventMask() & EVENT_MASK_INTERNAL_DEVICE_FOUND))
+				if ((mCallback != NULL) && (0 != (mCallback->GetEventMask() & EVENT_MASK_INTERNAL_DEVICE_FOUND)))
 				{
 					mCallback->OnDeviceFound((bt_address));
 				}
@@ -282,7 +294,7 @@ OYM_STATUS OYM_Discovery_Service::OnScanResult(OYM_PUINT8 data, OYM_UINT16 lengt
 				if (GetDeviceName((*ii).dev_name, adv_data, adv_data_len) == OYM_TRUE)
 				{
 					LOGDEBUG("device name is:%s \n", (*ii).dev_name);
-					if (0 != (mCallback->GetEventMask() & EVENT_MASK_INTERNAL_DEVICE_FOUND))
+					if ((mCallback != NULL) && (0 != (mCallback->GetEventMask() & EVENT_MASK_INTERNAL_DEVICE_FOUND)))
 					{
 						mCallback->OnDeviceFound((*ii));
 					}

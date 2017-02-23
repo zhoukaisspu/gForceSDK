@@ -2,7 +2,7 @@
 #include "AdapterManager.h"
 #include "RemoteDevice.h"
 
-OYM_AdapterManager::OYM_AdapterManager() :OYM_CallBack(ADAPTER_MANAGER_EVENT)
+OYM_AdapterManager::OYM_AdapterManager() :OYM_CallBack(ADAPTER_MANAGER_EVENT, ADAPTER_MANAGER_CALLBACK_INDEX)
 {
 	mInterface = new OYM_NPI_Interface;
 	mLog = new OYM_Log(MODUAL_TAG_AM, sizeof(MODUAL_TAG_AM));
@@ -13,6 +13,7 @@ OYM_AdapterManager::~OYM_AdapterManager()
 {
 	delete mLog;
 	delete mDS;
+	mInterface = NULL;
 }
 
 OYM_STATUS OYM_AdapterManager::Init()
@@ -34,6 +35,10 @@ OYM_STATUS OYM_AdapterManager::Init()
 		mInterface->RegisterCallback(this);
 		mInterface->InitDevice();
 	}
+	else
+	{
+		return result;
+	}
 	
 	if (mDS != NULL)
 	{
@@ -45,7 +50,13 @@ OYM_STATUS OYM_AdapterManager::Init()
 
 OYM_STATUS OYM_AdapterManager::Deinit()
 {
-	return OYM_SUCCESS;
+	OYM_STATUS result = OYM_FAIL;
+	if (mInterface != NULL)
+	{
+		result = mInterface->Deinit();
+	}
+
+	return result;
 }
 
 OYM_STATUS OYM_AdapterManager::StartScan()

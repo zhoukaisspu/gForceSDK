@@ -6,7 +6,7 @@
 class OYM_CallBack
 {
 public:
-	OYM_CallBack(OYM_LONG eventmask) :mEventMask(eventmask){}
+	OYM_CallBack(OYM_LONG eventmask, OYM_UINT8 index) :mEventMask(eventmask), mIndex(index){}
 	virtual OYM_STATUS OnDeviceFound(BLE_DEVICE new_device) = 0;
 	virtual OYM_STATUS OnScanFinished() = 0;
 	virtual OYM_STATUS OnScanResult(OYM_PUINT8 data, OYM_UINT16 length) = 0;
@@ -18,8 +18,14 @@ public:
 	{
 		return mEventMask;
 	}
+	
+	OYM_UINT8 GetIndex()
+	{
+		return mIndex;
+	}
 
 private:
 	OYM_LONG mEventMask;//which event is intent to process.
+	OYM_UINT8 mIndex;
 };
 #endif

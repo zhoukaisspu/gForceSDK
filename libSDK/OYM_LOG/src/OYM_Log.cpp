@@ -17,7 +17,7 @@ OYM_VOID OYM_Log::GetFileName(OYM_PCHAR filename)
 #ifdef WIN32
 	SYSTEMTIME sys;
 	GetLocalTime(&sys);
-	sprintf_s((char*)filename, LOG_LOG_FILE_NAME_LENGTH, "%02d_%02d_%02d_%03d.txt", sys.wHour, sys.wMinute, sys.wSecond, sys.wMilliseconds);
+	sprintf_s(filename, LOG_LOG_FILE_NAME_LENGTH, "%02d_%02d_%02d_%03d.txt", sys.wHour, sys.wMinute, sys.wSecond, sys.wMilliseconds);
 #else
 	struct timeval tv;
 	struct timezone tz;
@@ -35,23 +35,23 @@ OYM_VOID OYM_Log::GetFileName(OYM_PCHAR filename)
 
 OYM_Log::OYM_Log(OYM_CPCHAR modual_name, OYM_UINT8 length)
 {
-	mTag = (OYM_PCHAR)new OYM_CHAR(length);
+	//mTag = (OYM_PCHAR)new OYM_CHAR(length);
 	memcpy(mTag, modual_name, length);
 
 	mLogLevel = LOG_LEVEL_DEBUG;
 	mReference++;
+	printf("\n --------OYM_Log Contractor with reference = %d  tag length = %d-------\n", mReference, length);
+	printf("%s \n", mTag);
 
 	if (mReference == 1)
 	{
 		GetFileName(mFileName);
 #ifdef WIN32
-		fopen_s(&mLogFile, (const char*)mFileName, "wt+");
+		fopen_s(&mLogFile, (OYM_CPCHAR)mFileName, "wt+");
 		if (mLogFile == NULL)
 		{
 			printf("open file failed!!!");
 		}
-			
-		//fopen_s(&mLogFile, (const char*)"log.txt", "wt+");
 #else
 		mLogFile = fopen(mFileName, "wt+");
 #endif
@@ -60,21 +60,20 @@ OYM_Log::OYM_Log(OYM_CPCHAR modual_name, OYM_UINT8 length)
 
 OYM_Log::~OYM_Log()
 {
-	printf("\n --------OYM_Log decontractor-------\n");
+	printf("\n --------OYM_Log Deontractor with reference = %d-------\n", mReference);
 	mReference--;
 	if (mReference == 0)
 	{
 		fclose(mLogFile);
 	}
-
-	delete mTag;
 }
 
 void OYM_Log::SetLogLevel(OYM_UINT8 logLevel)
 {
 	if (logLevel >= LOG_LEVEL_OFF)
+	{
 		logLevel = LOG_LEVEL_OFF;
-
+	}
 	mLogLevel = logLevel;
 }
 
@@ -92,7 +91,7 @@ OYM_INT OYM_Log::PrintLog(OYM_UINT8 loglevel, OYM_CPCHAR fmt, ...)
 #ifdef WIN32
 	SYSTEMTIME sys;
 	GetLocalTime(&sys);
-	offset = sprintf_s((char*)mBuffer, LOG_BUFFER_LENGTH, "%02d:%02d:%02d.%03d", sys.wHour, sys.wMinute, sys.wSecond, sys.wMilliseconds);
+	offset = sprintf_s((OYM_PCHAR)mBuffer, LOG_BUFFER_LENGTH, "%02d:%02d:%02d.%03d", sys.wHour, sys.wMinute, sys.wSecond, sys.wMilliseconds);
 	total += offset;
 #else
 	struct timeval tv;
@@ -111,34 +110,34 @@ OYM_INT OYM_Log::PrintLog(OYM_UINT8 loglevel, OYM_CPCHAR fmt, ...)
 	if (loglevel == LOG_LEVEL_DEBUG)
 	{
 #ifdef WIN32
-		offset = sprintf_s((char*)mBuffer + offset, LOG_BUFFER_LENGTH-total, "[Debug]/%s:", mTag);
+		offset = sprintf_s((OYM_PCHAR)mBuffer + offset, LOG_BUFFER_LENGTH-total, "[Debug]/%s:", mTag);
 #else
-		offset = sprintf((char*)mBuffer + offset, "[Debug]/%s:", modual);
+		offset = sprintf((OYM_PCHAR)mBuffer + offset, "[Debug]/%s:", modual);
 #endif
 	} 
 	else if (loglevel == LOG_LEVEL_WARNING)
 	{
 #ifdef WIN32
-		offset = sprintf_s((char*)mBuffer + offset, LOG_BUFFER_LENGTH - total, "[Warning]/%s:", mTag);
+		offset = sprintf_s((OYM_PCHAR)mBuffer + offset, LOG_BUFFER_LENGTH - total, "[Warning]/%s:", mTag);
 #else
-		offset = sprintf((char*)mBuffer + offset, "[Debug]/%s:", modual);
+		offset = sprintf((OYM_PCHAR)mBuffer + offset, "[Debug]/%s:", modual);
 #endif
 	}
 	else if (loglevel == LOG_LEVEL_ERROR)
 	{
 #ifdef WIN32
-		offset = sprintf_s((char*)mBuffer + offset, LOG_BUFFER_LENGTH - total, "[Error]/%s:", mTag);
+		offset = sprintf_s((OYM_PCHAR)mBuffer + offset, LOG_BUFFER_LENGTH - total, "[Error]/%s:", mTag);
 #else
-		offset = sprintf((char*)mBuffer + offset, "[Debug]/%s:", modual);
+		offset = sprintf((OYM_PCHAR)mBuffer + offset, "[Debug]/%s:", modual);
 #endif
 	}
 	total += offset;
 	
 	va_start(argp, fmt);
 #ifdef WIN32
-	offset = vsprintf_s((char*)mBuffer + total, LOG_BUFFER_LENGTH - total, (const char*)fmt, argp);
+	offset = vsprintf_s((OYM_PCHAR)mBuffer + total, LOG_BUFFER_LENGTH - total, (OYM_CPCHAR)fmt, argp);
 #else
-	offset = vsnprintf((char*)mBuffer + total, LOG_BUFFER_LENGTH - total, fmt, argp);
+	offset = vsnprintf((OYM_PCHAR)mBuffer + total, LOG_BUFFER_LENGTH - total, fmt, argp);
 #endif
 	va_end(argp);
 
