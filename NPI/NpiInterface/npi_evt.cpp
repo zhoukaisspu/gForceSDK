@@ -22,12 +22,10 @@ void NPI_EVT::Run()
 	while (1) {
 		sEvt* pEvt = ((NPI_RX*)((Com*)comHdl)->m_rx)->Get_Queue()->Pop();
 		if (pEvt->type == HCI_EXIT_PACKET){
-			::LogI(_T("Event Thread Exit!\n"));
 			CloseHandle(hEvent);
-			CloseHandle(hThread);
+			::ReleaseSemaphore(g_semhdl, 1, NULL);
 			delete pEvt;
-			ExitThread(0);
-			//return;
+			return;
 		}
 		if (pEvt->evtCode == HCI_LE_EVENT_CODE) {
 			sHciEvt* pHciEvt = (sHciEvt*)pEvt;

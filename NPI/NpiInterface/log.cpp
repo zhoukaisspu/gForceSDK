@@ -41,10 +41,9 @@ void Log::Run()
 					Analyze_RX(buf, size);
 					break;
 				case HCI_EXIT_PACKET:
-					::LogI(_T("Log Thread Exit!\n"));
-					delete buf;
 					CloseHandle(hEvent);
-					//CloseHandle(hThread);
+					::ReleaseSemaphore(g_semhdl, 1, NULL);
+					delete buf;
 					return;
 					break;
 				default:

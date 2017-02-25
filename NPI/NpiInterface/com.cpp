@@ -1,9 +1,12 @@
 #include"stdafx.h"
-#include "npi_cmd.h"
+#include"npi_cmd.h"
 #include"npi_evt.h"
 #include"CommonDef.h"
 #include"com.h"
 #include"log.h"
+
+HANDLE  g_semhdl;
+
 Com::Com()
 {
 }
@@ -256,40 +259,48 @@ int Com::Connect()
 
 int Com::DisConnect()
 {
-	printf("DisConnect sizeof(sCMD) = %d\n", sizeof(sCMD));
+	HANDLE handle[4] = { 0 };
+	DWORD count = 0;
+	//CRITICAL_SECTION  threadCode;
+	//InitializeCriticalSection(&threadCode);
+
+	g_semhdl = CreateSemaphore(NULL, 0, 4, NULL);
+
 	if (com_file) {
-		if(evtThread != NULL)
-		{
+		//EnterCriticalSection(&threadCode);
+		if (evtThread){
 			evtThread->Terminate(0);
+			handle[count++] = evtThread;
 		}
-		
-		if(logThread != NULL)
-		{
+		if (logThread){
 			logThread->Terminate(0);
+			handle[count++] = logThread;
 		}
-
-		if(txThread != NULL)
-		{
+		if (txThread){
 			txThread->Terminate(0);
+			handle[count++] = txThread;
 		}
-
-		if(rxThread != NULL)
-		{
+		if (rxThread){
 			rxThread->Terminate(0);
+			handle[count++] = rxThread;
 		}
-
 		/*Send exit code to exit tx thread.*/
 		sCMD* pcmd = (sCMD*)new UINT8[CMD_HEAD_LEN];
 		pcmd->type = HCI_EXIT_PACKET;
 		pcmd->len = 0;
 		((NPI_TX*)m_tx)->Get_Queue()->Push(pcmd);
-#if 1
 		/*Send exit code to exit event thread.*/
 		sEvt* pEvt = (sEvt*)new UINT8[EVT_HEADER_LEN];
-		pEvt->type = HCI_EXIT_PACKET;		
+		pEvt->type = HCI_EXIT_PACKET;
 		pcmd->len = 0;
 		((NPI_RX*)m_rx)->Get_Queue()->Push(pEvt);
-#endif
+		/*wait until all threads exit*/
+		while (count--){
+			WaitForSingleObject(g_semhdl, INFINITE);
+		}
+		LogI(_T("All threads exit with err=%d\n"), GetLastError());
+		CloseHandle(g_semhdl);
+		g_semhdl = NULL;
 		CloseHandle(com_file);
 		com_file = NULL;
 	}

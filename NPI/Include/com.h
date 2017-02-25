@@ -4,6 +4,7 @@
 #include <atlstr.h>
 #include "CommonDef.h"
 #include "npi_tl.h"
+extern HANDLE  g_semhdl;
 class Com
 {
 public:
