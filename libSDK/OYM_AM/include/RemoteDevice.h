@@ -42,8 +42,8 @@ typedef enum
 	OYM_DEVICE_EVENT_ATT_READ_BLOB_RESP_MSG = WM_USER + 0x508,
 	OYM_DEVICE_EVENT_ATT_ERROR_MSG = WM_USER + 0x509,
 	OYM_DEVICE_EVENT_ATT_READ_BY_INFO_MSG = WM_USER + 0x510,
-	OYM_DEVICE_EVENT_ATT_EXCHANGE_MTU_MSG = WM_USER + 0x5011,
-	OYM_DEVICE_EVENT_ATT_WRITE_MSG = WM_USER + 0x5012,
+	OYM_DEVICE_EVENT_ATT_EXCHANGE_MTU_MSG = WM_USER + 0x511,
+	OYM_DEVICE_EVENT_ATT_WRITE_MSG = WM_USER + 0x512,
 	OYM_DEVICE_EVENT_EVICE_DISCONNECTED = WM_USER + 0x513,
 	OYM_DEVICE_EVENT_INVALID = WM_USER + 0x599,
 } OYM_DEVICE_EVENT;
@@ -54,6 +54,7 @@ typedef enum
 	OYM_DEVICE_ROLE_PERIPHERAL = 1,
 }OYM_DEVICE_ROLE;
 
+#define EVENT_DEVICE_CCONNECTED_STATUS 0
 #define EVENT_DEVICE_CCONNECTED_CONN_HANDLE_OFFSET 8
 #define EVENT_DEVICE_CCONNECTED_ROLE_OFFSET (EVENT_DEVICE_CCONNECTED_CONN_HANDLE_OFFSET + 2)
 #define EVENT_DEVICE_CCONNECTED_CONN_INTERVAL_OFFSET (EVENT_DEVICE_CCONNECTED_ROLE_OFFSET + 1)
@@ -98,7 +99,7 @@ public:
 
 	OYM_VOID Init();
 	OYM_VOID DeInit();
-	OYM_STATUS Connect();
+
 	OYM_STATUS ProcessMessage(OYM_DEVICE_EVENT event, OYM_PUINT8 data, OYM_UINT16 length);
 	OYM_STATUS IdleStateProcessMessage(OYM_DEVICE_EVENT event, OYM_PUINT8 data, OYM_UINT16 length);
 	OYM_STATUS W4ConnStateProcessMessage(OYM_DEVICE_EVENT event, OYM_PUINT8 data, OYM_UINT16 length); 
@@ -114,13 +115,18 @@ public:
 	OYM_STATUS DiscoveryDescriptor();
 
 	OYM_STATUS ProcessCharacteristicConfiguration(OYM_UINT8 currentprisvc, OYM_UINT8 currentchrac, OYM_UINT8 currentchracdes);
-	
+
+	OYM_STATUS OnDeviceConnected(OYM_PUINT8 data, OYM_UINT16 length);
+	OYM_STATUS AuthenticationComplete(OYM_PUINT8 data, OYM_UINT16 length);
+	OYM_STATUS BondComplete(OYM_PUINT8 data, OYM_UINT16 length);
+	OYM_STATUS ConnectionParameterUpdated(OYM_PUINT8 data, OYM_UINT16 length);
 	OYM_UINT8  mAddrType;
 	OYM_UINT8  mAddr[BT_ADDRESS_SIZE];
 	OYM_UINT8 mLTK[16];
 	OYM_UINT16 mDIV;
 	OYM_UINT8 mRAND[8];
 	OYM_UINT8 mKeySize;
+	
 private:
 	OYM_CHAR   mDevName[BLE_DEVICE_NAME_LENGTH];
 	OYM_UINT16 mHandle; //connection handle
@@ -137,17 +143,23 @@ private:
 
 	CThread* mThread;
 	OYM_ULONG mThreadID;
+	OYM_BOOL mThreadRunning;
+	HANDLE mThrandEvent;
 
 	list<MESSAGE*> mMessage;
+	CRITICAL_SECTION mMutex;
 
 	OYM_Service mService;
 	OYM_BOOL mNeedSaveService;
+	OYM_BOOL mNeedSaveLTK;
 	OYM_UINT16 mMTUSize;
 
-	OYM_UINT8 mCPS;
-	OYM_UINT8 mCC;
-	OYM_UINT8 mCCD;
+	OYM_UINT8 mCurrentPrimaryServiceIndex;
+	OYM_UINT8 mCurrentCharactericticIndex;
+	OYM_UINT8 mCurrentCharactericticDescriptorIndex;
 	//database
 	OYM_Database* mDatabase;
+
+	OYM_UINT8 N;
 };
 #endif

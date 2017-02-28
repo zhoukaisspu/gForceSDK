@@ -51,16 +51,6 @@ public:
 	OYM_STATUS Init();
 	OYM_STATUS Deinit();
 
-	OYM_STATUS CheckAdvData(OYM_PUINT8 data, OYM_UINT16 length);
-	OYM_BOOL GetDeviceName(OYM_PCHAR result, OYM_PUINT8 data, OYM_UINT16 length);
-	OYM_STATUS OnScanResult(OYM_PUINT8 data, OYM_UINT16 length);
-	OYM_STATUS OnScanFinished();
-
-	OYM_STATUS OnEvent(OYM_UINT32 event, OYM_PUINT8 data, OYM_UINT16 length)
-	{
-		return OYM_FAIL;
-	}
-
 	OYM_STATUS OnDeviceFound(BLE_DEVICE new_device)
 	{
 		return OYM_FAIL;
@@ -71,10 +61,17 @@ public:
 		return OYM_FAIL;
 	}
 
+	OYM_STATUS OnEvent(OYM_UINT32 event, OYM_PUINT8 data, OYM_UINT16 length);
+
 	OYM_STATUS StartScan();
 	OYM_STATUS StopScan();
 
 private:
+	OYM_STATUS ProcessScanFinished();
+	OYM_STATUS ProcessScanResult(OYM_PUINT8 data, OYM_UINT16 length);
+	OYM_STATUS CheckAdvData(OYM_PUINT8 data, OYM_UINT16 length);
+	OYM_BOOL GetDeviceName(OYM_PCHAR result, OYM_PUINT8 data, OYM_UINT16 length);
+
 	OYM_NPI_Interface *mInterface;
 	OYM_BOOL mIsScanning;
 	//OYM_AdapterManager* mAdapterManager;

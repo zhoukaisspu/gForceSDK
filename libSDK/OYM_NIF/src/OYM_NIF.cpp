@@ -25,26 +25,26 @@ OYM_STATUS OYM_NPI_Interface::OYM_Process_Event(OYM_UINT16 event_code, OYM_PUINT
 			for (ii = mCallback.begin(); ii != mCallback.end(); ii++)
 			{
 				OYM_UINT16 result = (((*ii)->GetEventMask()) & EVENT_MASK_GAP_DEVICE_DISCOVERY_MSG);
+				LOGDEBUG("(*ii)->GetEventMask() = %d \n", (*ii)->GetEventMask());
+				LOGDEBUG("result = %d \n", result);
 				if (result != 0)
 				{
-					(*ii)->OnScanFinished();
-					result = OYM_SUCCESS;
+					(*ii)->OnEvent(EVENT_MASK_GAP_SCAN_FINISHED, NULL, 0);
 				}
 			}
 			break;
 
 		case HCI_EXT_GAP_DEVICE_INFO_EVENT: //0x070D
-			LOGDEBUG("HCI_EXT_GAP_DEVICE_INFO_MSG \n");
+			LOGDEBUG("HCI_EXT_GAP_DEVICE_INFO_MSG with size = %d, size of callback is %d\n", length, mCallback.size());
 			for (ii = mCallback.begin(); ii != mCallback.end(); ii++)
 			{
 				OYM_UINT16 result = (((*ii)->GetEventMask()) & EVENT_MASK_GAP_DEVICE_INFO_MSG);
-				LOGDEBUG("(*ii)->GetEventMask() = %d \n", (*ii)->GetEventMask());
+				LOGDEBUG("(*ii)->GetEventMask() = 0x%x \n", (*ii)->GetEventMask());
 
 				LOGDEBUG("result = %d \n", result);
 				if (result != 0)
 				{
-					(*ii)->OnScanResult(data, length);
-					result = OYM_SUCCESS;
+					(*ii)->OnEvent(EVENT_MASK_GAP_SCAN_RESULT, data, length);
 				}
 			}
 			break;
@@ -172,10 +172,10 @@ void OYM_NPI_Interface::Run()
 		UINT16 opCode;
 		if (pEvt->type == HCI_EXIT_PACKET)
 		{
-			LOGDEBUG("com disconnected terminate event thread!! \n");
+			LOGDEBUG("OYM_NIF event thread exit!! \n");
+			printf("OYM_NIF event thread exit!! \n");
+			CloseHandle(mEvtThread->GetEvent());
 			delete pEvt;
-			//terminate thread
-			mEvtThread->Terminate(0);
 			return;
 		}
 		
@@ -202,6 +202,11 @@ OYM_NPI_Interface::OYM_NPI_Interface()
 {
 	mLog = new OYM_Log(MODUAL_TAG, sizeof(MODUAL_TAG));
 	mCallback.clear();
+}
+
+OYM_NPI_Interface::~OYM_NPI_Interface()
+{
+	delete mLog;
 }
 
 OYM_STATUS OYM_NPI_Interface::Init()
@@ -308,6 +313,19 @@ OYM_STATUS OYM_NPI_Interface::Connect(OYM_PUINT8 addr, UINT8 addr_type)
 	return result = status;
 }
 
+OYM_STATUS OYM_NPI_Interface::Disconnect(OYM_UINT16 handle)
+{
+	OYM_STATUS result;
+	OYM_BOOL status = OYM_FAIL;
+
+	if (mCommand != NULL)
+	{
+		mCommand->GAP_TerminateLinkRequest(handle);
+	}
+
+	return result = status;
+}
+
 OYM_STATUS OYM_NPI_Interface::RegisterCallback(OYM_CallBack *callback)
 {
 	LOGDEBUG("before register, num of callback is %d \n", mCallback.size());
@@ -321,15 +339,12 @@ OYM_STATUS OYM_NPI_Interface::UnRegisterCallback(OYM_CallBack *callback)
 {
 	LOGDEBUG("before unregister, num of callback is %d \n", mCallback.size());
 	LISTCALLBACK::iterator ii;
-	for (ii = mCallback.begin(); ii != mCallback.end(); )
+	for (ii = mCallback.begin(); ii != mCallback.end(); ii++)
 	{
 		if ((*ii)->GetIndex() == callback->GetIndex())
 		{
-			ii == mCallback.erase(ii);  
-		}
-		else
-		{
-			ii++;
+			ii == mCallback.erase(ii);
+			break;
 		}
 	}
 	LOGDEBUG("after unregister, num of callback is %d \n", mCallback.size());
@@ -356,9 +371,7 @@ OYM_STATUS OYM_NPI_Interface::Authenticate(OYM_UINT16 handle)
 	auth.pair_authReq.oper = 0x01;
 	auth.pair_oobFlag = NPI_FALSE;
 
-	LOGDEBUG("#######Authenticate start....\n");
 	status = mCommand->GAP_Authenticate(handle, &auth);
-	LOGDEBUG("#######Authenticate end....\n");
 	return (status == OYM_TRUE) ? OYM_SUCCESS : OYM_FAIL;
 }
 

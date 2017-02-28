@@ -13,7 +13,10 @@ OYM_AdapterManager::~OYM_AdapterManager()
 {
 	delete mLog;
 	delete mDS;
+	delete mInterface;
 	mInterface = NULL;
+	mDS = NULL;
+	mLog = NULL;
 }
 
 OYM_STATUS OYM_AdapterManager::Init()
@@ -51,11 +54,21 @@ OYM_STATUS OYM_AdapterManager::Init()
 OYM_STATUS OYM_AdapterManager::Deinit()
 {
 	OYM_STATUS result = OYM_FAIL;
+
+	if (mDS != NULL)
+	{
+		result = mDS->Deinit();
+	}
+
+	if (mInterface != NULL)
+	{
+		result = mInterface->UnRegisterCallback(this);
+	}
+
 	if (mInterface != NULL)
 	{
 		result = mInterface->Deinit();
 	}
-
 	return result;
 }
 
@@ -88,9 +101,29 @@ OYM_STATUS OYM_AdapterManager::StopScan()
 OYM_STATUS OYM_AdapterManager::Connect(OYM_PUINT8 addr, UINT8 addr_type)
 {
 	OYM_STATUS result = OYM_FAIL;
+	list<OYM_RemoteDevice*>::iterator ii;
+	for (ii = mAvailabeDevice.begin(); ii != mAvailabeDevice.end(); ii++)
+	{
+		if (((*ii)->mAddrType == addr_type) && memcmp((*ii)->mAddr, addr, BT_ADDRESS_SIZE) == 0)
+		{
+			(*ii)->Init();
+		}
+	}
+	
 	if (mInterface != NULL)
 	{
 		result = mInterface->Connect(addr, addr_type);
+	}
+	return result;
+}
+
+OYM_STATUS OYM_AdapterManager::Disconnect(OYM_UINT16 handle)
+{
+	LOGDEBUG("start to disconnect device... \n");
+	OYM_STATUS result = OYM_FAIL;
+	if (mInterface != NULL)
+	{
+		result = mInterface->Disconnect(handle);
 	}
 	return result;
 }
@@ -101,11 +134,11 @@ OYM_STATUS OYM_AdapterManager::OnDeviceFound(BLE_DEVICE new_device)
 	LOGDEBUG("OnNewDeviceFound... \n");
 	OYM_RemoteDevice *device = new OYM_RemoteDevice(mInterface, new_device, this);
 	mAvailabeDevice.push_front(device);
-	
+	mToConnectDevice.push_front(device);
 	return result;
 }
 
-OYM_STATUS OYM_AdapterManager::OnScanFinished()
+OYM_STATUS OYM_AdapterManager::ScanFinished()
 {
 	OYM_STATUS result = OYM_FAIL;
 	OYM_RemoteDevice *device;
@@ -113,9 +146,46 @@ OYM_STATUS OYM_AdapterManager::OnScanFinished()
 	LOGDEBUG("found device number is %d \n", mAvailabeDevice.size());
 	if (mAvailabeDevice.size() != 0)
 	{
+		device = mToConnectDevice.front();
+		result = this->Connect(device->mAddr, device->mAddrType);
+	}
+	return result;
+}
+
+OYM_STATUS OYM_AdapterManager::ConnectComplete(OYM_UINT16 handle)
+{
+	OYM_STATUS result = OYM_FAIL;
+	OYM_RemoteDevice *device;
+#if 1
+	//LOGDEBUG("ConnectComplete, start to disconnect it... \n");
+	//Sleep(2000);
+	//result = this->Disconnect(handle);
+#endif
+
+#if 0
+
+	LOGDEBUG("ConnectComplete, start to connect next device... \n");
+	mToConnectDevice.pop_front();
+	Sleep(2000);
+
+	LOGDEBUG("remaining device number is %d \n", mToConnectDevice.size());
+	if (mToConnectDevice.size() != 0)
+	{
+		device = mToConnectDevice.front();
+		result = this->Connect(device->mAddr, device->mAddrType);
+	}
+#endif
+
+#if 0
+	LOGDEBUG("ConnectComplete, start to connect next device... \n");
+	mAvailabeDevice.pop();
+	LOGDEBUG("mAvailabeDevice.size = %d \n", mAvailabeDevice.size());
+	if (mAvailabeDevice.size() != 0)
+	{
 		device = mAvailabeDevice.front();
 		result = device->Connect();
 	}
+#endif
 	return result;
 }
 
@@ -139,7 +209,6 @@ OYM_STATUS OYM_AdapterManager::OnConnect(OYM_PUINT8 data, OYM_UINT16 length)
 	
 	for (ii = mAvailabeDevice.begin(); ii != mAvailabeDevice.end(); ii++)
 	{
-		
 		LOGDEBUG("mAvailabeDevice.size() = %d \n", mAvailabeDevice.size());
 		if (((*ii)->mAddrType == addr_type) && memcmp((*ii)->mAddr, data + 2, BT_ADDRESS_SIZE) == 0)
 		{
@@ -264,6 +333,12 @@ OYM_STATUS OYM_AdapterManager::OnEvent(OYM_UINT32 event, OYM_PUINT8 data, OYM_UI
 			break;
 		}
 
+		case EVENT_MASK_INTERNAL_SCAN_FINISHED:
+		{
+			ScanFinished();
+			break;
+		}
+
 		default:
 			break;
 	}
@@ -275,10 +350,13 @@ OYM_STATUS OYM_AdapterManager::OnEvent(OYM_UINT32 event, OYM_PUINT8 data, OYM_UI
 		{
 			LOGDEBUG("the data of [%d]th bytes is 0x%02x \n", i, data[i]);
 		}
+
+		OYM_UINT16 handle = data[handle_offset] + (data[handle_offset + 1] << 8);
+		LOGDEBUG("OnEvent on handle = %d \n", handle);
 		for (ii = mAvailabeDevice.begin(); ii != mAvailabeDevice.end(); ii++)
 		{
-			OYM_UINT16 handle = data[handle_offset] + (data[handle_offset + 1] << 8);
-			if ((*ii)->GetHandle() == handle)
+			LOGDEBUG("*ii)->GetHandle() = %d, length = %d \n", (*ii)->GetHandle(), handle);
+			if (((*ii)->GetHandle()) == handle)
 			{
 				if (event == EVENT_MASK_GAP_LINK_TERMINATED_MSG)
 				{
@@ -287,8 +365,17 @@ OYM_STATUS OYM_AdapterManager::OnEvent(OYM_UINT32 event, OYM_PUINT8 data, OYM_UI
 				}
 				else
 				{
+					LOGDEBUG("call ProcessMessage \n");
 					(*ii)->ProcessMessage(message, data, length);
 				}
+			}
+		}
+
+		if(event == EVENT_MASK_BOND_COMPLETE_MSG)
+		{
+			if(0 == *data)
+			{
+				ConnectComplete(handle);
 			}
 		}
 	} 

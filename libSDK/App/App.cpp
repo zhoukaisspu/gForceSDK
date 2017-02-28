@@ -45,7 +45,7 @@ int _tmain(int charc, char* argv[]) {
 	{
 		return OYM_FAIL;
 	}
-#if 0
+#if 1
 	status = am->StartScan();
 	if (!OYM_SUCCEEDED)
 	{
@@ -58,14 +58,9 @@ int _tmain(int charc, char* argv[]) {
     {
         while( 1 )
 		{ 
-			Sleep(1000);
+			Sleep(2000);
 			loop++;
-			printf("loop = %d\n", loop);
-			if(loop == 5)
-			{
-				printf("Deinit \n");
-				am->Deinit();
-			}
+			printf("loop = %d \n", loop);
 		}
     }
 	else

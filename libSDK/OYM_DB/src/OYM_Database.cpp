@@ -224,24 +224,14 @@ OYM_STATUS OYM_Database::SaveLinkKey(OYM_UINT8 keysize, OYM_PUINT8 key, OYM_UINT
 	OYM_UINT8 size = (min(keysize, 8))*2 + 1;
 	char data[100];
 	memset(data, 0, size);
+	LOGDEBUG("start to save linkkey... \n");
 
 	//load file first
-	status = mDoc->LoadFile((const char*)mFilename);
-	if (status != OYM_SUCCESS)
-	{
-		free(data);
-		return status;
-	}
-	else
-	{
-		DeleteLinkKey();
-	}
+	mDoc->LoadFile((const char*)mFilename);
 
-	status = mDoc->LoadFile((const char*)mFilename);
 	XMLElement * SecurityInfomation = mDoc->NewElement(SECURITYINFOMATION);
 	mDoc->LinkEndChild(SecurityInfomation);
 
-	LOGDEBUG("start to save linkkey... \n");
 	XMLElement * KeySize = mDoc->NewElement(KEYSIZE);
 	KeySize->SetAttribute(KEYSIZE, keysize);
 	KeySize->SetAttribute(DIV, div);
@@ -272,7 +262,7 @@ OYM_STATUS OYM_Database::SaveIncludedService(XMLElement *PriSvc, OYM_INCSERVICE*
 
 	XMLElement *IncludeService = mDoc->NewElement(INCLUDEDSERVICE);
 	IncludeService->SetAttribute(INDEX, IncluSvc->mIndex);
-	IncludeService->SetAttribute(HANDLE, IncluSvc->mHandle);
+	IncludeService->SetAttribute(ATTRIHANDLE, IncluSvc->mHandle);
 	SaveUUID(IncludeService, IncluSvc->mUUID);	
 	IncludeService->SetAttribute(START_HANDLE, IncluSvc->mStartHandle);
 	IncludeService->SetAttribute(END_HANDLE, IncluSvc->mEndHandle);
@@ -284,17 +274,17 @@ OYM_STATUS OYM_Database::SaveIncludedService(XMLElement *PriSvc, OYM_INCSERVICE*
 OYM_STATUS OYM_Database::SaveCharacteristicDescriptor(XMLElement *Charc, OYM_CHAR_DESCRIPTOR* Descriptor)
 {
 	char *data;
-	if (Charc == NULL)
+	if (Charc == NULL || Descriptor == NULL)
 	{
 		return OYM_FAIL;
 	}
 
 	XMLElement *CharcDescrip = mDoc->NewElement(CHARACTERISTICDES);
 	CharcDescrip->SetAttribute(INDEX, Descriptor->mIndex);
-	CharcDescrip->SetAttribute(HANDLE, Descriptor->mHandle);
+	CharcDescrip->SetAttribute(ATTRIHANDLE, Descriptor->mHandle);
 	SaveUUID(CharcDescrip, Descriptor->mUUID);
 
-	if (Descriptor->mUUID.value.uuid16 != 0x2902)
+	if (Descriptor->mUUID.value.uuid16 != 0x2902 && Descriptor->mData != NULL)
 	{
 		data = (char*)malloc((Descriptor->mDataLen * 2) + 1);
 		arry2str(Descriptor->mData, Descriptor->mDataLen, data);
@@ -302,18 +292,28 @@ OYM_STATUS OYM_Database::SaveCharacteristicDescriptor(XMLElement *Charc, OYM_CHA
 		free(data);
 	}
 	Charc->LinkEndChild(CharcDescrip);
+	
 	return OYM_SUCCESS;
 }
 
 OYM_STATUS OYM_Database::SaveChracteristicValue(XMLElement *Charc, OYM_CHAR_VALUE* value)
 {
 	char *data;
-	XMLElement *CharcValue = mDoc->NewElement(CHARACTERISTICVALUE);
-	CharcValue->SetAttribute(HANDLE, value->mHandle);
+	if (Charc == NULL || value == NULL)
+	{
+		LOGDEBUG("SaveChracteristicValue with NULL pointer \n");
+		return OYM_FAIL;
+	}
 
-	data = (char*)malloc((value->mLength * 2) + 1);
-	arry2str(value->mData, value->mLength, data);
-	CharcValue->SetAttribute(VALUE, data);
+	XMLElement *CharcValue = mDoc->NewElement(CHARACTERISTICVALUE);
+	CharcValue->SetAttribute(ATTRIHANDLE, value->mHandle);
+
+	if (value->mData != NULL)
+	{
+		data = (char*)malloc((value->mLength * 2) + 1);
+		arry2str(value->mData, value->mLength, data);
+		CharcValue->SetAttribute(VALUE, data);
+	}
 
 	Charc->LinkEndChild(CharcValue);
 	return OYM_SUCCESS;
@@ -321,14 +321,15 @@ OYM_STATUS OYM_Database::SaveChracteristicValue(XMLElement *Charc, OYM_CHAR_VALU
 
 OYM_STATUS OYM_Database::SaveCharacteristic(XMLElement *PriSvc, OYM_CHARACTERISTIC* Characteristic)
 {
-	if (PriSvc == NULL)
+	if (PriSvc == NULL || Characteristic == NULL)
 	{
+		LOGDEBUG("SaveCharacteristic with NULL pointer \n");
 		return OYM_FAIL;
 	}
 
 	XMLElement *Charc = mDoc->NewElement(CHARACTERISTIC);
 	Charc->SetAttribute(INDEX, Characteristic->mIndex);
-	Charc->SetAttribute(HANDLE, Characteristic->mHandle);
+	Charc->SetAttribute(ATTRIHANDLE, Characteristic->mHandle);
 	SaveUUID(Charc, Characteristic->mUUID);
 	Charc->SetAttribute(PROPERTY, Characteristic->mProperty);
 	Charc->SetAttribute(VALUE_HANDLE, Characteristic->mValueHandle);
@@ -494,7 +495,7 @@ void OYM_Database::GetCharacteristicDescriptor(XMLElement *chara, OYM_CHARACTERI
 			}
 
 			//get handle
-			attribute = GetAttibuteByName(chrades, HANDLE);
+			attribute = GetAttibuteByName(chrades, ATTRIHANDLE);
 			if (attribute != NULL)
 			{
 				handle = attribute->IntValue();
@@ -552,9 +553,18 @@ void OYM_Database::GetCharacteristicValue(XMLElement *chara, OYM_CHARACTERISTIC*
 			
 			attribute = GetAttibuteByName(chara, VALUE);
 			value = attribute->Value();
-			charcteristic->mAttriValue->mLength = (strlen(value) / 2);
-			charcteristic->mAttriValue->mData = (OYM_PUINT8)malloc(charcteristic->mAttriValue->mLength);
-			str2arry(value, charcteristic->mAttriValue->mData);
+			LOGDEBUG("GetCharacteristicValue  value = %x\n", value);
+			if (value != NULL)
+			{
+				charcteristic->mAttriValue->mLength = (strlen(value) / 2);
+				charcteristic->mAttriValue->mData = (OYM_PUINT8)malloc(charcteristic->mAttriValue->mLength);
+				str2arry(value, charcteristic->mAttriValue->mData);
+			}
+			else
+			{
+				charcteristic->mAttriValue->mLength = 0;
+				charcteristic->mAttriValue->mData = NULL;
+			}
 
 			return;
 		}
@@ -594,7 +604,7 @@ OYM_CHARACTERISTIC* OYM_Database::LoadCharacteristic(XMLElement *chara)
 	}
 
 	//get handle
-	attribute = GetAttibuteByName(chara, HANDLE);
+	attribute = GetAttibuteByName(chara, ATTRIHANDLE);
 	if (attribute != NULL)
 	{
 		handle = attribute->IntValue();
@@ -688,7 +698,7 @@ OYM_INCSERVICE* OYM_Database::LoadIncludedService(XMLElement *includeservice)
 	}
 
 	//get num of included service
-	attribute = GetAttibuteByName(includeservice, HANDLE);
+	attribute = GetAttibuteByName(includeservice, ATTRIHANDLE);
 	if (attribute != NULL)
 	{
 		handle = attribute->IntValue();

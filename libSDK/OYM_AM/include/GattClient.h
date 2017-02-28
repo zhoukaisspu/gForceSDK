@@ -48,12 +48,13 @@ public:
 	{
 		mIndex = index;
 		mHandle = handle;
+		mData = NULL;
 	}
 	
 	OYM_UINT16 mHandle;
 	OYM_UUID mUUID;
 	OYM_UINT8 mDataLen;
-	OYM_UINT8 mData[10];
+	OYM_PUINT8 mData;
 	OYM_UINT8 mIndex;
 };
 
@@ -68,6 +69,7 @@ public:
 	OYM_CHAR_VALUE(OYM_UINT16 handle)
 	{
 		mHandle = handle;
+		mData = NULL;
 	}
 	
 	OYM_UINT16 mHandle;
@@ -82,6 +84,8 @@ public:
 	{
 	
 	}
+
+	~OYM_CHARACTERISTIC();
 
 	OYM_CHARACTERISTIC(OYM_UINT16 handle, OYM_UINT8 property, OYM_UINT16 valueHandle, OYM_UINT8 index)
 	{
@@ -131,6 +135,7 @@ class OYM_PRISERVICE
 {
 public:
 	OYM_PRISERVICE(OYM_UINT16 sHandle, OYM_UINT16 eHandle, OYM_UINT8 index);
+	~OYM_PRISERVICE();
 	OYM_STATUS AddCharacterIntoPriService(OYM_PUINT8 data, OYM_UINT8 pair_len);
 	OYM_STATUS AddIncSvcIntoPriService(OYM_PUINT8 data, OYM_UINT8 pair_len);
 
@@ -158,6 +163,7 @@ public:
 	OYM_STATUS AddPriSvcIntoService(OYM_PUINT8 data, OYM_UINT8 pair_len);
 	
 	OYM_Service();
+	~OYM_Service();
 	OYM_UINT8 mNumOfPrivateService;
 	OYM_UINT8 mCurrentPriService;
 	list<OYM_PRISERVICE*> mPrivateService;

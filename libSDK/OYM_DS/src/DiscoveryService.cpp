@@ -103,7 +103,7 @@ OYM_STATUS OYM_Discovery_Service::StopScan()
 	return result;
 }
 
-OYM_STATUS OYM_Discovery_Service::OnScanFinished()
+OYM_STATUS OYM_Discovery_Service::ProcessScanFinished()
 {
 	LOGDEBUG("Scan finished... \n");
 	if (mIsScanning == OYM_TRUE)
@@ -112,8 +112,9 @@ OYM_STATUS OYM_Discovery_Service::OnScanFinished()
 		mIsScanning = OYM_FALSE;
 		if ((mCallback != NULL) && (0 != (mCallback->GetEventMask() & EVENT_MASK_INTERNAL_SCAN_FINISHED)))
 		{
-			mCallback->OnScanFinished();
+			mCallback->OnEvent(EVENT_MASK_INTERNAL_SCAN_FINISHED, NULL, 0);
 		}
+		mAvalbalDevice.clear();
 	}
 
 	return OYM_SUCCESS;
@@ -208,7 +209,7 @@ OYM_BOOL OYM_Discovery_Service::GetDeviceName(OYM_PCHAR out, OYM_PUINT8 data, OY
 	return result;
 }
 
-OYM_STATUS OYM_Discovery_Service::OnScanResult(OYM_PUINT8 data, OYM_UINT16 length)
+OYM_STATUS OYM_Discovery_Service::ProcessScanResult(OYM_PUINT8 data, OYM_UINT16 length)
 {
 	OYM_UINT16 i;
 	list<BLE_DEVICE>::iterator ii;
@@ -279,7 +280,7 @@ OYM_STATUS OYM_Discovery_Service::OnScanResult(OYM_PUINT8 data, OYM_UINT16 lengt
 
 		//process scan response for device name
 		result = CheckAdvData(adv_data, adv_data_len);
-		LOGDEBUG("TCheckAdvData result is %d\n", result);
+		LOGDEBUG("CheckAdvData result is %d\n", result);
 	}
 
 	if (result == LE_ADV_PROCESS_OK)
@@ -304,4 +305,21 @@ OYM_STATUS OYM_Discovery_Service::OnScanResult(OYM_PUINT8 data, OYM_UINT16 lengt
 	}
 
 	return OYM_SUCCESS;
+}
+
+OYM_STATUS OYM_Discovery_Service::OnEvent(OYM_UINT32 event, OYM_PUINT8 data, OYM_UINT16 length)
+{
+	if (EVENT_MASK_GAP_SCAN_RESULT == event)
+	{
+		return ProcessScanResult(data, length);
+	}
+	else if (EVENT_MASK_GAP_SCAN_FINISHED == event)
+	{
+		return ProcessScanFinished();
+	}
+	else
+	{
+		/*not expected event.*/
+		return OYM_FAIL;
+	}
 }

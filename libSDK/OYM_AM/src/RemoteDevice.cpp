@@ -13,13 +13,45 @@ OYM_VOID OYM_RemoteDevice::Run()
 	MESSAGE* msg;
 	OYM_PUINT8	buf;
 	OYM_UINT16	size;
+	N = 0;
 
 	while (1) {
+		N++;
+		if (mThreadRunning == OYM_FALSE)
+		{
+			if (mThrandEvent != NULL)
+			{
+				CloseHandle(mThread->GetEvent());
+				mThrandEvent = NULL;
+				printf(("num = %d, aaa threads exit with err=%d\n"), N, GetLastError());
+			}
+			/*why execute this code after return??*/
+			printf(("num = %d, threads exit with err=%d\n"), N, GetLastError());
+			return;
+		}
+
+		EnterCriticalSection(&mMutex);
 		if (mMessage.size() != 0) //get msg from message queue
 		{
+			LOGDEBUG("shimengz 3333  mMessage.size() = %x!!! \n", mMessage.size());
 			msg = mMessage.front();
-			buf = (PUINT8)msg->data;
-			size = (UINT16)msg->length;
+			LOGDEBUG("shimengz 4444  msg = %x!!! \n", msg);
+			if(msg != NULL)
+			{
+				buf = (OYM_PUINT8)msg->data;
+				printf("size = %d \n", msg->length);
+				size = (OYM_UINT16)msg->length;
+
+				LOGDEBUG("shimengz 5555  !!! \n");
+				mMessage.pop_front();
+				LOGDEBUG("shimengz 6666  !!! \n");
+				LeaveCriticalSection(&mMutex);
+			}
+			else
+			{
+				LeaveCriticalSection(&mMutex);
+				return;
+			}
 			LOGDEBUG("received message 0x%x \n", msg->event);
 			
 			switch (mState) 
@@ -56,19 +88,22 @@ OYM_VOID OYM_RemoteDevice::Run()
 					LOGDEBUG("OYM_DEVICE_STATE_GATT_READ_CHARC_DESCRIPTOR_VALUE state received message \n");
 					W4GattReadCharcDesValueStateProcessMessage((OYM_DEVICE_EVENT)msg->event, buf, size);
 					break;
+				default:
+					break;
 			}
-			mMessage.pop_front();
+
+			LOGDEBUG("shimengz delete msg = %x	!!! \n", msg);
+			printf("shimengz delete msg = %x	!!! \n", msg);
+			delete msg;
 		}
 		else 
 		{
+			LeaveCriticalSection(&mMutex);
 			Sleep(50);
 		}
 	}
-}
 
-OYM_RemoteDevice::~OYM_RemoteDevice()
-{
-	delete mLog;
+	LOGDEBUG("thread stop to process message! \n");
 }
 
 OYM_RemoteDevice::OYM_RemoteDevice(OYM_NPI_Interface* minterface, BLE_DEVICE address, OYM_CallBack* callback)
@@ -80,21 +115,35 @@ OYM_RemoteDevice::OYM_RemoteDevice(OYM_NPI_Interface* minterface, BLE_DEVICE add
 	memset(mDevName, 0, BLE_DEVICE_NAME_LENGTH);
 	memcpy(mDevName, address.dev_name, BT_ADDRESS_SIZE);
 	mLog = new OYM_Log(MODUAL_TAG_RD, sizeof(MODUAL_TAG_RD));
-	mNeedSaveService = OYM_TRUE;
 
 	mDatabase = new OYM_Database(mAddr, BT_ADDRESS_SIZE);
-
+	mHandle = INVALID_HANDLE;
 	mState = OYM_DEVICE_STATE_IDLE;
 }
 
+OYM_RemoteDevice::~OYM_RemoteDevice()
+{
+	delete mLog;
+	delete mDatabase;
+}
+
+
 OYM_VOID OYM_RemoteDevice::Init()
 {
-	LOGDEBUG("Init... \n");
+	LOGDEBUG("Init thread to process message... \n");
+	InitializeCriticalSection(&mMutex);
+	mThreadRunning = OYM_TRUE;
 	/*create the thread to process message.*/
 	mThread = new CThread(this);
 	mThread->Start();
 	mThread->Join(100);
 	mThreadID = mThread->GetThreadID();
+	mThrandEvent = mThread->GetEvent();
+	mThreadRunning = OYM_TRUE;
+	mNeedSaveLTK = OYM_TRUE;
+	mNeedSaveService = OYM_TRUE;
+	mHandle = INVALID_HANDLE;
+	mMessage.clear();
 }
 
 OYM_VOID OYM_RemoteDevice::DeInit()
@@ -102,29 +151,60 @@ OYM_VOID OYM_RemoteDevice::DeInit()
 	LOGDEBUG("DeInit... \n");
 	if (mThread != NULL)
 	{
-		mThread->Terminate(0);
-		delete mThread;
-		mThread = NULL;
+		mThreadRunning = OYM_FALSE;
 	}
-
 	mState = OYM_DEVICE_STATE_IDLE;
 	mHandle = INVALID_HANDLE;
 }
 
-OYM_STATUS OYM_RemoteDevice::Connect()
+OYM_STATUS OYM_RemoteDevice::OnDeviceConnected(OYM_PUINT8 data, OYM_UINT16 length)
 {
-	OYM_STATUS result = OYM_FAIL;
-	if (mInterface != NULL)
+	OYM_STATUS status;
+	LOGDEBUG("OYM_DEVICE_EVENT_DEVICE_CONNECTED with length = %d\n", length);
+	for (OYM_UINT16 i = 0; i < length; i++)
 	{
-		LOGDEBUG("Connect... \n");
-		result = mInterface->Connect(mAddr, mAddrType);
-		//if (result == OYM_SUCCESS)
-		{
-			mState = OYM_DEVICE_STATE_W4CONN;
-		}
+		LOGDEBUG("the data of [%d]th bytes is 0x%02x \n", i, data[i]);
 	}
-		
-	return result;
+	status = data[EVENT_DEVICE_CCONNECTED_STATUS];
+	if (status != OYM_SUCCESS)
+	{
+		return status;
+	}
+
+	mHandle = data[EVENT_DEVICE_CCONNECTED_CONN_HANDLE_OFFSET] + (data[EVENT_DEVICE_CCONNECTED_CONN_HANDLE_OFFSET+1] << 8);
+	LOGDEBUG("mHandle = 0x%02x \n", mHandle);
+	mConnRole = (OYM_DEVICE_ROLE)data[EVENT_DEVICE_CCONNECTED_ROLE_OFFSET];
+	mConnInternal = data[EVENT_DEVICE_CCONNECTED_CONN_INTERVAL_OFFSET] + (data[EVENT_DEVICE_CCONNECTED_CONN_INTERVAL_OFFSET+1] << 8);
+	mSlaveLatency = data[EVENT_DEVICE_CCONNECTED_SLAVE_LATENCY_OFFSET] + (data[EVENT_DEVICE_CCONNECTED_SLAVE_LATENCY_OFFSET+1] << 8);
+	mConnTimeout = data[EVENT_DEVICE_CCONNECTED_CONN_TIMEOUT_OFFSET] + (data[EVENT_DEVICE_CCONNECTED_CONN_TIMEOUT_OFFSET+1] << 8);
+	mClockAccuracy = data[EVENT_DEVICE_CCONNECTED_CLOCK_ACCURACY_OFFSET];
+
+	LOGDEBUG("mConnRole = 0x%02x \n", mConnRole);
+	LOGDEBUG("mConnInternal = 0x%02x \n", mConnInternal);
+	LOGDEBUG("mSlaveLatency = 0x%02x \n", mSlaveLatency);
+	LOGDEBUG("mConnTimeout = 0x%02x \n", mConnTimeout);
+	LOGDEBUG("mClockAccuracy = 0x%02x \n", mClockAccuracy);
+
+	/*start to authentication automatic if we do not have the link key of remote device*/
+	/*check whether we have the link key, if not, start to authenticate, to do...*/
+	status = mDatabase->LoadLinkKey(&mKeySize, mLTK, &mDIV, mRAND);
+	//status = OYM_FAIL;
+	printf("LoadLinkKey done!! with status = %d \n", status);
+	if (status == OYM_SUCCESS)
+	{
+		/*link key exist, start to encrprtion*/
+		LOGDEBUG("Start to Bond device... \n");
+		status = mInterface->Bond(mHandle, mLTK, mDIV, mRAND, mKeySize);
+		mNeedSaveLTK = OYM_FALSE;
+	}
+	else
+	{
+		/*link key donot exist, start to authentication first.*/
+		LOGDEBUG("Start to Authenticat device... \n");
+		status = mInterface->Authenticate(mHandle);
+	}
+
+	return status;
 }
 
 OYM_STATUS OYM_RemoteDevice::IdleStateProcessMessage(OYM_DEVICE_EVENT event, OYM_PUINT8 data, OYM_UINT16 length)
@@ -134,7 +214,17 @@ OYM_STATUS OYM_RemoteDevice::IdleStateProcessMessage(OYM_DEVICE_EVENT event, OYM
 	switch (event)
 	{
 		case OYM_DEVICE_EVENT_DEVICE_CONNECTED:
-
+		{
+			result = OnDeviceConnected(data, length);
+			if (result == OYM_SUCCESS)
+			{
+				mState = OYM_DEVICE_STATE_W4SECU;
+			}
+			else
+			{
+				mState = OYM_DEVICE_STATE_IDLE;
+			}
+		}
 		break;
 
 		case OYM_DEVICE_STATE_W4CONN:
@@ -155,51 +245,18 @@ OYM_STATUS OYM_RemoteDevice::W4ConnStateProcessMessage(OYM_DEVICE_EVENT event, O
 	switch (event)
 	{
 		case OYM_DEVICE_EVENT_DEVICE_CONNECTED:
-			LOGDEBUG("OYM_DEVICE_EVENT_DEVICE_CONNECTED with length = %d\n", length);
-			for (OYM_UINT16 i = 0; i < length; i++)
+		{
+			result = OnDeviceConnected(data, length);
+			if (result == OYM_SUCCESS)
 			{
-				LOGDEBUG("the data of [%d]th bytes is 0x%02x \n", i, data[i]);
-			}
-			mHandle = data[EVENT_DEVICE_CCONNECTED_CONN_HANDLE_OFFSET] + (data[EVENT_DEVICE_CCONNECTED_CONN_HANDLE_OFFSET+1] << 8);
-			LOGDEBUG("mHandle = 0x%02x \n", mHandle);
-			mConnRole = (OYM_DEVICE_ROLE)data[EVENT_DEVICE_CCONNECTED_ROLE_OFFSET];
-			mConnInternal = data[EVENT_DEVICE_CCONNECTED_CONN_INTERVAL_OFFSET] + (data[EVENT_DEVICE_CCONNECTED_CONN_INTERVAL_OFFSET+1] << 8);
-			mSlaveLatency = data[EVENT_DEVICE_CCONNECTED_SLAVE_LATENCY_OFFSET] + (data[EVENT_DEVICE_CCONNECTED_SLAVE_LATENCY_OFFSET+1] << 8);
-			mConnTimeout = data[EVENT_DEVICE_CCONNECTED_CONN_TIMEOUT_OFFSET] + (data[EVENT_DEVICE_CCONNECTED_CONN_TIMEOUT_OFFSET+1] << 8);
-			mClockAccuracy = data[EVENT_DEVICE_CCONNECTED_CLOCK_ACCURACY_OFFSET];
-			
-			LOGDEBUG("mConnRole = 0x%02x \n", mConnRole);
-			LOGDEBUG("mConnInternal = 0x%02x \n", mConnInternal);
-			LOGDEBUG("mSlaveLatency = 0x%02x \n", mSlaveLatency);
-			LOGDEBUG("mConnTimeout = 0x%02x \n", mConnTimeout);
-			LOGDEBUG("mClockAccuracy = 0x%02x \n", mClockAccuracy);
-
-			/*start to authentication automatic if we do not have the link key of remote device*/
-			/*check whether we have the link key, if not, start to authenticate, to do...*/
-			status = mDatabase->LoadLinkKey(&mKeySize, mLTK, &mDIV, mRAND);
-			printf("LoadLinkKey done!! with status = %d \n", status);
-			//status = OYM_FAIL; //do not encryption for now cause from bugs.
-			if (status == OYM_SUCCESS)
-			{
-				//link key exist, start to encrprtion
-				//LOGDEBUG("---------->mInterface->Bond start....\n");
-				status = mInterface->Bond(mHandle, mLTK, mDIV, mRAND, mKeySize);
-				//if (status == OYM_SUCCESS)
-				{
-					mState = OYM_DEVICE_STATE_W4SECU;
-				}
-				//LOGDEBUG("---------->mInterface->Bond end....\n");
+				mState = OYM_DEVICE_STATE_W4SECU;
 			}
 			else
 			{
-				status = mInterface->Authenticate(mHandle);
-				if (status == OYM_SUCCESS)
-				{
-					mState = OYM_DEVICE_STATE_W4SECU;
-				}
+				mState = OYM_DEVICE_STATE_IDLE;
 			}
 			break;
-
+		}
 		case OYM_DEVICE_EVENT_SLAVE_SECURY_REQUEST:
 			LOGDEBUG("OYM_DEVICE_EVENT_SLAVE_SECURY_REQUEST with length = %d\n", length);
 
@@ -242,6 +299,129 @@ OYM_STATUS OYM_RemoteDevice::W4ConnStateProcessMessage(OYM_DEVICE_EVENT event, O
 	return result;
 }
 
+OYM_STATUS OYM_RemoteDevice::AuthenticationComplete(OYM_PUINT8 data, OYM_UINT16 length)
+{
+	OYM_STATUS status;
+	int KeySizeOffset = 0;
+	int DIVOffset = 0;
+	int LTKOffset = 0;
+	int RandOffset = 0;
+	LOGDEBUG("OYM_DEVICE_EVENT_AUTH_COMPLETE with length = %d\n", length);
+	for (OYM_UINT16 i = 0; i < length; i++)
+	{
+		LOGDEBUG("the data of [%d]th bytes is 0x%02x \n", i, data[i]);
+	}
+
+	if (data[EVENT_AUTH_COMPLETE_STATUS_OFFSET] != OYM_SUCCESS)
+	{
+		LOGDEBUG("OYM_DEVICE_EVENT_AUTH_COMPLETE with error!! \n");
+		return OYM_FAIL;
+	}
+
+	if (0x01 == data[EVENT_AUTH_COMPLETE_ENC_ENABLE_OFFSET])
+	{
+		LOGDEBUG("Link Key available 111 !!! \n");
+		KeySizeOffset = EVENT_AUTH_COMPLETE_KEYSIZE_OFFSET;
+		LTKOffset = EVENT_AUTH_COMPLETE_LTK_OFFSET;
+		DIVOffset = EVENT_AUTH_COMPLETE_DIV_OFFSET;
+		RandOffset = EVENT_AUTH_COMPLETE_RAND_OFFSET;
+	}
+	else if (0x01 == data[32])
+	{
+		LOGDEBUG("Link Key available 222!!! \n");
+		KeySizeOffset = 33;
+		LTKOffset = 34;
+		DIVOffset = 50;
+		RandOffset = 52;
+	}
+	else
+	{
+		LOGDEBUG("OYM_DEVICE_EVENT_AUTH_COMPLETE with enable = %d!! \n ", data[32]);
+		LOGDEBUG("NO Link Key available!!! \n");
+		return OYM_FAIL;
+	}
+
+	mKeySize = data[KeySizeOffset];
+	LOGDEBUG("OYM_DEVICE_EVENT_AUTH_COMPLETE with keysize = %d!! \n ", mKeySize);
+	/*need to check the length of keysize.*/
+	memcpy(mLTK, data + LTKOffset, mKeySize);
+	for (OYM_UINT16 i = 0; i < mKeySize; i++)
+	{
+		LOGDEBUG("the mLTK of [%d]th bytes is 0x%02x \n", i, mLTK[i]);
+	}
+
+	mDIV = data[DIVOffset] + (data[DIVOffset + 1] << 8);
+	LOGDEBUG("OYM_DEVICE_EVENT_AUTH_COMPLETE with mDIV = 0x%02x!! \n ", mDIV);
+
+	memcpy(mRAND, data + RandOffset, 8);
+	for (OYM_UINT16 i = 0; i < 8; i++)
+	{
+		LOGDEBUG("the mRAND of [%d]th bytes is 0x%02x \n", i, mRAND[i]);
+	}
+	LOGDEBUG("---------->mInterface->Bond start....\n");
+	status = mInterface->Bond(mHandle, mLTK, mDIV, mRAND, mKeySize);
+	LOGDEBUG("---------->mInterface->Bond end....\n");
+
+	return status;
+}
+
+OYM_STATUS OYM_RemoteDevice::BondComplete(OYM_PUINT8 data, OYM_UINT16 length)
+{
+	OYM_STATUS status;
+	LOGDEBUG("BondComplete with length = %d\n", length);
+
+	status = data[EVENT_BOND_COMPLETE_STATUS_OFFSET];
+	if (status == OYM_SUCCESS)
+	{
+		LOGDEBUG("BondComplete successful!!!\n");
+		//save link key to xml file.
+		if (mNeedSaveLTK == OYM_TRUE)
+		{
+			mDatabase->SaveLinkKey(mKeySize, mLTK, mDIV, mRAND);
+			mNeedSaveLTK = OYM_FALSE;
+		}
+
+		//start to exchange MTU size
+		status = mInterface->ExchangeMTUSize(mHandle, LOCAL_GATT_CLIENT_MTU_SIZE);
+		if (OYM_SUCCESS == status)
+		{
+			LOGDEBUG("Gatt start to exchange MTU size! \n");
+			mState = OYM_DEVICE_STATE_GATT_PRI_SVC;
+		}
+		else
+		{
+			//fail to discovery all primary service, disconnect connection
+		}
+	}
+	else if (status == 0x06) //key missing
+	{
+		LOGDEBUG("OYM_DEVICE_EVENT_BOND_COMPLETE fail with status = %d!!!\n", status);
+		//Remove information of remote device;
+		mDatabase->DeleteLinkKey();
+		mDatabase->DeleteGattService();
+		mNeedSaveLTK = OYM_TRUE;
+		mNeedSaveService = OYM_TRUE;
+		//mInterface->Authenticate(mHandle);
+	}
+	return status;
+}
+
+OYM_STATUS OYM_RemoteDevice::ConnectionParameterUpdated(OYM_PUINT8 data, OYM_UINT16 length)
+{
+	OYM_STATUS status;
+	LOGDEBUG("ConnectionParameterUpdated with length = %d\n", length);
+	status = data[EVENT_BOND_COMPLETE_STATUS_OFFSET];
+	if (status == OYM_SUCCESS)
+	{
+		mConnInternal = data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] << 8);
+		mSlaveLatency = data[EVENT_LINK_PARA_UPDATE_LATENCY_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_LATENCY_OFFSET+1] << 8);
+		mConnTimeout = data[EVENT_LINK_PARA_UPDATE_TIMEOUT_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_TIMEOUT_OFFSET+1] << 8);
+		LOGDEBUG("mConnInternal = 0x%02x \n", mConnInternal);
+		LOGDEBUG("mSlaveLatency = 0x%02x \n", mSlaveLatency);
+		LOGDEBUG("mConnTimeout = 0x%02x \n", mConnTimeout);
+	}
+	return status;
+}
 OYM_STATUS OYM_RemoteDevice::W4SecuStateProcessMessage(OYM_DEVICE_EVENT event, OYM_PUINT8 data, OYM_UINT16 length)
 {
 	OYM_STATUS result = OYM_FAIL;
@@ -250,148 +430,36 @@ OYM_STATUS OYM_RemoteDevice::W4SecuStateProcessMessage(OYM_DEVICE_EVENT event, O
 	switch (event)
 	{
 		case OYM_DEVICE_EVENT_SLAVE_SECURY_REQUEST:
+		{
 			LOGDEBUG("OYM_DEVICE_EVENT_SLAVE_SECURY_REQUEST with length = %d\n", length);
 			LOGDEBUG("OYM_DEVICE_EVENT_SLAVE_SECURY_REQUEST skip it--------> \n");
-#if 0
-			LOGDEBUG("OYM_DEVICE_EVENT_SLAVE_SECURY_REQUEST with length = %d\n", length);
-
-			status = data[EVENT_SLAVE_SECURY_REQUEST_STATUS_OFFSET];
-			if (status != OYM_SUCCESS)
-			{
-				LOGDEBUG("OYM_DEVICE_EVENT_SLAVE_SECURY_REQUEST with error status = %d\n", status);
-				return result;
-			}
-
-			if (0 == memcmp(data + EVENT_SLAVE_SECURY_REQUEST_ADDRESS_OFFSET, mAddr, BT_ADDRESS_SIZE))
-			{
-				OYM_UINT8 auth_type = data[EVENT_SLAVE_SECURY_REQUEST_AUTH_TYPE_OFFSET];
-				if (auth_type == 1)
-				{
-					LOGDEBUG("---------->mInterface->Authenticate start....\n");
-					mInterface->Authenticate(mHandle);
-					LOGDEBUG("---------->mInterface->Authenticate end....\n");
-				}
-				else
-				{
-					LOGDEBUG("---------->mInterface->Authenticate not called....\n");
-				}
-			}
-			else
-			{
-				LOGDEBUG("address is not patch");
-			}
-#endif
 			break;
+		}
 
 		case OYM_DEVICE_EVENT_AUTH_COMPLETE:
 		{
-			int KeySizeOffset = 0;
-			int DIVOffset = 0;
-			int LTKOffset = 0;
-			int RandOffset = 0;
-			LOGDEBUG("OYM_DEVICE_EVENT_AUTH_COMPLETE with length = %d\n", length);
-			for (OYM_UINT16 i = 0; i < length; i++)
+			result = AuthenticationComplete(data, length);
+			if(result != OYM_SUCCESS)
 			{
-				LOGDEBUG("the data of [%d]th bytes is 0x%02x \n", i, data[i]);
+				LOGDEBUG("Authentication Failed!!! \n");
 			}
-
-			if (data[EVENT_AUTH_COMPLETE_STATUS_OFFSET] != OYM_SUCCESS)
-			{
-				LOGDEBUG("OYM_DEVICE_EVENT_AUTH_COMPLETE with error!! \n");
-				return OYM_FAIL;
-			}
-
-			if (0x01 == data[EVENT_AUTH_COMPLETE_ENC_ENABLE_OFFSET])
-			{
-				LOGDEBUG("Link Key available 111 !!! \n");
-				KeySizeOffset = EVENT_AUTH_COMPLETE_KEYSIZE_OFFSET;
-				LTKOffset = EVENT_AUTH_COMPLETE_LTK_OFFSET;
-				DIVOffset = EVENT_AUTH_COMPLETE_DIV_OFFSET;
-				RandOffset = EVENT_AUTH_COMPLETE_RAND_OFFSET;
-			}
-			else if (0x01 == data[32])
-			{
-				LOGDEBUG("Link Key available 222!!! \n");
-				KeySizeOffset = 33;
-				LTKOffset = 34;
-				DIVOffset = 50;
-				RandOffset = 52;
-			}
-			else
-			{
-				LOGDEBUG("OYM_DEVICE_EVENT_AUTH_COMPLETE with enable = %d!! \n ", data[32]);
-				LOGDEBUG("NO Link Key available!!! \n");
-				return OYM_FAIL;
-			}
-
-			mKeySize = data[KeySizeOffset];
-			LOGDEBUG("OYM_DEVICE_EVENT_AUTH_COMPLETE with keysize = %d!! \n ", mKeySize);
-			/*need to check the length of keysize.*/
-			memcpy(mLTK, data + LTKOffset, mKeySize);
-			for (OYM_UINT16 i = 0; i < mKeySize; i++)
-			{
-				LOGDEBUG("the mLTK of [%d]th bytes is 0x%02x \n", i, mLTK[i]);
-			}
-			mDIV = data[DIVOffset] + (data[DIVOffset + 1] << 8);
-			LOGDEBUG("OYM_DEVICE_EVENT_AUTH_COMPLETE with mDIV = 0x%02x!! \n ", mDIV);
-			memcpy(mRAND, data + RandOffset, 8);
-			for (OYM_UINT16 i = 0; i < 8; i++)
-			{
-				LOGDEBUG("the mRAND of [%d]th bytes is 0x%02x \n", i, mRAND[i]);
-			}
-
-			LOGDEBUG("---------->mInterface->Bond start....\n");
-			mInterface->Bond(mHandle, mLTK, mDIV, mRAND, mKeySize);
-			LOGDEBUG("---------->mInterface->Bond end....\n");
 			break;
 		}
 
 		case OYM_DEVICE_EVENT_BOND_COMPLETE:
-			LOGDEBUG("OYM_DEVICE_EVENT_BOND_COMPLETE with length = %d\n", length);
-
-			status = data[EVENT_BOND_COMPLETE_STATUS_OFFSET];
-			if (status == OYM_SUCCESS)
+		{
+			result = BondComplete(data, length);
+			if(result != OYM_SUCCESS)
 			{
-				LOGDEBUG("OYM_DEVICE_EVENT_BOND_COMPLETE successful!!!\n");
-				//save link key to xml file.
-				mDatabase->SaveLinkKey(mKeySize, mLTK, mDIV, mRAND);
-
-				//start to exchange MTU size
-				status = mInterface->ExchangeMTUSize(mHandle, LOCAL_GATT_CLIENT_MTU_SIZE);
-				if (OYM_SUCCESS == status)
-				{
-					LOGDEBUG("Gatt start to exchange MTU size! \n");
-					mState = OYM_DEVICE_STATE_GATT_PRI_SVC;
-				}
-				else
-				{
-					//fail to discovery all primary service, disconnect connection
-				}
+				LOGDEBUG("Bond Failed!!! \n");
 			}
-			else if (status == 0x06) //key missing
-			{
-				LOGDEBUG("OYM_DEVICE_EVENT_BOND_COMPLETE fail with status = %d!!!\n", status);
-				//Remove information of remote device;
-				mDatabase->DeleteLinkKey();
-				mDatabase->DeleteGattService();
-				//mInterface->Authenticate(mHandle);
-			}
-			
 			break;
-
+		}
 		case OYM_DEVICE_EVENT_LINK_PARA_UPDATE:
-			LOGDEBUG("OYM_DEVICE_EVENT_LINK_PARA_UPDATE with length = %d\n", length);
-			status = data[EVENT_BOND_COMPLETE_STATUS_OFFSET];
-			if (status == OYM_SUCCESS)
-			{
-				mConnInternal = data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] << 8);
-				mSlaveLatency = data[EVENT_LINK_PARA_UPDATE_LATENCY_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_LATENCY_OFFSET+1] << 8);
-				mConnTimeout = data[EVENT_LINK_PARA_UPDATE_TIMEOUT_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_TIMEOUT_OFFSET+1] << 8);
-				LOGDEBUG("mConnInternal = 0x%02x \n", mConnInternal);
-				LOGDEBUG("mSlaveLatency = 0x%02x \n", mSlaveLatency);
-				LOGDEBUG("mConnTimeout = 0x%02x \n", mConnTimeout);
-			}
+		{
+			ConnectionParameterUpdated(data, length);
 			break;
+		}
 
 		default:
 			break;
@@ -413,17 +481,11 @@ OYM_STATUS OYM_RemoteDevice::W4GattPriSvcStateProcessMessage(OYM_DEVICE_EVENT ev
 		break;
 
 	case OYM_DEVICE_EVENT_LINK_PARA_UPDATE:
-		LOGDEBUG("OYM_DEVICE_EVENT_LINK_PARA_UPDATE with length = %d\n", length);
-		status = data[EVENT_BOND_COMPLETE_STATUS_OFFSET];
-		if (status == OYM_SUCCESS)
 		{
-			mConnInternal = data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] << 8);
-			mSlaveLatency = data[EVENT_LINK_PARA_UPDATE_LATENCY_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_LATENCY_OFFSET + 1] << 8);
-			mConnTimeout = data[EVENT_LINK_PARA_UPDATE_TIMEOUT_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_TIMEOUT_OFFSET + 1] << 8);
-			LOGDEBUG("mConnInternal = 0x%02x \n", mConnInternal);
-			LOGDEBUG("mSlaveLatency = 0x%02x \n", mSlaveLatency);
-			LOGDEBUG("mConnTimeout = 0x%02x \n", mConnTimeout);
+			ConnectionParameterUpdated(data, length);
+			break;
 		}
+		
 		break;
 
 	case OYM_DEVICE_EVENT_ATT_EXCHANGE_MTU_MSG:
@@ -446,10 +508,10 @@ OYM_STATUS OYM_RemoteDevice::W4GattPriSvcStateProcessMessage(OYM_DEVICE_EVENT ev
 		if (OYM_SUCCESS == mDatabase->LoadService(&mService))
 		{
 			LOGDEBUG("Load Service Successful!! \n");
-			mCPS = 0;
-			mCC = 0;
-			mCCD = 0;
-			ProcessCharacteristicConfiguration(mCPS, mCC, mCCD);
+			mCurrentPrimaryServiceIndex = 0;
+			mCurrentCharactericticIndex = 0;
+			mCurrentCharactericticDescriptorIndex = 0;
+			ProcessCharacteristicConfiguration(mCurrentPrimaryServiceIndex, mCurrentCharactericticIndex, mCurrentCharactericticDescriptorIndex);
 			mState = OYM_DEVICE_STATE_GATT_READ_CHARC_DESCRIPTOR_VALUE;
 			mNeedSaveService = OYM_FALSE;
 		}
@@ -486,14 +548,14 @@ OYM_STATUS OYM_RemoteDevice::W4GattPriSvcStateProcessMessage(OYM_DEVICE_EVENT ev
 		OYM_PUINT8 p = data + 5;
 
 		LOGDEBUG("OYM_DEVICE_EVENT_ATT_READ_BY_GRP_TYPE_MSG with status = %d\n", status);
-		if (0x1A == status)
+		if (OYM_ATT_PRODECURE_COMPLETE == status)
 		{
 			LOGDEBUG("OYM_DEVICE_EVENT_ATT_READ_BY_GRP_TYPE_MSG completeed with service number is %d! \n", mService.mNumOfPrivateService);
 			//change state to discovery included service and characteristic.
 			OYM_PRISERVICE* service = mService.FindPriSvcbyIndex(mService.mCurrentPriService);
 			if (NULL != service)
 			{
-				LOGDEBUG("start to find the included service of %dth service. \n", mService.mCurrentPriService);
+				LOGDEBUG("start to discovery %dth primary service!!!\n", mService.mCurrentPriService);
 				mInterface->DiscoveryIncludedPrimaryService(mHandle, service->mStartHandle, service->mEndHandle);
 				mState = OYM_DEVICE_STATE_GATT_INC_SVC;
 			}
@@ -502,7 +564,7 @@ OYM_STATUS OYM_RemoteDevice::W4GattPriSvcStateProcessMessage(OYM_DEVICE_EVENT ev
 				LOGDEBUG("mService.mCurrentPriService = %d is not available. \n", mService.mCurrentPriService);
 			}
 		}
-		else if (0 == status)
+		else if (OYM_ATT_PROCEDURE_SUCCESS == status)
 		{
 			if ((length - 1) % pair_len == 0)
 			{
@@ -548,18 +610,10 @@ OYM_STATUS OYM_RemoteDevice::W4GattIncSvcStateProcessMessage(OYM_DEVICE_EVENT ev
 			break;
 
 		case OYM_DEVICE_EVENT_LINK_PARA_UPDATE:
-			LOGDEBUG("OYM_DEVICE_EVENT_LINK_PARA_UPDATE with length = %d\n", length);
-			status = data[EVENT_BOND_COMPLETE_STATUS_OFFSET];
-			if (status == OYM_SUCCESS)
-			{
-				mConnInternal = data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] << 8);
-				mSlaveLatency = data[EVENT_LINK_PARA_UPDATE_LATENCY_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_LATENCY_OFFSET + 1] << 8);
-				mConnTimeout = data[EVENT_LINK_PARA_UPDATE_TIMEOUT_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_TIMEOUT_OFFSET + 1] << 8);
-				LOGDEBUG("mConnInternal = 0x%02x \n", mConnInternal);
-				LOGDEBUG("mSlaveLatency = 0x%02x \n", mSlaveLatency);
-				LOGDEBUG("mConnTimeout = 0x%02x \n", mConnTimeout);
-			}
+		{
+			ConnectionParameterUpdated(data, length);
 			break;
+		}
 
 		case OYM_DEVICE_EVENT_ATT_ERROR_MSG:
 		{
@@ -638,18 +692,11 @@ OYM_STATUS OYM_RemoteDevice::W4GattDisCharcStateProcessMessage(OYM_DEVICE_EVENT 
 		break;
 
 	case OYM_DEVICE_EVENT_LINK_PARA_UPDATE:
+	{
 		LOGDEBUG("OYM_DEVICE_EVENT_LINK_PARA_UPDATE with length = %d\n", length);
-		status = data[EVENT_BOND_COMPLETE_STATUS_OFFSET];
-		if (status == OYM_SUCCESS)
-		{
-			mConnInternal = data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] << 8);
-			mSlaveLatency = data[EVENT_LINK_PARA_UPDATE_LATENCY_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_LATENCY_OFFSET + 1] << 8);
-			mConnTimeout = data[EVENT_LINK_PARA_UPDATE_TIMEOUT_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_TIMEOUT_OFFSET + 1] << 8);
-			LOGDEBUG("mConnInternal = 0x%02x \n", mConnInternal);
-			LOGDEBUG("mSlaveLatency = 0x%02x \n", mSlaveLatency);
-			LOGDEBUG("mConnTimeout = 0x%02x \n", mConnTimeout);
-		}
+		ConnectionParameterUpdated(data, length);
 		break;
+	}
 
 	case OYM_DEVICE_EVENT_ATT_ERROR_MSG:
 	{
@@ -657,19 +704,17 @@ OYM_STATUS OYM_RemoteDevice::W4GattDisCharcStateProcessMessage(OYM_DEVICE_EVENT 
 		OYM_UINT8 error_code = data[OYM_ATT_ERROR_MSG_ERROR_CODE_OFFSET];
 		if (OYM_ERROR_CODE_ATTR_NOT_FOUND == error_code)
 		{
-			//no included service found, start to discovery charactistic.
-			OYM_PRISERVICE* service = mService.FindPriSvcbyIndex(mService.mCurrentPriService);
-			if (NULL != service)
+			//no characteristic found, start to discovery next primary service.
+			OYM_PRISERVICE* service;
+			if((service = mService.GetNextAvailablePriSvc()) != NULL)
 			{
-				LOGDEBUG("start to find the characteristic of  %dth service. \n", mService.mCurrentPriService);
-				//mInterface->DiscoveryCharacteristic(mHandle, service->mStartHandle, service->mEndHandle);
-				//mState = OYM_DEVICE_STATE_GATT_DIS_CHARC;
-			}
-			else
-			{
-				LOGDEBUG("mService.mCurrentPriService = %d is not available. \n", mService.mCurrentPriService);
+				LOGDEBUG("start to discovery %dth primary service!!!\n", mService.mCurrentPriService);
+				mInterface->DiscoveryIncludedPrimaryService(mHandle, service->mStartHandle, service->mEndHandle);
+				mState = OYM_DEVICE_STATE_GATT_INC_SVC;
+				return OYM_SUCCESS;
 			}
 		}
+		break;
 	}
 
 	case OYM_DEVICE_EVENT_ATT_READ_BY_TYPE_MSG:
@@ -770,42 +815,29 @@ OYM_STATUS OYM_RemoteDevice::W4GattReadCharcValueStateProcessMessage(OYM_DEVICE_
 			break;
 
 		case OYM_DEVICE_EVENT_LINK_PARA_UPDATE:
+		{
 			LOGDEBUG("OYM_DEVICE_EVENT_LINK_PARA_UPDATE with length = %d\n", length);
-			status = data[EVENT_BOND_COMPLETE_STATUS_OFFSET];
-			if (status == OYM_SUCCESS)
-			{
-				mConnInternal = data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] << 8);
-				mSlaveLatency = data[EVENT_LINK_PARA_UPDATE_LATENCY_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_LATENCY_OFFSET + 1] << 8);
-				mConnTimeout = data[EVENT_LINK_PARA_UPDATE_TIMEOUT_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_TIMEOUT_OFFSET + 1] << 8);
-				LOGDEBUG("mConnInternal = 0x%02x \n", mConnInternal);
-				LOGDEBUG("mSlaveLatency = 0x%02x \n", mSlaveLatency);
-				LOGDEBUG("mConnTimeout = 0x%02x \n", mConnTimeout);
-			}
+			ConnectionParameterUpdated(data, length);
 			break;
+		}
 
 		case OYM_DEVICE_EVENT_ATT_ERROR_MSG:
 		{
 			//get error code
 			OYM_UINT8 error_code = data[OYM_ATT_ERROR_MSG_ERROR_CODE_OFFSET];
 			LOGDEBUG("OYM_DEVICE_EVENT_ATT_ERROR_MSG with error code = %d \n", error_code);
-			if (OYM_ERROR_CODE_ATTR_NOT_FOUND == error_code)
+			LOGDEBUG("read value error, start to discovery discriptor... \n");
+			OYM_PRISERVICE* service = mService.FindPriSvcbyIndex(mService.mCurrentPriService);
+			if (service != NULL)
 			{
-				//no included service found, start to discovery charactistic.
-				OYM_PRISERVICE* service = mService.FindPriSvcbyIndex(mService.mCurrentPriService);
-				if (NULL != service)
+				OYM_CHARACTERISTIC* characteristic = service->FindCharacteristicbyIndex(service->mCurrentCharateristic);
+				LOGDEBUG("OYM_DEVICE_EVENT_ATT_READ_RESP_MSG success!!!\n");
+				if (characteristic != NULL)
 				{
-					LOGDEBUG("start to find the characteristic of  %dth service. \n", mService.mCurrentPriService);
-					//mInterface->DiscoveryCharacteristic(mHandle, service->mStartHandle, service->mEndHandle);
-					//mState = OYM_DEVICE_STATE_GATT_DIS_CHARC;
+					characteristic->mAttriValue->mLength = 0;
+					characteristic->mAttriValue->mData = NULL;
+					DiscoveryDescriptor();
 				}
-				else
-				{
-					LOGDEBUG("mCurrentPriService = %d is not available. \n", mService.mCurrentPriService);
-				}
-			}
-			else 
-			{
-				DiscoveryDescriptor();
 			}
 		}
 		
@@ -829,7 +861,10 @@ OYM_STATUS OYM_RemoteDevice::W4GattReadCharcValueStateProcessMessage(OYM_DEVICE_
 					{
 						characteristic->mAttriValue->mLength = length;
 						characteristic->mAttriValue->mData = (OYM_PUINT8)malloc(length);
-						memcpy(characteristic->mAttriValue->mData, data + OYM_ATT_READ_VALUE_RESP_DATA_OFFSET, length);
+						if (characteristic->mAttriValue->mData != NULL)
+						{
+							memcpy(characteristic->mAttriValue->mData, data + OYM_ATT_READ_VALUE_RESP_DATA_OFFSET, length);
+						}
 						LOGDEBUG("OYM_DEVICE_EVENT_ATT_READ_RESP_MSG success!!!\n");
 						this->DiscoveryDescriptor();
 					}
@@ -880,7 +915,10 @@ OYM_STATUS OYM_RemoteDevice::W4GattReadCharcValueStateProcessMessage(OYM_DEVICE_
 				{
 					characteristic->mAttriValue->mLength = Total;
 					characteristic->mAttriValue->mData = (OYM_PUINT8)malloc(Total);
-					memcpy(characteristic->mAttriValue->mData, Temp_Buffer, Total);
+					if (characteristic->mAttriValue->mData != NULL)
+					{
+						memcpy(characteristic->mAttriValue->mData, Temp_Buffer, Total);
+					}
 					LOGDEBUG("OYM_DEVICE_EVENT_ATT_READ_RESP_MSG with Total length = %d !!!\n", Total);
 					this->DiscoveryDescriptor();
 				}
@@ -971,42 +1009,38 @@ OYM_STATUS OYM_RemoteDevice::W4GattReadCharcDesValueStateProcessMessage(OYM_DEVI
 {
 	OYM_STATUS result = OYM_FAIL;
 	OYM_UINT8 status = data[OYM_ATT_READ_VALUE_RESP_STATUS_OFFSET];
-	LOGDEBUG("W4GattReadCharcValueStateProcessMessage process Message = %d \n", event);
+	LOGDEBUG("W4GattReadCharcDesValueStateProcessMessage process Message = %d \n", event);
 	switch (event)
 	{
 		case OYM_DEVICE_EVENT_SLAVE_SECURY_REQUEST:
 		case OYM_DEVICE_EVENT_AUTH_COMPLETE:
 		case OYM_DEVICE_EVENT_BOND_COMPLETE:
-			LOGDEBUG("W4GattPriSvcStateProcessMessage process error Message = %d \n", event);
+			LOGDEBUG("W4GattReadCharcDesValueStateProcessMessage process error Message = %d \n", event);
 			break;
 
 		case OYM_DEVICE_EVENT_LINK_PARA_UPDATE:
+		{
 			LOGDEBUG("OYM_DEVICE_EVENT_LINK_PARA_UPDATE with length = %d\n", length);
-			status = data[EVENT_BOND_COMPLETE_STATUS_OFFSET];
-			if (status == OYM_SUCCESS)
-			{
-				mConnInternal = data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] << 8);
-				mSlaveLatency = data[EVENT_LINK_PARA_UPDATE_LATENCY_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_LATENCY_OFFSET + 1] << 8);
-				mConnTimeout = data[EVENT_LINK_PARA_UPDATE_TIMEOUT_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_TIMEOUT_OFFSET + 1] << 8);
-				LOGDEBUG("mConnInternal = 0x%02x \n", mConnInternal);
-				LOGDEBUG("mSlaveLatency = 0x%02x \n", mSlaveLatency);
-				LOGDEBUG("mConnTimeout = 0x%02x \n", mConnTimeout);
-			}
+			ConnectionParameterUpdated(data, length);
 			break;
+		}
 
 		/*characteristic value has been read.*/
 		case OYM_DEVICE_EVENT_ATT_READ_RESP_MSG:
 		{
 			LOGDEBUG("OYM_DEVICE_EVENT_ATT_READ_RESP_MSG! \n");
-			OYM_PRISERVICE* service = mService.FindPriSvcbyIndex(mCPS);
-			OYM_CHARACTERISTIC* characteristic = service->FindCharacteristicbyIndex(mCC);
-			OYM_CHAR_DESCRIPTOR* descriptor = characteristic->FindDescriptorByIndex(mCCD);
+			OYM_PRISERVICE* service = mService.FindPriSvcbyIndex(mCurrentPrimaryServiceIndex);
+			OYM_CHARACTERISTIC* characteristic = service->FindCharacteristicbyIndex(mCurrentCharactericticIndex);
+			OYM_CHAR_DESCRIPTOR* descriptor = characteristic->FindDescriptorByIndex(mCurrentCharactericticDescriptorIndex);
 			descriptor->mDataLen = data[OYM_ATT_READ_VALUE_RESP_LEN_OFFSET];
 			LOGDEBUG("OYM_DEVICE_EVENT_ATT_READ_RESP_MSG! with length = %d \n", descriptor->mDataLen);
-			memcpy(descriptor->mData, data + OYM_ATT_READ_VALUE_RESP_DATA_OFFSET, descriptor->mDataLen);
-	
-			mCCD += 1;
-			if (OYM_SUCCESS == ProcessCharacteristicConfiguration(mCPS, mCC, mCCD))
+			descriptor->mData = (OYM_PUINT8)malloc(descriptor->mDataLen + 1);
+			if (descriptor->mData != NULL)
+			{
+				memcpy(descriptor->mData, data + OYM_ATT_READ_VALUE_RESP_DATA_OFFSET, descriptor->mDataLen);
+			}
+			mCurrentCharactericticDescriptorIndex += 1;
+			if (OYM_SUCCESS == ProcessCharacteristicConfiguration(mCurrentPrimaryServiceIndex, mCurrentCharactericticIndex, mCurrentCharactericticDescriptorIndex))
 			{
 				if (mNeedSaveService == OYM_TRUE)
 				{
@@ -1019,8 +1053,8 @@ OYM_STATUS OYM_RemoteDevice::W4GattReadCharcDesValueStateProcessMessage(OYM_DEVI
 		case OYM_DEVICE_EVENT_ATT_WRITE_MSG:
 		{
 			LOGDEBUG("OYM_DEVICE_EVENT_ATT_WRITE_MSG! \n");
-			mCCD += 1;
-			if (OYM_SUCCESS == ProcessCharacteristicConfiguration(mCPS, mCC, mCCD))
+			mCurrentCharactericticDescriptorIndex += 1;
+			if (OYM_SUCCESS == ProcessCharacteristicConfiguration(mCurrentPrimaryServiceIndex, mCurrentCharactericticIndex, mCurrentCharactericticDescriptorIndex))
 			{
 				if (mNeedSaveService == OYM_TRUE)
 				{
@@ -1049,13 +1083,27 @@ OYM_UINT16 OYM_RemoteDevice::GetHandle()
 //revice message from AdapterManager and queue message to a list.
 OYM_STATUS OYM_RemoteDevice::ProcessMessage(OYM_DEVICE_EVENT event, OYM_PUINT8 data, OYM_UINT16 length)
 {
-	LOGDEBUG("----->ProcessMessage event = 0x%x \n", event);
-	MESSAGE *message = new MESSAGE;
-	message->event = event;
-	message->length = length;
-	memcpy(message->data, data, length);
+	LOGDEBUG("----->ProcessMessage event = 0x%x sizeof(MESSAGE) = %d \n", event, sizeof(MESSAGE));
+	MESSAGE *message = (MESSAGE *) new OYM_UINT8[sizeof(MESSAGE)];
+	if(message != NULL)
+	{
+		message->event = event;
+		message->length = length;
+		memcpy((void*)(message->data), data, length);
 
-	mMessage.push_back(message);
+		LOGDEBUG("shimengz 1111  msg = %x, (%d)pk(%d) !!! \n", message, sizeof(message->data), length);
+		EnterCriticalSection(&mMutex);
+		printf((" mMessage.push_back(message) = %x; err=%d\n"), message, GetLastError());
+		mMessage.push_back(message);
+		printf((" mMessage.push_back(message) = %x; err=%d\n"), message, GetLastError());
+		LOGDEBUG(" mMessage.push_back(message) = %x; err=%d\n", message, GetLastError());
+		LeaveCriticalSection(&mMutex);
+		LOGDEBUG("shimengz 2222  msg = %x!!! \n", message);
+	}
+	else
+	{
+		LOGDEBUG("----->ProcessMessage new Message Failed!!! \n");
+	}
 	return OYM_SUCCESS;
 }
 
@@ -1072,8 +1120,17 @@ OYM_STATUS OYM_RemoteDevice::NextCharacterateristic()
 		characteristic = service->FindCharacteristicbyIndex(service->mCurrentCharateristic);
 		if (characteristic != NULL)
 		{
-			mInterface->ReadCharacteristicValue(mHandle, characteristic->mValueHandle);
-			mState = OYM_DEVICE_STATE_GATT_READ_CHARC_VALUE;
+			if (characteristic->mProperty & OYM_ATT_PROPERTY_READ)
+			{
+				//characteristic is readable
+				mInterface->ReadCharacteristicValue(mHandle, characteristic->mValueHandle);
+				mState = OYM_DEVICE_STATE_GATT_READ_CHARC_VALUE;
+			}
+			else
+			{
+				//do not need to read characteristic value. start to read characteristic descriptor if need.
+				this->DiscoveryDescriptor();
+			}
 		}
 		else
 		{
@@ -1093,10 +1150,10 @@ OYM_STATUS OYM_RemoteDevice::NextCharacterateristic()
 	{
 		LOGDEBUG("no more primary service exist, service discovery process has been finished!!!\n");
 		LOGDEBUG("start to write CCC value!!!\n");
-		mCPS = 0;
-		mCC = 0;
-		mCCD = 0;
-		ProcessCharacteristicConfiguration(mCPS, mCC, mCCD);
+		mCurrentPrimaryServiceIndex = 0;
+		mCurrentCharactericticIndex = 0;
+		mCurrentCharactericticDescriptorIndex = 0;
+		ProcessCharacteristicConfiguration(mCurrentPrimaryServiceIndex, mCurrentCharactericticIndex, mCurrentCharactericticDescriptorIndex);
 		mState = OYM_DEVICE_STATE_GATT_READ_CHARC_DESCRIPTOR_VALUE;
 	}
 
@@ -1145,8 +1202,17 @@ OYM_STATUS OYM_RemoteDevice::DiscoveryDescriptor()
 			characteristic = service->FindCharacteristicbyIndex(service->mCurrentCharateristic);
 			if (characteristic != NULL)
 			{
-				mInterface->ReadCharacteristicValue(mHandle, characteristic->mValueHandle);
-				mState = OYM_DEVICE_STATE_GATT_READ_CHARC_VALUE;
+				if (characteristic->mProperty & OYM_ATT_PROPERTY_READ)
+				{
+					//characteristic is readable
+					mInterface->ReadCharacteristicValue(mHandle, characteristic->mValueHandle);
+					mState = OYM_DEVICE_STATE_GATT_READ_CHARC_VALUE;
+				}
+				else
+				{
+					//do not need to read characteristic value. start to read characteristic descriptor if need.
+					this->DiscoveryDescriptor();
+				}
 			}
 			else
 			{
@@ -1166,10 +1232,10 @@ OYM_STATUS OYM_RemoteDevice::DiscoveryDescriptor()
 		{
 			LOGDEBUG("no more primary service exist, service discovery process has been finished!!!\n");
 			LOGDEBUG("start to write CCC value!!!\n");
-			mCPS = 0;
-			mCC = 0;
-			mCCD = 0;
-			ProcessCharacteristicConfiguration(mCPS, mCC, mCCD);
+			mCurrentPrimaryServiceIndex = 0;
+			mCurrentCharactericticIndex = 0;
+			mCurrentCharactericticDescriptorIndex = 0;
+			ProcessCharacteristicConfiguration(mCurrentPrimaryServiceIndex, mCurrentCharactericticIndex, mCurrentCharactericticDescriptorIndex);
 			mState = OYM_DEVICE_STATE_GATT_READ_CHARC_DESCRIPTOR_VALUE;
 		}
 	}
@@ -1238,9 +1304,9 @@ OYM_STATUS OYM_RemoteDevice::ProcessCharacteristicConfiguration(OYM_UINT8 curren
 					{
 						mInterface->ReadCharacteristicValue(mHandle, descriptor->mHandle);
 					}
-					mCPS = currentprisvc;
-					mCC = currentchrac;
-					mCCD = currentchracdes;
+					mCurrentPrimaryServiceIndex = currentprisvc;
+					mCurrentCharactericticIndex = currentchrac;
+					mCurrentCharactericticDescriptorIndex = currentchracdes;
 					return OYM_FAIL;
 				}
 			}

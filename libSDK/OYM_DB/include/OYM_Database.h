@@ -23,7 +23,7 @@ using namespace std;
 #define CHARACTERISTICDES	 "CharacteristicDescriptor"
 #define CHARACTERISTICVALUE  "CharacteristicValue"
 #define ATTRITYPE		     "AttributeType"
-#define HANDLE				 "Handle"
+#define ATTRIHANDLE			 "Handle"
 #define INDEX				 "Index"
 #define UUID				 "UUID"
 #define START_HANDLE		 "StartHandle"

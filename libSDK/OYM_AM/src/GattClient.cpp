@@ -11,6 +11,33 @@
 *		2.2.2 find characteristic descriptor if exit
 *3. process characteristic descriptor(read write)
 */
+OYM_CHARACTERISTIC::~OYM_CHARACTERISTIC()
+{
+	OYM_CHAR_DESCRIPTOR* temp_c;
+	OYM_UINT8 i;
+	for (i = 0; i < mDescriptor.size(); i++)
+	{
+		temp_c = mDescriptor.front();
+		mDescriptor.pop_front();
+		if (temp_c->mData != NULL)
+		{
+			delete temp_c->mData;
+			temp_c->mData = NULL;
+		}
+		delete temp_c;
+	}
+
+	if (mAttriValue != NULL)
+	{
+		if (mAttriValue->mData != NULL)
+		{
+			delete mAttriValue->mData;
+			mAttriValue->mData = NULL;
+		}
+		delete mAttriValue;
+		mAttriValue = NULL;
+	}
+}
 
 OYM_CHAR_DESCRIPTOR* OYM_CHARACTERISTIC::FindDescriptorByUUID(OYM_UUID uuid)
 {
@@ -204,6 +231,26 @@ OYM_PRISERVICE::OYM_PRISERVICE(OYM_UINT16 sHandle, OYM_UINT16 eHandle, OYM_UINT8
 	mNumOfIncludedService = 0;
 }
 
+OYM_PRISERVICE::~OYM_PRISERVICE()
+{
+	OYM_CHARACTERISTIC* temp_c;
+	OYM_INCSERVICE* temp_i;
+	OYM_UINT8 i;
+	for (i = 0; i < mCharacteristic.size(); i++)
+	{
+		temp_c = mCharacteristic.front();
+		mCharacteristic.pop_front();
+		delete temp_c;
+	}
+
+	for (i = 0; i < mIncludeService.size(); i++)
+	{
+		temp_i = mIncludeService.front();
+		mIncludeService.pop_front();
+		delete temp_i;
+	}
+}
+
 OYM_PRISERVICE* OYM_Service::GetNextAvailablePriSvc()
 {
 	OYM_PRISERVICE* result = NULL;
@@ -285,6 +332,21 @@ OYM_PRISERVICE* OYM_Service::FindPriSvcbyIndex(OYM_UINT8 index)
 
 OYM_Service::OYM_Service()
 {
+	mNumOfPrivateService = 0;
+	mCurrentPriService = 0;
+}
+
+OYM_Service::~OYM_Service()
+{
+	OYM_PRISERVICE* temp;
+	OYM_UINT8 i;
+	for (i = 0; i < mPrivateService.size(); i++)
+	{
+		temp = mPrivateService.front();
+		mPrivateService.pop_front();
+		delete temp;
+	}
+
 	mNumOfPrivateService = 0;
 	mCurrentPriService = 0;
 }

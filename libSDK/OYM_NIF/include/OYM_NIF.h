@@ -19,6 +19,7 @@ class OYM_NPI_Interface:public Runnable
 public:
 	OYM_VOID Run();
 	OYM_NPI_Interface();
+	~OYM_NPI_Interface();
 	OYM_STATUS Init();
 	OYM_STATUS Deinit();
 
@@ -26,6 +27,7 @@ public:
 	OYM_STATUS StartLEScan();
 	OYM_STATUS StopLEScan();
 	OYM_STATUS Connect(OYM_PUINT8 addr, UINT8 addr_type);
+	OYM_STATUS Disconnect(OYM_UINT16 handle);
 	
 	OYM_STATUS Authenticate(OYM_UINT16 handle);
 	OYM_STATUS Bond(OYM_UINT16 handle, OYM_PUINT8 ltk, OYM_UINT16 div, OYM_PUINT8 rand, OYM_UINT8 ltk_size);
@@ -57,7 +59,6 @@ private:
 	NPI_Queue<sEvt*, EVT_QUEUE_SIZE>* mEventQueue;
 	OYM_STATUS OYM_Process_Event(OYM_UINT16 event_code, OYM_PUINT8 data, OYM_UINT8 length);
 
-	//fix Log name to mLog!!
 	OYM_Log *mLog;
 };
 
@@ -92,4 +93,6 @@ private:
 #define EVENT_MASK_ATT_READ_BLOB_RESP_MSG		(BIT2 << 16)
 #define EVENT_MASK_ATT_EXCHANGE_MTU_MSG			(BIT3 << 16)
 #define EVENT_MASK_ATT_WRITE_MSG				(BIT4 << 16)
+#define EVENT_MASK_GAP_SCAN_RESULT				(BIT5 << 16)
+#define EVENT_MASK_GAP_SCAN_FINISHED			(BIT6 << 16)
 #endif
