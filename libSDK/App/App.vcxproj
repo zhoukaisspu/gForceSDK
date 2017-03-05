@@ -81,7 +81,6 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\NPI\Include\app.h" />
     <ClInclude Include="..\..\NPI\Include\com.h" />
     <ClInclude Include="..\..\NPI\Include\CommonDef.h" />
     <ClInclude Include="..\..\NPI\Include\gap.h" />
@@ -92,6 +91,7 @@
     <ClInclude Include="..\..\NPI\Include\npi_queue.h" />
     <ClInclude Include="..\..\NPI\Include\npi_tl.h" />
     <ClInclude Include="..\..\NPI\Include\Thread.h" />
+    <ClInclude Include="..\Include\app.h" />
     <ClInclude Include="..\Include\OYM_Callback.h" />
     <ClInclude Include="..\Include\oym_types.h" />
     <ClInclude Include="..\OYM_AM\include\AdapterManager.h" />

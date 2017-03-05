@@ -51,18 +51,7 @@ OYM_STATUS OYM_NPI_Interface::OYM_Process_Event(OYM_UINT16 event_code, OYM_PUINT
 
 		case HCI_EXT_GAP_LINK_ESTABLISHED_EVENT: //0x0705
 			LOGDEBUG("HCI_EXT_GAP_LINK_ESTABLISHED_MSG \n");
-			for (ii = mCallback.begin(); ii != mCallback.end(); ii++)
-			{
-				OYM_UINT16 result = (((*ii)->GetEventMask()) & EVENT_MASK_GAP_LINK_ESTABLISHED_MSG);
-
-				LOGDEBUG("result = %d \n", result);
-				if (result != 0)
-				{
-					(*ii)->OnConnect(data, length);
-					result = OYM_SUCCESS;
-				}
-
-			}
+			event = EVENT_MASK_GAP_LINK_ESTABLISHED_MSG;
 			break;
 
 		case HCI_EXT_GAP_LINK_TERMINATED_EVENT: //0x0706
@@ -300,14 +289,14 @@ OYM_STATUS OYM_NPI_Interface::StopLEScan()
 	return result = (status == OYM_TRUE) ? OYM_SUCCESS : OYM_FAIL;
 }
 
-OYM_STATUS OYM_NPI_Interface::Connect(OYM_PUINT8 addr, UINT8 addr_type)
+OYM_STATUS OYM_NPI_Interface::Connect(OYM_PUINT8 addr, UINT8 addr_type, OYM_BOOL use_whitelist)
 {
 	OYM_STATUS result;
 	OYM_BOOL status = OYM_FAIL;
 
 	if (mCommand != NULL)
 	{
-		mCommand->GAP_EstablishLinkRequest(NPI_DISABLE, NPI_DISABLE, (eGapAddrType)addr_type, addr);
+		mCommand->GAP_EstablishLinkRequest(NPI_DISABLE, (eEnDisMode)use_whitelist, (eGapAddrType)addr_type, addr);
 	}
 
 	return result = status;
@@ -387,6 +376,13 @@ OYM_STATUS OYM_NPI_Interface::ExchangeMTUSize(OYM_UINT16 handle, OYM_UINT16 mtu)
 {
 	OYM_BOOL status = OYM_FAIL;
 	status = mCommand->GATT_ExchangeMTU(handle, mtu);
+	return (status == OYM_TRUE) ? OYM_SUCCESS : OYM_FAIL;
+}
+
+OYM_STATUS OYM_NPI_Interface::UpdateConnectionParameter(OYM_UINT16 handle, OYM_UINT16 int_min, OYM_UINT16 int_max, OYM_UINT16 slave_latency, OYM_UINT16 supervision_timeout)
+{
+	OYM_BOOL status = OYM_FAIL;
+	status = mCommand->L2CAP_ConnParamUpdateReq(handle, int_min, int_max, slave_latency, supervision_timeout);
 	return (status == OYM_TRUE) ? OYM_SUCCESS : OYM_FAIL;
 }
 

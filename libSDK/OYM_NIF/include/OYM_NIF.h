@@ -26,14 +26,14 @@ public:
 	OYM_STATUS InitDevice();
 	OYM_STATUS StartLEScan();
 	OYM_STATUS StopLEScan();
-	OYM_STATUS Connect(OYM_PUINT8 addr, UINT8 addr_type);
+	OYM_STATUS Connect(OYM_PUINT8 addr, UINT8 addr_type, OYM_BOOL use_whitelist);
 	OYM_STATUS Disconnect(OYM_UINT16 handle);
 	
 	OYM_STATUS Authenticate(OYM_UINT16 handle);
 	OYM_STATUS Bond(OYM_UINT16 handle, OYM_PUINT8 ltk, OYM_UINT16 div, OYM_PUINT8 rand, OYM_UINT8 ltk_size);
 	
 	OYM_STATUS ExchangeMTUSize(OYM_UINT16 handle, OYM_UINT16 mtu);
-
+	OYM_STATUS UpdateConnectionParameter(OYM_UINT16 handle, OYM_UINT16 int_min, OYM_UINT16 int_max, OYM_UINT16 slave_latency, OYM_UINT16 supervision_timeout);
 	OYM_STATUS DiscoveryAllPrimaryService(OYM_UINT16 handle);
 	OYM_STATUS DiscoveryIncludedPrimaryService(OYM_UINT16 conn_handle, OYM_UINT16 start_handle, OYM_UINT16 end_handle);
 	OYM_STATUS DiscoveryCharacteristic(OYM_UINT16 conn_handle, OYM_UINT16 start_handle, OYM_UINT16 end_handle);
@@ -95,4 +95,7 @@ private:
 #define EVENT_MASK_ATT_WRITE_MSG				(BIT4 << 16)
 #define EVENT_MASK_GAP_SCAN_RESULT				(BIT5 << 16)
 #define EVENT_MASK_GAP_SCAN_FINISHED			(BIT6 << 16)
+
+#define EVENT_MASK_DEVICE_CONNECTED				(BIT0 << 24)
+#define EVENT_MASK_DEVICE_PARAMETER_UPDATED		(BIT1 << 24)
 #endif

@@ -56,11 +56,6 @@ public:
 		return OYM_FAIL;
 	}
 
-	OYM_STATUS OnConnect(OYM_PUINT8 data, OYM_UINT16 length)
-	{
-		return OYM_FAIL;
-	}
-
 	OYM_STATUS OnEvent(OYM_UINT32 event, OYM_PUINT8 data, OYM_UINT16 length);
 
 	OYM_STATUS StartScan();

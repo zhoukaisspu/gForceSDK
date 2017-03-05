@@ -35,7 +35,7 @@ OYM_VOID arry2str(OYM_PUINT8 array, OYM_UINT32 length, char* result)
 OYM_UINT8 char2int8(const char* data)
 {
 	OYM_UINT8 result = '#';
-	//LOGDEBUG("input: %c   ", *data);
+
 	if ((*data) >= '0' && (*data) <= '9')
 	{
 		result = (*data) - '0';
@@ -46,7 +46,6 @@ OYM_UINT8 char2int8(const char* data)
 		result = (*data) - 'A' + 10;
 	}
 
-	//LOGDEBUG("output: %x \n", result);
 	return result;
 }
 
@@ -538,6 +537,10 @@ void OYM_Database::GetCharacteristicValue(XMLElement *chara, OYM_CHARACTERISTIC*
 	XMLElement *temp;
 	const XMLAttribute* attribute;
 	const char* value;
+	if (charcteristic == NULL)
+	{
+		return;
+	}
 
 	while (chracvalue != NULL)
 	{
@@ -552,18 +555,21 @@ void OYM_Database::GetCharacteristicValue(XMLElement *chara, OYM_CHARACTERISTIC*
 			}
 			
 			attribute = GetAttibuteByName(chara, VALUE);
-			value = attribute->Value();
-			LOGDEBUG("GetCharacteristicValue  value = %x\n", value);
-			if (value != NULL)
+			if (attribute != NULL)
 			{
-				charcteristic->mAttriValue->mLength = (strlen(value) / 2);
-				charcteristic->mAttriValue->mData = (OYM_PUINT8)malloc(charcteristic->mAttriValue->mLength);
-				str2arry(value, charcteristic->mAttriValue->mData);
-			}
-			else
-			{
-				charcteristic->mAttriValue->mLength = 0;
-				charcteristic->mAttriValue->mData = NULL;
+				value = attribute->Value();
+				LOGDEBUG("GetCharacteristicValue  value = %x\n", value);
+				if (value != NULL)
+				{
+					charcteristic->mAttriValue->mLength = (strlen(value) / 2);
+					charcteristic->mAttriValue->mData = (OYM_PUINT8)malloc(charcteristic->mAttriValue->mLength);
+					str2arry(value, charcteristic->mAttriValue->mData);
+				}
+				else
+				{
+					charcteristic->mAttriValue->mLength = 0;
+					charcteristic->mAttriValue->mData = NULL;
+				}
 			}
 
 			return;

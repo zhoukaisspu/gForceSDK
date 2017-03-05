@@ -33,18 +33,13 @@ OYM_VOID OYM_RemoteDevice::Run()
 		EnterCriticalSection(&mMutex);
 		if (mMessage.size() != 0) //get msg from message queue
 		{
-			LOGDEBUG("shimengz 3333  mMessage.size() = %x!!! \n", mMessage.size());
 			msg = mMessage.front();
-			LOGDEBUG("shimengz 4444  msg = %x!!! \n", msg);
 			if(msg != NULL)
 			{
 				buf = (OYM_PUINT8)msg->data;
-				printf("size = %d \n", msg->length);
 				size = (OYM_UINT16)msg->length;
 
-				LOGDEBUG("shimengz 5555  !!! \n");
 				mMessage.pop_front();
-				LOGDEBUG("shimengz 6666  !!! \n");
 				LeaveCriticalSection(&mMutex);
 			}
 			else
@@ -88,12 +83,14 @@ OYM_VOID OYM_RemoteDevice::Run()
 					LOGDEBUG("OYM_DEVICE_STATE_GATT_READ_CHARC_DESCRIPTOR_VALUE state received message \n");
 					W4GattReadCharcDesValueStateProcessMessage((OYM_DEVICE_EVENT)msg->event, buf, size);
 					break;
+				case OYM_DEVICE_STATE_CONNECTED:
+					LOGDEBUG("OYM_DEVICE_STATE_CONNECTED state received message \n");
+					DeviceConnectedStateProcessMessage((OYM_DEVICE_EVENT)msg->event, buf, size);
+					break;
 				default:
 					break;
 			}
 
-			LOGDEBUG("shimengz delete msg = %x	!!! \n", msg);
-			printf("shimengz delete msg = %x	!!! \n", msg);
 			delete msg;
 		}
 		else 
@@ -106,14 +103,13 @@ OYM_VOID OYM_RemoteDevice::Run()
 	LOGDEBUG("thread stop to process message! \n");
 }
 
-OYM_RemoteDevice::OYM_RemoteDevice(OYM_NPI_Interface* minterface, BLE_DEVICE address, OYM_CallBack* callback)
+OYM_RemoteDevice::OYM_RemoteDevice(OYM_NPI_Interface* minterface, OYM_UINT8 addr_type, OYM_PUINT8 address, OYM_CallBack* callback)
 {
 	mInterface = minterface;
 	mCallback = callback;
-	mAddrType = address.addr_type;
-	memcpy(mAddr, address.addr, BT_ADDRESS_SIZE);
+	mAddrType = addr_type;
+	memcpy(mAddr, address, BT_ADDRESS_SIZE);
 	memset(mDevName, 0, BLE_DEVICE_NAME_LENGTH);
-	memcpy(mDevName, address.dev_name, BT_ADDRESS_SIZE);
 	mLog = new OYM_Log(MODUAL_TAG_RD, sizeof(MODUAL_TAG_RD));
 
 	mDatabase = new OYM_Database(mAddr, BT_ADDRESS_SIZE);
@@ -425,7 +421,6 @@ OYM_STATUS OYM_RemoteDevice::ConnectionParameterUpdated(OYM_PUINT8 data, OYM_UIN
 OYM_STATUS OYM_RemoteDevice::W4SecuStateProcessMessage(OYM_DEVICE_EVENT event, OYM_PUINT8 data, OYM_UINT16 length)
 {
 	OYM_STATUS result = OYM_FAIL;
-	OYM_STATUS status;
 	LOGDEBUG("W4SecuStateProcessMessage process Message = %d \n", event);
 	switch (event)
 	{
@@ -470,7 +465,6 @@ OYM_STATUS OYM_RemoteDevice::W4SecuStateProcessMessage(OYM_DEVICE_EVENT event, O
 OYM_STATUS OYM_RemoteDevice::W4GattPriSvcStateProcessMessage(OYM_DEVICE_EVENT event, OYM_PUINT8 data, OYM_UINT16 length)
 {
 	OYM_STATUS result = OYM_FAIL;
-	OYM_UINT8 status;
 	LOGDEBUG("W4GattPriSvcStateProcessMessage process Message = %d \n", event);
 	switch (event)
 	{
@@ -904,7 +898,7 @@ OYM_STATUS OYM_RemoteDevice::W4GattReadCharcValueStateProcessMessage(OYM_DEVICE_
 				if (characteristic != NULL)
 				{
 					OYM_UINT8 length = data[OYM_ATT_READ_VALUE_RESP_LEN_OFFSET];
-					LOGDEBUG("OYM_DEVICE_EVENT_ATT_READ_RESP_MSG with length = %d !!!\n", length);
+					LOGDEBUG("OYM_DEVICE_EVENT_ATT_READ_BLOB_RESP_MSG with length = %d !!!\n", length);
 					memcpy(Temp_Buffer+Total, data + OYM_ATT_READ_VALUE_RESP_DATA_OFFSET, length);
 					Total += length;
 				}
@@ -919,7 +913,7 @@ OYM_STATUS OYM_RemoteDevice::W4GattReadCharcValueStateProcessMessage(OYM_DEVICE_
 					{
 						memcpy(characteristic->mAttriValue->mData, Temp_Buffer, Total);
 					}
-					LOGDEBUG("OYM_DEVICE_EVENT_ATT_READ_RESP_MSG with Total length = %d !!!\n", Total);
+					LOGDEBUG("OYM_DEVICE_EVENT_ATT_READ_BLOB_RESP_MSG with Total length = %d !!!\n", Total);
 					this->DiscoveryDescriptor();
 				}
 			}
@@ -979,7 +973,7 @@ OYM_STATUS OYM_RemoteDevice::W4GattReadCharcValueStateProcessMessage(OYM_DEVICE_
 					}
 					else
 					{
-						LOGERROR("OYM_DEVICE_EVENT_ATT_READ_RESP_MSG characteristic not found!!!\n");
+						LOGERROR("OYM_DEVICE_EVENT_ATT_READ_BY_INFO_MSG characteristic not found!!!\n");
 
 					}
 				}
@@ -1045,7 +1039,13 @@ OYM_STATUS OYM_RemoteDevice::W4GattReadCharcDesValueStateProcessMessage(OYM_DEVI
 				if (mNeedSaveService == OYM_TRUE)
 				{
 					mDatabase->SaveService(&mService);
-				}	
+				}
+				mState = OYM_DEVICE_STATE_CONNECTED;
+				if (mCallback != NULL)
+				{
+					OYM_UINT8 data[2] = {mHandle&0xFF, ((mHandle&0xFF00)>>8)};
+					mCallback->OnEvent(EVENT_MASK_DEVICE_CONNECTED, data, 2);
+				}
 			}
 			break;
 		}
@@ -1059,6 +1059,12 @@ OYM_STATUS OYM_RemoteDevice::W4GattReadCharcDesValueStateProcessMessage(OYM_DEVI
 				if (mNeedSaveService == OYM_TRUE)
 				{
 					mDatabase->SaveService(&mService);
+					mState = OYM_DEVICE_STATE_CONNECTED;
+					if (mCallback != NULL)
+					{
+						OYM_UINT8 data[2] = {mHandle&0xFF, ((mHandle&0xFF00)>>8)};
+						mCallback->OnEvent(EVENT_MASK_DEVICE_CONNECTED, data, 2);
+					}
 				}
 			}
 			break;
@@ -1070,14 +1076,41 @@ OYM_STATUS OYM_RemoteDevice::W4GattReadCharcDesValueStateProcessMessage(OYM_DEVI
 	return result;
 }
 
-OYM_ULONG OYM_RemoteDevice::GetThreadId()
+OYM_STATUS OYM_RemoteDevice::DeviceConnectedStateProcessMessage(OYM_DEVICE_EVENT event, OYM_PUINT8 data, OYM_UINT16 length)
 {
-	return mThreadID;
-}
+	OYM_STATUS result = OYM_FAIL;
+	OYM_UINT8 status = data[OYM_ATT_READ_VALUE_RESP_STATUS_OFFSET];
+	LOGDEBUG("DeviceConnectedStateProcessMessage process Message = %d \n", event);
+	switch (event)
+	{
+		case OYM_DEVICE_EVENT_LINK_PARA_UPDATE:
+		{
+			LOGDEBUG("OYM_DEVICE_EVENT_LINK_PARA_UPDATE with length = %d\n", length);
+			ConnectionParameterUpdated(data, length);
+			break;
+		}
 
-OYM_UINT16 OYM_RemoteDevice::GetHandle()
-{
-	return mHandle;
+		case OYM_DEVICE_EVENT_ATT_EXCHANGE_MTU_MSG:
+		{
+			OYM_UINT8 status = data[EVENT_ATT_EXCHANGE_MTU_MSG_STATUS_OFFSET];
+			OYM_UINT16 Server_MTU_Size;
+			if (status == OYM_SUCCESS)
+			{
+				OYM_UINT data_len = data[EVENT_ATT_EXCHANGE_MTU_MSG_LEN_OFFSET];
+				if (data_len == 0x02)
+				{
+					Server_MTU_Size = data[EVENT_ATT_EXCHANGE_MTU_MSG_DATA_OFFSET] + (data[EVENT_ATT_EXCHANGE_MTU_MSG_DATA_OFFSET + 1] << 8);
+					LOGDEBUG("Server_MTU_Size = 0x%02x \n", Server_MTU_Size);
+				}
+			}
+
+			mMTUSize = min(Server_MTU_Size, LOCAL_GATT_CLIENT_MTU_SIZE);
+		 }
+		default:
+			break;
+	}
+
+	return result;
 }
 
 //revice message from AdapterManager and queue message to a list.
@@ -1091,14 +1124,9 @@ OYM_STATUS OYM_RemoteDevice::ProcessMessage(OYM_DEVICE_EVENT event, OYM_PUINT8 d
 		message->length = length;
 		memcpy((void*)(message->data), data, length);
 
-		LOGDEBUG("shimengz 1111  msg = %x, (%d)pk(%d) !!! \n", message, sizeof(message->data), length);
 		EnterCriticalSection(&mMutex);
-		printf((" mMessage.push_back(message) = %x; err=%d\n"), message, GetLastError());
 		mMessage.push_back(message);
-		printf((" mMessage.push_back(message) = %x; err=%d\n"), message, GetLastError());
-		LOGDEBUG(" mMessage.push_back(message) = %x; err=%d\n", message, GetLastError());
 		LeaveCriticalSection(&mMutex);
-		LOGDEBUG("shimengz 2222  msg = %x!!! \n", message);
 	}
 	else
 	{
@@ -1320,4 +1348,53 @@ OYM_STATUS OYM_RemoteDevice::ProcessCharacteristicConfiguration(OYM_UINT8 curren
 	}
 	
 	return OYM_SUCCESS;
+}
+
+OYM_STATUS OYM_RemoteDevice::ExchangeMTUSize(OYM_UINT16 mtu_size)
+{
+	if (mInterface != NULL && mState == OYM_DEVICE_STATE_CONNECTED)
+	{
+		mMTUSize = mtu_size;
+		return mInterface->ExchangeMTUSize(mHandle, mtu_size);
+	}
+	else
+	{
+		return OYM_FAIL;
+	}
+}
+
+OYM_STATUS OYM_RemoteDevice::ConnectionParameterUpdateRequest(OYM_UINT16 conn_interval_min, OYM_UINT16 conn_interval_max, OYM_UINT16 slave_latence, OYM_UINT16 supervision_timeout)
+{
+	if (mInterface != NULL && mState == OYM_DEVICE_STATE_CONNECTED)
+	{
+		return mInterface->UpdateConnectionParameter(mHandle, conn_interval_min, conn_interval_max, slave_latence, supervision_timeout);
+	}
+	else
+	{
+		return OYM_FAIL;
+	}
+}
+
+OYM_STATUS OYM_RemoteDevice::WriteCharacteristicValue(OYM_UINT16 attribute_handle, OYM_UINT8 data_length, OYM_PUINT8 data)
+{
+	if (mInterface != NULL && mState == OYM_DEVICE_STATE_CONNECTED)
+	{
+		return mInterface->WriteCharacVlaue(mHandle, attribute_handle, data, data_length);
+	}
+	else
+	{
+		return OYM_FAIL;
+	}
+}
+
+OYM_STATUS OYM_RemoteDevice::ReadCharacteristicValue(OYM_UINT16 attribute_handle)
+{
+	if (mInterface != NULL && mState == OYM_DEVICE_STATE_CONNECTED)
+	{
+		return mInterface->ReadCharacteristicValue(mHandle, attribute_handle);
+	}
+	else
+	{
+		return OYM_FAIL;
+	}
 }

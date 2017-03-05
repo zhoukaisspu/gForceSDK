@@ -42,7 +42,6 @@ typedef enum {
 	OYM_ERR_CODE_NO_RESOURCE = 0x61,
 } OYM_ERROR_CODE;
 
-
 #define BLE_DEVICE_NAME_LENGTH 30
 struct BLE_DEVICE{
 	OYM_UINT8   addr_type;

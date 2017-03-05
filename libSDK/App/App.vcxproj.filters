@@ -48,9 +48,6 @@
     <ClInclude Include="..\OYM_NIF\include\OYM_NIF.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\NPI\Include\app.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\NPI\Include\com.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -85,6 +82,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\OYM_DB\include\tinyxml2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\app.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

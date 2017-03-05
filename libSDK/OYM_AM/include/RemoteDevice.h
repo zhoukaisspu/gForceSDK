@@ -27,6 +27,7 @@ typedef enum
 	OYM_DEVICE_STATE_GATT_DIS_CHARC = 5,
 	OYM_DEVICE_STATE_GATT_READ_CHARC_VALUE = 6,
 	OYM_DEVICE_STATE_GATT_READ_CHARC_DESCRIPTOR_VALUE = 7,
+	OYM_DEVICE_STATE_CONNECTED = 8,
 } OYM_DEVICE_STATE;
 
 typedef enum
@@ -91,11 +92,38 @@ class OYM_RemoteDevice:public Runnable
 //class OYM_RemoteDevice
 {
 public:
-	OYM_RemoteDevice(OYM_NPI_Interface* minterface, BLE_DEVICE address, OYM_CallBack* callback);
+	OYM_RemoteDevice(OYM_NPI_Interface* minterface, OYM_UINT8 addr_type, OYM_PUINT8 address, OYM_CallBack* callback);
 	~OYM_RemoteDevice();
 	OYM_VOID Run();
-	OYM_ULONG GetThreadId();
-	OYM_UINT16 GetHandle();
+	OYM_UINT16 GetHandle()
+	{
+		return mHandle;
+	}
+
+	OYM_UINT16 GetConnectInterval()
+	{
+		return mConnInternal;
+	}
+
+	OYM_UINT16 GetSupervisionTimeout()
+	{
+		return mConnTimeout;
+	}
+
+	OYM_UINT16 GetSlaveLatency()
+	{
+		return mSlaveLatency;
+	}
+
+	OYM_UINT16 GetMTUSize()
+	{
+		return mMTUSize;
+	}
+
+	OYM_DEVICE_STATE GetState()
+	{
+		return mState;
+	}
 
 	OYM_VOID Init();
 	OYM_VOID DeInit();
@@ -109,6 +137,7 @@ public:
 	OYM_STATUS W4GattDisCharcStateProcessMessage(OYM_DEVICE_EVENT event, OYM_PUINT8 data, OYM_UINT16 length);
 	OYM_STATUS W4GattReadCharcValueStateProcessMessage(OYM_DEVICE_EVENT event, OYM_PUINT8 data, OYM_UINT16 length);
 	OYM_STATUS W4GattReadCharcDesValueStateProcessMessage(OYM_DEVICE_EVENT event, OYM_PUINT8 data, OYM_UINT16 length);
+	OYM_STATUS DeviceConnectedStateProcessMessage(OYM_DEVICE_EVENT event, OYM_PUINT8 data, OYM_UINT16 length);
 
 	OYM_STATUS StartDiscoveryCharacteristic();
 	OYM_STATUS NextCharacterateristic();
@@ -120,13 +149,18 @@ public:
 	OYM_STATUS AuthenticationComplete(OYM_PUINT8 data, OYM_UINT16 length);
 	OYM_STATUS BondComplete(OYM_PUINT8 data, OYM_UINT16 length);
 	OYM_STATUS ConnectionParameterUpdated(OYM_PUINT8 data, OYM_UINT16 length);
+	OYM_STATUS ConnectionParameterUpdateRequest(OYM_UINT16 conn_interval_min, OYM_UINT16 conn_interval_max, OYM_UINT16 slave_latence, OYM_UINT16 supervision_timeout);
+	OYM_STATUS WriteCharacteristicValue(OYM_UINT16 attribute_handle, OYM_UINT8 data_length, OYM_PUINT8 data);
+	OYM_STATUS ReadCharacteristicValue(OYM_UINT16 attribute_handle);
+
+	OYM_STATUS ExchangeMTUSize(OYM_UINT16 mtu_size);
 	OYM_UINT8  mAddrType;
 	OYM_UINT8  mAddr[BT_ADDRESS_SIZE];
 	OYM_UINT8 mLTK[16];
 	OYM_UINT16 mDIV;
 	OYM_UINT8 mRAND[8];
 	OYM_UINT8 mKeySize;
-	
+
 private:
 	OYM_CHAR   mDevName[BLE_DEVICE_NAME_LENGTH];
 	OYM_UINT16 mHandle; //connection handle
