@@ -1,41 +1,39 @@
 文件结构
 ----
 
-SDK_BLE 根目录（目前的repository名字，待修改）
+gForce_SDK 根目录
+  | 
+  +- binding 针对各开发平台做的porting
+  |  |
+  |  +- (Unity3D, python, js, html5, etc)
   |
   +- doc 文档
   |
   +- example 示例
   |
-  +- export SDK产生的动态链接库
+  +- external 项目中使用的第三方库（对外发布时只需按其license要求来决定是否提供）
+  |
+  +- inc 对外导出的头文件
+  |  |
+  |  +- utils 各种types、os abs layer等，不包括内部使用的如logutil
+  |
+  +- lib SDK产生的动态链接库
   |  |
   |  +- (linux, windows, ios, osx, android, etc)
   |
-  +- external 项目中使用的第三方库（对外发布时只需按其license要求来决定是否提供）
-  |
-  +- make 各开发环境的项目文件，只针对SDK和test。其他如platform和example的项目文件应与其代码在同一目录。不用“build”是因为它被包含在.gitignore里并且不宜移除。
+  +- script 各开发环境的项目文件，只针对SDK和test。其他如platform和example的项目文件应与其代码在同一目录。不用“build”是因为它被包含在.gitignore里并且不宜移除。
   |  |
   |  +- (vs2013, g++, etc)
-  | 
-  +- platform 针对各开发平台做的porting
-  |  |
-  |  +- (Unity3D, python, js, html5, etc)
   |
   +- src 项目主代码，不包括测试代码
   |  |
-  |  +- ble 现在的libSDK
-  |  |
-  |  +- common 内部使用的公共模块，比如logutil，以及内部使用的types。建议不含cpp文件，如有实现部分用hpp替代。
-  |  |
-  |  +- gforce C++封装的SDK代码
-  |  |
-  |  +- include 对外导出的头文件
+  |  +- ble 现在的libSDK用hpp替代。
   |  |  |
-  |  |  +- utils 各种types、os abs layer等，不包括内部使用的如logutil
+  |  |  +- npi 现在的NPI
+  |  |     |
+  |  |     +- npiutil 现在的SDK_BLE_GUI
   |  |
-  |  +- npi 现在的NPI
-  |  |
-  |  +- npiutil 现在的SDK_BLE_GUI
+  |  +- common 内部使用的公共模块，比如logutil，以及内部使用的types。建议不含cpp文件，如有实现部分
   |
   +- test 所有的测试代码
   
