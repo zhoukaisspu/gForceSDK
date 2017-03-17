@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GForceSDK", "GForceSDK\GForceSDK.vcxproj", "{AD84BB21-766A-4485-84A5-13490CB129A2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NativeTestApp", "..\..\test\NativeTestApp\NativeTestApp.vcxproj", "{DD4E5B9B-A6DB-4D3E-BFBC-148BA7204D4D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AD84BB21-766A-4485-84A5-13490CB129A2} = {AD84BB21-766A-4485-84A5-13490CB129A2}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AD84BB21-766A-4485-84A5-13490CB129A2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AD84BB21-766A-4485-84A5-13490CB129A2}.Debug|Win32.Build.0 = Debug|Win32
+		{AD84BB21-766A-4485-84A5-13490CB129A2}.Release|Win32.ActiveCfg = Release|Win32
+		{AD84BB21-766A-4485-84A5-13490CB129A2}.Release|Win32.Build.0 = Release|Win32
+		{DD4E5B9B-A6DB-4D3E-BFBC-148BA7204D4D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DD4E5B9B-A6DB-4D3E-BFBC-148BA7204D4D}.Debug|Win32.Build.0 = Debug|Win32
+		{DD4E5B9B-A6DB-4D3E-BFBC-148BA7204D4D}.Release|Win32.ActiveCfg = Release|Win32
+		{DD4E5B9B-A6DB-4D3E-BFBC-148BA7204D4D}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
