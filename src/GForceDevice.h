@@ -10,7 +10,7 @@ namespace oym
 	class GForceDevice : public BLEDevice
 	{
 	public:
-		GForceDevice(gfsPtr<OYM_AdapterManager>& am, const BLE_DEVICE& bleDev) : BLEDevice(am, bleDev) {}
+		GForceDevice(IDongle* dongle, const BLE_DEVICE& bleDev) : BLEDevice(dongle, bleDev) {}
 
 	protected:
 		virtual ~GForceDevice() {}

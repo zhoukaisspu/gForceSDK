@@ -9,8 +9,6 @@ namespace oym
 	class Device
 	{
 	public:
-		Device() {}
-
 		virtual GF_UINT8 getAddrType() const = 0;
 		virtual GF_RET_CODE getAddress(GF_UINT8* addr, GF_SIZE bufLen) const = 0;
 		virtual tstring getAddress() const = 0;

@@ -1,6 +1,7 @@
 #include "LogUtils.h"
 #include "BLEDevice.h"
-#include "utils.h"
+#include "Utils.h"
+#include "assert.h"
 #include <cstdio>
 
 
@@ -18,19 +19,21 @@ GF_RET_CODE BLEDevice::registerListener(const gfwPtr<DeviceListener>& listener)
 	return GF_SUCCESS;
 }
 
-BLEDevice::BLEDevice(gfsPtr<OYM_AdapterManager>& am, const BLE_DEVICE& bleDev)
-	: mAM(am)
+BLEDevice::BLEDevice(IDongle* dongle, const BLE_DEVICE& bleDev)
+	: mDongle(dongle)
 	, mAddrType(bleDev.addr_type)
 	, mRssi(bleDev.rssi)
 {
+	assert(mDongle != nullptr);
 	memcpy(mAddress, bleDev.addr, sizeof(mAddress));
 
 	GF_CHAR name[BLE_DEVICE_NAME_LENGTH + 1] = "";
 	memcpy(name, bleDev.dev_name, sizeof(bleDev.dev_name));
 	name[BLE_DEVICE_NAME_LENGTH] = '\0';
-	mName = totstring(string(name));
+	mName = utils::totstring(string(name));
 
-	GF_LOGD("New device: address type: %d, address: %s, name: %s", mAddrType, tostring(getAddress()).c_str(), tostring(mName).c_str());
+	GF_LOGD("New device: address type: %u, address: %s, name: %s", (GF_UINT)mAddrType,
+		utils::tostring(getAddress()).c_str(), utils::tostring(mName).c_str());
 }
 
 GF_RET_CODE BLEDevice::identifyDevice(int msec)
@@ -50,17 +53,7 @@ GF_RET_CODE BLEDevice::getAddress(GF_UINT8* addr, GF_SIZE bufLen) const
 
 tstring BLEDevice::getAddress() const
 {
-	char str[sizeof(mAddress)*(3) + 1];
-	for (int i = 0; i < sizeof(mAddress); ++i)
-	{
-#ifdef WIN32
-		sprintf_s(str + (3 * i), sizeof(str) - (3 * i), "%2.2X:", mAddress[i]);
-#else
-		snprintf(str + (3 * i), sizeof(str) - (3 * i), "%2.2X:", mAddress[i]);
-#endif
-	}
-	str[sizeof(str) - 2] = '\0';
-	return totstring(string(str));
+	return utils::deviceAddressToString(mAddress, sizeof(mAddress));
 }
 
 bool BLEDevice::isMyself(GF_UINT8 addrType, GF_UINT8 addr[]) const
@@ -77,13 +70,20 @@ bool BLEDevice::isMyself(GF_UINT8 addrType, GF_UINT8 addr[]) const
 	return false;
 }
 
+bool BLEDevice::isMyself(GF_UINT8 addrType, tstring addr) const
+{
+	return ((addrType == mAddrType && getAddress() == addr) ?
+		true : false);
+}
+
 bool BLEDevice::takeover(BLEDevice& from)
 {
 	if ((mAddrType != from.mAddrType) ||
 		memcmp(mAddress, from.mAddress, sizeof(mAddress)))
 	{
 		GF_LOGD("%s: failed because two objects are not the same device.\nself--> addr is %u:%s.\nold--> addr is :%u:%s",
-			__FUNCTION__, mAddrType, tostring(getAddress()).c_str(), from.mAddrType, tostring(from.getAddress()).c_str());
+			__FUNCTION__, (GF_UINT)mAddrType, utils::tostring(getAddress()).c_str(),
+			(GF_UINT)from.mAddrType, utils::tostring(from.getAddress()).c_str());
 		return false;
 	}
 	/* copy needed
@@ -123,7 +123,7 @@ GF_RET_CODE BLEDevice::connect(bool directConn)
 		break;
 	case DeviceConnectionStatus::Disconnected:
 	case DeviceConnectionStatus::Connecting:
-		if (OYM_SUCCESS == mAM->Connect(mAddress, mAddrType, directConn))
+		if (OYM_SUCCESS == mDongle->connect(*this, directConn))
 			ret = GF_SUCCESS;
 		break;
 	default:;
@@ -140,7 +140,7 @@ GF_RET_CODE BLEDevice::disconnect()
 	switch (mCnntStatus)
 	{
 	case DeviceConnectionStatus::Connected:
-		if (OYM_SUCCESS == mAM->Disconnect(mHandle))
+		if (OYM_SUCCESS == mDongle->disconnect(*this))
 			ret = GF_SUCCESS;
 		break;
 	case DeviceConnectionStatus::Disconnected:
@@ -166,7 +166,7 @@ GF_RET_CODE BLEDevice::cancelConnect()
 	case DeviceConnectionStatus::Disconnecting:
 		break;
 	case DeviceConnectionStatus::Connecting:
-		if (OYM_SUCCESS == mAM->CancelConnect(mAddress, mAddrType))
+		if (OYM_SUCCESS == mDongle->cancelConnect(*this))
 		{
 			ret = GF_SUCCESS;
 			GF_LOGD("Connection cancelling...");
@@ -185,21 +185,21 @@ void BLEDevice::updateData(const BLE_DEVICE& bleDev)
 	GF_CHAR name[BLE_DEVICE_NAME_LENGTH + 1] = "";
 	memcpy(name, bleDev.dev_name, sizeof(bleDev.dev_name));
 	name[BLE_DEVICE_NAME_LENGTH] = '\0';
-	tstring newName = totstring(string(name));
+	tstring newName = utils::totstring(string(name));
 	if (newName != mName)
 	{
-		GF_LOGD("Update device name: %s", tostring(mName).c_str());
+		GF_LOGD("Update device name: %s", utils::tostring(mName).c_str());
 	}
 	mRssi = bleDev.rssi;
 
-	GF_LOGD("Update device rssi: %u", mRssi);
+	GF_LOGD("Update device rssi: %u", (GF_UINT)mRssi);
 
 	// TODO: notify client.
 }
 
 void BLEDevice::onConnected(const GF_ConnectedDevice& connedDevice)
 {
-	GF_LOGD("Device connected: previous state is: %u", static_cast<int>(mCnntStatus));
+	GF_LOGD("Device connected: previous state is: %u", static_cast<GF_UINT>(mCnntStatus));
 	mHandle = connedDevice.handle;
 	mConnInt = connedDevice.conn_int;
 	mSuperTO = connedDevice.superTO;
@@ -208,7 +208,7 @@ void BLEDevice::onConnected(const GF_ConnectedDevice& connedDevice)
 
 	if (DeviceConnectionStatus::Disconnecting == mCnntStatus)
 	{
-		if (OYM_SUCCESS == mAM->Disconnect(mHandle))
+		if (OYM_SUCCESS == mDongle->disconnect(*this))
 		{
 			// if user selected to cancel connection, make it and no notifiction
 			mCnntStatus = DeviceConnectionStatus::Disconnecting;
@@ -224,7 +224,7 @@ void BLEDevice::onConnected(const GF_ConnectedDevice& connedDevice)
 void BLEDevice::onDisconnected(GF_UINT8 reason)
 {
 	GF_LOGD("Device connected: previous state is: %u, reason is: %u",
-		static_cast<int>(mCnntStatus), reason);
+		static_cast<GF_UINT>(mCnntStatus), (GF_UINT)reason);
 	mCnntStatus = DeviceConnectionStatus::Disconnected;
 	mHandle = 0;
 	mConnInt = 0;
@@ -241,7 +241,7 @@ GF_RET_CODE BLEDevice::configMtuSize(GF_UINT16 mtuSize)
 	OYM_STATUS ret = OYM_FAIL;
 	if (mHandle != 0)
 	{
-		ret = mAM->ConfigMtuSize(mHandle, mtuSize);
+		ret = mDongle->configMtuSize(*this, mtuSize);
 	}
 	return (ret == OYM_SUCCESS) ? GF_SUCCESS : GF_ERROR;
 }
@@ -253,7 +253,7 @@ GF_RET_CODE BLEDevice::connectionParameterUpdate(GF_UINT16 conn_interval_min, GF
 	OYM_STATUS ret = OYM_FAIL;
 	if (mHandle != 0)
 	{
-		ret = mAM->ConnectionParameterUpdate(mHandle, conn_interval_min, conn_interval_max,
+		ret = mDongle->connectionParameterUpdate(*this, conn_interval_min, conn_interval_max,
 			slave_latence, supervision_timeout);
 	}
 	return (ret == OYM_SUCCESS) ? GF_SUCCESS : GF_ERROR;
@@ -265,7 +265,7 @@ GF_RET_CODE BLEDevice::WriteCharacteristic(GF_UINT16 attribute_handle, GF_UINT8 
 	OYM_STATUS ret = OYM_FAIL;
 	if (mHandle != 0)
 	{
-		ret = mAM->WriteCharacteristic(mHandle, attribute_handle, data_length, data);
+		ret = mDongle->writeCharacteristic(*this, attribute_handle, data_length, data);
 	}
 	return (ret == OYM_SUCCESS) ? GF_SUCCESS : GF_ERROR;
 }
@@ -276,14 +276,14 @@ GF_RET_CODE BLEDevice::ReadCharacteristic(GF_UINT16 attribute_handle)
 	OYM_STATUS ret = OYM_FAIL;
 	if (mHandle != 0)
 	{
-		ret = mAM->ReadCharacteristic(mHandle, attribute_handle);
+		ret = mDongle->readCharacteristic(*this, attribute_handle);
 	}
 	return (ret == OYM_SUCCESS) ? GF_SUCCESS : GF_ERROR;
 }
 
 void BLEDevice::onMTUSizeChanged(GF_STATUS status, GF_UINT16 mtu_size)
 {
-	GF_LOGD("%s: status: %u, new MTU size: %u", __FUNCTION__, status, mtu_size);
+	GF_LOGD("%s: status: %u, new MTU size: %u", __FUNCTION__, (GF_UINT)status, (GF_UINT)mtu_size);
 	mMTUsize = mtu_size;
 	// TODO: notify client
 }
@@ -291,10 +291,10 @@ void BLEDevice::onMTUSizeChanged(GF_STATUS status, GF_UINT16 mtu_size)
 void BLEDevice::onConnectionParmeterUpdated(GF_STATUS status, GF_UINT16 conn_int, GF_UINT16 superTO, GF_UINT16 slavelatency)
 {
 	GF_LOGD(__FUNCTION__);
-	GF_LOGD("status: %u", status);
-	GF_LOGD("conn_int: %u", conn_int);
-	GF_LOGD("superTO: %u", superTO);
-	GF_LOGD("slavelatency: %u", slavelatency);
+	GF_LOGD("status: %u", (GF_UINT)status);
+	GF_LOGD("conn_int: %u", (GF_UINT)conn_int);
+	GF_LOGD("superTO: %u", (GF_UINT)superTO);
+	GF_LOGD("slavelatency: %u", (GF_UINT)slavelatency);
 	mConnInt = conn_int;
 	mSuperTO = superTO;
 	mSlavelatency = slavelatency;
@@ -304,8 +304,8 @@ void BLEDevice::onConnectionParmeterUpdated(GF_STATUS status, GF_UINT16 conn_int
 void BLEDevice::onChracteristicValueRead(GF_STATUS status, GF_UINT8 length, GF_PUINT8 data)
 {
 	GF_LOGD(__FUNCTION__);
-	GF_LOGD("status: ", status);
-	GF_LOGD("length: ", length);
-	GF_LOGD("&data: ", (int)data);
+	GF_LOGD("status: %u", (GF_UINT)status);
+	GF_LOGD("length: %u", (GF_UINT)length);
+	GF_LOGD("&data: %p", data);
 	// TODO: notify client
 }

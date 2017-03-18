@@ -13,6 +13,7 @@
 
 #include <atomic>
 #include <list>
+#include <algorithm>
 
 using namespace std;
 using namespace oym;
@@ -78,9 +79,9 @@ void enumDevice(WPDEVICE dev)
 	}
 	else
 	{
-		GF_LOGI("Dev: addrtype: %d, address: %s, name: %s, connstatus: %d, position:%d",
-			sp->getAddrType(), tostring(sp->getAddress()).c_str(), tostring(sp->getName()).c_str(),
-			static_cast<int>(sp->getConnectionStatus()), static_cast<int>(sp->getPosition()));
+		GF_LOGI("Dev: addrtype: %u, address: %s, name: %s, connstatus: %u, position:%u",
+			(GF_UINT)sp->getAddrType(), utils::tostring(sp->getAddress()).c_str(), utils::tostring(sp->getName()).c_str(),
+			static_cast<GF_UINT>(sp->getConnectionStatus()), static_cast<GF_UINT>(sp->getPosition()));
 		listDev.push_back(sp);
 	}
 }
@@ -94,7 +95,7 @@ void handleCmd(gfsPtr<Dongle>& pDongle, string cmd)
 	switch (cmd[0])
 	{
 	case 'g':
-		GF_LOGI("dongle status is: %d", static_cast<int>(pDongle->getStatus()));
+		GF_LOGI("dongle status is: %u", static_cast<GF_UINT>(pDongle->getStatus()));
 		break;
 	case 's':
 		listDev.clear();
@@ -105,7 +106,7 @@ void handleCmd(gfsPtr<Dongle>& pDongle, string cmd)
 		break;
 	case 'e':
 	{
-		GF_LOGI("Total %d devices found, %d of them are connected.",
+		GF_LOGI("Total %u devices found, %u of them are connected.",
 			pDongle->getNumOfDevices(), pDongle->getNumOfConnectedDevices());
 		listDev.clear();
 		pDongle->enumDevices(enumDevice, false);
@@ -133,6 +134,7 @@ void handleCmd(gfsPtr<Dongle>& pDongle, string cmd)
 		break;
 	}
 	default:;
+		GF_LOGW("Invalid command %s.", cmd.c_str());
 	}
 }
 
@@ -143,17 +145,35 @@ class DongleListenerImp : public DongleListener
 	{
 		GF_LOGD("%s", __FUNCTION__);
 	}
-	virtual void onDeviceFound(gfwPtr<Device> dev)
+	virtual void onDeviceFound(WPDEVICE device)
 	{
-		auto ptr = dev.lock();
-		GF_LOGI("%s: Name: %s", __FUNCTION__, (nullptr == ptr ? "__empty__" : tostring(ptr->getName()).c_str()));
+		auto ptr = device.lock();
+		GF_LOGI("%s: Name: %s", __FUNCTION__, (nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
 	}
-	virtual void onDeviceSpecialized(gfwPtr<Device> oldPtr, gfwPtr<Device> newPtr)
+	virtual void onDeviceDiscard(WPDEVICE device)
+	{
+		auto ptr = device.lock();
+		GF_LOGD("%s: device: %s", __FUNCTION__, (nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
+		//listDev.erase(remove_if(listDev.begin(), listDev.end(),
+		//	[&ptr](decltype(*listDev.begin()) it){ return (ptr == it); }), listDev.end());
+
+		for (auto itor = listDev.begin(); itor != listDev.end();)
+		{
+			if (ptr == (*itor))
+				listDev.erase(itor++);
+			else
+				++itor;
+		}
+	}
+	virtual void onDeviceSpecialized(WPDEVICE oldPtr, WPDEVICE newPtr)
 	{
 		auto spold = oldPtr.lock();
 		auto spnew = newPtr.lock();
-		GF_LOGI("%s: DongleState: old device: %s", __FUNCTION__, (nullptr == spold ? "__empty__" : tostring(spold->getName()).c_str()));
-		GF_LOGI("%s: DongleState: new device: %s", __FUNCTION__, (nullptr == spnew ? "__empty__" : tostring(spnew->getName()).c_str()));
+		GF_LOGI("%s: DongleState: old device: %s", __FUNCTION__, (nullptr == spold ? "__empty__" : utils::tostring(spold->getName()).c_str()));
+		GF_LOGI("%s: DongleState: new device: %s", __FUNCTION__, (nullptr == spnew ? "__empty__" : utils::tostring(spnew->getName()).c_str()));
+		//listDev.erase(remove_if(listDev.begin(), listDev.end(),
+		//	[&spold](decltype(*listDev.begin()) it){ return (spold == it); }), listDev.end());
+
 		for (auto itor = listDev.begin(); itor != listDev.end();)
 		{
 			if (spold == (*itor))
@@ -164,9 +184,39 @@ class DongleListenerImp : public DongleListener
 		if (nullptr != spnew)
 			listDev.push_back(spnew);
 	}
-	virtual void onStateChanged(DongleState dongState)
+	virtual void onStateChanged(DongleState state)
 	{
-		GF_LOGI("%s: DongleState: %d", __FUNCTION__, static_cast<int>(dongState));
+		GF_LOGI("%s: DongleState: %u", __FUNCTION__, static_cast<GF_UINT>(state));
+	}
+};
+
+class DeviceListenerImpl : public DeviceListener
+{
+	virtual void onDeviceConnected(WPDEVICE device, GF_STATUS status)
+	{
+		auto ptr = device.lock();
+		GF_LOGD("%s: device: %s", __FUNCTION__, (nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
+	}
+	virtual void onDeviceDisonnected(WPDEVICE device, GF_STATUS status, GF_UINT8 reason)
+	{
+		auto ptr = device.lock();
+		GF_LOGD("%s: device: %s", __FUNCTION__, (nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
+	}
+	virtual void onMTUSizeChanged(WPDEVICE device, GF_STATUS status, GF_UINT16 mtu_size)
+	{
+		auto ptr = device.lock();
+		GF_LOGD("%s: device: %s", __FUNCTION__, (nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
+	}
+	virtual void onConnectionParmeterUpdated(WPDEVICE device, GF_STATUS status, GF_UINT16 conn_int, GF_UINT16 superTO, GF_UINT16 slavelatency)
+	{
+		auto ptr = device.lock();
+		GF_LOGD("%s: device: %s", __FUNCTION__, (nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
+	}
+	virtual void onEvent(WPDEVICE device, GF_EVENT event, GF_CPCHAR data)
+	{
+		auto ptr = device.lock();
+		GF_LOGD("%s: device: %s, event: %u", __FUNCTION__,
+			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()), (GF_UINT)event);
 	}
 };
 
@@ -191,8 +241,8 @@ int _tmain()
 		GF_LOGE("failed to init dongle.");
 		return 0;
 	}
-	GF_LOGI("dongle status is: %d", static_cast<int>(pDongle->getStatus()));
-	GF_LOGI("dongle string is: %s", tostring(pDongle->getDescString()).c_str());
+	GF_LOGI("dongle status is: %u", static_cast<GF_UINT>(pDongle->getStatus()));
+	GF_LOGI("dongle string is: %s", utils::tostring(pDongle->getDescString()).c_str());
 
 
 	if (SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrlhandler, TRUE))

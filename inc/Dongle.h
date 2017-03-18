@@ -25,8 +25,8 @@ namespace oym
 		virtual GF_RET_CODE startScan(GF_UINT8 rssiThreshold = 0) = 0;
 		virtual GF_RET_CODE stopScan() = 0;
 
-		virtual int getNumOfDevices() const = 0;
-		virtual int getNumOfConnectedDevices() const = 0;
+		virtual GF_SIZE getNumOfDevices() const = 0;
+		virtual GF_SIZE getNumOfConnectedDevices() const = 0;
 		virtual void enumDevices(FunEnumDevice funEnum, bool bConnectedOnly = true) = 0;
 		virtual WPDEVICE findDevice(GF_UINT8 addrType, tstring address) = 0;
 		// set up virtual device, client can combine two or more gdevices positioning in

@@ -11,21 +11,24 @@ gfsPtr<Dongle> DongleManager::mTheSharedPtr;
 
 gfsPtr<Dongle> DongleManager::getDongleInstance(const tstring& sIdentifier)
 {
-	Dongle* retVal = mTheDongle.load(memory_order_acquire);
-	if (nullptr == retVal)
+	Dongle* rawPtr = mTheDongle.load(memory_order_acquire);
+	if (nullptr == rawPtr || nullptr == mTheSharedPtr || mTheSharedPtr.get() != rawPtr)
 	{
 		lock_guard<mutex> lock(mMutex);
-		retVal = mTheDongle.load(memory_order_relaxed);
-		if (nullptr == retVal)
+		rawPtr = mTheDongle.load(memory_order_relaxed);
+		if (nullptr == rawPtr || nullptr == mTheSharedPtr || mTheSharedPtr.get() != rawPtr)
 		{
-			GF_LOGD("Creating the dongle.");
-			mTheSharedPtr = dynamic_pointer_cast<Dongle>(make_shared<BLEDongle>(sIdentifier));
+			if (nullptr == mTheSharedPtr)
+			{
+				GF_LOGD("Creating dongle instance.");
+				mTheSharedPtr = dynamic_pointer_cast<Dongle>(make_shared<BLEDongle>(sIdentifier));
+			}
 			mTheDongle.store(mTheSharedPtr.get(), memory_order_release);
 		}
 	}
 	if (nullptr == mTheSharedPtr)
 	{
-		GF_LOGD("getDongleInstance error, object is NULL.");
+		GF_LOGF("getDongleInstance error, object is NULL.");
 	}
 	return mTheSharedPtr;
 }

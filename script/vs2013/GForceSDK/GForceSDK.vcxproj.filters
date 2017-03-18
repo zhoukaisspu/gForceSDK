@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Exposed Header Files">
+      <UniqueIdentifier>{49745f9b-d3b8-4a48-a0f6-69ddaa6f701d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\GForceDevice.cpp">
@@ -41,24 +44,6 @@
     <ClInclude Include="..\..\..\src\BLEDongle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\inc\Dongle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\inc\DongleListener.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\inc\DongleManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\inc\gfTypes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\inc\Device.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\inc\DeviceListener.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -72,6 +57,27 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\common\utils\LogUtils_Linux.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\DeviceListener.h">
+      <Filter>Exposed Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\Device.h">
+      <Filter>Exposed Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\Dongle.h">
+      <Filter>Exposed Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\DongleListener.h">
+      <Filter>Exposed Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\DongleManager.h">
+      <Filter>Exposed Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\gfTypes.h">
+      <Filter>Exposed Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\IDongle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

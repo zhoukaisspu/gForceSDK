@@ -3,6 +3,7 @@
 #include <set>
 
 #include "Dongle.h"
+#include "IDongle.h"
 #include "BLEDevice.h"
 #include "Utils.h"
 
@@ -13,7 +14,7 @@ namespace oym
 {
 
 	class BLEDongle :
-		public Dongle, public IClientCallback
+		public Dongle, public IClientCallback, public IDongle
 	{
 	public:
 		BLEDongle(const tstring& sIdentifier);
@@ -30,11 +31,11 @@ namespace oym
 		// setup listener
 		virtual GF_RET_CODE registerListener(const gfwPtr<DongleListener>& listener);
 
-		virtual GF_RET_CODE startScan(OYM_UINT8 rssiThreshold = 0);
+		virtual GF_RET_CODE startScan(OYM_UINT8 rssiThreshold);
 		virtual GF_RET_CODE stopScan();
 
-		virtual int getNumOfDevices() const { return mDevices.size(); }
-		virtual int getNumOfConnectedDevices() const;
+		virtual GF_SIZE getNumOfDevices() const { return mDisconnDevices.size() + mConnectedDevices.size(); }
+		virtual GF_SIZE getNumOfConnectedDevices() const { return mConnectedDevices.size(); }
 		virtual void enumDevices(FunEnumDevice funEnum, bool bConnectedOnly = true);
 		virtual WPDEVICE findDevice(OYM_UINT8 addrType, tstring address);
 		// set up virtual device, client can combine two or more gdevices positioning in
@@ -60,11 +61,23 @@ namespace oym
 
 		virtual void onComDestory();
 
+	protected:
+		// IDongle for device usage
+		virtual GF_RET_CODE connect(BLEDevice& dev, bool directConn = true);
+		virtual GF_RET_CODE cancelConnect(BLEDevice& dev);
+		virtual GF_RET_CODE disconnect(BLEDevice& dev);
+		virtual GF_RET_CODE configMtuSize(BLEDevice& dev, GF_UINT16 mtuSize);
+		virtual GF_RET_CODE connectionParameterUpdate(BLEDevice& dev,
+			GF_UINT16 conn_interval_min, GF_UINT16 conn_interval_max,
+			GF_UINT16 slave_latence, GF_UINT16 supervision_timeout);
+		virtual GF_RET_CODE writeCharacteristic(BLEDevice& dev,
+			GF_UINT16 attribute_handle, GF_UINT8 data_length, GF_PUINT8 data);
+		virtual GF_RET_CODE readCharacteristic(BLEDevice& dev, GF_UINT16 attribute_handle);
+
 	private:
 		gfsPtr<OYM_AdapterManager> mAM;
-		typedef gfsPtr<BLEDevice> PTR_DEVICE;
-		typedef set<gfsPtr<BLEDevice>, DevComp<gfsPtr<BLEDevice>>> SET_DEVICE;
-		SET_DEVICE mDevices;
+		set<gfsPtr<BLEDevice>, DevComp<gfsPtr<BLEDevice>>> mDisconnDevices;
+		set<gfsPtr<BLEDevice>, ConnectedDevComp<gfsPtr<BLEDevice>>> mConnectedDevices;
 		set<gfwPtr<DongleListener>, WeakPtrComp<DongleListener>> mListeners;
 	};
 

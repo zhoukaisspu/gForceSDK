@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Device.h"
+#include "IDongle.h"
 #include "AdapterManager.h"
 #include "Utils.h"
 #include <set>
@@ -13,7 +14,7 @@ namespace oym
 	class BLEDevice : public Device
 	{
 	public:
-		BLEDevice(gfsPtr<OYM_AdapterManager>& am, const BLE_DEVICE& bleDev);
+		BLEDevice(IDongle* dongle, const BLE_DEVICE& bleDev);
 		virtual ~BLEDevice() { }
 
 		virtual GF_UINT8 getAddrType() const { return mAddrType; }
@@ -64,10 +65,11 @@ namespace oym
 			}
 		}
 		virtual bool isMyself(GF_UINT8 addrType, GF_UINT8 addr[]) const;
+		virtual bool isMyself(GF_UINT8 addrType, tstring addr) const;
 		virtual bool takeover(BLEDevice& from);
 
 	protected:
-		gfsPtr<OYM_AdapterManager> mAM;
+		IDongle* mDongle;
 
 	protected:
 		DeviceConnectionStatus mCnntStatus = DeviceConnectionStatus::Disconnected;
