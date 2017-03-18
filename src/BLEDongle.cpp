@@ -1,3 +1,4 @@
+#include "LogUtils.h"
 #include "BLEDongle.h"
 #include "DongleListener.h"
 
@@ -7,33 +8,33 @@ using namespace oym;
 
 BLEDongle::BLEDongle(const tstring& sIdentifier)
 {
-	tcout << _T("BLEDongle++: identfiler: ") << sIdentifier << endl;
+	GF_LOGD("BLEDongle++: identfiler: %s", tostring(sIdentifier).c_str());
 }
 
 
 BLEDongle::~BLEDongle()
 {
 	mAM = nullptr;
-	tcout << _T("BLEDongle--") << endl;
+	GF_LOGD("BLEDongle--");
 }
 
 // module management
 GF_RET_CODE BLEDongle::init()
 {
 	GF_RET_CODE ret = GF_SUCCESS;
-	tcout << __FUNCTION__ << endl;
+	GF_LOGD(__FUNCTION__);
 
 	if (nullptr != mAM) {
 		return ret;
 	}
 	mAM = make_shared<OYM_AdapterManager>();
 	if (nullptr == mAM) {
-		tcout << _T("Memory insurfficient.") << endl;
+		GF_LOGD("Memory insurfficient.");
 		return GF_ERR_NO_RESOURCE;
 	}
 	OYM_STATUS result = OYM_FAIL;
 	if (OYM_SUCCESS != (result = mAM->Init(BLE_COMM))) {
-		tcout << _T("Adapter init failed.") << endl;
+		GF_LOGD("Adapter init failed.");
 		mAM = nullptr;
 		// TODO: check return value
 		return GF_ERROR;
@@ -47,7 +48,7 @@ GF_RET_CODE BLEDongle::init()
 GF_RET_CODE BLEDongle::deinit()
 {
 	GF_RET_CODE ret = GF_SUCCESS;
-	tcout << __FUNCTION__ << endl;
+	GF_LOGD(__FUNCTION__);
 
 	for (auto& itor : mDevices)
 	{
@@ -61,7 +62,7 @@ GF_RET_CODE BLEDongle::deinit()
 	}
 	OYM_STATUS result = OYM_FAIL;
 	if (OYM_SUCCESS != (result = mAM->Deinit())) {
-		tcout << _T("Adapter deinit failed.") << endl;
+		GF_LOGD("Adapter deinit failed.");
 	}
 	mAM->UnregisterClientCallback();
 	mAM = nullptr;
@@ -102,7 +103,7 @@ tstring BLEDongle::getDescString() const
 // setup listener
 GF_RET_CODE BLEDongle::registerListener(const gfwPtr<DongleListener>& listener)
 {
-	tcout << __FUNCTION__ << endl;
+	GF_LOGD(__FUNCTION__);
 	if (nullptr == listener.lock())
 		return GF_ERROR_BAD_PARAM;
 
@@ -113,7 +114,7 @@ GF_RET_CODE BLEDongle::registerListener(const gfwPtr<DongleListener>& listener)
 
 GF_RET_CODE BLEDongle::startScan(OYM_UINT8 rssiThreshold)
 {
-	tcout << __FUNCTION__ << endl;
+	GF_LOGD(__FUNCTION__);
 	if (nullptr == mAM)
 		return GF_ERROR_BAD_STATE;
 
@@ -129,7 +130,7 @@ GF_RET_CODE BLEDongle::startScan(OYM_UINT8 rssiThreshold)
 			{
 				// TODO: notify client that the device will be erased.
 
-				tcout << "Disconnected device removed." << endl;
+				GF_LOGD("Disconnected device removed.");
 				mDevices.erase(itor++);
 			}
 			else
@@ -145,14 +146,14 @@ GF_RET_CODE BLEDongle::startScan(OYM_UINT8 rssiThreshold)
 
 GF_RET_CODE BLEDongle::stopScan()
 {
-	tcout << __FUNCTION__ << endl;
+	GF_LOGD(__FUNCTION__);
 	if (nullptr == mAM)
 		return GF_ERROR_BAD_STATE;
 
 	OYM_STATUS ret = mAM->StopScan();
 	if (OYM_SUCCESS == ret)
 	{
-		tcout << "Scan stopped." << endl;
+		GF_LOGD("Scan stopped.");
 		for (auto& itor : mListeners)
 		{
 			auto ptr = itor.lock();
@@ -166,7 +167,7 @@ GF_RET_CODE BLEDongle::stopScan()
 
 void BLEDongle::enumDevices(FunEnumDevice funEnum, bool bConnectedOnly)
 {
-	tcout << __FUNCTION__ << endl;
+	GF_LOGD(__FUNCTION__);
 
 	for (auto& itor : mDevices)
 	{
@@ -179,7 +180,7 @@ void BLEDongle::enumDevices(FunEnumDevice funEnum, bool bConnectedOnly)
 
 int BLEDongle::getNumOfConnectedDevices() const
 {
-	tcout << __FUNCTION__ << endl;
+	GF_LOGD(__FUNCTION__);
 	int cnt = 0;
 	for (auto& itor : mDevices)
 	{
@@ -191,7 +192,7 @@ int BLEDongle::getNumOfConnectedDevices() const
 
 WPDEVICE BLEDongle::findDevice(OYM_UINT8 addrType, tstring address)
 {
-	tcout << __FUNCTION__ << endl;
+	GF_LOGD(__FUNCTION__);
 	WPDEVICE ret;
 	for (auto& itor : mDevices)
 	{
@@ -206,13 +207,13 @@ GF_RET_CODE BLEDongle::createVirtualDevice(int numDevices, vector<WPDEVICE> real
 	numDevices;
 	realDevices;
 	newDevice;
-	tcout << __FUNCTION__ << endl;
+	GF_LOGD(__FUNCTION__);
 	return GF_ERROR_NOT_SUPPORT; // not implemented
 }
 
 void BLEDongle::onScanResult(BLE_DEVICE* device)
 {
-	tcout << __FUNCTION__ << endl;
+	GF_LOGD(__FUNCTION__);
 	if (device == nullptr)
 		return;
 
@@ -233,7 +234,7 @@ void BLEDongle::onScanResult(BLE_DEVICE* device)
 
 void BLEDongle::onScanFinished()
 {
-	tcout << __FUNCTION__ << endl;
+	GF_LOGD(__FUNCTION__);
 	for (auto& itor : mListeners)
 	{
 		auto ptr = itor.lock();
@@ -246,7 +247,7 @@ void BLEDongle::onScanFinished()
 void BLEDongle::onDeviceConnected(OYM_STATUS status, GF_ConnectedDevice *device)
 {
 	status;
-	tcout << __FUNCTION__ << endl;
+	GF_LOGD(__FUNCTION__);
 
 	for (auto itor : mDevices)
 	{
@@ -263,7 +264,7 @@ void BLEDongle::onDeviceConnected(OYM_STATUS status, GF_ConnectedDevice *device)
 void BLEDongle::onDeviceDisonnected(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT8 reason)
 {
 	status;
-	tcout << __FUNCTION__ << endl;
+	GF_LOGD(__FUNCTION__);
 
 	for (auto itor : mDevices)
 	{
@@ -277,7 +278,7 @@ void BLEDongle::onDeviceDisonnected(OYM_STATUS status, OYM_UINT16 handle, OYM_UI
 
 void BLEDongle::onMTUSizeChanged(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT16 mtu_size)
 {
-	tcout << __FUNCTION__ << endl;
+	GF_LOGD(__FUNCTION__);
 
 	for (auto itor : mDevices)
 	{
@@ -290,7 +291,7 @@ void BLEDongle::onMTUSizeChanged(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT1
 
 void BLEDongle::onConnectionParmeterUpdated(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT16 conn_int, OYM_UINT16 superTO, OYM_UINT16 slavelatency)
 {
-	tcout << __FUNCTION__ << endl;
+	GF_LOGD(__FUNCTION__);
 
 	for (auto itor : mDevices)
 	{
@@ -303,7 +304,7 @@ void BLEDongle::onConnectionParmeterUpdated(OYM_STATUS status, OYM_UINT16 handle
 
 void BLEDongle::onChracteristicValueRead(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT8 length, OYM_PUINT8 data)
 {
-	tcout << __FUNCTION__ << endl;
+	GF_LOGD(__FUNCTION__);
 
 	for (auto itor : mDevices)
 	{
@@ -318,12 +319,12 @@ void BLEDongle::onChracteristicValueRead(OYM_STATUS status, OYM_UINT16 handle, O
 void BLEDongle::onNotificationReceived(OYM_UINT16 handle, OYM_UINT8 length, OYM_PUINT8 data)
 {
 	handle; length; data;
-	//tcout << __FUNCTION__ << endl;
+	//GF_LOGD(__FUNCTION__);
 }
 
 void BLEDongle::onComDestory()
 {
-	tcout << __FUNCTION__ << endl;
+	GF_LOGD(__FUNCTION__);
 	// TODO: do something after com destoryed
 
 	for (auto& itor : mListeners)

@@ -25,6 +25,10 @@
     <ClInclude Include="..\..\..\inc\gfTypes.h" />
     <ClInclude Include="..\..\..\src\BLEDevice.h" />
     <ClInclude Include="..\..\..\src\BLEDongle.h" />
+    <ClInclude Include="..\..\..\src\common\LogUtils.h" />
+    <ClInclude Include="..\..\..\src\common\utils\LogUtils_Linux.h" />
+    <ClInclude Include="..\..\..\src\common\utils\LogUtil_Android.h" />
+    <ClInclude Include="..\..\..\src\common\utils\LogUtil_Win.h" />
     <ClInclude Include="..\..\..\src\GForceDevice.h" />
     <ClInclude Include="..\..\..\src\Utils.h" />
     <ClInclude Include="..\..\..\src\VirtualDevice.h" />

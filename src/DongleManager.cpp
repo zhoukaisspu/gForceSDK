@@ -1,4 +1,4 @@
-
+#include "LogUtils.h"
 #include "BLEDongle.h"
 #include "DongleManager.h"
 
@@ -18,14 +18,14 @@ gfsPtr<Dongle> DongleManager::getDongleInstance(const tstring& sIdentifier)
 		retVal = mTheDongle.load(memory_order_relaxed);
 		if (nullptr == retVal)
 		{
-			tcout << _T("Creating the hub.") << endl;
+			GF_LOGD("Creating the dongle.");
 			mTheSharedPtr = dynamic_pointer_cast<Dongle>(make_shared<BLEDongle>(sIdentifier));
 			mTheDongle.store(mTheSharedPtr.get(), memory_order_release);
 		}
 	}
 	if (nullptr == mTheSharedPtr)
 	{
-		tcout << _T("getDongleInstance error, object is NULL.") << endl;
+		GF_LOGD("getDongleInstance error, object is NULL.");
 	}
 	return mTheSharedPtr;
 }

@@ -14,7 +14,7 @@ namespace oym
 	{
 	public:
 		BLEDevice(gfsPtr<OYM_AdapterManager>& am, const BLE_DEVICE& bleDev);
-		virtual ~BLEDevice() { tcout<< "BLEDevice decons+++++++++++++++++++++++++++++++++++++\n" << endl; }
+		virtual ~BLEDevice() { }
 
 		virtual GF_UINT8 getAddrType() const { return mAddrType; }
 		virtual GF_RET_CODE getAddress(GF_UINT8* addr, GF_SIZE bufLen) const;

@@ -34,7 +34,7 @@ namespace oym
 		//   data of these devices seperately, and can get one combined gesture
 		//   data if it happens
 		virtual GF_RET_CODE createVirtualDevice(int numDevices, std::vector<WPDEVICE> realDevices, WPDEVICE& newDevice) = 0;
-		
+
 		// removing method releaseDevice, virtual device can be destoryed by calling disconnect
 		//virtual int releaseDevice(SPTR_DEV& device) = 0;
 

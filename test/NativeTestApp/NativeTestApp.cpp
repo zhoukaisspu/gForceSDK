@@ -1,11 +1,15 @@
 // NativeTestApp.cpp : Defines the entry point for the console application.
 //
-
 #include "stdafx.h"
+
+#define TAG "NativeTestApp"
+
 #include "DongleManager.h"
 #include "Device.h"
 #include "DongleListener.h"
 #include "DeviceListener.h"
+#include "LogUtils.h"
+#include "../Utils.h"
 
 #include <atomic>
 #include <list>
@@ -23,25 +27,25 @@ BOOL ctrlhandler(DWORD fdwctrltype)
 	{
 	case CTRL_C_EVENT:
 		// handle the ctrl-c signal.
-		printf("ctrl-c event\n\n");
+		GF_LOGI("ctrl-c event\n");
 		bExiting = true;
 		break;
 	case CTRL_CLOSE_EVENT:
 		// ctrl-close: confirm that the user wants to exit.
-		printf("ctrl-close event\n\n");
+		GF_LOGI("ctrl-close event");
 		bExiting = true;
 		break;
 	case CTRL_BREAK_EVENT:
 		// pass other signals to the next handler.
-		printf("ctrl-break event\n\n");
+		GF_LOGI("ctrl-break event");
 		bExiting = true;
 		break;
 	case CTRL_LOGOFF_EVENT:
-		printf("ctrl-logoff event\n\n");
+		GF_LOGI("ctrl-logoff event");
 		bExiting = true;
 		break;
 	case CTRL_SHUTDOWN_EVENT:
-		printf("ctrl-shutdown event\n\n");
+		GF_LOGI("ctrl-shutdown event");
 		bExiting = true;
 		break;
 	default:;
@@ -54,15 +58,14 @@ BOOL ctrlhandler(DWORD fdwctrltype)
 
 void printHelp()
 {
-	tcout << _T("\n\nPress Ctrl+C to exit.\n") << endl;
-	tcout << _T("g:\tGet dongle status.") << endl;
-	tcout << _T("s:\tStart to scan.") << endl;
-	tcout << _T("S:\tStop to scan.") << endl;
-	tcout << _T("e:\tEnum devices.") << endl;
-	tcout << _T("c:\tConnect to device.") << endl;
-	tcout << _T("C:\tCancel connecting to device.") << endl;
-	tcout << _T("d:\tDisconnect device.") << endl;
-	tcout << endl << endl << endl;
+	GF_LOGI("\tPress Ctrl+C to exit.\n");
+	GF_LOGI("g:\tGet dongle status.");
+	GF_LOGI("s:\tStart to scan.");
+	GF_LOGI("S:\tStop to scan.");
+	GF_LOGI("e:\tEnum devices.");
+	GF_LOGI("c:\tConnect to device.");
+	GF_LOGI("C:\tCancel connecting to device.");
+	GF_LOGI("d:\tDisconnect device.\n\n");
 }
 
 list<gfsPtr<Device>> listDev;
@@ -71,13 +74,13 @@ void enumDevice(WPDEVICE dev)
 	auto sp = dev.lock();
 	if (nullptr == sp)
 	{
-		tcout << __FUNCTION__ << ": empty device???" << endl;
+		GF_LOGW("%s: empty device???", __FUNCTION__);
 	}
 	else
 	{
-		tcout << "Dev: addrtype: " << sp->getAddrType() << ", address: " << sp->getAddress() << ", name: " << sp->getName() << ", connstatus: "
-			<< static_cast<int>(sp->getConnectionStatus()) << ", position: " << static_cast<int>(sp->getPosition())
-			<< endl;
+		GF_LOGI("Dev: addrtype: %d, address: %s, name: %s, connstatus: %d, position:%d",
+			sp->getAddrType(), tostring(sp->getAddress()).c_str(), tostring(sp->getName()).c_str(),
+			static_cast<int>(sp->getConnectionStatus()), static_cast<int>(sp->getPosition()));
 		listDev.push_back(sp);
 	}
 }
@@ -87,11 +90,11 @@ void handleCmd(gfsPtr<Dongle>& pDongle, string cmd)
 	if (cmd.length() == 0)
 		return;
 
-	printf("Command %s received.\n", cmd.c_str());
+	GF_LOGI("Command %s received.", cmd.c_str());
 	switch (cmd[0])
 	{
 	case 'g':
-		tcout << _T("dongle status is: ") << static_cast<int>(pDongle->getStatus()) << endl;
+		GF_LOGI("dongle status is: %d", static_cast<int>(pDongle->getStatus()));
 		break;
 	case 's':
 		listDev.clear();
@@ -102,7 +105,7 @@ void handleCmd(gfsPtr<Dongle>& pDongle, string cmd)
 		break;
 	case 'e':
 	{
-		printf("Total %d devices found, %d of them are connected.\n",
+		GF_LOGI("Total %d devices found, %d of them are connected.",
 			pDongle->getNumOfDevices(), pDongle->getNumOfConnectedDevices());
 		listDev.clear();
 		pDongle->enumDevices(enumDevice, false);
@@ -138,19 +141,19 @@ class DongleListenerImp : public DongleListener
 {
 	virtual void onScanfinished()
 	{
-		tcout << __FUNCTION__ << endl;
+		GF_LOGD("%s", __FUNCTION__);
 	}
 	virtual void onDeviceFound(gfwPtr<Device> dev)
 	{
 		auto ptr = dev.lock();
-		tcout << __FUNCTION__ << _T(": Name: ") << (nullptr == ptr ? _T("__empty__") : ptr->getName().c_str()) << endl;
+		GF_LOGI("%s: Name: %s", __FUNCTION__, (nullptr == ptr ? "__empty__" : tostring(ptr->getName()).c_str()));
 	}
 	virtual void onDeviceSpecialized(gfwPtr<Device> oldPtr, gfwPtr<Device> newPtr)
 	{
 		auto spold = oldPtr.lock();
 		auto spnew = newPtr.lock();
-		tcout << __FUNCTION__ << _T(": old device: ") << (nullptr == spold ? _T("__empty__") : spold->getName().c_str()) << endl;
-		tcout << __FUNCTION__ << _T(": new device: ") << (nullptr == spnew ? _T("__empty__") : spnew->getName().c_str()) << endl;
+		GF_LOGI("%s: DongleState: old device: %s", __FUNCTION__, (nullptr == spold ? "__empty__" : tostring(spold->getName()).c_str()));
+		GF_LOGI("%s: DongleState: new device: %s", __FUNCTION__, (nullptr == spnew ? "__empty__" : tostring(spnew->getName()).c_str()));
 		for (auto itor = listDev.begin(); itor != listDev.end();)
 		{
 			if (spold == (*itor))
@@ -163,7 +166,7 @@ class DongleListenerImp : public DongleListener
 	}
 	virtual void onStateChanged(DongleState dongState)
 	{
-		tcout << __FUNCTION__ << ": DongleState: " << static_cast<int>(dongState) << endl;
+		GF_LOGI("%s: DongleState: %d", __FUNCTION__, static_cast<int>(dongState));
 	}
 };
 
@@ -173,7 +176,7 @@ int _tmain()
 	gfsPtr<Dongle> pDongle = DongleManager::getDongleInstance(_T("TestApp"));
 
 	if (nullptr == pDongle) {
-		tcout << _T("failed to get dongle.") << endl;
+		GF_LOGE("failed to get dongle.");
 		return 0;
 	}
 
@@ -185,11 +188,11 @@ int _tmain()
 
 	if (GF_SUCCESS != pDongle->init())
 	{
-		tcout << _T("failed to init dongle.") << endl;
+		GF_LOGE("failed to init dongle.");
 		return 0;
 	}
-	tcout << _T("dongle status is: ") << static_cast<int>(pDongle->getStatus()) << endl;
-	tcout << _T("dongle string is: ") << pDongle->getDescString().c_str() << endl;
+	GF_LOGI("dongle status is: %d", static_cast<int>(pDongle->getStatus()));
+	GF_LOGI("dongle string is: %s", tostring(pDongle->getDescString()).c_str());
 
 
 	if (SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrlhandler, TRUE))
@@ -202,7 +205,7 @@ int _tmain()
 	}
 	else
 	{
-		tcout << _T("Error: could not set control handler.") << endl;
+		GF_LOGE("Error: could not set control handler.");
 	}
 
 	listDev.clear();
