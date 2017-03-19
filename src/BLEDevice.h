@@ -10,6 +10,7 @@ using namespace std;
 
 namespace oym
 {
+#define INVALID_HANDLE (GF_UINT16)0xFFFF
 
 	class BLEDevice : public Device
 	{
@@ -31,6 +32,7 @@ namespace oym
 		virtual GF_RET_CODE identifyDevice(int msec = 1000);
 
 		virtual GF_RET_CODE registerListener(const gfwPtr<DeviceListener>& listener);
+		virtual GF_RET_CODE unRegisterListener(const gfwPtr<DeviceListener>& listener);
 
 		virtual DeviceConnectionStatus getConnectionStatus() const { return mCnntStatus; }
 		virtual GF_RET_CODE setPostion(DevicePosition pos);
@@ -43,8 +45,8 @@ namespace oym
 		virtual GF_RET_CODE configMtuSize(GF_UINT16 mtuSize);
 		virtual GF_RET_CODE connectionParameterUpdate(GF_UINT16 conn_interval_min, GF_UINT16 conn_interval_max,
 			GF_UINT16 slave_latence, GF_UINT16 supervision_timeout);
-		virtual GF_RET_CODE WriteCharacteristic(GF_UINT16 attribute_handle, GF_UINT8 data_length, GF_PUINT8 data);
-		virtual GF_RET_CODE ReadCharacteristic(GF_UINT16 attribute_handle);
+		virtual GF_RET_CODE writeCharacteristic(GF_UINT16 attribute_handle, GF_UINT8 data_length, GF_PUINT8 data);
+		virtual GF_RET_CODE readCharacteristic(GF_UINT16 attribute_handle);
 
 	public:
 		virtual void updateData(const BLE_DEVICE& bleDev);
@@ -79,7 +81,7 @@ namespace oym
 		tstring		mName;
 		GF_UINT8	mRssi = 0;
 
-		GF_UINT16	mHandle = 0;
+		GF_UINT16	mHandle = INVALID_HANDLE;
 		GF_UINT16	mConnInt = 0;
 		GF_UINT16	mSuperTO = 0;
 		GF_UINT16	mSlavelatency = 0;

@@ -12,6 +12,8 @@ namespace oym
 	public:
 		GForceDevice(IDongle* dongle, const BLE_DEVICE& bleDev) : BLEDevice(dongle, bleDev) {}
 
+		//void parseData();
+
 	protected:
 		virtual ~GForceDevice() {}
 	};

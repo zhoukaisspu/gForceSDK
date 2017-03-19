@@ -231,9 +231,8 @@ int _tmain()
 	}
 
 	gfsPtr<DongleListener> listener = dynamic_pointer_cast<DongleListener>(make_shared<DongleListenerImp>());
-	gfwPtr<DongleListener> wptest = listener;
 	pDongle->registerListener(listener);
-	pDongle->registerListener(wptest);
+	pDongle->registerListener(dynamic_pointer_cast<DongleListener>(make_shared<DongleListenerImp>()));
 	//listener = nullptr;
 
 	if (GF_SUCCESS != pDongle->init())
@@ -259,6 +258,7 @@ int _tmain()
 	}
 
 	listDev.clear();
+	pDongle->unRegisterListener(listener);
 	pDongle->deinit();
 
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrlhandler, FALSE);

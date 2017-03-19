@@ -119,6 +119,17 @@ GF_RET_CODE BLEDongle::registerListener(const gfwPtr<DongleListener>& listener)
 	return GF_SUCCESS;
 }
 
+GF_RET_CODE BLEDongle::unRegisterListener(const gfwPtr<DongleListener>& listener)
+{
+	GF_LOGD(__FUNCTION__);
+	if (nullptr == listener.lock())
+		return GF_ERROR_BAD_PARAM;
+
+	mListeners.erase(listener);
+	cleanInvalidWeakP(mListeners);
+	return GF_SUCCESS;
+}
+
 GF_RET_CODE BLEDongle::startScan(OYM_UINT8 rssiThreshold)
 {
 	GF_LOGD(__FUNCTION__);
@@ -276,6 +287,20 @@ void BLEDongle::onDeviceConnected(OYM_STATUS status, GF_ConnectedDevice *device)
 		GF_LOGW("No device found in disconnect_list. %u:%s",
 			(GF_UINT)device->address_type,
 			utils::tostring(utils::deviceAddressToString(device->address, sizeof(device->address)).c_str()));
+		for (auto& itor : mConnectedDevices)
+		{
+			if (itor->isMyself(device->address_type, device->address))
+			{
+				dev = itor;
+				break;
+			}
+		}
+	}
+	if (nullptr == dev)
+	{
+		GF_LOGW("No device found in connect_list either. %u:%s",
+			(GF_UINT)device->address_type,
+			utils::tostring(utils::deviceAddressToString(device->address, sizeof(device->address)).c_str()));
 		return;
 	}
 	mConnectedDevices.insert(dev);
@@ -302,6 +327,19 @@ void BLEDongle::onDeviceDisonnected(OYM_STATUS status, OYM_UINT16 handle, OYM_UI
 	if (nullptr == dev)
 	{
 		GF_LOGW("No device found in connect_list. handle is %u, reason is %u",
+			(GF_UINT)handle, (GF_UINT)reason);
+		for (auto& itor : mDisconnDevices)
+		{
+			if (handle == itor->getHandle())
+			{
+				dev = itor;
+				break;
+			}
+		}
+	}
+	if (nullptr == dev)
+	{
+		GF_LOGW("No device found in disconnect_list either. handle is %u, reason is %u",
 			(GF_UINT)handle, (GF_UINT)reason);
 		return;
 	}
@@ -399,7 +437,7 @@ GF_RET_CODE BLEDongle::cancelConnect(BLEDevice& dev)
 
 GF_RET_CODE BLEDongle::disconnect(BLEDevice& dev)
 {
-	if (nullptr == mAM || NULL == dev.getHandle())
+	if (nullptr == mAM || INVALID_HANDLE == dev.getHandle())
 		return GF_ERROR_BAD_STATE;
 	OYM_STATUS status = mAM->Disconnect(dev.getHandle());
 	return status == OYM_SUCCESS ? GF_SUCCESS : GF_ERROR;
@@ -407,7 +445,7 @@ GF_RET_CODE BLEDongle::disconnect(BLEDevice& dev)
 
 GF_RET_CODE BLEDongle::configMtuSize(BLEDevice& dev, GF_UINT16 mtuSize)
 {
-	if (nullptr == mAM || NULL == dev.getHandle())
+	if (nullptr == mAM || INVALID_HANDLE == dev.getHandle())
 		return GF_ERROR_BAD_STATE;
 	OYM_STATUS status = mAM->ConfigMtuSize(dev.getHandle(), mtuSize);
 	return status == OYM_SUCCESS ? GF_SUCCESS : GF_ERROR;
@@ -416,7 +454,7 @@ GF_RET_CODE BLEDongle::configMtuSize(BLEDevice& dev, GF_UINT16 mtuSize)
 GF_RET_CODE BLEDongle::connectionParameterUpdate(BLEDevice& dev, GF_UINT16 conn_interval_min,
 	GF_UINT16 conn_interval_max, GF_UINT16 slave_latence, GF_UINT16 supervision_timeout)
 {
-	if (nullptr == mAM || NULL == dev.getHandle())
+	if (nullptr == mAM || INVALID_HANDLE == dev.getHandle())
 		return GF_ERROR_BAD_STATE;
 	OYM_STATUS status = mAM->ConnectionParameterUpdate(dev.getHandle(), conn_interval_min,
 		conn_interval_max, slave_latence, supervision_timeout);
@@ -426,7 +464,7 @@ GF_RET_CODE BLEDongle::connectionParameterUpdate(BLEDevice& dev, GF_UINT16 conn_
 GF_RET_CODE BLEDongle::writeCharacteristic(BLEDevice& dev,
 	GF_UINT16 attribute_handle, GF_UINT8 data_length, GF_PUINT8 data)
 {
-	if (nullptr == mAM || NULL == dev.getHandle())
+	if (nullptr == mAM || INVALID_HANDLE == dev.getHandle())
 		return GF_ERROR_BAD_STATE;
 	OYM_STATUS status = mAM->WriteCharacteristic(dev.getHandle(), attribute_handle,
 		data_length, data);
@@ -435,7 +473,7 @@ GF_RET_CODE BLEDongle::writeCharacteristic(BLEDevice& dev,
 
 GF_RET_CODE BLEDongle::readCharacteristic(BLEDevice& dev, GF_UINT16 attribute_handle)
 {
-	if (nullptr == mAM || NULL == dev.getHandle())
+	if (nullptr == mAM || INVALID_HANDLE == dev.getHandle())
 		return GF_ERROR_BAD_STATE;
 	OYM_STATUS status = mAM->ReadCharacteristic(dev.getHandle(), attribute_handle);
 	return status == OYM_SUCCESS ? GF_SUCCESS : GF_ERROR;

@@ -42,10 +42,10 @@ namespace oym {
 
 #endif // UNICODE
 
-		//----------------------------------------------------------
-		// gfwPtr, gfsPtr
-		//----------------------------------------------------------
-		template <typename T>
+	//----------------------------------------------------------
+	// gfwPtr, gfsPtr
+	//----------------------------------------------------------
+	template <typename T>
 	using gfwPtr = std::weak_ptr < T > ;
 	template <typename T>
 	using gfsPtr = std::shared_ptr < T > ;

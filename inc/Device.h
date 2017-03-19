@@ -20,6 +20,7 @@ namespace oym
 		virtual GF_UINT16 getMTUsize() const = 0;
 
 		virtual GF_RET_CODE registerListener(const gfwPtr<DeviceListener>& listener) = 0;
+		virtual GF_RET_CODE unRegisterListener(const gfwPtr<DeviceListener>& listener) = 0;
 
 		// configuration
 

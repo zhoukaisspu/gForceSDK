@@ -30,6 +30,7 @@ namespace oym
 
 		// setup listener
 		virtual GF_RET_CODE registerListener(const gfwPtr<DongleListener>& listener);
+		virtual GF_RET_CODE unRegisterListener(const gfwPtr<DongleListener>& listener);
 
 		virtual GF_RET_CODE startScan(OYM_UINT8 rssiThreshold);
 		virtual GF_RET_CODE stopScan();

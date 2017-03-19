@@ -97,7 +97,7 @@ namespace oym {
 		}
 	};
 
-	template <class _T> void cleanInvalidWeakP(_T container) {
+	template <class _T> void cleanInvalidWeakP(_T& container) {
 		for (auto itor = container.begin(); itor != container.end();) {
 			if (nullptr == itor->lock()) {
 				container.erase(itor++);

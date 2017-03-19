@@ -19,6 +19,17 @@ GF_RET_CODE BLEDevice::registerListener(const gfwPtr<DeviceListener>& listener)
 	return GF_SUCCESS;
 }
 
+GF_RET_CODE BLEDevice::unRegisterListener(const gfwPtr<DeviceListener>& listener)
+{
+	GF_LOGD(__FUNCTION__);
+	if (nullptr == listener.lock())
+		return GF_ERROR_BAD_PARAM;
+
+	mListeners.erase(listener);
+	cleanInvalidWeakP(mListeners);
+	return GF_SUCCESS;
+}
+
 BLEDevice::BLEDevice(IDongle* dongle, const BLE_DEVICE& bleDev)
 	: mDongle(dongle)
 	, mAddrType(bleDev.addr_type)
@@ -226,7 +237,7 @@ void BLEDevice::onDisconnected(GF_UINT8 reason)
 	GF_LOGD("Device connected: previous state is: %u, reason is: %u",
 		static_cast<GF_UINT>(mCnntStatus), (GF_UINT)reason);
 	mCnntStatus = DeviceConnectionStatus::Disconnected;
-	mHandle = 0;
+	mHandle = INVALID_HANDLE;
 	mConnInt = 0;
 	mSuperTO = 0;
 	mSlavelatency = 0;
@@ -239,7 +250,7 @@ GF_RET_CODE BLEDevice::configMtuSize(GF_UINT16 mtuSize)
 {
 	GF_LOGD(__FUNCTION__);
 	OYM_STATUS ret = OYM_FAIL;
-	if (mHandle != 0)
+	if (mHandle != INVALID_HANDLE)
 	{
 		ret = mDongle->configMtuSize(*this, mtuSize);
 	}
@@ -251,7 +262,7 @@ GF_RET_CODE BLEDevice::connectionParameterUpdate(GF_UINT16 conn_interval_min, GF
 {
 	GF_LOGD(__FUNCTION__);
 	OYM_STATUS ret = OYM_FAIL;
-	if (mHandle != 0)
+	if (mHandle != INVALID_HANDLE)
 	{
 		ret = mDongle->connectionParameterUpdate(*this, conn_interval_min, conn_interval_max,
 			slave_latence, supervision_timeout);
@@ -259,22 +270,22 @@ GF_RET_CODE BLEDevice::connectionParameterUpdate(GF_UINT16 conn_interval_min, GF
 	return (ret == OYM_SUCCESS) ? GF_SUCCESS : GF_ERROR;
 }
 
-GF_RET_CODE BLEDevice::WriteCharacteristic(GF_UINT16 attribute_handle, GF_UINT8 data_length, GF_PUINT8 data)
+GF_RET_CODE BLEDevice::writeCharacteristic(GF_UINT16 attribute_handle, GF_UINT8 data_length, GF_PUINT8 data)
 {
 	GF_LOGD(__FUNCTION__);
 	OYM_STATUS ret = OYM_FAIL;
-	if (mHandle != 0)
+	if (mHandle != INVALID_HANDLE)
 	{
 		ret = mDongle->writeCharacteristic(*this, attribute_handle, data_length, data);
 	}
 	return (ret == OYM_SUCCESS) ? GF_SUCCESS : GF_ERROR;
 }
 
-GF_RET_CODE BLEDevice::ReadCharacteristic(GF_UINT16 attribute_handle)
+GF_RET_CODE BLEDevice::readCharacteristic(GF_UINT16 attribute_handle)
 {
 	GF_LOGD(__FUNCTION__);
 	OYM_STATUS ret = OYM_FAIL;
-	if (mHandle != 0)
+	if (mHandle != INVALID_HANDLE)
 	{
 		ret = mDongle->readCharacteristic(*this, attribute_handle);
 	}
