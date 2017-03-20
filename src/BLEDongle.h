@@ -22,7 +22,7 @@ namespace oym
 
 
 		// module management
-		virtual GF_RET_CODE init();
+		virtual GF_RET_CODE init(GF_UINT8 comPort);
 		virtual GF_RET_CODE deinit();
 		// get status, version, etc.
 		virtual DongleState getStatus() const;

@@ -13,7 +13,7 @@ namespace oym
 	public:
 
 		// module management
-		virtual GF_RET_CODE init() = 0;
+		virtual GF_RET_CODE init(GF_UINT8 comPort = 0) = 0;
 		virtual GF_RET_CODE deinit() = 0;
 		// get status, version, etc.
 		virtual DongleState getStatus() const = 0;

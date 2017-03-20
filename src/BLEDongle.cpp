@@ -4,8 +4,6 @@
 
 using namespace oym;
 
-#define BLE_COMM 3
-
 BLEDongle::BLEDongle(const tstring& sIdentifier)
 {
 	GF_LOGD("BLEDongle++: identfiler: %s", utils::tostring(sIdentifier).c_str());
@@ -19,7 +17,7 @@ BLEDongle::~BLEDongle()
 }
 
 // module management
-GF_RET_CODE BLEDongle::init()
+GF_RET_CODE BLEDongle::init(GF_UINT8 comPort)
 {
 	GF_RET_CODE ret = GF_SUCCESS;
 	GF_LOGD(__FUNCTION__);
@@ -33,7 +31,7 @@ GF_RET_CODE BLEDongle::init()
 		return GF_ERR_NO_RESOURCE;
 	}
 	OYM_STATUS result = OYM_FAIL;
-	if (OYM_SUCCESS != (result = mAM->Init(BLE_COMM))) {
+	if (OYM_SUCCESS != (result = mAM->Init(comPort))) {
 		GF_LOGD("Adapter init failed.");
 		mAM = nullptr;
 		// TODO: check return value
