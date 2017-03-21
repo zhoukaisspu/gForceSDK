@@ -1,10 +1,11 @@
-// define GForce device
+// define generic device
 #pragma once
 
 #include "Device.h"
-#include "IDongle.h"
-#include "AdapterManager.h"
+#include "IAdapter.h"
 #include "Utils.h"
+#include "IClientCallback.h"
+
 #include <set>
 #include <mutex>
 using namespace std;
@@ -15,7 +16,7 @@ namespace oym
 	class BLEDevice : public Device
 	{
 	public:
-		BLEDevice(IDongle* dongle, const BLE_DEVICE& bleDev);
+		BLEDevice(IAdapter* adapter, const BLE_DEVICE& bleDev);
 		virtual ~BLEDevice() { }
 
 		virtual GF_UINT8 getAddrType() const { return mAddrType; }
@@ -72,7 +73,7 @@ namespace oym
 		virtual bool takeover(BLEDevice& from);
 
 	protected:
-		IDongle* mDongle;
+		IAdapter* mAdapter;
 
 	protected:
 		DeviceConnectionStatus mCnntStatus = DeviceConnectionStatus::Disconnected;

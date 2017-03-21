@@ -6,9 +6,9 @@
 
 namespace oym
 {
-	class DongleListener;
+	class AdapterListener;
 
-	class Dongle
+	class Adapter
 	{
 	public:
 
@@ -16,12 +16,12 @@ namespace oym
 		virtual GF_RET_CODE init(GF_UINT8 comPort = 0) = 0;
 		virtual GF_RET_CODE deinit() = 0;
 		// get status, version, etc.
-		virtual DongleState getStatus() const = 0;
+		virtual AdapterState getStatus() const = 0;
 		virtual tstring getDescString() const = 0;
 
 		// setup listener
-		virtual GF_RET_CODE registerListener(const gfwPtr<DongleListener>& listener) = 0;
-		virtual GF_RET_CODE unRegisterListener(const gfwPtr<DongleListener>& listener) = 0;
+		virtual GF_RET_CODE registerListener(const gfwPtr<AdapterListener>& listener) = 0;
+		virtual GF_RET_CODE unRegisterListener(const gfwPtr<AdapterListener>& listener) = 0;
 
 		virtual GF_RET_CODE startScan(GF_UINT8 rssiThreshold = 0) = 0;
 		virtual GF_RET_CODE stopScan() = 0;
@@ -40,9 +40,9 @@ namespace oym
 		//virtual int releaseDevice(SPTR_DEV& device) = 0;
 
 	protected:
-		Dongle() {}
-		virtual ~Dongle() {}
-		friend class DongleManager;
+		Adapter() {}
+		virtual ~Adapter() {}
+		friend class AdapterManager;
 	};
 
 } // namespace oym

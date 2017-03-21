@@ -6,7 +6,7 @@ namespace oym
 {
 	class BLEDevice;
 
-	class IDongle
+	class IAdapter
 	{
 	public:
 		virtual GF_RET_CODE connect(BLEDevice& dev, bool directConn = true) = 0;

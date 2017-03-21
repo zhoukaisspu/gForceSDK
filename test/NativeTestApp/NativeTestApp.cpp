@@ -4,9 +4,9 @@
 
 #define TAG "NativeTestApp"
 
-#include "DongleManager.h"
+#include "AdapterFactory.h"
 #include "Device.h"
-#include "DongleListener.h"
+#include "AdapterListener.h"
 #include "DeviceListener.h"
 #include "LogUtils.h"
 #include "../Utils.h"
@@ -60,7 +60,7 @@ BOOL ctrlhandler(DWORD fdwctrltype)
 void printHelp()
 {
 	GF_LOGI("\tPress Ctrl+C to exit.\n");
-	GF_LOGI("g:\tGet dongle status.");
+	GF_LOGI("g:\tGet adapter status.");
 	GF_LOGI("s:\tStart to scan.");
 	GF_LOGI("S:\tStop to scan.");
 	GF_LOGI("e:\tEnum devices.");
@@ -86,7 +86,7 @@ void enumDevice(WPDEVICE dev)
 	}
 }
 
-void handleCmd(gfsPtr<Dongle>& pDongle, string cmd)
+void handleCmd(gfsPtr<Adapter>& pAdapter, string cmd)
 {
 	if (cmd.length() == 0)
 		return;
@@ -95,21 +95,21 @@ void handleCmd(gfsPtr<Dongle>& pDongle, string cmd)
 	switch (cmd[0])
 	{
 	case 'g':
-		GF_LOGI("dongle status is: %u", static_cast<GF_UINT>(pDongle->getStatus()));
+		GF_LOGI("adapter status is: %u", static_cast<GF_UINT>(pAdapter->getStatus()));
 		break;
 	case 's':
 		listDev.clear();
-		pDongle->startScan(DEFAULT_RSSI);
+		pAdapter->startScan(DEFAULT_RSSI);
 		break;
 	case 'S':
-		pDongle->stopScan();
+		pAdapter->stopScan();
 		break;
 	case 'e':
 	{
 		GF_LOGI("Total %u devices found, %u of them are connected.",
-			pDongle->getNumOfDevices(), pDongle->getNumOfConnectedDevices());
+			pAdapter->getNumOfDevices(), pAdapter->getNumOfConnectedDevices());
 		listDev.clear();
-		pDongle->enumDevices(enumDevice, false);
+		pAdapter->enumDevices(enumDevice, false);
 		break;
 	}
 	case 'c':
@@ -139,7 +139,7 @@ void handleCmd(gfsPtr<Dongle>& pDongle, string cmd)
 }
 
 
-class DongleListenerImp : public DongleListener
+class AdapterListenerImp : public AdapterListener
 {
 	virtual void onScanfinished()
 	{
@@ -169,8 +169,8 @@ class DongleListenerImp : public DongleListener
 	{
 		auto spold = oldPtr.lock();
 		auto spnew = newPtr.lock();
-		GF_LOGI("%s: DongleState: old device: %s", __FUNCTION__, (nullptr == spold ? "__empty__" : utils::tostring(spold->getName()).c_str()));
-		GF_LOGI("%s: DongleState: new device: %s", __FUNCTION__, (nullptr == spnew ? "__empty__" : utils::tostring(spnew->getName()).c_str()));
+		GF_LOGI("%s: AdapterState: old device: %s", __FUNCTION__, (nullptr == spold ? "__empty__" : utils::tostring(spold->getName()).c_str()));
+		GF_LOGI("%s: AdapterState: new device: %s", __FUNCTION__, (nullptr == spnew ? "__empty__" : utils::tostring(spnew->getName()).c_str()));
 		//listDev.erase(remove_if(listDev.begin(), listDev.end(),
 		//	[&spold](decltype(*listDev.begin()) it){ return (spold == it); }), listDev.end());
 
@@ -184,9 +184,9 @@ class DongleListenerImp : public DongleListener
 		if (nullptr != spnew)
 			listDev.push_back(spnew);
 	}
-	virtual void onStateChanged(DongleState state)
+	virtual void onStateChanged(AdapterState state)
 	{
-		GF_LOGI("%s: DongleState: %u", __FUNCTION__, static_cast<GF_UINT>(state));
+		GF_LOGI("%s: AdapterState: %u", __FUNCTION__, static_cast<GF_UINT>(state));
 	}
 };
 
@@ -234,25 +234,25 @@ class DeviceListenerImpl : public DeviceListener
 int _tmain()
 {
 	printHelp();
-	gfsPtr<Dongle> pDongle = DongleManager::getDongleInstance(_T("TestApp"));
+	gfsPtr<Adapter> pAdapter = AdapterFactory::getAdapterInstance(_T("TestApp"));
 
-	if (nullptr == pDongle) {
-		GF_LOGE("failed to get dongle.");
+	if (nullptr == pAdapter) {
+		GF_LOGE("failed to get adapter.");
 		return 0;
 	}
 
-	gfsPtr<DongleListener> listener = dynamic_pointer_cast<DongleListener>(make_shared<DongleListenerImp>());
-	pDongle->registerListener(listener);
-	pDongle->registerListener(dynamic_pointer_cast<DongleListener>(make_shared<DongleListenerImp>()));
+	gfsPtr<AdapterListener> listener = dynamic_pointer_cast<AdapterListener>(make_shared<AdapterListenerImp>());
+	pAdapter->registerListener(listener);
+	pAdapter->registerListener(dynamic_pointer_cast<AdapterListener>(make_shared<AdapterListenerImp>()));
 	//listener = nullptr;
 
-	if (GF_SUCCESS != pDongle->init())
+	if (GF_SUCCESS != pAdapter->init())
 	{
-		GF_LOGE("failed to init dongle.");
+		GF_LOGE("failed to init adapter.");
 		return 0;
 	}
-	GF_LOGI("dongle status is: %u", static_cast<GF_UINT>(pDongle->getStatus()));
-	GF_LOGI("dongle string is: %s", utils::tostring(pDongle->getDescString()).c_str());
+	GF_LOGI("adapter status is: %u", static_cast<GF_UINT>(pAdapter->getStatus()));
+	GF_LOGI("adapter string is: %s", utils::tostring(pAdapter->getDescString()).c_str());
 
 
 	if (SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrlhandler, TRUE))
@@ -260,7 +260,7 @@ int _tmain()
 		do {
 			string cmd;
 			cin >> cmd;
-			handleCmd(pDongle, cmd);
+			handleCmd(pAdapter, cmd);
 		} while (!bExiting);
 	}
 	else
@@ -269,8 +269,8 @@ int _tmain()
 	}
 
 	listDev.clear();
-	pDongle->unRegisterListener(listener);
-	pDongle->deinit();
+	pAdapter->unRegisterListener(listener);
+	pAdapter->deinit();
 
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrlhandler, FALSE);
 	return 0;

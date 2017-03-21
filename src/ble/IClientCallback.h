@@ -8,7 +8,7 @@ public:
 	virtual void onScanResult(BLE_DEVICE* device) = 0;
 	virtual void onScanFinished() = 0;
 	virtual void onDeviceConnected(OYM_STATUS status, GF_ConnectedDevice *device) = 0;
-	virtual void onDeviceDisonnected(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT8 reason) = 0;
+	virtual void onDeviceDisonnected(OYM_STATUS status, GF_ConnectedDevice *device, OYM_UINT8 reason) = 0;
 
 	virtual void onMTUSizeChanged(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT16 mtu_size) = 0;
 	virtual void onConnectionParmeterUpdated(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT16 conn_int, OYM_UINT16 superTO, OYM_UINT16 slavelatency) = 0;

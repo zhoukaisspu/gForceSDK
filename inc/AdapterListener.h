@@ -4,7 +4,7 @@
 
 namespace oym
 {
-	class DongleListener
+	class AdapterListener
 	{
 	public:
 		virtual void onScanfinished() = 0;
@@ -14,7 +14,7 @@ namespace oym
 		// are recongnized, a subclass is created to take over the old one,
 		// nothing more to be cared but discard the oldPtr.
 		virtual void onDeviceSpecialized(WPDEVICE oldPtr, WPDEVICE newPtr) = 0;
-		virtual void onStateChanged(DongleState state) = 0;
+		virtual void onStateChanged(AdapterState state) = 0;
 	};
 
 }

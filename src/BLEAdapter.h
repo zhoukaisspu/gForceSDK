@@ -3,8 +3,8 @@
 #include <mutex>
 #include <set>
 
-#include "Dongle.h"
-#include "IDongle.h"
+#include "Adapter.h"
+#include "IAdapter.h"
 #include "BLEDevice.h"
 #include "Utils.h"
 
@@ -14,24 +14,24 @@
 namespace oym
 {
 
-	class BLEDongle :
-		public Dongle, public IClientCallback, public IDongle
+	class BLEAdapter :
+		public Adapter, public IClientCallback, public IAdapter
 	{
 	public:
-		BLEDongle(const tstring& sIdentifier);
-		virtual ~BLEDongle();
+		BLEAdapter(const tstring& sIdentifier);
+		virtual ~BLEAdapter();
 
 
 		// module management
 		virtual GF_RET_CODE init(GF_UINT8 comPort);
 		virtual GF_RET_CODE deinit();
 		// get status, version, etc.
-		virtual DongleState getStatus() const;
+		virtual AdapterState getStatus() const;
 		virtual tstring getDescString() const;
 
 		// setup listener
-		virtual GF_RET_CODE registerListener(const gfwPtr<DongleListener>& listener);
-		virtual GF_RET_CODE unRegisterListener(const gfwPtr<DongleListener>& listener);
+		virtual GF_RET_CODE registerListener(const gfwPtr<AdapterListener>& listener);
+		virtual GF_RET_CODE unRegisterListener(const gfwPtr<AdapterListener>& listener);
 
 		virtual GF_RET_CODE startScan(OYM_UINT8 rssiThreshold);
 		virtual GF_RET_CODE stopScan();
@@ -51,7 +51,7 @@ namespace oym
 		virtual void onScanResult(BLE_DEVICE* device);
 		virtual void onScanFinished();
 		virtual void onDeviceConnected(OYM_STATUS status, GF_ConnectedDevice *device);
-		virtual void onDeviceDisonnected(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT8 reason);
+		virtual void onDeviceDisonnected(OYM_STATUS status, GF_ConnectedDevice *device, OYM_UINT8 reason);
 
 		virtual void onMTUSizeChanged(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT16 mtu_size);
 		virtual void onConnectionParmeterUpdated(OYM_STATUS status, OYM_UINT16 handle,
@@ -64,7 +64,7 @@ namespace oym
 		virtual void onComDestory();
 
 	protected:
-		// IDongle for device usage
+		// IAdapter for device usage
 		virtual GF_RET_CODE connect(BLEDevice& dev, bool directConn = true);
 		virtual GF_RET_CODE cancelConnect(BLEDevice& dev);
 		virtual GF_RET_CODE disconnect(BLEDevice& dev);
@@ -83,7 +83,7 @@ namespace oym
 		gfsPtr<OYM_AdapterManager> mAM;
 		set<gfsPtr<BLEDevice>, DevComp<gfsPtr<BLEDevice>>> mDisconnDevices;
 		set<gfsPtr<BLEDevice>, ConnectedDevComp<gfsPtr<BLEDevice>>> mConnectedDevices;
-		set<gfwPtr<DongleListener>, WeakPtrComp<DongleListener>> mListeners;
+		set<gfwPtr<AdapterListener>, WeakPtrComp<AdapterListener>> mListeners;
 	};
 
 

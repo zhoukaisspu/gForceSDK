@@ -1,7 +1,6 @@
 #include "LogUtils.h"
 #include "BLEDevice.h"
 #include "Utils.h"
-#include "assert.h"
 #include <cstdio>
 
 
@@ -30,12 +29,12 @@ GF_RET_CODE BLEDevice::unRegisterListener(const gfwPtr<DeviceListener>& listener
 	return GF_SUCCESS;
 }
 
-BLEDevice::BLEDevice(IDongle* dongle, const BLE_DEVICE& bleDev)
-	: mDongle(dongle)
+BLEDevice::BLEDevice(IAdapter* adapter, const BLE_DEVICE& bleDev)
+	: mAdapter(adapter)
 	, mAddrType(bleDev.addr_type)
 	, mRssi(bleDev.rssi)
 {
-	assert(mDongle != nullptr);
+	ASSERT_VALID_PTR(mAdapter);
 	memcpy(mAddress, bleDev.addr, sizeof(mAddress));
 
 	GF_CHAR name[BLE_DEVICE_NAME_LENGTH + 1] = "";
@@ -134,7 +133,7 @@ GF_RET_CODE BLEDevice::connect(bool directConn)
 		break;
 	case DeviceConnectionStatus::Disconnected:
 	case DeviceConnectionStatus::Connecting:
-		if (OYM_SUCCESS == mDongle->connect(*this, directConn))
+		if (OYM_SUCCESS == mAdapter->connect(*this, directConn))
 			ret = GF_SUCCESS;
 		break;
 	default:;
@@ -151,7 +150,7 @@ GF_RET_CODE BLEDevice::disconnect()
 	switch (mCnntStatus)
 	{
 	case DeviceConnectionStatus::Connected:
-		if (OYM_SUCCESS == mDongle->disconnect(*this))
+		if (OYM_SUCCESS == mAdapter->disconnect(*this))
 			ret = GF_SUCCESS;
 		break;
 	case DeviceConnectionStatus::Disconnected:
@@ -177,7 +176,7 @@ GF_RET_CODE BLEDevice::cancelConnect()
 	case DeviceConnectionStatus::Disconnecting:
 		break;
 	case DeviceConnectionStatus::Connecting:
-		if (OYM_SUCCESS == mDongle->cancelConnect(*this))
+		if (OYM_SUCCESS == mAdapter->cancelConnect(*this))
 		{
 			ret = GF_SUCCESS;
 			GF_LOGD("Connection cancelling...");
@@ -219,7 +218,7 @@ void BLEDevice::onConnected(const GF_ConnectedDevice& connedDevice)
 
 	if (DeviceConnectionStatus::Disconnecting == mCnntStatus)
 	{
-		if (OYM_SUCCESS == mDongle->disconnect(*this))
+		if (OYM_SUCCESS == mAdapter->disconnect(*this))
 		{
 			// if user selected to cancel connection, make it and no notifiction
 			mCnntStatus = DeviceConnectionStatus::Disconnecting;
@@ -252,7 +251,7 @@ GF_RET_CODE BLEDevice::configMtuSize(GF_UINT16 mtuSize)
 	OYM_STATUS ret = OYM_FAIL;
 	if (mHandle != INVALID_HANDLE)
 	{
-		ret = mDongle->configMtuSize(*this, mtuSize);
+		ret = mAdapter->configMtuSize(*this, mtuSize);
 	}
 	return (ret == OYM_SUCCESS) ? GF_SUCCESS : GF_ERROR;
 }
@@ -264,7 +263,7 @@ GF_RET_CODE BLEDevice::connectionParameterUpdate(GF_UINT16 conn_interval_min, GF
 	OYM_STATUS ret = OYM_FAIL;
 	if (mHandle != INVALID_HANDLE)
 	{
-		ret = mDongle->connectionParameterUpdate(*this, conn_interval_min, conn_interval_max,
+		ret = mAdapter->connectionParameterUpdate(*this, conn_interval_min, conn_interval_max,
 			slave_latence, supervision_timeout);
 	}
 	return (ret == OYM_SUCCESS) ? GF_SUCCESS : GF_ERROR;
@@ -276,7 +275,7 @@ GF_RET_CODE BLEDevice::writeCharacteristic(AttributeHandle attribute_handle, GF_
 	OYM_STATUS ret = OYM_FAIL;
 	if (mHandle != INVALID_HANDLE)
 	{
-		ret = mDongle->writeCharacteristic(*this, attribute_handle, dataLen, data);
+		ret = mAdapter->writeCharacteristic(*this, attribute_handle, dataLen, data);
 	}
 	return (ret == OYM_SUCCESS) ? GF_SUCCESS : GF_ERROR;
 }
@@ -287,7 +286,7 @@ GF_RET_CODE BLEDevice::readCharacteristic(AttributeHandle attribute_handle)
 	OYM_STATUS ret = OYM_FAIL;
 	if (mHandle != INVALID_HANDLE)
 	{
-		ret = mDongle->readCharacteristic(*this, attribute_handle);
+		ret = mAdapter->readCharacteristic(*this, attribute_handle);
 	}
 	return (ret == OYM_SUCCESS) ? GF_SUCCESS : GF_ERROR;
 }

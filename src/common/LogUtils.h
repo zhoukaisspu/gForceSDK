@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef TAG
-#define TAG "GForceSDK"
+#define TAG "gForceSDK"
 #endif
 
 

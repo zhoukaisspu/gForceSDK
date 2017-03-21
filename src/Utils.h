@@ -4,9 +4,20 @@
 #include <memory>
 #include <locale.h>
 #include <algorithm>
+#include <assert.h>
 using namespace std;
 
 namespace oym {
+
+#if defined(DEBUG) || defined(_DEBUG)
+
+#define ASSERT_VALID_PTR(p) assert(nullptr != (p))
+
+#else // DEBUG
+
+#define ASSERT_VALID_PTR(p)
+
+#endif // DEBUG
 
 	//#define __GF_INLINE__ inline
 #define __GF_INLINE__ static

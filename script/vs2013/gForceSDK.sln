@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GForceSDK", "GForceSDK\GForceSDK.vcxproj", "{AD84BB21-766A-4485-84A5-13490CB129A2}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gForceSDK", "gForceSDK\gForceSDK.vcxproj", "{AD84BB21-766A-4485-84A5-13490CB129A2}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NativeTestApp", "NativeTestApp\NativeTestApp.vcxproj", "{DD4E5B9B-A6DB-4D3E-BFBC-148BA7204D4D}"
 	ProjectSection(ProjectDependencies) = postProject

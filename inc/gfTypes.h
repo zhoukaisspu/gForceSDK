@@ -77,7 +77,7 @@ namespace oym {
 	} GF_EVENT;
 
 
-	enum class DongleState{
+	enum class AdapterState{
 		Idle,
 		Scanning,
 		Connecting,

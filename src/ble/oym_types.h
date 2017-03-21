@@ -42,6 +42,11 @@ typedef enum {
 	OYM_ERR_CODE_NO_RESOURCE = 0x61,
 } OYM_ERROR_CODE;
 
+typedef enum {
+	GF_ERR_NONE = 0x00,
+	GF_ERR_CODE_NO_RESOURCE = 0x61,
+} GF_LIBBLE_ERROR_CODE;
+
 #define BLE_DEVICE_NAME_LENGTH 30
 struct BLE_DEVICE{
 	OYM_UINT8   addr_type;
@@ -57,6 +62,8 @@ struct BLE_DEVICE{
 	}
 
 };
+
+#define INVALID_HANDLE 0xFFFF
 
 class OYM_CallBack
 {

@@ -1,4 +1,4 @@
-// device GForce
+// define gForce device
 
 #pragma once
 
@@ -6,7 +6,7 @@
 
 namespace oym
 {
-	class BLEDongle;
+	class BLEAdapter;
 
 #define EVENT_MASK				0x7F
 #define PCKID_FLAG_MASK			0x01
@@ -22,7 +22,7 @@ namespace oym
 	class GForceDevice : public BLEDevice
 	{
 	public:
-		GForceDevice(IDongle* dongle, const BLE_DEVICE& bleDev) : BLEDevice(dongle, bleDev) {}
+		GForceDevice(IAdapter* adapter, const BLE_DEVICE& bleDev) : BLEDevice(adapter, bleDev) {}
 		virtual ~GForceDevice() {}
 
 	protected:
