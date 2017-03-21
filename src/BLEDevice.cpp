@@ -207,7 +207,7 @@ void BLEDevice::updateData(const BLE_DEVICE& bleDev)
 	// TODO: notify client.
 }
 
-void BLEDevice::onConnected(const GF_ConnectedDevice& connedDevice)
+void BLEDevice::onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDevice)
 {
 	GF_LOGD("Device connected: previous state is: %u", static_cast<GF_UINT>(mCnntStatus));
 	mHandle = connedDevice.handle;
@@ -228,10 +228,16 @@ void BLEDevice::onConnected(const GF_ConnectedDevice& connedDevice)
 	}
 	mCnntStatus = DeviceConnectionStatus::Connected;
 
-	// TODO: notify client.
+	// notify client.
+	for (auto& itor : mListeners)
+	{
+		auto ptr = itor.lock();
+		if (nullptr != ptr)
+			ptr->onDeviceConnected(this, status);
+	}
 }
 
-void BLEDevice::onDisconnected(GF_UINT8 reason)
+void BLEDevice::onDisconnected(GF_STATUS status, GF_UINT8 reason)
 {
 	GF_LOGD("Device connected: previous state is: %u, reason is: %u",
 		static_cast<GF_UINT>(mCnntStatus), (GF_UINT)reason);
@@ -242,7 +248,13 @@ void BLEDevice::onDisconnected(GF_UINT8 reason)
 	mSlavelatency = 0;
 	mMTUsize = 0;
 
-	// TODO: notify client.
+	// notify client.
+	for (auto& itor : mListeners)
+	{
+		auto ptr = itor.lock();
+		if (nullptr != ptr)
+			ptr->onDeviceDisonnected(this, status, reason);
+	}
 }
 
 GF_RET_CODE BLEDevice::configMtuSize(GF_UINT16 mtuSize)
@@ -295,7 +307,14 @@ void BLEDevice::onMTUSizeChanged(GF_STATUS status, GF_UINT16 mtu_size)
 {
 	GF_LOGD("%s: status: %u, new MTU size: %u", __FUNCTION__, (GF_UINT)status, (GF_UINT)mtu_size);
 	mMTUsize = mtu_size;
-	// TODO: notify client
+
+	// notify client.
+	for (auto& itor : mListeners)
+	{
+		auto ptr = itor.lock();
+		if (nullptr != ptr)
+			ptr->onMTUSizeChanged(this, status, mtu_size);
+	}
 }
 
 void BLEDevice::onConnectionParmeterUpdated(GF_STATUS status, GF_UINT16 conn_int, GF_UINT16 superTO, GF_UINT16 slavelatency)
@@ -308,7 +327,14 @@ void BLEDevice::onConnectionParmeterUpdated(GF_STATUS status, GF_UINT16 conn_int
 	mConnInt = conn_int;
 	mSuperTO = superTO;
 	mSlavelatency = slavelatency;
-	// TODO: notify client
+
+	// notify client.
+	for (auto& itor : mListeners)
+	{
+		auto ptr = itor.lock();
+		if (nullptr != ptr)
+			ptr->onConnectionParmeterUpdated(this, status, conn_int, superTO, slavelatency);
+	}
 }
 
 void BLEDevice::onCharacteristicValueRead(GF_STATUS status, GF_UINT8 length, GF_PUINT8 data)

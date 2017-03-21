@@ -1,7 +1,6 @@
 #include "GForceDevice.h"
 #include "utils.h"
 #include "LogUtils.h"
-#include "DeviceListener.h"
 
 using namespace oym;
 
@@ -61,6 +60,7 @@ void GForceDevice::onData(GF_UINT8 length, GF_PUINT8 data)
 
 void GForceDevice::onQuaternion(GF_UINT8 length, GF_PUINT8 data)
 {
+	length; data;
 }
 
 void GForceDevice::onGesture(GF_UINT8 length, GF_PUINT8 data)

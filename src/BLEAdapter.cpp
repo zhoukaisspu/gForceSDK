@@ -269,7 +269,6 @@ void BLEAdapter::onScanFinished()
 
 void BLEAdapter::onDeviceConnected(OYM_STATUS status, GF_ConnectedDevice *device)
 {
-	status;
 	GF_LOGD(__FUNCTION__);
 	ASSERT_VALID_PTR(device);
 	if (nullptr == device)
@@ -307,7 +306,7 @@ void BLEAdapter::onDeviceConnected(OYM_STATUS status, GF_ConnectedDevice *device
 		return;
 	}
 	mConnectedDevices.insert(dev);
-	dev->onConnected(*device);
+	dev->onConnected(status, *device);
 	// TODO: when a device is found, no later than it is connected, need to find
 	// it's detail information, then specialize it.
 	/*
@@ -361,7 +360,7 @@ void BLEAdapter::onDeviceDisonnected(OYM_STATUS status, GF_ConnectedDevice *devi
 		return;
 	}
 	mDisconnDevices.insert(dev);
-	dev->onDisconnected(reason);
+	dev->onDisconnected(status, reason);
 }
 
 
@@ -404,16 +403,25 @@ void BLEAdapter::onCharacteristicValueRead(OYM_STATUS status, OYM_UINT16 handle,
 	}
 }
 
+#define ATTRIB_HANDLE_GEVENT (0x27)
+
 /*Notification format: data length(1 byte N) + data(N Bytes)*/
 void BLEAdapter::onNotificationReceived(OYM_UINT16 handle, OYM_UINT8 length, OYM_PUINT8 data)
 {
-	handle; length; data;
-	//GF_LOGD(__FUNCTION__);
+	// parse data header
+	if (length <= 3)
+		return;
+	GF_UINT16 attrib_handle = data[1] | ((GF_UINT16)data[2] << 8);
+	if (ATTRIB_HANDLE_GEVENT != attrib_handle)
+	{
+		GF_LOGD("%s: not a event type. attrib_handle is %u", attrib_handle);
+		return;
+	}
 	for (auto& itor : mConnectedDevices)
 	{
 		if (itor->getHandle() == handle)
 		{
-			itor->onData(length, data);
+			itor->onData(length-3, data+3);
 		}
 	}
 }

@@ -4,6 +4,7 @@
 #include "Device.h"
 #include "IAdapter.h"
 #include "Utils.h"
+#include "DeviceListener.h"
 #include "IClientCallback.h"
 
 #include <set>
@@ -51,8 +52,8 @@ namespace oym
 
 	public:
 		virtual void updateData(const BLE_DEVICE& bleDev);
-		virtual void onConnected(const GF_ConnectedDevice& connedDevice);
-		virtual void onDisconnected(GF_UINT8 reason);
+		virtual void onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDevice);
+		virtual void onDisconnected(GF_STATUS status, GF_UINT8 reason);
 		virtual void onMTUSizeChanged(GF_STATUS status, GF_UINT16 mtu_size);
 		virtual void onConnectionParmeterUpdated(GF_STATUS status, GF_UINT16 conn_int, GF_UINT16 superTO, GF_UINT16 slavelatency);
 		virtual void onCharacteristicValueRead(GF_STATUS status, GF_UINT8 length, GF_PUINT8 data);

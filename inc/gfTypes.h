@@ -76,6 +76,18 @@ namespace oym {
 		GF_EVT_DATA_QUATERNION,
 	} GF_EVENT;
 
+	
+	enum class Gesture : GF_UINT8 {
+		Relax = 0x00,
+		Gist = 0x01,
+		SpreadFingers = 0x02,
+		WaveTowardPalm = 0x03,
+		WaveBackwardPalm = 0x04,
+		TuckFingers = 0x05,
+		Shoot = 0x06,
+		Unknown = 0xFF
+	};
+
 
 	enum class AdapterState{
 		Idle,

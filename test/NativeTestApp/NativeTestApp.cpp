@@ -70,74 +70,6 @@ void printHelp()
 }
 
 list<gfsPtr<Device>> listDev;
-void enumDevice(WPDEVICE dev)
-{
-	auto sp = dev.lock();
-	if (nullptr == sp)
-	{
-		GF_LOGW("%s: empty device???", __FUNCTION__);
-	}
-	else
-	{
-		GF_LOGI("Dev: addrtype: %u, address: %s, name: %s, connstatus: %u, position:%u",
-			(GF_UINT)sp->getAddrType(), utils::tostring(sp->getAddress()).c_str(), utils::tostring(sp->getName()).c_str(),
-			static_cast<GF_UINT>(sp->getConnectionStatus()), static_cast<GF_UINT>(sp->getPosition()));
-		listDev.push_back(sp);
-	}
-}
-
-void handleCmd(gfsPtr<Adapter>& pAdapter, string cmd)
-{
-	if (cmd.length() == 0)
-		return;
-
-	GF_LOGI("Command %s received.", cmd.c_str());
-	switch (cmd[0])
-	{
-	case 'g':
-		GF_LOGI("adapter status is: %u", static_cast<GF_UINT>(pAdapter->getStatus()));
-		break;
-	case 's':
-		listDev.clear();
-		pAdapter->startScan(DEFAULT_RSSI);
-		break;
-	case 'S':
-		pAdapter->stopScan();
-		break;
-	case 'e':
-	{
-		GF_LOGI("Total %u devices found, %u of them are connected.",
-			pAdapter->getNumOfDevices(), pAdapter->getNumOfConnectedDevices());
-		listDev.clear();
-		pAdapter->enumDevices(enumDevice, false);
-		break;
-	}
-	case 'c':
-	{
-		auto itor = listDev.begin();
-		if (itor != listDev.end())
-			(*itor)->connect();
-		break;
-	}
-	case 'C':
-	{
-		auto itor = listDev.begin();
-		if (itor != listDev.end())
-			(*itor)->cancelConnect();
-		break;
-	}
-	case 'd':
-	{
-		auto itor = listDev.begin();
-		if (itor != listDev.end())
-			(*itor)->disconnect();
-		break;
-	}
-	default:;
-		GF_LOGW("Invalid command %s.", cmd.c_str());
-	}
-}
-
 
 class AdapterListenerImp : public AdapterListener
 {
@@ -210,12 +142,46 @@ class DeviceListenerImpl : public DeviceListener
 	}
 	virtual void onEvent(Device* device, GF_EVENT event, GF_UINT8 length, GF_PUINT8 data)
 	{
-		GF_LOGD("%s: device: %s, event: %u", __FUNCTION__,
-			(nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()), (GF_UINT)event);
-
-		if (event == GF_EVT_DATA_GESTURE)
+		switch (event)
 		{
-			GF_LOGD("Gesture data received: %u", data[0]);
+		case GF_EVT_DEVICE_RECENTER:
+			GF_LOGD("Gesture position re-centered.");
+			break;
+		case GF_EVT_DATA_GESTURE:
+		{
+			string gesture;
+			switch (data[0])
+			{
+			case static_cast<GF_UINT8>(Gesture::Relax) :
+				gesture = "Relax";
+				break;
+			case static_cast<GF_UINT8>(Gesture::Gist) :
+				gesture = "Gist";
+				break;
+			case static_cast<GF_UINT8>(Gesture::SpreadFingers) :
+				gesture = "SpreadFingers";
+				break;
+			case static_cast<GF_UINT8>(Gesture::WaveTowardPalm) :
+				gesture = "WaveTowardPalm";
+				break;
+			case static_cast<GF_UINT8>(Gesture::WaveBackwardPalm) :
+				gesture = "WaveBackwardPalm";
+				break;
+			case static_cast<GF_UINT8>(Gesture::TuckFingers) :
+				gesture = "TuckFingers";
+				break;
+			case static_cast<GF_UINT8>(Gesture::Shoot) :
+				gesture = "Shoot";
+				break;
+			case static_cast<GF_UINT8>(Gesture::Unknown) :
+			default:
+				gesture = "Unknown";
+			}
+			GF_LOGD("Gesture data received: %u -> %s", data[0], gesture.c_str());
+			break;
+		}
+		case GF_EVT_DATA_QUATERNION:
+		default:;
 		}
 	}
 	virtual void onChracteristicUpdated(Device* device, GF_STATUS status, AttributeHandle attribute_handle, GF_UINT8 length, GF_PUINT8 data)
@@ -230,6 +196,79 @@ class DeviceListenerImpl : public DeviceListener
 		}
 	}
 };
+
+gfsPtr<DeviceListener> devListener = dynamic_pointer_cast<DeviceListener>(make_shared<DeviceListenerImpl>());
+
+void enumDevice(WPDEVICE dev)
+{
+	auto sp = dev.lock();
+	if (nullptr == sp)
+	{
+		GF_LOGW("%s: empty device???", __FUNCTION__);
+	}
+	else
+	{
+		GF_LOGI("Dev: addrtype: %u, address: %s, name: %s, connstatus: %u, position:%u",
+			(GF_UINT)sp->getAddrType(), utils::tostring(sp->getAddress()).c_str(), utils::tostring(sp->getName()).c_str(),
+			static_cast<GF_UINT>(sp->getConnectionStatus()), static_cast<GF_UINT>(sp->getPosition()));
+		sp->registerListener(devListener);
+		listDev.push_back(sp);
+	}
+}
+
+void handleCmd(gfsPtr<Adapter>& pAdapter, string cmd)
+{
+	if (cmd.length() == 0)
+		return;
+
+	GF_LOGI("Command %s received.", cmd.c_str());
+	switch (cmd[0])
+	{
+	case 'g':
+		GF_LOGI("adapter status is: %u", static_cast<GF_UINT>(pAdapter->getStatus()));
+		break;
+	case 's':
+		listDev.clear();
+		pAdapter->startScan(DEFAULT_RSSI);
+		break;
+	case 'S':
+		pAdapter->stopScan();
+		break;
+	case 'e':
+	{
+		GF_LOGI("Total %u devices found, %u of them are connected.",
+			pAdapter->getNumOfDevices(), pAdapter->getNumOfConnectedDevices());
+		listDev.clear();
+		pAdapter->enumDevices(enumDevice, false);
+		break;
+	}
+	case 'c':
+	{
+		auto itor = listDev.begin();
+		if (itor != listDev.end())
+			(*itor)->connect();
+		break;
+	}
+	case 'C':
+	{
+		auto itor = listDev.begin();
+		if (itor != listDev.end())
+			(*itor)->cancelConnect();
+		break;
+	}
+	case 'd':
+	{
+		auto itor = listDev.begin();
+		if (itor != listDev.end())
+			(*itor)->disconnect();
+		break;
+	}
+	default:;
+		GF_LOGW("Invalid command %s.", cmd.c_str());
+	}
+}
+
+
 
 int _tmain()
 {
