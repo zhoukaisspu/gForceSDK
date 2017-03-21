@@ -29,6 +29,7 @@
     <ClInclude Include="..\..\..\src\common\utils\LogUtils_Linux.h" />
     <ClInclude Include="..\..\..\src\common\utils\LogUtil_Android.h" />
     <ClInclude Include="..\..\..\src\common\utils\LogUtil_Win.h" />
+    <ClInclude Include="..\..\..\src\DeviceHelper.h" />
     <ClInclude Include="..\..\..\src\GForceDevice.h" />
     <ClInclude Include="..\..\..\src\IDongle.h" />
     <ClInclude Include="..\..\..\src\Utils.h" />

@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <stdarg.h>
+using namespace std;
 
 #define GF_LOG_BUF_SIZE 1024
 
@@ -25,7 +26,7 @@ struct win_log_print {
 		vsnprintf_s(buf + offset, size_t(GF_LOG_BUF_SIZE - offset), _TRUNCATE, fmt, ap);
 		va_end(ap);
 
-		std::cout << buf << std::endl;
+		cout << buf << endl;
 		return 0;//strlen(buf)
 	}
 };

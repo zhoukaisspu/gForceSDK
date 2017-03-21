@@ -270,18 +270,18 @@ GF_RET_CODE BLEDevice::connectionParameterUpdate(GF_UINT16 conn_interval_min, GF
 	return (ret == OYM_SUCCESS) ? GF_SUCCESS : GF_ERROR;
 }
 
-GF_RET_CODE BLEDevice::writeCharacteristic(GF_UINT16 attribute_handle, GF_UINT8 data_length, GF_PUINT8 data)
+GF_RET_CODE BLEDevice::writeCharacteristic(AttributeHandle attribute_handle, GF_UINT8 dataLen, GF_PUINT8 data)
 {
 	GF_LOGD(__FUNCTION__);
 	OYM_STATUS ret = OYM_FAIL;
 	if (mHandle != INVALID_HANDLE)
 	{
-		ret = mDongle->writeCharacteristic(*this, attribute_handle, data_length, data);
+		ret = mDongle->writeCharacteristic(*this, attribute_handle, dataLen, data);
 	}
 	return (ret == OYM_SUCCESS) ? GF_SUCCESS : GF_ERROR;
 }
 
-GF_RET_CODE BLEDevice::readCharacteristic(GF_UINT16 attribute_handle)
+GF_RET_CODE BLEDevice::readCharacteristic(AttributeHandle attribute_handle)
 {
 	GF_LOGD(__FUNCTION__);
 	OYM_STATUS ret = OYM_FAIL;
@@ -312,11 +312,17 @@ void BLEDevice::onConnectionParmeterUpdated(GF_STATUS status, GF_UINT16 conn_int
 	// TODO: notify client
 }
 
-void BLEDevice::onChracteristicValueRead(GF_STATUS status, GF_UINT8 length, GF_PUINT8 data)
+void BLEDevice::onCharacteristicValueRead(GF_STATUS status, GF_UINT8 length, GF_PUINT8 data)
 {
 	GF_LOGD(__FUNCTION__);
 	GF_LOGD("status: %u", (GF_UINT)status);
 	GF_LOGD("length: %u", (GF_UINT)length);
 	GF_LOGD("&data: %p", data);
 	// TODO: notify client
+}
+
+void BLEDevice::onData(GF_UINT8 length, GF_PUINT8 data)
+{
+	length; data;
+	// nothing to do
 }

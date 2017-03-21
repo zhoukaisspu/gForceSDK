@@ -40,10 +40,9 @@ namespace oym
 		virtual GF_RET_CODE connectionParameterUpdate(GF_UINT16 conn_interval_min, GF_UINT16 conn_interval_max,
 			GF_UINT16 slave_latence, GF_UINT16 supervision_timeout) = 0;
 
-		/*
-		GF_STATUS WriteCharacteristic(GF_UINT16 conn_handle, GF_UINT16 attribute_handle, GF_UINT8 data_length, GF_PUINT8 data);
-		GF_STATUS ReadCharacteristic(GF_UINT16 conn_handle, GF_UINT16 attribute_handle);
-		*/
+		virtual GF_RET_CODE writeCharacteristic(AttributeHandle attribute_handle, GF_UINT8 dataLen, GF_PUINT8 data) = 0;
+		virtual GF_RET_CODE readCharacteristic(AttributeHandle attribute_handle) = 0;
+
 	protected:
 		// all devices have to be created by hub
 		virtual ~Device() {}

@@ -12,7 +12,7 @@ public:
 
 	virtual void onMTUSizeChanged(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT16 mtu_size) = 0;
 	virtual void onConnectionParmeterUpdated(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT16 conn_int, OYM_UINT16 superTO, OYM_UINT16 slavelatency) = 0;
-	virtual void onChracteristicValueRead(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT8 length, OYM_PUINT8 data) = 0;
+	virtual void onCharacteristicValueRead(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT8 length, OYM_PUINT8 data) = 0;
 
 	/*Notification format: data length(1 byte N) + data(N Bytes)*/
 	virtual void onNotificationReceived(OYM_UINT16 handle, OYM_UINT8 length, OYM_PUINT8 data) = 0;

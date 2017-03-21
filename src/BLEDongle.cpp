@@ -1,6 +1,7 @@
 #include "LogUtils.h"
 #include "BLEDongle.h"
 #include "DongleListener.h"
+#include "GForceDevice.h"
 
 using namespace oym;
 
@@ -239,7 +240,7 @@ void BLEDongle::onScanResult(BLE_DEVICE* device)
 		return;
 
 	// newly scanned should not be connected
-	auto newItem = make_shared<BLEDevice>(this, *device);
+	auto newItem = createDeviceBeforeConnect(*device);
 	pair<decltype(mDisconnDevices.begin()), bool> ret = mDisconnDevices.insert(newItem);
 	auto exists = mDisconnDevices.find(newItem);
 	if (ret.second == false)
@@ -305,6 +306,13 @@ void BLEDongle::onDeviceConnected(OYM_STATUS status, GF_ConnectedDevice *device)
 	dev->onConnected(*device);
 	// TODO: when a device is found, no later than it is connected, need to find
 	// it's detail information, then specialize it.
+	/*
+	for (GF_UINT16 i = static_cast<GF_UINT16>(AttributeHandle::GATTPrimServiceDeclaration1);
+		i < static_cast<GF_UINT16>(AttributeHandle::Max); ++i)
+	{
+		dev->readCharacteristic(static_cast<AttributeHandle>(i));
+	}
+	*/
 }
 
 void BLEDongle::onDeviceDisonnected(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT8 reason)
@@ -372,7 +380,7 @@ void BLEDongle::onConnectionParmeterUpdated(OYM_STATUS status, OYM_UINT16 handle
 	}
 }
 
-void BLEDongle::onChracteristicValueRead(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT8 length, OYM_PUINT8 data)
+void BLEDongle::onCharacteristicValueRead(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT8 length, OYM_PUINT8 data)
 {
 	GF_LOGD(__FUNCTION__);
 
@@ -380,7 +388,7 @@ void BLEDongle::onChracteristicValueRead(OYM_STATUS status, OYM_UINT16 handle, O
 	{
 		if (itor->getHandle() == handle)
 		{
-			itor->onChracteristicValueRead(status, length, data);
+			itor->onCharacteristicValueRead(status, length, data);
 		}
 	}
 }
@@ -390,6 +398,13 @@ void BLEDongle::onNotificationReceived(OYM_UINT16 handle, OYM_UINT8 length, OYM_
 {
 	handle; length; data;
 	//GF_LOGD(__FUNCTION__);
+	for (auto& itor : mConnectedDevices)
+	{
+		if (itor->getHandle() == handle)
+		{
+			itor->onData(length, data);
+		}
+	}
 }
 
 void BLEDongle::onComDestory()
@@ -460,21 +475,30 @@ GF_RET_CODE BLEDongle::connectionParameterUpdate(BLEDevice& dev, GF_UINT16 conn_
 }
 
 GF_RET_CODE BLEDongle::writeCharacteristic(BLEDevice& dev,
-	GF_UINT16 attribute_handle, GF_UINT8 data_length, GF_PUINT8 data)
+	AttributeHandle attribute_handle, GF_UINT8 data_length, GF_PUINT8 data)
 {
 	if (nullptr == mAM || INVALID_HANDLE == dev.getHandle())
 		return GF_ERROR_BAD_STATE;
-	OYM_STATUS status = mAM->WriteCharacteristic(dev.getHandle(), attribute_handle,
+	OYM_STATUS status = mAM->WriteCharacteristic(dev.getHandle(), static_cast<GF_UINT16>(attribute_handle),
 		data_length, data);
 	return status == OYM_SUCCESS ? GF_SUCCESS : GF_ERROR;
 }
 
-GF_RET_CODE BLEDongle::readCharacteristic(BLEDevice& dev, GF_UINT16 attribute_handle)
+GF_RET_CODE BLEDongle::readCharacteristic(BLEDevice& dev, AttributeHandle attribute_handle)
 {
 	if (nullptr == mAM || INVALID_HANDLE == dev.getHandle())
 		return GF_ERROR_BAD_STATE;
-	OYM_STATUS status = mAM->ReadCharacteristic(dev.getHandle(), attribute_handle);
+	OYM_STATUS status = mAM->ReadCharacteristic(dev.getHandle(), static_cast<GF_UINT16>(attribute_handle));
 	return status == OYM_SUCCESS ? GF_SUCCESS : GF_ERROR;
 }
 
+const char* gForcePrefix = "gForceBLE";
+
+gfsPtr<BLEDevice> BLEDongle::createDeviceBeforeConnect(const BLE_DEVICE& bleDev)
+{
+	if (nullptr != strstr(bleDev.dev_name, gForcePrefix))
+		return dynamic_pointer_cast<BLEDevice>(make_shared<GForceDevice>(this, bleDev));
+	else
+		return make_shared<BLEDevice>(this, bleDev);
+}
 

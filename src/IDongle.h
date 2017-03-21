@@ -17,8 +17,8 @@ namespace oym
 			GF_UINT16 conn_interval_min, GF_UINT16 conn_interval_max,
 			GF_UINT16 slave_latence, GF_UINT16 supervision_timeout) = 0;
 		virtual GF_RET_CODE writeCharacteristic(BLEDevice& dev,
-			GF_UINT16 attribute_handle, GF_UINT8 data_length, GF_PUINT8 data) = 0;
-		virtual GF_RET_CODE readCharacteristic(BLEDevice& dev, GF_UINT16 attribute_handle) = 0;
+			AttributeHandle attribute_handle, GF_UINT8 data_length, GF_PUINT8 data) = 0;
+		virtual GF_RET_CODE readCharacteristic(BLEDevice& dev, AttributeHandle attribute_handle) = 0;
 	};
 } // namespace oym
 

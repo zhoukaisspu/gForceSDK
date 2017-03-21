@@ -192,31 +192,42 @@ class DongleListenerImp : public DongleListener
 
 class DeviceListenerImpl : public DeviceListener
 {
-	virtual void onDeviceConnected(WPDEVICE device, GF_STATUS status)
+	virtual void onDeviceConnected(Device* device, GF_STATUS status)
 	{
-		auto ptr = device.lock();
-		GF_LOGD("%s: device: %s", __FUNCTION__, (nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
+		GF_LOGD("%s: device: %s", __FUNCTION__, (nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()));
 	}
-	virtual void onDeviceDisonnected(WPDEVICE device, GF_STATUS status, GF_UINT8 reason)
+	virtual void onDeviceDisonnected(Device* device, GF_STATUS status, GF_UINT8 reason)
 	{
-		auto ptr = device.lock();
-		GF_LOGD("%s: device: %s", __FUNCTION__, (nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
+		GF_LOGD("%s: device: %s", __FUNCTION__, (nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()));
 	}
-	virtual void onMTUSizeChanged(WPDEVICE device, GF_STATUS status, GF_UINT16 mtu_size)
+	virtual void onMTUSizeChanged(Device* device, GF_STATUS status, GF_UINT16 mtu_size)
 	{
-		auto ptr = device.lock();
-		GF_LOGD("%s: device: %s", __FUNCTION__, (nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
+		GF_LOGD("%s: device: %s", __FUNCTION__, (nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()));
 	}
-	virtual void onConnectionParmeterUpdated(WPDEVICE device, GF_STATUS status, GF_UINT16 conn_int, GF_UINT16 superTO, GF_UINT16 slavelatency)
+	virtual void onConnectionParmeterUpdated(Device* device, GF_STATUS status, GF_UINT16 conn_int, GF_UINT16 superTO, GF_UINT16 slavelatency)
 	{
-		auto ptr = device.lock();
-		GF_LOGD("%s: device: %s", __FUNCTION__, (nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
+		GF_LOGD("%s: device: %s", __FUNCTION__, (nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()));
 	}
-	virtual void onEvent(WPDEVICE device, GF_EVENT event, GF_CPCHAR data)
+	virtual void onEvent(Device* device, GF_EVENT event, GF_UINT8 length, GF_PUINT8 data)
 	{
-		auto ptr = device.lock();
 		GF_LOGD("%s: device: %s, event: %u", __FUNCTION__,
-			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()), (GF_UINT)event);
+			(nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()), (GF_UINT)event);
+
+		if (event == GF_EVT_DATA_GESTURE)
+		{
+			GF_LOGD("Gesture data received: %u", data[0]);
+		}
+	}
+	virtual void onChracteristicUpdated(Device* device, GF_STATUS status, AttributeHandle attribute_handle, GF_UINT8 length, GF_PUINT8 data)
+	{
+		GF_UINT16 attr = static_cast<GF_UINT16>(attribute_handle);
+
+		if (attr < static_cast<GF_UINT16>(AttributeHandle::Max) && 'S' == charTypes[attr])
+		{
+			string str((char*)data, length);
+			GF_LOGI("%s: device: %s, status: %u, characteristic %d received: %s", __FUNCTION__,
+				(nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()), status, attr, str.c_str());
+		}
 	}
 };
 

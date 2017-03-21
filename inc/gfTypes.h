@@ -24,6 +24,9 @@ namespace oym {
 	typedef size_t				GF_SIZE;
 	typedef GF_INT				GF_STATUS;
 
+
+	const static GF_UINT16 INVALID_HANDLE = 0xFFFF;
+
 #if defined(UNICODE) || defined(_UNICODE)
 
 #define tstring std::wstring
@@ -68,6 +71,9 @@ namespace oym {
 
 	typedef enum {
 		GF_EVT_EVENTBASE,
+		GF_EVT_DEVICE_RECENTER,
+		GF_EVT_DATA_GESTURE,
+		GF_EVT_DATA_QUATERNION,
 	} GF_EVENT;
 
 
@@ -94,5 +100,41 @@ namespace oym {
 		Virtual
 	};
 
+	// define Characteristic read/write handle
+	enum class AttributeHandle : GF_UINT16 {
+		GATTPrimServiceDeclaration1 = 0x0001,
+		GATTCharacteristicDeclaration1,
+		DeviceName,
+		GATTCharacteristicDeclaration2,
+		Appearance,
+		GATTCharacteristicDeclaration3,
+		PreferredConnectParamters,
+		GATTPrimServiceDeclaration2,
+		GATTPrimServiceDeclaration3,
+		GATTCharacteristicDeclaration4,
+		SystemID,
+		GATTCharacteristicDeclaration5,
+		ModelNumberStr,
+		GATTCharacteristicDeclaration6,
+		SerialNumberStr,
+		GATTCharacteristicDeclaration7,
+		FirmwareRevStr,
+		GATTCharacteristicDeclaration8,
+		HardwareRevStr,
+		GATTCharacteristicDeclaration9,
+		SoftwareRevStr,
+		GATTCharacteristicDeclaration10,
+		ManufactureNameStr,
+		GATTCharacteristicDeclaration11,
+		IEEE11073_20601,
+		GATTCharacteristicDeclaration12,
+		PnPID,
+		GATTPrimServiceDeclaration4,
+		GATTCharacteristicDeclaration13,
+		Max
+	};
+
+	static const char charTypes[] =
+		"BBSBBBBBBBBBSBSBSBSBSBSBBBBBBN";
 
 } // namespace oym

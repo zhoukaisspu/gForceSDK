@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include <set>
 
 #include "Dongle.h"
@@ -55,7 +56,7 @@ namespace oym
 		virtual void onMTUSizeChanged(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT16 mtu_size);
 		virtual void onConnectionParmeterUpdated(OYM_STATUS status, OYM_UINT16 handle,
 			OYM_UINT16 conn_int, OYM_UINT16 superTO, OYM_UINT16 slavelatency);
-		virtual void onChracteristicValueRead(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT8 length, OYM_PUINT8 data);
+		virtual void onCharacteristicValueRead(OYM_STATUS status, OYM_UINT16 handle, OYM_UINT8 length, OYM_PUINT8 data);
 
 		/*Notification format: data length(1 byte N) + data(N Bytes)*/
 		virtual void onNotificationReceived(OYM_UINT16 handle, OYM_UINT8 length, OYM_PUINT8 data);
@@ -72,10 +73,13 @@ namespace oym
 			GF_UINT16 conn_interval_min, GF_UINT16 conn_interval_max,
 			GF_UINT16 slave_latence, GF_UINT16 supervision_timeout);
 		virtual GF_RET_CODE writeCharacteristic(BLEDevice& dev,
-			GF_UINT16 attribute_handle, GF_UINT8 data_length, GF_PUINT8 data);
-		virtual GF_RET_CODE readCharacteristic(BLEDevice& dev, GF_UINT16 attribute_handle);
+			AttributeHandle attribute_handle, GF_UINT8 data_length, GF_PUINT8 data);
+		virtual GF_RET_CODE readCharacteristic(BLEDevice& dev, AttributeHandle attribute_handle);
 
-	private:
+	protected:
+		// device factory methods
+		gfsPtr<BLEDevice> createDeviceBeforeConnect(const BLE_DEVICE& bleDev);
+	protected:
 		gfsPtr<OYM_AdapterManager> mAM;
 		set<gfsPtr<BLEDevice>, DevComp<gfsPtr<BLEDevice>>> mDisconnDevices;
 		set<gfsPtr<BLEDevice>, ConnectedDevComp<gfsPtr<BLEDevice>>> mConnectedDevices;

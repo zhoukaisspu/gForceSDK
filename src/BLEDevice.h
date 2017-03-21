@@ -6,11 +6,11 @@
 #include "AdapterManager.h"
 #include "Utils.h"
 #include <set>
+#include <mutex>
 using namespace std;
 
 namespace oym
 {
-#define INVALID_HANDLE (GF_UINT16)0xFFFF
 
 	class BLEDevice : public Device
 	{
@@ -45,8 +45,8 @@ namespace oym
 		virtual GF_RET_CODE configMtuSize(GF_UINT16 mtuSize);
 		virtual GF_RET_CODE connectionParameterUpdate(GF_UINT16 conn_interval_min, GF_UINT16 conn_interval_max,
 			GF_UINT16 slave_latence, GF_UINT16 supervision_timeout);
-		virtual GF_RET_CODE writeCharacteristic(GF_UINT16 attribute_handle, GF_UINT8 data_length, GF_PUINT8 data);
-		virtual GF_RET_CODE readCharacteristic(GF_UINT16 attribute_handle);
+		virtual GF_RET_CODE writeCharacteristic(AttributeHandle attribute_handle, GF_UINT8 dataLen, GF_PUINT8 data);
+		virtual GF_RET_CODE readCharacteristic(AttributeHandle attribute_handle);
 
 	public:
 		virtual void updateData(const BLE_DEVICE& bleDev);
@@ -54,7 +54,8 @@ namespace oym
 		virtual void onDisconnected(GF_UINT8 reason);
 		virtual void onMTUSizeChanged(GF_STATUS status, GF_UINT16 mtu_size);
 		virtual void onConnectionParmeterUpdated(GF_STATUS status, GF_UINT16 conn_int, GF_UINT16 superTO, GF_UINT16 slavelatency);
-		virtual void onChracteristicValueRead(GF_STATUS status, GF_UINT8 length, GF_PUINT8 data);
+		virtual void onCharacteristicValueRead(GF_STATUS status, GF_UINT8 length, GF_PUINT8 data);
+		virtual void onData(GF_UINT8 length, GF_PUINT8 data);
 
 	public:
 		virtual bool operator < (const BLEDevice& devRight) const {
