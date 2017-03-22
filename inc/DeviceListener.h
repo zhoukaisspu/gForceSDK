@@ -4,7 +4,7 @@
 
 #include "gfTypes.h"
 
-namespace oym
+namespace gf
 {
 	class Device;
 
@@ -25,4 +25,4 @@ namespace oym
 		virtual void onEvent(Device* device, GF_EVENT event, GF_UINT8 length, GF_PUINT8 data) = 0;
 	};
 
-} // namespace oym
+} // namespace gf

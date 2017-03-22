@@ -2,7 +2,7 @@
 #include "utils.h"
 #include "LogUtils.h"
 
-using namespace oym;
+using namespace gf;
 
 
 void GForceDevice::onData(GF_UINT8 length, GF_PUINT8 data)

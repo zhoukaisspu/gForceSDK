@@ -2,7 +2,7 @@
 
 #include "gfTypes.h"
 
-namespace oym
+namespace gf
 {
 	class DeviceListener;
 
@@ -48,4 +48,4 @@ namespace oym
 		virtual ~Device() {}
 	};
 
-} // namespace oym
+} // namespace gf

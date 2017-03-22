@@ -2,7 +2,7 @@
 
 #include "GForceDevice.h"
 
-namespace oym
+namespace gf
 {
 
 
@@ -11,4 +11,4 @@ namespace oym
 	public:
 	};
 
-} // namespace oym
+} // namespace gf

@@ -2,22 +2,22 @@
 #pragma once
 
 #include "Device.h"
-#include "IAdapter.h"
+#include "IHub.h"
 #include "Utils.h"
 #include "DeviceListener.h"
-#include "IClientCallback.h"
+#include "ClientCallbackInterface.h"
 
 #include <set>
 #include <mutex>
 using namespace std;
 
-namespace oym
+namespace gf
 {
 
 	class BLEDevice : public Device
 	{
 	public:
-		BLEDevice(IAdapter* adapter, const BLE_DEVICE& bleDev);
+		BLEDevice(IHub* hub, const GF_BLEDevice& bleDev);
 		virtual ~BLEDevice() { }
 
 		virtual GF_UINT8 getAddrType() const { return mAddrType; }
@@ -51,7 +51,7 @@ namespace oym
 		virtual GF_RET_CODE readCharacteristic(AttributeHandle attribute_handle);
 
 	public:
-		virtual void updateData(const BLE_DEVICE& bleDev);
+		virtual void updateData(const GF_BLEDevice& bleDev);
 		virtual void onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDevice);
 		virtual void onDisconnected(GF_STATUS status, GF_UINT8 reason);
 		virtual void onMTUSizeChanged(GF_STATUS status, GF_UINT16 mtu_size);
@@ -74,7 +74,7 @@ namespace oym
 		virtual bool takeover(BLEDevice& from);
 
 	protected:
-		IAdapter* mAdapter;
+		IHub* mHub;
 
 	protected:
 		DeviceConnectionStatus mCnntStatus = DeviceConnectionStatus::Disconnected;
@@ -94,4 +94,4 @@ namespace oym
 		set<gfwPtr<DeviceListener>, WeakPtrComp<DeviceListener>> mListeners;
 	};
 
-} // namespace oym
+} // namespace gf

@@ -4,7 +4,7 @@
 
 #include "Device.h"
 
-namespace oym
+namespace gf
 {
 
 	class VirtualDevice : public Device
@@ -22,4 +22,4 @@ namespace oym
 		virtual ~VirtualDevice() {}
 	};
 
-} // namespace oym
+} // namespace gf

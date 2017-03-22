@@ -7,7 +7,7 @@
 #include <assert.h>
 using namespace std;
 
-namespace oym {
+namespace gf {
 
 #if defined(DEBUG) || defined(_DEBUG)
 
@@ -122,4 +122,4 @@ namespace oym {
 		}
 	}
 
-} // namespace oym
+} // namespace gf

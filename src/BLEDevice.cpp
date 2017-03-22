@@ -4,37 +4,37 @@
 #include <cstdio>
 
 
-using namespace oym;
+using namespace gf;
 
 
 GF_RET_CODE BLEDevice::registerListener(const gfwPtr<DeviceListener>& listener)
 {
 	GF_LOGD(__FUNCTION__);
 	if (nullptr == listener.lock())
-		return GF_ERROR_BAD_PARAM;
+		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
 
 	mListeners.insert(listener);
 	cleanInvalidWeakP(mListeners);
-	return GF_SUCCESS;
+	return GF_RET_CODE::GF_SUCCESS;
 }
 
 GF_RET_CODE BLEDevice::unRegisterListener(const gfwPtr<DeviceListener>& listener)
 {
 	GF_LOGD(__FUNCTION__);
 	if (nullptr == listener.lock())
-		return GF_ERROR_BAD_PARAM;
+		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
 
 	mListeners.erase(listener);
 	cleanInvalidWeakP(mListeners);
-	return GF_SUCCESS;
+	return GF_RET_CODE::GF_SUCCESS;
 }
 
-BLEDevice::BLEDevice(IAdapter* adapter, const BLE_DEVICE& bleDev)
-	: mAdapter(adapter)
+BLEDevice::BLEDevice(IHub* hub, const GF_BLEDevice& bleDev)
+	: mHub(hub)
 	, mAddrType(bleDev.addr_type)
 	, mRssi(bleDev.rssi)
 {
-	ASSERT_VALID_PTR(mAdapter);
+	ASSERT_VALID_PTR(mHub);
 	memcpy(mAddress, bleDev.addr, sizeof(mAddress));
 
 	GF_CHAR name[BLE_DEVICE_NAME_LENGTH + 1] = "";
@@ -50,15 +50,15 @@ GF_RET_CODE BLEDevice::identifyDevice(int msec)
 {
 	msec;
 	GF_LOGI("%s: Opps, not implemented yet.", __FUNCTION__);
-	return GF_ERROR_NOT_SUPPORT;
+	return GF_RET_CODE::GF_ERROR_NOT_SUPPORT;
 }
 
 GF_RET_CODE BLEDevice::getAddress(GF_UINT8* addr, GF_SIZE bufLen) const
 {
 	if (nullptr == addr || bufLen < sizeof(mAddress))
-		return GF_ERROR_BAD_PARAM;
+		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
 	memcpy(addr, mAddress, sizeof(mAddress));
-	return GF_SUCCESS;
+	return GF_RET_CODE::GF_SUCCESS;
 }
 
 tstring BLEDevice::getAddress() const
@@ -118,27 +118,26 @@ GF_RET_CODE BLEDevice::setPostion(DevicePosition pos)
 {
 	GF_LOGD(__FUNCTION__);
 	mPosition = pos;
-	return GF_SUCCESS;
+	return GF_RET_CODE::GF_SUCCESS;
 }
 
 GF_RET_CODE BLEDevice::connect(bool directConn)
 {
 	GF_LOGD(__FUNCTION__);
-	GF_RET_CODE ret = GF_ERROR;
+	GF_RET_CODE ret = GF_RET_CODE::GF_ERROR;
 	switch (mCnntStatus)
 	{
 	case DeviceConnectionStatus::Connected:
-		return GF_SUCCESS;
+		return GF_RET_CODE::GF_SUCCESS;
 	case DeviceConnectionStatus::Disconnecting:
 		break;
 	case DeviceConnectionStatus::Disconnected:
 	case DeviceConnectionStatus::Connecting:
-		if (OYM_SUCCESS == mAdapter->connect(*this, directConn))
-			ret = GF_SUCCESS;
+		ret = mHub->connect(*this, directConn);
 		break;
 	default:;
 	}
-	if (ret == GF_SUCCESS)
+	if (ret == GF_RET_CODE::GF_SUCCESS)
 		mCnntStatus = DeviceConnectionStatus::Connecting;
 	return ret;
 }
@@ -146,21 +145,20 @@ GF_RET_CODE BLEDevice::connect(bool directConn)
 GF_RET_CODE BLEDevice::disconnect()
 {
 	GF_LOGD(__FUNCTION__);
-	GF_RET_CODE ret = GF_ERROR;
+	GF_RET_CODE ret = GF_RET_CODE::GF_ERROR;
 	switch (mCnntStatus)
 	{
 	case DeviceConnectionStatus::Connected:
-		if (OYM_SUCCESS == mAdapter->disconnect(*this))
-			ret = GF_SUCCESS;
+		ret = mHub->disconnect(*this);
 		break;
 	case DeviceConnectionStatus::Disconnected:
 	case DeviceConnectionStatus::Disconnecting:
-		return GF_SUCCESS;
+		return GF_RET_CODE::GF_SUCCESS;
 	case DeviceConnectionStatus::Connecting:
 		break;
 	default:;
 	}
-	if (ret == GF_SUCCESS)
+	if (ret == GF_RET_CODE::GF_SUCCESS)
 		mCnntStatus = DeviceConnectionStatus::Disconnecting;
 	return ret;
 }
@@ -168,7 +166,7 @@ GF_RET_CODE BLEDevice::disconnect()
 GF_RET_CODE BLEDevice::cancelConnect()
 {
 	GF_LOGD(__FUNCTION__);
-	GF_RET_CODE ret = GF_ERROR;
+	GF_RET_CODE ret = GF_RET_CODE::GF_ERROR;
 	switch (mCnntStatus)
 	{
 	case DeviceConnectionStatus::Connected:
@@ -176,20 +174,19 @@ GF_RET_CODE BLEDevice::cancelConnect()
 	case DeviceConnectionStatus::Disconnecting:
 		break;
 	case DeviceConnectionStatus::Connecting:
-		if (OYM_SUCCESS == mAdapter->cancelConnect(*this))
-		{
-			ret = GF_SUCCESS;
-			GF_LOGD("Connection cancelling...");
-		}
+		ret = mHub->cancelConnect(*this);
 		break;
 	default:;
 	}
-	if (ret == GF_SUCCESS)
+	if (ret == GF_RET_CODE::GF_SUCCESS)
+	{
 		mCnntStatus = DeviceConnectionStatus::Disconnecting;
+		GF_LOGD("Connection cancelling...");
+	}
 	return ret;
 }
 
-void BLEDevice::updateData(const BLE_DEVICE& bleDev)
+void BLEDevice::updateData(const GF_BLEDevice& bleDev)
 {
 	// update name and rssi
 	GF_CHAR name[BLE_DEVICE_NAME_LENGTH + 1] = "";
@@ -218,7 +215,7 @@ void BLEDevice::onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDe
 
 	if (DeviceConnectionStatus::Disconnecting == mCnntStatus)
 	{
-		if (OYM_SUCCESS == mAdapter->disconnect(*this))
+		if (GF_RET_CODE::GF_SUCCESS == mHub->disconnect(*this))
 		{
 			// if user selected to cancel connection, make it and no notifiction
 			mCnntStatus = DeviceConnectionStatus::Disconnecting;
@@ -260,47 +257,47 @@ void BLEDevice::onDisconnected(GF_STATUS status, GF_UINT8 reason)
 GF_RET_CODE BLEDevice::configMtuSize(GF_UINT16 mtuSize)
 {
 	GF_LOGD(__FUNCTION__);
-	OYM_STATUS ret = OYM_FAIL;
+	GF_RET_CODE ret = GF_RET_CODE::GF_ERROR_BAD_STATE;
 	if (mHandle != INVALID_HANDLE)
 	{
-		ret = mAdapter->configMtuSize(*this, mtuSize);
+		ret = mHub->configMtuSize(*this, mtuSize);
 	}
-	return (ret == OYM_SUCCESS) ? GF_SUCCESS : GF_ERROR;
+	return ret;
 }
 
 GF_RET_CODE BLEDevice::connectionParameterUpdate(GF_UINT16 conn_interval_min, GF_UINT16 conn_interval_max,
 	GF_UINT16 slave_latence, GF_UINT16 supervision_timeout)
 {
 	GF_LOGD(__FUNCTION__);
-	OYM_STATUS ret = OYM_FAIL;
+	GF_RET_CODE ret = GF_RET_CODE::GF_ERROR_BAD_STATE;
 	if (mHandle != INVALID_HANDLE)
 	{
-		ret = mAdapter->connectionParameterUpdate(*this, conn_interval_min, conn_interval_max,
+		ret = mHub->connectionParameterUpdate(*this, conn_interval_min, conn_interval_max,
 			slave_latence, supervision_timeout);
 	}
-	return (ret == OYM_SUCCESS) ? GF_SUCCESS : GF_ERROR;
+	return ret;
 }
 
 GF_RET_CODE BLEDevice::writeCharacteristic(AttributeHandle attribute_handle, GF_UINT8 dataLen, GF_PUINT8 data)
 {
 	GF_LOGD(__FUNCTION__);
-	OYM_STATUS ret = OYM_FAIL;
+	GF_RET_CODE ret = GF_RET_CODE::GF_ERROR_BAD_STATE;
 	if (mHandle != INVALID_HANDLE)
 	{
-		ret = mAdapter->writeCharacteristic(*this, attribute_handle, dataLen, data);
+		ret = mHub->writeCharacteristic(*this, attribute_handle, dataLen, data);
 	}
-	return (ret == OYM_SUCCESS) ? GF_SUCCESS : GF_ERROR;
+	return ret;
 }
 
 GF_RET_CODE BLEDevice::readCharacteristic(AttributeHandle attribute_handle)
 {
 	GF_LOGD(__FUNCTION__);
-	OYM_STATUS ret = OYM_FAIL;
+	GF_RET_CODE ret = GF_RET_CODE::GF_ERROR_BAD_STATE;
 	if (mHandle != INVALID_HANDLE)
 	{
-		ret = mAdapter->readCharacteristic(*this, attribute_handle);
+		ret = mHub->readCharacteristic(*this, attribute_handle);
 	}
-	return (ret == OYM_SUCCESS) ? GF_SUCCESS : GF_ERROR;
+	return ret;
 }
 
 void BLEDevice::onMTUSizeChanged(GF_STATUS status, GF_UINT16 mtu_size)
@@ -346,8 +343,7 @@ void BLEDevice::onCharacteristicValueRead(GF_STATUS status, GF_UINT8 length, GF_
 	// TODO: notify client
 }
 
-void BLEDevice::onData(GF_UINT8 length, GF_PUINT8 data)
+void BLEDevice::onData(GF_UINT8, GF_PUINT8)
 {
-	length; data;
 	// nothing to do
 }

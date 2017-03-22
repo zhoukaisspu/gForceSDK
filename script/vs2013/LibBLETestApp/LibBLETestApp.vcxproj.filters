@@ -48,7 +48,4 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <Library Include="..\..\..\lib\windows\LibBLE.lib" />
-  </ItemGroup>
 </Project>

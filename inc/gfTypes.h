@@ -5,7 +5,7 @@
 #include <string>
 #include <memory>
 
-namespace oym {
+namespace gf {
 
 	typedef char				GF_CHAR;
 	typedef char*				GF_PCHAR;
@@ -31,7 +31,7 @@ namespace oym {
 
 #define tstring std::wstring
 #define tchar wchar_t
-#ifndef _T
+#if ! defined(WIN32) || ! defined(_T)
 #define _T(x) L ## x
 #endif
 
@@ -39,7 +39,7 @@ namespace oym {
 
 #define tstring std::string
 #define tchar char
-#ifndef _T
+#if ! defined(WIN32) || ! defined(_T)
 #define __T(x) x
 #endif
 
@@ -58,7 +58,7 @@ namespace oym {
 	typedef void(*FunEnumDevice)(WPDEVICE);
 
 
-	typedef enum {
+	enum class GF_RET_CODE : GF_INT{
 		GF_SUCCESS = 0,
 		GF_ERROR,
 		GF_ERROR_BAD_PARAM,
@@ -66,7 +66,7 @@ namespace oym {
 		GF_ERROR_NOT_SUPPORT,
 		GF_ERR_SCAN_BUSY,
 		GF_ERR_NO_RESOURCE,
-	} GF_RET_CODE;
+	};
 
 
 	typedef enum {
@@ -89,7 +89,7 @@ namespace oym {
 	};
 
 
-	enum class AdapterState{
+	enum class HubState{
 		Idle,
 		Scanning,
 		Connecting,
@@ -149,4 +149,4 @@ namespace oym {
 	static const char charTypes[] =
 		"BBSBBBBBBBBBSBSBSBSBSBSBBBBBBN";
 
-} // namespace oym
+} // namespace gf

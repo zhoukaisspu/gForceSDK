@@ -24,10 +24,10 @@
     <ClCompile Include="..\..\..\src\BLEDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\BLEAdapter.cpp">
+    <ClCompile Include="..\..\..\src\BLEHub.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\AdapterFactory.cpp">
+    <ClCompile Include="..\..\..\src\HubManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -68,20 +68,29 @@
     <ClInclude Include="..\..\..\src\DeviceHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\IAdapter.h">
+    <ClInclude Include="..\..\..\inc\HubListener.h">
+      <Filter>Exposed Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\Hub.h">
+      <Filter>Exposed Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\IHub.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\inc\Adapter.h">
-      <Filter>Exposed Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\inc\AdapterListener.h">
-      <Filter>Exposed Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\BLEAdapter.h">
+    <ClInclude Include="..\..\..\src\BLEHub.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\inc\AdapterFactory.h">
+    <ClInclude Include="..\..\..\inc\HubManager.h">
       <Filter>Exposed Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\inc\AdapterManagerInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\inc\ClientCallbackInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\inc\oym_types.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

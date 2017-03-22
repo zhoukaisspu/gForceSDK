@@ -4,9 +4,9 @@
 
 #include "BLEDevice.h"
 
-namespace oym
+namespace gf
 {
-	class BLEAdapter;
+	class BLEHub;
 
 #define EVENT_MASK				0x7F
 #define PCKID_FLAG_MASK			0x01
@@ -22,7 +22,7 @@ namespace oym
 	class GForceDevice : public BLEDevice
 	{
 	public:
-		GForceDevice(IAdapter* adapter, const BLE_DEVICE& bleDev) : BLEDevice(adapter, bleDev) {}
+		GForceDevice(IHub* hub, const GF_BLEDevice& bleDev) : BLEDevice(hub, bleDev) {}
 		virtual ~GForceDevice() {}
 
 	protected:
@@ -37,4 +37,4 @@ namespace oym
 		GF_UINT16 mPackageId = INVALID_PACKAGE_ID;
 	};
 
-} // namespace oym
+} // namespace gf

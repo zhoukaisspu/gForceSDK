@@ -4,9 +4,9 @@
 
 #define TAG "NativeTestApp"
 
-#include "AdapterFactory.h"
+#include "HubManager.h"
 #include "Device.h"
-#include "AdapterListener.h"
+#include "HubListener.h"
 #include "DeviceListener.h"
 #include "LogUtils.h"
 #include "../Utils.h"
@@ -16,7 +16,7 @@
 #include <algorithm>
 
 using namespace std;
-using namespace oym;
+using namespace gf;
 
 #define DEFAULT_RSSI 0xA0
 
@@ -60,7 +60,7 @@ BOOL ctrlhandler(DWORD fdwctrltype)
 void printHelp()
 {
 	GF_LOGI("\tPress Ctrl+C to exit.\n");
-	GF_LOGI("g:\tGet adapter status.");
+	GF_LOGI("g:\tGet hub status.");
 	GF_LOGI("s:\tStart to scan.");
 	GF_LOGI("S:\tStop to scan.");
 	GF_LOGI("e:\tEnum devices.");
@@ -71,7 +71,7 @@ void printHelp()
 
 list<gfsPtr<Device>> listDev;
 
-class AdapterListenerImp : public AdapterListener
+class HubListenerImp : public HubListener
 {
 	virtual void onScanfinished()
 	{
@@ -101,8 +101,8 @@ class AdapterListenerImp : public AdapterListener
 	{
 		auto spold = oldPtr.lock();
 		auto spnew = newPtr.lock();
-		GF_LOGI("%s: AdapterState: old device: %s", __FUNCTION__, (nullptr == spold ? "__empty__" : utils::tostring(spold->getName()).c_str()));
-		GF_LOGI("%s: AdapterState: new device: %s", __FUNCTION__, (nullptr == spnew ? "__empty__" : utils::tostring(spnew->getName()).c_str()));
+		GF_LOGI("%s: HubState: old device: %s", __FUNCTION__, (nullptr == spold ? "__empty__" : utils::tostring(spold->getName()).c_str()));
+		GF_LOGI("%s: HubState: new device: %s", __FUNCTION__, (nullptr == spnew ? "__empty__" : utils::tostring(spnew->getName()).c_str()));
 		//listDev.erase(remove_if(listDev.begin(), listDev.end(),
 		//	[&spold](decltype(*listDev.begin()) it){ return (spold == it); }), listDev.end());
 
@@ -116,9 +116,9 @@ class AdapterListenerImp : public AdapterListener
 		if (nullptr != spnew)
 			listDev.push_back(spnew);
 	}
-	virtual void onStateChanged(AdapterState state)
+	virtual void onStateChanged(HubState state)
 	{
-		GF_LOGI("%s: AdapterState: %u", __FUNCTION__, static_cast<GF_UINT>(state));
+		GF_LOGI("%s: HubState: %u", __FUNCTION__, static_cast<GF_UINT>(state));
 	}
 };
 
@@ -216,7 +216,7 @@ void enumDevice(WPDEVICE dev)
 	}
 }
 
-void handleCmd(gfsPtr<Adapter>& pAdapter, string cmd)
+void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 {
 	if (cmd.length() == 0)
 		return;
@@ -225,21 +225,21 @@ void handleCmd(gfsPtr<Adapter>& pAdapter, string cmd)
 	switch (cmd[0])
 	{
 	case 'g':
-		GF_LOGI("adapter status is: %u", static_cast<GF_UINT>(pAdapter->getStatus()));
+		GF_LOGI("hub status is: %u", static_cast<GF_UINT>(pHub->getStatus()));
 		break;
 	case 's':
 		listDev.clear();
-		pAdapter->startScan(DEFAULT_RSSI);
+		pHub->startScan(DEFAULT_RSSI);
 		break;
 	case 'S':
-		pAdapter->stopScan();
+		pHub->stopScan();
 		break;
 	case 'e':
 	{
 		GF_LOGI("Total %u devices found, %u of them are connected.",
-			pAdapter->getNumOfDevices(), pAdapter->getNumOfConnectedDevices());
+			pHub->getNumOfDevices(), pHub->getNumOfConnectedDevices());
 		listDev.clear();
-		pAdapter->enumDevices(enumDevice, false);
+		pHub->enumDevices(enumDevice, false);
 		break;
 	}
 	case 'c':
@@ -273,25 +273,25 @@ void handleCmd(gfsPtr<Adapter>& pAdapter, string cmd)
 int _tmain()
 {
 	printHelp();
-	gfsPtr<Adapter> pAdapter = AdapterFactory::getAdapterInstance(_T("TestApp"));
+	gfsPtr<Hub> pHub = HubManager::getHubInstance(_T("TestApp"));
 
-	if (nullptr == pAdapter) {
-		GF_LOGE("failed to get adapter.");
+	if (nullptr == pHub) {
+		GF_LOGE("failed to get hub.");
 		return 0;
 	}
 
-	gfsPtr<AdapterListener> listener = dynamic_pointer_cast<AdapterListener>(make_shared<AdapterListenerImp>());
-	pAdapter->registerListener(listener);
-	pAdapter->registerListener(dynamic_pointer_cast<AdapterListener>(make_shared<AdapterListenerImp>()));
+	gfsPtr<HubListener> listener = dynamic_pointer_cast<HubListener>(make_shared<HubListenerImp>());
+	pHub->registerListener(listener);
+	pHub->registerListener(dynamic_pointer_cast<HubListener>(make_shared<HubListenerImp>()));
 	//listener = nullptr;
 
-	if (GF_SUCCESS != pAdapter->init())
+	if (GF_RET_CODE::GF_SUCCESS != pHub->init())
 	{
-		GF_LOGE("failed to init adapter.");
+		GF_LOGE("failed to init hub.");
 		return 0;
 	}
-	GF_LOGI("adapter status is: %u", static_cast<GF_UINT>(pAdapter->getStatus()));
-	GF_LOGI("adapter string is: %s", utils::tostring(pAdapter->getDescString()).c_str());
+	GF_LOGI("hub status is: %u", static_cast<GF_UINT>(pHub->getStatus()));
+	GF_LOGI("hub string is: %s", utils::tostring(pHub->getDescString()).c_str());
 
 
 	if (SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrlhandler, TRUE))
@@ -299,7 +299,7 @@ int _tmain()
 		do {
 			string cmd;
 			cin >> cmd;
-			handleCmd(pAdapter, cmd);
+			handleCmd(pHub, cmd);
 		} while (!bExiting);
 	}
 	else
@@ -308,8 +308,8 @@ int _tmain()
 	}
 
 	listDev.clear();
-	pAdapter->unRegisterListener(listener);
-	pAdapter->deinit();
+	pHub->unRegisterListener(listener);
+	pHub->deinit();
 
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrlhandler, FALSE);
 	return 0;
