@@ -26,13 +26,13 @@ public:
 	GF_STATUS RegisterClientCallback(GF_CClientCallback* callback)
 	{
 		mClientCallback = callback;
-		return GF_SUCCESS;
+		return GF_INNER_SUCCESS;
 	}
 
 	GF_STATUS UnregisterClientCallback()
 	{
 		mClientCallback = NULL;
-		return GF_SUCCESS;
+		return GF_INNER_SUCCESS;
 	}
 
 	GF_STATUS ConfigMtuSize(GF_UINT16 conn_handle, GF_UINT16 MTU_Size);

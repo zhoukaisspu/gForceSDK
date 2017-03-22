@@ -162,7 +162,7 @@ GF_STATUS GF_CRemoteDevice::OnDeviceConnected(GF_PUINT8 data, GF_UINT16 length)
 		LOGDEBUG(mTag, "the data of [%d]th bytes is 0x%02x \n", i, data[i]);
 	}
 	status = data[EVENT_DEVICE_CCONNECTED_STATUS];
-	if (status != GF_SUCCESS)
+	if (status != GF_INNER_SUCCESS)
 	{
 		return status;
 	}
@@ -186,7 +186,7 @@ GF_STATUS GF_CRemoteDevice::OnDeviceConnected(GF_PUINT8 data, GF_UINT16 length)
 	status = mDatabase->LoadLinkKey(&mKeySize, mLTK, &mDIV, mRAND);
 	//status = GF_FAIL;
 	printf("LoadLinkKey done!! with status = %d \n", status);
-	if (status == GF_SUCCESS)
+	if (status == GF_INNER_SUCCESS)
 	{
 		/*link key exist, start to encrprtion*/
 		LOGDEBUG(mTag, "Start to Bond device... \n");
@@ -212,7 +212,7 @@ GF_STATUS GF_CRemoteDevice::IdleStateProcessMessage(GF_DEVICE_EVENT event, GF_PU
 		case GF_DEVICE_EVENT_DEVICE_CONNECTED:
 		{
 			result = OnDeviceConnected(data, length);
-			if (result == GF_SUCCESS)
+			if (result == GF_INNER_SUCCESS)
 			{
 				mState = GF_DEVICE_STATE_W4SECU;
 			}
@@ -243,7 +243,7 @@ GF_STATUS GF_CRemoteDevice::W4ConnStateProcessMessage(GF_DEVICE_EVENT event, GF_
 		case GF_DEVICE_EVENT_DEVICE_CONNECTED:
 		{
 			result = OnDeviceConnected(data, length);
-			if (result == GF_SUCCESS)
+			if (result == GF_INNER_SUCCESS)
 			{
 				mState = GF_DEVICE_STATE_W4SECU;
 			}
@@ -257,7 +257,7 @@ GF_STATUS GF_CRemoteDevice::W4ConnStateProcessMessage(GF_DEVICE_EVENT event, GF_
 			LOGDEBUG(mTag, "GF_DEVICE_EVENT_SLAVE_SECURY_REQUEST with length = %d\n", length);
 
 			status = data[EVENT_SLAVE_SECURY_REQUEST_STATUS_OFFSET];
-			if (status != GF_SUCCESS)
+			if (status != GF_INNER_SUCCESS)
 			{
 				LOGDEBUG(mTag, "GF_DEVICE_EVENT_SLAVE_SECURY_REQUEST with error status = %d\n", status);
 				return result;
@@ -308,7 +308,7 @@ GF_STATUS GF_CRemoteDevice::AuthenticationComplete(GF_PUINT8 data, GF_UINT16 len
 		LOGDEBUG(mTag, "the data of [%d]th bytes is 0x%02x \n", i, data[i]);
 	}
 
-	if (data[EVENT_AUTH_COMPLETE_STATUS_OFFSET] != GF_SUCCESS)
+	if (data[EVENT_AUTH_COMPLETE_STATUS_OFFSET] != GF_INNER_SUCCESS)
 	{
 		LOGDEBUG(mTag, "GF_DEVICE_EVENT_AUTH_COMPLETE with error!! \n");
 		return GF_FAIL;
@@ -367,7 +367,7 @@ GF_STATUS GF_CRemoteDevice::BondComplete(GF_PUINT8 data, GF_UINT16 length)
 	LOGDEBUG(mTag, "BondComplete with length = %d\n", length);
 
 	status = data[EVENT_BOND_COMPLETE_STATUS_OFFSET];
-	if (status == GF_SUCCESS)
+	if (status == GF_INNER_SUCCESS)
 	{
 		LOGDEBUG(mTag, "BondComplete successful!!!\n");
 		//save link key to xml file.
@@ -379,7 +379,7 @@ GF_STATUS GF_CRemoteDevice::BondComplete(GF_PUINT8 data, GF_UINT16 length)
 
 		//start to exchange MTU size
 		status = mInterface->ExchangeMTUSize(mHandle, LOCAL_GATT_CLIENT_MTU_SIZE);
-		if (GF_SUCCESS == status)
+		if (GF_INNER_SUCCESS == status)
 		{
 			LOGDEBUG(mTag, "Gatt start to exchange MTU size! \n");
 			mState = GF_DEVICE_STATE_GATT_PRI_SVC;
@@ -407,7 +407,7 @@ GF_STATUS GF_CRemoteDevice::ConnectionParameterUpdated(GF_PUINT8 data, GF_UINT16
 	GF_STATUS status;
 	LOGDEBUG(mTag, "ConnectionParameterUpdated with length = %d\n", length);
 	status = data[EVENT_BOND_COMPLETE_STATUS_OFFSET];
-	if (status == GF_SUCCESS)
+	if (status == GF_INNER_SUCCESS)
 	{
 		mConnInternal = data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] << 8);
 		mSlaveLatency = data[EVENT_LINK_PARA_UPDATE_LATENCY_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_LATENCY_OFFSET+1] << 8);
@@ -434,7 +434,7 @@ GF_STATUS GF_CRemoteDevice::W4SecuStateProcessMessage(GF_DEVICE_EVENT event, GF_
 		case GF_DEVICE_EVENT_AUTH_COMPLETE:
 		{
 			result = AuthenticationComplete(data, length);
-			if(result != GF_SUCCESS)
+			if(result != GF_INNER_SUCCESS)
 			{
 				LOGDEBUG(mTag, "Authentication Failed!!! \n");
 			}
@@ -444,7 +444,7 @@ GF_STATUS GF_CRemoteDevice::W4SecuStateProcessMessage(GF_DEVICE_EVENT event, GF_
 		case GF_DEVICE_EVENT_BOND_COMPLETE:
 		{
 			result = BondComplete(data, length);
-			if(result != GF_SUCCESS)
+			if(result != GF_INNER_SUCCESS)
 			{
 				LOGDEBUG(mTag, "Bond Failed!!! \n");
 			}
@@ -486,7 +486,7 @@ GF_STATUS GF_CRemoteDevice::W4GattPriSvcStateProcessMessage(GF_DEVICE_EVENT even
 	{
 		GF_UINT8 status = data[EVENT_ATT_EXCHANGE_MTU_MSG_STATUS_OFFSET];
 		GF_UINT16 Server_MTU_Size;
-		if (status == GF_SUCCESS)
+		if (status == GF_INNER_SUCCESS)
 		{
 			GF_UINT data_len = data[EVENT_ATT_EXCHANGE_MTU_MSG_LEN_OFFSET];
 			if (data_len == 0x02)
@@ -499,7 +499,7 @@ GF_STATUS GF_CRemoteDevice::W4GattPriSvcStateProcessMessage(GF_DEVICE_EVENT even
 		mMTUSize = min(Server_MTU_Size, LOCAL_GATT_CLIENT_MTU_SIZE);
 		/*Load Gatt Service*/
 		LOGDEBUG(mTag, "start to Load GATT Service ... \n");
-		if (GF_SUCCESS == mDatabase->LoadService(&mService))
+		if (GF_INNER_SUCCESS == mDatabase->LoadService(&mService))
 		{
 			LOGDEBUG(mTag, "Load Service Successful!! \n");
 			mCurrentPrimaryServiceIndex = 0;
@@ -513,7 +513,7 @@ GF_STATUS GF_CRemoteDevice::W4GattPriSvcStateProcessMessage(GF_DEVICE_EVENT even
 		{
 			//start to discaovery all primary service.
 			LOGDEBUG(mTag, "start to discaovery all primary service.\n");
-			if (GF_SUCCESS == mInterface->DiscoveryAllPrimaryService(mHandle))
+			if (GF_INNER_SUCCESS == mInterface->DiscoveryAllPrimaryService(mHandle))
 			{
 				//mState = GF_DEVICE_STATE_GATT_PRI_SVC;
 			}
@@ -705,7 +705,7 @@ GF_STATUS GF_CRemoteDevice::W4GattDisCharcStateProcessMessage(GF_DEVICE_EVENT ev
 				LOGDEBUG(mTag, "start to discovery %dth primary service!!!\n", mService.mCurrentPriService);
 				mInterface->DiscoveryIncludedPrimaryService(mHandle, service->mStartHandle, service->mEndHandle);
 				mState = GF_DEVICE_STATE_GATT_INC_SVC;
-				return GF_SUCCESS;
+				return GF_INNER_SUCCESS;
 			}
 		}
 		break;
@@ -1035,7 +1035,7 @@ GF_STATUS GF_CRemoteDevice::W4GattReadCharcDesValueStateProcessMessage(GF_DEVICE
 				memcpy(descriptor->mData, data + GF_ATT_READ_VALUE_RESP_DATA_OFFSET, descriptor->mDataLen);
 			}
 			mCurrentCharactericticDescriptorIndex += 1;
-			if (GF_SUCCESS == ProcessCharacteristicConfiguration(mCurrentPrimaryServiceIndex, mCurrentCharactericticIndex, mCurrentCharactericticDescriptorIndex))
+			if (GF_INNER_SUCCESS == ProcessCharacteristicConfiguration(mCurrentPrimaryServiceIndex, mCurrentCharactericticIndex, mCurrentCharactericticDescriptorIndex))
 			{
 				if (mNeedSaveService == GF_TRUE)
 				{
@@ -1055,7 +1055,7 @@ GF_STATUS GF_CRemoteDevice::W4GattReadCharcDesValueStateProcessMessage(GF_DEVICE
 		{
 			LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_WRITE_MSG! \n");
 			mCurrentCharactericticDescriptorIndex += 1;
-			if (GF_SUCCESS == ProcessCharacteristicConfiguration(mCurrentPrimaryServiceIndex, mCurrentCharactericticIndex, mCurrentCharactericticDescriptorIndex))
+			if (GF_INNER_SUCCESS == ProcessCharacteristicConfiguration(mCurrentPrimaryServiceIndex, mCurrentCharactericticIndex, mCurrentCharactericticDescriptorIndex))
 			{
 				if (mNeedSaveService == GF_TRUE)
 				{
@@ -1095,7 +1095,7 @@ GF_STATUS GF_CRemoteDevice::DeviceConnectedStateProcessMessage(GF_DEVICE_EVENT e
 		{
 			GF_UINT8 status = data[EVENT_ATT_EXCHANGE_MTU_MSG_STATUS_OFFSET];
 			GF_UINT16 Server_MTU_Size;
-			if (status == GF_SUCCESS)
+			if (status == GF_INNER_SUCCESS)
 			{
 				GF_UINT data_len = data[EVENT_ATT_EXCHANGE_MTU_MSG_LEN_OFFSET];
 				if (data_len == 0x02)
@@ -1133,7 +1133,7 @@ GF_STATUS GF_CRemoteDevice::ProcessMessage(GF_DEVICE_EVENT event, GF_PUINT8 data
 	{
 		LOGDEBUG(mTag, "----->ProcessMessage new Message Failed!!! \n");
 	}
-	return GF_SUCCESS;
+	return GF_INNER_SUCCESS;
 }
 
 GF_STATUS GF_CRemoteDevice::NextCharacterateristic()
@@ -1172,7 +1172,7 @@ GF_STATUS GF_CRemoteDevice::NextCharacterateristic()
 		LOGDEBUG(mTag, "start to discovery %dth primary service!!!\n", mService.mCurrentPriService);
 		mInterface->DiscoveryIncludedPrimaryService(mHandle, service->mStartHandle, service->mEndHandle);
 		mState = GF_DEVICE_STATE_GATT_INC_SVC;
-		return GF_SUCCESS;
+		return GF_INNER_SUCCESS;
 	}
 	/*no more characteristic and no more priamry service exist.*/
 	else
@@ -1186,7 +1186,7 @@ GF_STATUS GF_CRemoteDevice::NextCharacterateristic()
 		mState = GF_DEVICE_STATE_GATT_READ_CHARC_DESCRIPTOR_VALUE;
 	}
 
-	return GF_SUCCESS;
+	return GF_INNER_SUCCESS;
 }
 
 GF_STATUS GF_CRemoteDevice::DiscoveryDescriptor()
@@ -1254,7 +1254,7 @@ GF_STATUS GF_CRemoteDevice::DiscoveryDescriptor()
 			LOGDEBUG(mTag, "start to discovery %dth primary service!!!\n", mService.mCurrentPriService);
 			mInterface->DiscoveryIncludedPrimaryService(mHandle, service->mStartHandle, service->mEndHandle);
 			mState = GF_DEVICE_STATE_GATT_INC_SVC;
-			return GF_SUCCESS;
+			return GF_INNER_SUCCESS;
 		}
 		/*no more characteristic and no more priamry service exist.*/
 		else
@@ -1269,7 +1269,7 @@ GF_STATUS GF_CRemoteDevice::DiscoveryDescriptor()
 		}
 	}
 
-	return GF_SUCCESS;
+	return GF_INNER_SUCCESS;
 }
 
 GF_STATUS GF_CRemoteDevice::StartDiscoveryCharacteristic()
@@ -1282,7 +1282,7 @@ GF_STATUS GF_CRemoteDevice::StartDiscoveryCharacteristic()
 		if (mInterface != NULL)
 		{
 			result = mInterface->DiscoveryCharacteristic(mHandle, service->mStartHandle, service->mEndHandle);
-			if (result == GF_SUCCESS)
+			if (result == GF_INNER_SUCCESS)
 			{
 				mState = GF_DEVICE_STATE_GATT_DIS_CHARC;
 			}
@@ -1348,7 +1348,7 @@ GF_STATUS GF_CRemoteDevice::ProcessCharacteristicConfiguration(GF_UINT8 currentp
 		currentchracdes = 0;
 	}
 	
-	return GF_SUCCESS;
+	return GF_INNER_SUCCESS;
 }
 
 GF_STATUS GF_CRemoteDevice::ExchangeMTUSize(GF_UINT16 mtu_size)

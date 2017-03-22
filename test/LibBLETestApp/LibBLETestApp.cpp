@@ -94,7 +94,7 @@ public:
 		printf("\n onConnectionParmeterUpdated \n");
 	}
 
-	void onChracteristicValueRead(GF_STATUS status, GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
+	void onCharacteristicValueRead(GF_STATUS status, GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
 	{
 		printf("\n onChracteristicValueRead \n");
 	}

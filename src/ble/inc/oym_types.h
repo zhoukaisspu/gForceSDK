@@ -4,38 +4,21 @@
 
 #include <Windows.h>
 
+#include "gfTypes.h"
+using namespace gf;
+
 typedef void				GF_VOID;
-typedef char				GF_CHAR;
-typedef char*				GF_PCHAR;
-typedef const char*			GF_CPCHAR;
-typedef unsigned int		GF_UINT;
-typedef int					GF_INT;
 typedef long				GF_LONG;
 typedef unsigned long		GF_ULONG;
-typedef float				GF_FLOAT;
-
-typedef unsigned char		GF_UINT8;
-typedef unsigned char*		GF_PUINT8;
-typedef unsigned short		GF_UINT16;
-typedef unsigned short*		GF_PUINT16;
-typedef unsigned int		GF_UINT32;
-typedef unsigned long long	GF_UINT64;
-
 typedef GF_INT				GF_BOOL;
 #define GF_FALSE			((GF_BOOL)0)
 #define GF_TRUE			(GF_BOOL)(!(GF_FALSE))
 
-typedef size_t				GF_SIZE;
-typedef HANDLE				GF_HANDLE;
-
-
-typedef GF_INT				GF_STATUS;
-#define GF_SUCCESS			((GF_INT)0)
+#define GF_INNER_SUCCESS		((GF_INT)0)
 #define GF_FAIL			((GF_INT)1)
-#define GF_SUCCEEDED		(GF_SUCCESS == status)
+#define GF_SUCCEEDED		(GF_INNER_SUCCESS == status)
 
 #define BT_ADDRESS_SIZE		6
-typedef GF_UINT8			BT_Address_Type;
 
 typedef enum {
 	GF_ERR_CODE_SCAN_BUSY = 0x60,

@@ -96,7 +96,7 @@ GF_CCharacteristicDescriptor* GF_CCharacteristic::FindDescriptorByIndex(GF_UINT8
 
 GF_STATUS GF_CCharacteristic::AddDescriptorIntoCharacteristic(GF_PUINT8 data, GF_UINT8 pair_len)
 {
-	GF_STATUS result = GF_SUCCESS;
+	GF_STATUS result = GF_INNER_SUCCESS;
 	GF_UINT16 handle = data[0] + (data[1] << 8);
 	GF_CCharacteristicDescriptor* descriptor = new GF_CCharacteristicDescriptor(handle, mNumOfDescriptor);
 	if (pair_len == 4)
@@ -118,7 +118,7 @@ GF_STATUS GF_CCharacteristic::AddDescriptorIntoCharacteristic(GF_PUINT8 data, GF
 
 GF_STATUS GF_CPrimaryService::AddCharacterIntoPriService(GF_PUINT8 data, GF_UINT8 pair_len)
 {
-	GF_STATUS result = GF_SUCCESS;
+	GF_STATUS result = GF_INNER_SUCCESS;
 	GF_UINT16 start_handle;
 	GF_UINT8 property;
 	GF_UINT16 value_handle;
@@ -157,7 +157,7 @@ GF_STATUS GF_CPrimaryService::AddCharacterIntoPriService(GF_PUINT8 data, GF_UINT
 
 GF_STATUS GF_CPrimaryService::AddIncSvcIntoPriService(GF_PUINT8 data, GF_UINT8 pair_len)
 {
-	GF_STATUS result = GF_SUCCESS;
+	GF_STATUS result = GF_INNER_SUCCESS;
 	GF_UINT16 handle;
 	GF_UINT16 start_handle;
 	GF_UINT16 end_handle;
@@ -281,7 +281,7 @@ GF_CPrimaryService* GF_CService::GetNextAvailablePriSvc()
 
 GF_STATUS GF_CService::AddPriSvcIntoService(GF_PUINT8 data, GF_UINT8 pair_len)
 {
-	GF_STATUS result = GF_SUCCESS;
+	GF_STATUS result = GF_INNER_SUCCESS;
 	
 	GF_UINT16 start_handle = data[0] + (data[1] << 8);
 	GF_UINT16 end_handle = data[2] + (data[3] << 8);
