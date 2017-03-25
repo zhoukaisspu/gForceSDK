@@ -23,6 +23,7 @@
     <ClInclude Include="..\..\..\inc\Hub.h" />
     <ClInclude Include="..\..\..\inc\HubListener.h" />
     <ClInclude Include="..\..\..\inc\HubManager.h" />
+    <ClInclude Include="..\..\..\inc\Quaternion.h" />
     <ClInclude Include="..\..\..\src\BLEDevice.h" />
     <ClInclude Include="..\..\..\src\BLEHub.h" />
     <ClInclude Include="..\..\..\src\ble\inc\AdapterManagerInterface.h" />

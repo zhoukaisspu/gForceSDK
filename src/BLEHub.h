@@ -144,6 +144,8 @@ namespace gf
 	public:
 		virtual GF_RET_CODE poll(Event& event)
 		{
+			if (mWorkMode == WorkMode::Messaging)
+				return GF_RET_CODE::GF_ERROR_BAD_STATE;
 			return GF_RET_CODE::GF_SUCCESS;
 		}
 	protected:

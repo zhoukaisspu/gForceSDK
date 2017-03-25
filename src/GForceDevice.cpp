@@ -1,6 +1,7 @@
 #include "GForceDevice.h"
 #include "utils.h"
 #include "LogUtils.h"
+#include "Quaternion.h"
 
 using namespace gf;
 
@@ -64,6 +65,18 @@ void GForceDevice::onData(GF_UINT8 length, GF_PUINT8 data)
 void GForceDevice::onQuaternion(GF_UINT8 length, GF_PUINT8 data)
 {
 	length; data;
+	if (length < 16)
+	{
+		GF_LOGD("%s, length: %u, data insufficient.", __FUNCTION__, length);
+		return;
+	}
+	float w, x, y, z;
+	w = *(float*)&data[0];
+	x = *(float*)&data[4];
+	y = *(float*)&data[8];
+	z = *(float*)&data[12];
+	Quaternion<float> q(w, x, y, z);
+	GF_LOGD("Quaternion: %s", q.toString().c_str());
 }
 
 void GForceDevice::onGesture(GF_UINT8 length, GF_PUINT8 data)

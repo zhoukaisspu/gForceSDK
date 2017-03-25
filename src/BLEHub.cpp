@@ -363,6 +363,9 @@ void BLEHub::onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device)
 		GF_LOGW("No device found in connect_list either. %u:%s",
 			(GF_UINT)device->address_type,
 			utils::tostring(utils::deviceAddressToString(device->address, sizeof(device->address)).c_str()));
+
+		// TODO: add new device using GF_ConnectedDevice
+		// need more info to do it
 		return;
 	}
 	mConnectedDevices.insert(dev);

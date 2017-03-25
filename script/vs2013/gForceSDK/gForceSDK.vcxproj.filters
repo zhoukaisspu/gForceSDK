@@ -92,5 +92,8 @@
     <ClInclude Include="..\..\..\src\ble\inc\oym_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\inc\Quaternion.h">
+      <Filter>Exposed Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
