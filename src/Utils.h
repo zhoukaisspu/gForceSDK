@@ -5,6 +5,10 @@
 #include <locale.h>
 #include <algorithm>
 #include <assert.h>
+#include <condition_variable>
+#include <mutex>
+#include <deque>
+#include <functional>
 using namespace std;
 
 namespace gf {
@@ -12,10 +16,12 @@ namespace gf {
 #if defined(DEBUG) || defined(_DEBUG)
 
 #define ASSERT_VALID_PTR(p) assert(nullptr != (p))
+#define ASSERT_IF(c) assert((c))
 
 #else // DEBUG
 
 #define ASSERT_VALID_PTR(p)
+#define ASSERT_IF(c)
 
 #endif // DEBUG
 
@@ -121,5 +127,43 @@ namespace gf {
 			}
 		}
 	}
+
+	template <class _Type>
+	class BQueue // block queue
+	{
+	public:
+		BQueue() {}
+		~BQueue() {}
+
+		void push(_Type& i)
+		{
+			{
+				lock_guard<mutex> lock(mMutex);
+				mQ.push_back(i);
+			}
+			mCondition.notify_one();
+		}
+
+		_Type pop()
+		{
+			unique_lock<mutex> lock(mMutex);
+			auto& q = mQ;
+			mCondition.wait(lock, [&q](){ return !q.empty(); });
+			ASSERT_IF(!q.empty());
+			_Type r = q.front();
+			q.pop_front();
+			return r;
+		}
+
+		void clear()
+		{
+			mQ.clear();
+		}
+
+	private:
+		deque<_Type> mQ;
+		mutex mMutex;
+		condition_variable mCondition;
+	};
 
 } // namespace gf

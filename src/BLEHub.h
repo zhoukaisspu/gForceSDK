@@ -1,6 +1,7 @@
 #pragma once
 
-#include <mutex>
+#include <atomic>
+#include <thread>
 #include <set>
 
 #include "Hub.h"
@@ -11,6 +12,9 @@
 #include "HubManager.h"
 #include "ClientCallbackInterface.h"
 #include "AdapterManagerInterface.h"
+
+
+#define ONLY_SCAN_GFORCE_DEVICE (1)
 
 namespace gf
 {
@@ -26,8 +30,13 @@ namespace gf
 		// module management
 		virtual GF_RET_CODE init(GF_UINT8 comPort);
 		virtual GF_RET_CODE deinit();
+		virtual WorkMode getWorkMode() const {
+			lock_guard<mutex> lock(const_cast<mutex&>(mTaskMutex));
+			return mWorkMode;
+		}
+		virtual WorkMode setWorkMode(WorkMode newMode);
 		// get status, version, etc.
-		virtual HubState getStatus() const;
+		virtual HubState getStatus();
 		virtual tstring getDescString() const;
 
 		// setup listener
@@ -37,8 +46,14 @@ namespace gf
 		virtual GF_RET_CODE startScan(GF_UINT8 rssiThreshold);
 		virtual GF_RET_CODE stopScan();
 
-		virtual GF_SIZE getNumOfDevices() const { return mDisconnDevices.size() + mConnectedDevices.size(); }
-		virtual GF_SIZE getNumOfConnectedDevices() const { return mConnectedDevices.size(); }
+		virtual GF_SIZE getNumOfDevices() const {
+			lock_guard<mutex> lock(const_cast<mutex&>(mTaskMutex));
+			return mDisconnDevices.size() + mConnectedDevices.size();
+		}
+		virtual GF_SIZE getNumOfConnectedDevices() const {
+			lock_guard<mutex> lock(const_cast<mutex&>(mTaskMutex));
+			return mConnectedDevices.size();
+		}
 		virtual void enumDevices(FunEnumDevice funEnum, bool bConnectedOnly = true);
 		virtual WPDEVICE findDevice(GF_UINT8 addrType, tstring address);
 		// set up virtual device, client can combine two or more gdevices positioning in
@@ -85,6 +100,56 @@ namespace gf
 		set<gfsPtr<BLEDevice>, DevComp<gfsPtr<BLEDevice>>> mDisconnDevices;
 		set<gfsPtr<BLEDevice>, ConnectedDevComp<gfsPtr<BLEDevice>>> mConnectedDevices;
 		set<gfwPtr<HubListener>, WeakPtrComp<HubListener>> mListeners;
+
+	protected:
+		struct HubMsg
+		{
+			function<GF_UINT32()> fun6param;
+			GF_UINT32 ret = 0;
+			atomic<bool> executed = false;
+			condition_variable syncCallCond;
+			HubMsg(decltype(fun6param) foo) : fun6param(foo) {}
+		};
+		GF_UINT32 executeCommand(gfsPtr<HubMsg> msg)
+		{
+			msg->executed = false;
+			unique_lock<mutex> lock(mTaskMutex);
+			mMsgQ.push(msg);
+			msg->syncCallCond.wait(lock, [&msg]()->bool{ return msg->executed; });
+			return msg->ret;
+		}
+		void commandTask()
+		{
+			while (true)
+			{
+				auto msg = mMsgQ.pop();
+				if (nullptr == msg)
+				{
+					GF_LOGD("Wake me up and exit!");
+					break;
+				}
+				{
+					lock_guard<mutex> lock(mTaskMutex);
+					msg->ret = msg->fun6param();
+				}
+				GF_LOGD("Msg received and executed: ret = %u", msg->ret);
+				msg->executed = true;
+				msg->syncCallCond.notify_all();
+			}
+		}
+		mutex mTaskMutex;
+		thread mCommandThread;
+		BQueue<gfsPtr<HubMsg>> mMsgQ;
+
+	public:
+		virtual GF_RET_CODE poll(Event& event)
+		{
+			return GF_RET_CODE::GF_SUCCESS;
+		}
+	protected:
+		WorkMode mWorkMode = WorkMode::Messaging;
+		mutex mPollMutex;
+		condition_variable mPollCond;
 	};
 
 

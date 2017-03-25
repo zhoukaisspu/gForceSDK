@@ -57,8 +57,15 @@ namespace gf {
 	typedef gfwPtr<Device> WPDEVICE;
 	typedef void(*FunEnumDevice)(WPDEVICE);
 
+	// Messaging mode: set up callbacks and waiting for callback and event.
+	// Polling mode: call the Poll method and block until an event received
+	//     or a devices status changed.
+	enum class WorkMode {
+		Messaging,
+		Polling,
+	};
 
-	enum class GF_RET_CODE : GF_INT{
+	enum class GF_RET_CODE : GF_UINT32{
 		GF_SUCCESS = 0,
 		GF_ERROR,
 		GF_ERROR_BAD_PARAM,
@@ -71,11 +78,14 @@ namespace gf {
 
 	typedef enum {
 		GF_EVT_EVENTBASE,
-		GF_EVT_DEVICE_RECENTER,
+		GF_EVT_DEVICE_RECENTER = GF_EVT_EVENTBASE,
 		GF_EVT_DATA_GESTURE,
 		GF_EVT_DATA_QUATERNION,
-	} GF_EVENT;
+	} GF_EVENT_TYPE;
 
+	struct Event
+	{
+	};
 	
 	enum class Gesture : GF_UINT8 {
 		Relax = 0x00,

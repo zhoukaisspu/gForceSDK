@@ -140,12 +140,12 @@ class DeviceListenerImpl : public DeviceListener
 	{
 		GF_LOGD("%s: device: %s", __FUNCTION__, (nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()));
 	}
-	virtual void onEvent(Device* device, GF_EVENT event, GF_UINT8 length, GF_PUINT8 data)
+	virtual void onEvent(Device* device, GF_EVENT_TYPE event, GF_UINT8 length, GF_PUINT8 data)
 	{
 		switch (event)
 		{
 		case GF_EVT_DEVICE_RECENTER:
-			GF_LOGD("Gesture position re-centered.");
+			GF_LOGD("Gesture position re-centered. device = %s", utils::tostring(device->getName()).c_str());
 			break;
 		case GF_EVT_DATA_GESTURE:
 		{
@@ -177,7 +177,8 @@ class DeviceListenerImpl : public DeviceListener
 			default:
 				gesture = "Unknown";
 			}
-			GF_LOGD("Gesture data received: %u -> %s", data[0], gesture.c_str());
+			GF_LOGD("Device: %s, Gesture data received: %u -> %s",
+				utils::tostring(device->getName()).c_str(), data[0], gesture.c_str());
 			break;
 		}
 		case GF_EVT_DATA_QUATERNION:
@@ -244,23 +245,38 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 	}
 	case 'c':
 	{
-		auto itor = listDev.begin();
-		if (itor != listDev.end())
-			(*itor)->connect();
+		for (auto& itor : listDev)
+		{
+			if (DeviceConnectionStatus::Disconnected == itor->getConnectionStatus())
+			{
+				itor->connect();
+				break;
+			}
+		}
 		break;
 	}
 	case 'C':
 	{
-		auto itor = listDev.begin();
-		if (itor != listDev.end())
-			(*itor)->cancelConnect();
+		for (auto& itor : listDev)
+		{
+			if (DeviceConnectionStatus::Connecting == itor->getConnectionStatus())
+			{
+				itor->cancelConnect();
+				break;
+			}
+		}
 		break;
 	}
 	case 'd':
 	{
-		auto itor = listDev.begin();
-		if (itor != listDev.end())
-			(*itor)->disconnect();
+		for (auto& itor : listDev)
+		{
+			if (DeviceConnectionStatus::Connected == itor->getConnectionStatus())
+			{
+				itor->disconnect();
+				break;
+			}
+		}
 		break;
 	}
 	default:;

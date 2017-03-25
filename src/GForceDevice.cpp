@@ -21,6 +21,8 @@ void GForceDevice::onData(GF_UINT8 length, GF_PUINT8 data)
 		currPackageId = data[2];
 		payload = &data[3];
 		--payloadLength;
+
+		lock_guard<mutex> lock(mMutex);
 		if (mPackageId == INVALID_PACKAGE_ID)
 		{
 			mPackageId = currPackageId;
@@ -32,7 +34,8 @@ void GForceDevice::onData(GF_UINT8 length, GF_PUINT8 data)
 				mPackageId = 0;
 			if (mPackageId != currPackageId)
 			{
-				GF_LOGE("%s: package id error.", __FUNCTION__);
+				//GF_LOGE("%s:%s: package id error. new id = %u", __FUNCTION__,
+				//	utils::tostring(getName()).c_str(), mPackageId);
 				mPackageId = currPackageId;
 			}
 		}
@@ -68,6 +71,7 @@ void GForceDevice::onGesture(GF_UINT8 length, GF_PUINT8 data)
 	GF_LOGD("%s, length: %u", __FUNCTION__, length);
 	if (length > 0)
 	{
+		lock_guard<mutex> lock(mMutex);
 		for (auto& itor : mListeners)
 		{
 			auto ptr = itor.lock();
@@ -85,6 +89,7 @@ void GForceDevice::onStatus(GF_UINT8 length, GF_PUINT8 data)
 		GF_UINT8 status = data[0] & EVENT_RECENTER_MASK;
 		if (1 == status)
 		{
+			lock_guard<mutex> lock(mMutex);
 			for (auto& itor : mListeners)
 			{
 				auto ptr = itor.lock();

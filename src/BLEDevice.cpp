@@ -13,6 +13,7 @@ GF_RET_CODE BLEDevice::registerListener(const gfwPtr<DeviceListener>& listener)
 	if (nullptr == listener.lock())
 		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
 
+	lock_guard<mutex> lock(mMutex);
 	mListeners.insert(listener);
 	cleanInvalidWeakP(mListeners);
 	return GF_RET_CODE::GF_SUCCESS;
@@ -24,6 +25,7 @@ GF_RET_CODE BLEDevice::unRegisterListener(const gfwPtr<DeviceListener>& listener
 	if (nullptr == listener.lock())
 		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
 
+	lock_guard<mutex> lock(mMutex);
 	mListeners.erase(listener);
 	cleanInvalidWeakP(mListeners);
 	return GF_RET_CODE::GF_SUCCESS;
@@ -42,8 +44,13 @@ BLEDevice::BLEDevice(IHub* hub, const GF_BLEDevice& bleDev)
 	name[BLE_DEVICE_NAME_LENGTH] = '\0';
 	mName = utils::totstring(string(name));
 
-	GF_LOGD("New device: address type: %u, address: %s, name: %s", (GF_UINT)mAddrType,
+	GF_LOGD("BLEDevice++: address type: %u, address: %s, name: %s", (GF_UINT)mAddrType,
 		utils::tostring(getAddress()).c_str(), utils::tostring(mName).c_str());
+}
+
+BLEDevice::~BLEDevice()
+{
+	GF_LOGD("BLEDevice--");
 }
 
 GF_RET_CODE BLEDevice::identifyDevice(int msec)
@@ -110,6 +117,7 @@ bool BLEDevice::takeover(BLEDevice& from)
 	GF_UINT16	mSlavelatency;
 	GF_UINT16	mMTUsize;
 	*/
+	lock_guard<mutex> lock(mMutex);
 	mListeners = from.mListeners;
 	return true;
 }
@@ -188,6 +196,7 @@ GF_RET_CODE BLEDevice::cancelConnect()
 
 void BLEDevice::updateData(const GF_BLEDevice& bleDev)
 {
+	lock_guard<mutex> lock(mMutex);
 	// update name and rssi
 	GF_CHAR name[BLE_DEVICE_NAME_LENGTH + 1] = "";
 	memcpy(name, bleDev.dev_name, sizeof(bleDev.dev_name));
@@ -206,6 +215,7 @@ void BLEDevice::updateData(const GF_BLEDevice& bleDev)
 
 void BLEDevice::onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDevice)
 {
+	lock_guard<mutex> lock(mMutex);
 	GF_LOGD("Device connected: previous state is: %u", static_cast<GF_UINT>(mCnntStatus));
 	mHandle = connedDevice.handle;
 	mConnInt = connedDevice.conn_int;
@@ -213,6 +223,7 @@ void BLEDevice::onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDe
 	mSlavelatency = connedDevice.slavelatency;
 	mMTUsize = connedDevice.MTUsize;
 
+#if 0 // don't change status in onXxxx methods
 	if (DeviceConnectionStatus::Disconnecting == mCnntStatus)
 	{
 		if (GF_RET_CODE::GF_SUCCESS == mHub->disconnect(*this))
@@ -223,6 +234,7 @@ void BLEDevice::onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDe
 			return;
 		}
 	}
+#endif
 	mCnntStatus = DeviceConnectionStatus::Connected;
 
 	// notify client.
@@ -236,6 +248,7 @@ void BLEDevice::onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDe
 
 void BLEDevice::onDisconnected(GF_STATUS status, GF_UINT8 reason)
 {
+	lock_guard<mutex> lock(mMutex);
 	GF_LOGD("Device connected: previous state is: %u, reason is: %u",
 		static_cast<GF_UINT>(mCnntStatus), (GF_UINT)reason);
 	mCnntStatus = DeviceConnectionStatus::Disconnected;
@@ -303,6 +316,7 @@ GF_RET_CODE BLEDevice::readCharacteristic(AttributeHandle attribute_handle)
 void BLEDevice::onMTUSizeChanged(GF_STATUS status, GF_UINT16 mtu_size)
 {
 	GF_LOGD("%s: status: %u, new MTU size: %u", __FUNCTION__, (GF_UINT)status, (GF_UINT)mtu_size);
+	lock_guard<mutex> lock(mMutex);
 	mMTUsize = mtu_size;
 
 	// notify client.
@@ -321,6 +335,7 @@ void BLEDevice::onConnectionParmeterUpdated(GF_STATUS status, GF_UINT16 conn_int
 	GF_LOGD("conn_int: %u", (GF_UINT)conn_int);
 	GF_LOGD("superTO: %u", (GF_UINT)superTO);
 	GF_LOGD("slavelatency: %u", (GF_UINT)slavelatency);
+	lock_guard<mutex> lock(mMutex);
 	mConnInt = conn_int;
 	mSuperTO = superTO;
 	mSlavelatency = slavelatency;

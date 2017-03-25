@@ -15,8 +15,10 @@ namespace gf
 		// module management
 		virtual GF_RET_CODE init(GF_UINT8 comPort = 0) = 0;
 		virtual GF_RET_CODE deinit() = 0;
+		virtual WorkMode getWorkMode() const = 0;
+		virtual WorkMode setWorkMode(WorkMode newMode) = 0;
 		// get status, version, etc.
-		virtual HubState getStatus() const = 0;
+		virtual HubState getStatus() = 0;
 		virtual tstring getDescString() const = 0;
 
 		// setup listener
@@ -38,6 +40,8 @@ namespace gf
 
 		// removing method releaseDevice, virtual device can be destoryed by calling disconnect
 		//virtual int releaseDevice(SPTR_DEV& device) = 0;
+
+		virtual GF_RET_CODE poll(Event& event) = 0;
 
 	protected:
 		Hub() {}

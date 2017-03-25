@@ -24,6 +24,7 @@ GF_RET_CODE BLEHub::init(GF_UINT8 comPort)
 	GF_RET_CODE ret = GF_RET_CODE::GF_SUCCESS;
 	GF_LOGD(__FUNCTION__);
 
+	lock_guard<mutex> lock(const_cast<mutex&>(mTaskMutex));
 	if (nullptr != mAM) {
 		return ret;
 	}
@@ -35,11 +36,13 @@ GF_RET_CODE BLEHub::init(GF_UINT8 comPort)
 	if (GF_INNER_SUCCESS != mAM->Init(comPort)) {
 		GF_LOGD("Hub init failed.");
 		mAM = nullptr;
-		// TODO: check return value
+		// TODO: check return value for reason
 		return GF_RET_CODE::GF_ERROR;
 	}
 
 	mAM->RegisterClientCallback(this);
+
+	mCommandThread = thread(std::mem_fn(&BLEHub::commandTask), this);
 
 	return ret;
 }
@@ -49,18 +52,37 @@ GF_RET_CODE BLEHub::deinit()
 	GF_RET_CODE ret = GF_RET_CODE::GF_SUCCESS;
 	GF_LOGD(__FUNCTION__);
 
-	for (auto& itor : mDisconnDevices)
+	// get dongle status and stop scan
+	if (HubState::Scanning == getStatus())
 	{
-		if (DeviceConnectionStatus::Disconnected != itor->getConnectionStatus())
-			itor->disconnect();
+		stopScan();
 	}
-	mDisconnDevices.clear();
 
-	for (auto& itor : mConnectedDevices)
+	unique_lock<mutex> lock(mTaskMutex);
+	auto disconDevices = mDisconnDevices;
+	auto connedDevices = mConnectedDevices;
+	lock.unlock();
+	for (auto& itor : disconDevices)
 	{
 		if (DeviceConnectionStatus::Disconnected != itor->getConnectionStatus())
 			itor->disconnect();
 	}
+	for (auto& itor : connedDevices)
+	{
+		if (DeviceConnectionStatus::Disconnected != itor->getConnectionStatus())
+			itor->disconnect();
+	}
+	// send empty message to exit command thread
+	gfsPtr<HubMsg> emptyEvent;
+	mMsgQ.push(emptyEvent);
+	if (mCommandThread.joinable())
+	{
+		mCommandThread.join();
+	}
+
+	lock.lock();
+	mMsgQ.clear();
+	mDisconnDevices.clear();
 	mConnectedDevices.clear();
 
 	if (nullptr == mAM) {
@@ -75,14 +97,27 @@ GF_RET_CODE BLEHub::deinit()
 	return ret;
 }
 
-HubState BLEHub::getStatus() const
+WorkMode BLEHub::setWorkMode(WorkMode newMode)
+{
+	lock_guard<mutex> lock(mTaskMutex);
+	auto oldMode = mWorkMode;
+	mWorkMode = newMode;
+	return oldMode;
+}
+
+HubState BLEHub::getStatus()
 {
 	HubState ret = HubState::Unknown;
-
 	if (nullptr == mAM) {
 		return ret;
 	}
-	switch (mAM->GetHubState())
+	auto am = mAM;
+	GF_HubState state = static_cast<GF_HubState>(executeCommand(make_shared<HubMsg>([&am]()
+	{
+		return static_cast<GF_UINT32>(am->GetHubState());
+	})));
+
+	switch (state)
 	{
 	case State_Idle:
 		ret = HubState::Idle;
@@ -112,6 +147,7 @@ GF_RET_CODE BLEHub::registerListener(const gfwPtr<HubListener>& listener)
 	if (nullptr == listener.lock())
 		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
 
+	lock_guard<mutex> lock(mTaskMutex);
 	mListeners.insert(listener);
 	cleanInvalidWeakP(mListeners);
 	return GF_RET_CODE::GF_SUCCESS;
@@ -123,6 +159,7 @@ GF_RET_CODE BLEHub::unRegisterListener(const gfwPtr<HubListener>& listener)
 	if (nullptr == listener.lock())
 		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
 
+	lock_guard<mutex> lock(mTaskMutex);
 	mListeners.erase(listener);
 	cleanInvalidWeakP(mListeners);
 	return GF_RET_CODE::GF_SUCCESS;
@@ -134,36 +171,42 @@ GF_RET_CODE BLEHub::startScan(GF_UINT8 rssiThreshold)
 	if (nullptr == mAM)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
-	cleanInvalidWeakP(mListeners);
-	GF_STATUS ret = mAM->StartScan(rssiThreshold);
-
-	// TODO: thread safe
-	if (GF_INNER_SUCCESS == ret)
+	auto am = mAM;
+	decltype(mListeners)& ls = mListeners;
+	decltype(mDisconnDevices)& dd = mDisconnDevices;
+	GF_UINT32 ret = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, &ls, &dd, rssiThreshold]()
 	{
-		// if scan started, remove all disconnected devices
-		for (auto itor = mDisconnDevices.begin(); itor != mDisconnDevices.end();)
+		cleanInvalidWeakP(ls);
+		GF_UINT32 ret = static_cast<GF_UINT32>(am->StartScan(rssiThreshold));
+		if (GF_INNER_SUCCESS == ret)
 		{
-			if ((*itor)->getConnectionStatus() == DeviceConnectionStatus::Disconnected)
+			// if scan started, remove all disconnected devices
+			for (auto itor = dd.begin(); itor != dd.end();)
 			{
-				// notify client that the device will be erased.
-				for (auto& listener : mListeners)
+				if ((*itor)->getConnectionStatus() == DeviceConnectionStatus::Disconnected)
 				{
-					auto ptr = listener.lock();
-					if (nullptr != ptr)
-						ptr->onDeviceDiscard(*itor);
+					// notify client that the device will be erased.
+					for (auto& listener : ls)
+					{
+						auto ptr = listener.lock();
+						if (nullptr != ptr)
+							ptr->onDeviceDiscard(*itor);
+					}
+					GF_LOGD("Disconnected device removed.");
+					dd.erase(itor++);
 				}
-				GF_LOGD("Disconnected device removed.");
-				mDisconnDevices.erase(itor++);
-			}
-			else
-			{
-				itor++;
+				else
+				{
+					itor++;
+				}
 			}
 		}
-
+		return ret;
+	})));
+	if (GF_INNER_SUCCESS == ret)
 		return GF_RET_CODE::GF_SUCCESS;
-	}
-	return GF_RET_CODE::GF_ERROR;
+	else
+		return GF_RET_CODE::GF_ERROR;
 }
 
 GF_RET_CODE BLEHub::stopScan()
@@ -172,25 +215,35 @@ GF_RET_CODE BLEHub::stopScan()
 	if (nullptr == mAM)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
-	GF_STATUS ret = mAM->StopScan();
-	if (GF_INNER_SUCCESS == ret)
+	auto am = mAM;
+	decltype(mListeners)& ls = mListeners;
+	GF_UINT32 ret = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, &ls]()
 	{
-		GF_LOGD("Scan stopped.");
-		for (auto& itor : mListeners)
+		GF_UINT32 ret = static_cast<GF_UINT32>(am->StopScan());
+		if (GF_INNER_SUCCESS == ret)
 		{
-			auto ptr = itor.lock();
-			if (nullptr != ptr)
-				// TODO: add cleaning invalid gfwPtr from list in somewhere
-				ptr->onScanfinished();
+			cleanInvalidWeakP(ls);
+			GF_LOGD("Scan stopped.");
+			for (auto& itor : ls)
+			{
+				auto ptr = itor.lock();
+				if (nullptr != ptr)
+					ptr->onScanfinished();
+			}
 		}
-	}
-	return GF_RET_CODE::GF_SUCCESS;
+		return ret;
+	})));
+	if (GF_INNER_SUCCESS == ret)
+		return GF_RET_CODE::GF_SUCCESS;
+	else
+		return GF_RET_CODE::GF_ERROR;
 }
 
 void BLEHub::enumDevices(FunEnumDevice funEnum, bool bConnectedOnly)
 {
 	GF_LOGD(__FUNCTION__);
 
+	lock_guard<mutex> lock(mTaskMutex);
 	for (auto& itor : mConnectedDevices)
 	{
 		funEnum(dynamic_pointer_cast<Device>(itor));
@@ -208,6 +261,8 @@ WPDEVICE BLEHub::findDevice(GF_UINT8 addrType, tstring address)
 {
 	GF_LOGD(__FUNCTION__);
 	gfsPtr<Device> ret;
+
+	lock_guard<mutex> lock(mTaskMutex);
 	for (auto& itor : mConnectedDevices)
 	{
 		if (itor->isMyself(addrType, address))
@@ -240,6 +295,11 @@ void BLEHub::onScanResult(GF_BLEDevice* device)
 
 	// newly scanned should not be connected
 	auto newItem = createDeviceBeforeConnect(*device);
+	if (nullptr == newItem)
+		return;
+
+	lock_guard<mutex> lock(mTaskMutex);
+
 	pair<decltype(mDisconnDevices.begin()), bool> ret = mDisconnDevices.insert(newItem);
 	auto exists = mDisconnDevices.find(newItem);
 	if (ret.second == false)
@@ -257,6 +317,7 @@ void BLEHub::onScanResult(GF_BLEDevice* device)
 void BLEHub::onScanFinished()
 {
 	GF_LOGD(__FUNCTION__);
+	lock_guard<mutex> lock(mTaskMutex);
 	for (auto& itor : mListeners)
 	{
 		auto ptr = itor.lock();
@@ -272,6 +333,7 @@ void BLEHub::onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device)
 	if (nullptr == device)
 		return;
 
+	lock_guard<mutex> lock(mTaskMutex);
 	gfsPtr<BLEDevice> dev;
 	for (auto& itor : mDisconnDevices)
 	{
@@ -309,9 +371,9 @@ void BLEHub::onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device)
 	// it's detail information, then specialize it.
 	/*
 	for (GF_UINT16 i = static_cast<GF_UINT16>(AttributeHandle::GATTPrimServiceDeclaration1);
-		i < static_cast<GF_UINT16>(AttributeHandle::Max); ++i)
+	i < static_cast<GF_UINT16>(AttributeHandle::Max); ++i)
 	{
-		dev->readCharacteristic(static_cast<AttributeHandle>(i));
+	dev->readCharacteristic(static_cast<AttributeHandle>(i));
 	}
 	*/
 }
@@ -324,6 +386,7 @@ void BLEHub::onDeviceDisonnected(GF_STATUS status, GF_ConnectedDevice *device, G
 	if (nullptr == device)
 		return;
 
+	lock_guard<mutex> lock(mTaskMutex);
 	gfsPtr<BLEDevice> dev;
 	for (auto& itor : mConnectedDevices)
 	{
@@ -366,6 +429,7 @@ void BLEHub::onMTUSizeChanged(GF_STATUS status, GF_UINT16 handle, GF_UINT16 mtu_
 {
 	GF_LOGD(__FUNCTION__);
 
+	lock_guard<mutex> lock(mTaskMutex);
 	for (auto& itor : mConnectedDevices)
 	{
 		if (itor->getHandle() == handle)
@@ -379,6 +443,7 @@ void BLEHub::onConnectionParmeterUpdated(GF_STATUS status, GF_UINT16 handle, GF_
 {
 	GF_LOGD(__FUNCTION__);
 
+	lock_guard<mutex> lock(mTaskMutex);
 	for (auto& itor : mConnectedDevices)
 	{
 		if (itor->getHandle() == handle)
@@ -392,6 +457,7 @@ void BLEHub::onCharacteristicValueRead(GF_STATUS status, GF_UINT16 handle, GF_UI
 {
 	GF_LOGD(__FUNCTION__);
 
+	lock_guard<mutex> lock(mTaskMutex);
 	for (auto& itor : mConnectedDevices)
 	{
 		if (itor->getHandle() == handle)
@@ -415,13 +481,18 @@ void BLEHub::onNotificationReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8
 		GF_LOGD("%s: not a event type. attrib_handle is %u", attrib_handle);
 		return;
 	}
+	unique_lock<mutex> lock(mTaskMutex);
+	gfsPtr<BLEDevice> dev;
 	for (auto& itor : mConnectedDevices)
 	{
 		if (itor->getHandle() == handle)
 		{
-			itor->onData(length-3, data+3);
+			dev = itor;
 		}
 	}
+	lock.unlock();
+	if (nullptr != dev)
+		dev->onData(length - 3, data + 3);
 }
 
 void BLEHub::onComDestory()
@@ -429,6 +500,7 @@ void BLEHub::onComDestory()
 	GF_LOGD(__FUNCTION__);
 	// TODO: do something after com destoryed
 
+	lock_guard<mutex> lock(mTaskMutex);
 	for (auto& itor : mListeners)
 	{
 		auto ptr = itor.lock();
@@ -440,16 +512,24 @@ void BLEHub::onComDestory()
 
 GF_RET_CODE BLEHub::connect(BLEDevice& dev, bool directConn)
 {
-	GF_RET_CODE ret = GF_RET_CODE::GF_SUCCESS;
 	if (nullptr == mAM)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
+
 	GF_UINT8 addr[BT_ADDRESS_SIZE];
-	ret = dev.getAddress(addr, sizeof(addr));
+	GF_RET_CODE ret = dev.getAddress(addr, sizeof(addr));
 	if (GF_RET_CODE::GF_SUCCESS != ret)
 		return ret;
-	GF_STATUS status = mAM->Connect(addr, dev.getAddrType(),
-		directConn ? GF_TRUE : GF_FALSE);
-	return status == GF_INNER_SUCCESS ? GF_RET_CODE::GF_SUCCESS : GF_RET_CODE::GF_ERROR;
+	GF_UINT8 type = dev.getAddrType();
+	auto am = mAM;
+	GF_UINT32 status = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, &addr, type, directConn]()
+	{
+		GF_STATUS status = am->Connect(addr, type, directConn ? GF_TRUE : GF_FALSE);
+		return static_cast<GF_UINT32>(status);
+	})));
+	if (GF_INNER_SUCCESS == status)
+		return GF_RET_CODE::GF_SUCCESS;
+	else
+		return GF_RET_CODE::GF_ERROR;
 }
 
 GF_RET_CODE BLEHub::cancelConnect(BLEDevice& dev)
@@ -461,24 +541,53 @@ GF_RET_CODE BLEHub::cancelConnect(BLEDevice& dev)
 	ret = dev.getAddress(addr, sizeof(addr));
 	if (GF_RET_CODE::GF_SUCCESS != ret)
 		return ret;
-	GF_STATUS status = mAM->CancelConnect(addr, dev.getAddrType());
-	return status == GF_INNER_SUCCESS ? GF_RET_CODE::GF_SUCCESS : GF_RET_CODE::GF_ERROR;
+	auto type = dev.getAddrType();
+	auto am = mAM;
+	GF_UINT32 status = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, &addr, type]()
+	{
+		GF_STATUS status = am->CancelConnect(addr, type);
+		return static_cast<GF_UINT32>(status);
+	})));
+	if (GF_INNER_SUCCESS == status)
+		return GF_RET_CODE::GF_SUCCESS;
+	else
+		return GF_RET_CODE::GF_ERROR;
 }
 
 GF_RET_CODE BLEHub::disconnect(BLEDevice& dev)
 {
 	if (nullptr == mAM || INVALID_HANDLE == dev.getHandle())
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
-	GF_STATUS status = mAM->Disconnect(dev.getHandle());
-	return status == GF_INNER_SUCCESS ? GF_RET_CODE::GF_SUCCESS : GF_RET_CODE::GF_ERROR;
+
+	auto handle = dev.getHandle();
+	auto am = mAM;
+	GF_UINT32 status = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, handle]()
+	{
+		GF_STATUS status = am->Disconnect(handle);
+		return static_cast<GF_UINT32>(status);
+	})));
+	if (GF_INNER_SUCCESS == status)
+		return GF_RET_CODE::GF_SUCCESS;
+	else
+		return GF_RET_CODE::GF_ERROR;
 }
 
 GF_RET_CODE BLEHub::configMtuSize(BLEDevice& dev, GF_UINT16 mtuSize)
 {
 	if (nullptr == mAM || INVALID_HANDLE == dev.getHandle())
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
-	GF_STATUS status = mAM->ConfigMtuSize(dev.getHandle(), mtuSize);
-	return status == GF_INNER_SUCCESS ? GF_RET_CODE::GF_SUCCESS : GF_RET_CODE::GF_ERROR;
+
+	auto handle = dev.getHandle();
+	auto am = mAM;
+	GF_UINT32 status = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, handle, mtuSize]()
+	{
+		GF_STATUS status = am->ConfigMtuSize(handle, mtuSize);
+		return static_cast<GF_UINT32>(status);
+	})));
+	if (GF_INNER_SUCCESS == status)
+		return GF_RET_CODE::GF_SUCCESS;
+	else
+		return GF_RET_CODE::GF_ERROR;
 }
 
 GF_RET_CODE BLEHub::connectionParameterUpdate(BLEDevice& dev, GF_UINT16 conn_interval_min,
@@ -486,9 +595,20 @@ GF_RET_CODE BLEHub::connectionParameterUpdate(BLEDevice& dev, GF_UINT16 conn_int
 {
 	if (nullptr == mAM || INVALID_HANDLE == dev.getHandle())
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
-	GF_STATUS status = mAM->ConnectionParameterUpdate(dev.getHandle(), conn_interval_min,
-		conn_interval_max, slave_latence, supervision_timeout);
-	return status == GF_INNER_SUCCESS ? GF_RET_CODE::GF_SUCCESS : GF_RET_CODE::GF_ERROR;
+
+	auto handle = dev.getHandle();
+	auto am = mAM;
+	GF_UINT32 status = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, handle,
+		conn_interval_min, conn_interval_max, slave_latence, supervision_timeout]()
+	{
+		GF_STATUS status = am->ConnectionParameterUpdate(handle, conn_interval_min,
+			conn_interval_max, slave_latence, supervision_timeout);
+		return static_cast<GF_UINT32>(status);
+	})));
+	if (GF_INNER_SUCCESS == status)
+		return GF_RET_CODE::GF_SUCCESS;
+	else
+		return GF_RET_CODE::GF_ERROR;
 }
 
 GF_RET_CODE BLEHub::writeCharacteristic(BLEDevice& dev,
@@ -496,17 +616,38 @@ GF_RET_CODE BLEHub::writeCharacteristic(BLEDevice& dev,
 {
 	if (nullptr == mAM || INVALID_HANDLE == dev.getHandle())
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
-	GF_STATUS status = mAM->WriteCharacteristic(dev.getHandle(), static_cast<GF_UINT16>(attribute_handle),
-		data_length, data);
-	return status == GF_INNER_SUCCESS ? GF_RET_CODE::GF_SUCCESS : GF_RET_CODE::GF_ERROR;
+
+	auto handle = dev.getHandle();
+	auto am = mAM;
+	GF_UINT32 status = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, handle,
+		attribute_handle, data_length, data]()
+	{
+		GF_STATUS status = am->WriteCharacteristic(handle, static_cast<GF_UINT16>(attribute_handle),
+			data_length, data);
+		return static_cast<GF_UINT32>(status);
+	})));
+	if (GF_INNER_SUCCESS == status)
+		return GF_RET_CODE::GF_SUCCESS;
+	else
+		return GF_RET_CODE::GF_ERROR;
 }
 
 GF_RET_CODE BLEHub::readCharacteristic(BLEDevice& dev, AttributeHandle attribute_handle)
 {
 	if (nullptr == mAM || INVALID_HANDLE == dev.getHandle())
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
-	GF_STATUS status = mAM->ReadCharacteristic(dev.getHandle(), static_cast<GF_UINT16>(attribute_handle));
-	return status == GF_INNER_SUCCESS ? GF_RET_CODE::GF_SUCCESS : GF_RET_CODE::GF_ERROR;
+
+	auto handle = dev.getHandle();
+	auto am = mAM;
+	GF_UINT32 status = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, handle, attribute_handle]()
+	{
+		GF_STATUS status = am->ReadCharacteristic(handle, static_cast<GF_UINT16>(attribute_handle));
+		return static_cast<GF_UINT32>(status);
+	})));
+	if (GF_INNER_SUCCESS == status)
+		return GF_RET_CODE::GF_SUCCESS;
+	else
+		return GF_RET_CODE::GF_ERROR;
 }
 
 const char* gForcePrefix = "gForceBLE";
@@ -514,8 +655,17 @@ const char* gForcePrefix = "gForceBLE";
 gfsPtr<BLEDevice> BLEHub::createDeviceBeforeConnect(const GF_BLEDevice& bleDev)
 {
 	if (nullptr != strstr(bleDev.dev_name, gForcePrefix))
+	{
 		return dynamic_pointer_cast<BLEDevice>(make_shared<GForceDevice>(this, bleDev));
+	}
 	else
+	{
+#if ONLY_SCAN_GFORCE_DEVICE
+		GF_LOGI("Device unmatch. %s", bleDev.dev_name);
+		return nullptr;
+#else
 		return make_shared<BLEDevice>(this, bleDev);
+#endif
+	}
 }
 

@@ -216,7 +216,7 @@ GF_STATUS GF_CNpiInterface::Init(GF_UINT8 com_num)
 		return GF_FAIL;
 	}
 
-	if (NULL == (mEventQueue = (mCommand->Connect(NULL, 1))))
+	if (NULL == (mEventQueue = (mCommand->Connect(NULL, 2))))
 	{
 		delete mCommand;
 

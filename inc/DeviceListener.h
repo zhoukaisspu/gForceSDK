@@ -22,7 +22,7 @@ namespace gf
 		/*Notification format: data length(1 byte N) + data(N Bytes)*/
 		//virtual void onNotificationReceived(WPDEVICE device, GF_UINT8 length, GF_PUINT8 data) = 0;
 
-		virtual void onEvent(Device* device, GF_EVENT event, GF_UINT8 length, GF_PUINT8 data) = 0;
+		virtual void onEvent(Device* device, GF_EVENT_TYPE event, GF_UINT8 length, GF_PUINT8 data) = 0;
 	};
 
 } // namespace gf

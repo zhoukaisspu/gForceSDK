@@ -18,7 +18,7 @@ namespace gf
 	{
 	public:
 		BLEDevice(IHub* hub, const GF_BLEDevice& bleDev);
-		virtual ~BLEDevice() { }
+		virtual ~BLEDevice();
 
 		virtual GF_UINT8 getAddrType() const { return mAddrType; }
 		virtual GF_RET_CODE getAddress(GF_UINT8* addr, GF_SIZE bufLen) const;
@@ -92,6 +92,8 @@ namespace gf
 
 	protected:
 		set<gfwPtr<DeviceListener>, WeakPtrComp<DeviceListener>> mListeners;
+		// TODO: thread-safe
+		mutex mMutex;
 	};
 
 } // namespace gf
