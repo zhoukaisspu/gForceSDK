@@ -18,7 +18,6 @@
 #include "gatt.h"
 
 #define MAX_CON_DEV        8
-#define MFC_GUI
 typedef struct {
 	UINT16 conHdl;
 	UINT8 enable;

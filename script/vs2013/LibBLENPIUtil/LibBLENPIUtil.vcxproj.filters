@@ -1,0 +1,143 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\ButtGattView.cpp">
+      <Filter>sc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdTab1_Dlg.cpp">
+      <Filter>sc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdTab2_Dlg.cpp">
+      <Filter>sc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdTab3_Dlg.cpp">
+      <Filter>sc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdTab4_Dlg.cpp">
+      <Filter>sc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdView.cpp">
+      <Filter>sc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\GuiEvtHdl.cpp">
+      <Filter>sc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\LogView.cpp">
+      <Filter>sc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\MainFrm.cpp">
+      <Filter>sc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\NewDeviceDlg.cpp">
+      <Filter>sc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\SDK_BLE_GUI.cpp">
+      <Filter>sc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\TopFrame.cpp">
+      <Filter>sc</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\ble\npi\Thread.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\ButtGattView.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdTab1_Dlg.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdTab2_Dlg.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdTab3_Dlg.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdTab4_Dlg.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdView.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\GuiEvtHdl.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\LogView.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\MainFrm.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\NewDeviceDlg.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\SDK_BLE_GUI.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\TopFrame.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\com.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\CommonDef.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\gap.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\gatt.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\log.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\npi_cmd.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\npi_evt.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\npi_queue.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\npi_tl.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ble\npi\Thread.h">
+      <Filter>header</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="header">
+      <UniqueIdentifier>{4113cd3e-a601-4909-8b94-31713b003b60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resource">
+      <UniqueIdentifier>{25969e49-b41f-434a-8ea0-8bfcc1e3d9a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sc">
+      <UniqueIdentifier>{52e94e49-6fc1-468c-9853-5eb4462b08dd}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\Toolbar.bmp">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="res\LibBLENPIUtil.ico">
+      <Filter>resource</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\LibBLENPIUtil.rc2">
+      <Filter>resource</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="LibBLENPIUtil.rc">
+      <Filter>resource</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

@@ -31,7 +31,7 @@ GF_STATUS GF_CNpiInterface::GF_Process_Event(GF_UINT16 event_code, GF_PUINT8 dat
 					}
 				}
 			}
-			return GF_SUCCESS;
+			return GF_OK;
 
 		case HCI_EXT_GAP_DEVICE_INFO_EVENT: //0x070D
 			for (GF_UINT8 i = 0; i < CALLBACK_MAX_INDEX; i++)
@@ -47,7 +47,7 @@ GF_STATUS GF_CNpiInterface::GF_Process_Event(GF_UINT16 event_code, GF_PUINT8 dat
 					}
 				}
 			}
-			return GF_SUCCESS;
+			return GF_OK;
 
 		case HCI_EXT_GAP_LINK_ESTABLISHED_EVENT: //0x0705
 			LOGDEBUG(mTag, "HCI_EXT_GAP_LINK_ESTABLISHED_MSG \n");
@@ -141,7 +141,7 @@ GF_STATUS GF_CNpiInterface::GF_Process_Event(GF_UINT16 event_code, GF_PUINT8 dat
 			if (result != 0)
 			{
 				mCallback[i]->OnEvent(event, data, length);
-				result = GF_SUCCESS;
+				result = GF_OK;
 			}
 		}
 	}
@@ -227,9 +227,8 @@ GF_STATUS GF_CNpiInterface::Init(GF_UINT8 com_num)
 	mEvtThread = new CThread(this);
 	mEvtThread->Start();
 	mEvtThread->Join(100);
-	mEvtThreadID = mEvtThread->GetThreadID();
 
-	return GF_SUCCESS;
+	return GF_OK;
 }
 
 GF_STATUS GF_CNpiInterface::Deinit()
@@ -243,7 +242,7 @@ GF_STATUS GF_CNpiInterface::Deinit()
 		mCommand = NULL;
 	}
 
-	return GF_SUCCESS;
+	return GF_OK;
 }
 
 GF_STATUS GF_CNpiInterface::InitDevice()
@@ -263,7 +262,7 @@ GF_STATUS GF_CNpiInterface::InitDevice()
 	gap_role.data = 0x08;
 	if (GF_TRUE == mCommand->GAP_DeviceInit((gapRole_t)gap_role, 5, irk, csrk, (GF_PUINT8)&sign_count))
 	{
-		result = GF_SUCCESS;
+		result = GF_OK;
 	}
 	else
 	{
@@ -283,7 +282,7 @@ GF_STATUS GF_CNpiInterface::StartLEScan()
 	}
 		
 
-	return result = (status == GF_TRUE) ? GF_SUCCESS : GF_FAIL;
+	return result = (status == GF_TRUE) ? GF_OK : GF_FAIL;
 }
 
 GF_STATUS GF_CNpiInterface::StopLEScan()
@@ -296,7 +295,7 @@ GF_STATUS GF_CNpiInterface::StopLEScan()
 		status = mCommand->GAP_DeviceDiscoveryCancel();
 	}
 		
-	return result = (status == GF_TRUE) ? GF_SUCCESS : GF_FAIL;
+	return result = (status == GF_TRUE) ? GF_OK : GF_FAIL;
 }
 
 GF_STATUS GF_CNpiInterface::Connect(GF_PUINT8 addr, UINT8 addr_type, GF_BOOL use_whitelist)
@@ -308,7 +307,7 @@ GF_STATUS GF_CNpiInterface::Connect(GF_PUINT8 addr, UINT8 addr_type, GF_BOOL use
 		status = mCommand->GAP_EstablishLinkRequest(NPI_DISABLE, (eEnDisMode)use_whitelist, (eGapAddrType)addr_type, addr);
 	}
 
-	return (status == GF_TRUE) ? GF_SUCCESS : GF_FAIL;
+	return (status == GF_TRUE) ? GF_OK : GF_FAIL;
 }
 
 GF_STATUS GF_CNpiInterface::Disconnect(GF_UINT16 handle)
@@ -320,7 +319,7 @@ GF_STATUS GF_CNpiInterface::Disconnect(GF_UINT16 handle)
 		status = mCommand->GAP_TerminateLinkRequest(handle);
 	}
 
-	return (status == GF_TRUE) ? GF_SUCCESS : GF_FAIL;
+	return (status == GF_TRUE) ? GF_OK : GF_FAIL;
 }
 
 GF_STATUS GF_CNpiInterface::RegisterCallback(GF_CCallBack *callback)
@@ -329,7 +328,7 @@ GF_STATUS GF_CNpiInterface::RegisterCallback(GF_CCallBack *callback)
 	if (index < CALLBACK_MAX_INDEX)
 	{
 		mCallback[index] = callback;
-		return GF_SUCCESS;
+		return GF_OK;
 	}
 	else
 	{
@@ -343,7 +342,7 @@ GF_STATUS GF_CNpiInterface::UnRegisterCallback(GF_CCallBack *callback)
 	if (index < CALLBACK_MAX_INDEX)
 	{
 		mCallback[index] = NULL;
-		return GF_SUCCESS;
+		return GF_OK;
 	}
 	else
 	{
@@ -371,7 +370,7 @@ GF_STATUS GF_CNpiInterface::Authenticate(GF_UINT16 handle)
 	auth.pair_oobFlag = NPI_FALSE;
 
 	status = mCommand->GAP_Authenticate(handle, &auth);
-	return (status == GF_TRUE) ? GF_SUCCESS : GF_FAIL;
+	return (status == GF_TRUE) ? GF_OK : GF_FAIL;
 }
 
 GF_STATUS GF_CNpiInterface::Bond(GF_UINT16 handle, GF_PUINT8 ltk, GF_UINT16 div, GF_PUINT8 rand, GF_UINT8 ltk_size)
@@ -379,21 +378,21 @@ GF_STATUS GF_CNpiInterface::Bond(GF_UINT16 handle, GF_PUINT8 ltk, GF_UINT16 div,
 	GF_BOOL status = GF_FAIL;
 	status = mCommand->GAP_Bond(handle, NPI_DISABLE, ltk, div, rand, ltk_size);
 
-	return (status == GF_TRUE) ? GF_SUCCESS : GF_FAIL;
+	return (status == GF_TRUE) ? GF_OK : GF_FAIL;
 }
 
 GF_STATUS GF_CNpiInterface::ExchangeMTUSize(GF_UINT16 handle, GF_UINT16 mtu)
 {
 	GF_BOOL status = GF_FAIL;
 	status = mCommand->GATT_ExchangeMTU(handle, mtu);
-	return (status == GF_TRUE) ? GF_SUCCESS : GF_FAIL;
+	return (status == GF_TRUE) ? GF_OK : GF_FAIL;
 }
 
 GF_STATUS GF_CNpiInterface::UpdateConnectionParameter(GF_UINT16 handle, GF_UINT16 int_min, GF_UINT16 int_max, GF_UINT16 slave_latency, GF_UINT16 supervision_timeout)
 {
 	GF_BOOL status = GF_FAIL;
 	status = mCommand->L2CAP_ConnParamUpdateReq(handle, int_min, int_max, slave_latency, supervision_timeout);
-	return (status == GF_TRUE) ? GF_SUCCESS : GF_FAIL;
+	return (status == GF_TRUE) ? GF_OK : GF_FAIL;
 }
 
 GF_STATUS GF_CNpiInterface::DiscoveryAllPrimaryService(GF_UINT16 handle)
@@ -401,49 +400,49 @@ GF_STATUS GF_CNpiInterface::DiscoveryAllPrimaryService(GF_UINT16 handle)
 	GF_BOOL status = GF_FAIL;
 	status = mCommand->GATT_DiscAllPrimaryServices(handle);
 
-	return (status == GF_TRUE) ? GF_SUCCESS : GF_FAIL;
+	return (status == GF_TRUE) ? GF_OK : GF_FAIL;
 }
 
 GF_STATUS GF_CNpiInterface::DiscoveryIncludedPrimaryService(GF_UINT16 conn_handle, GF_UINT16 start_handle, GF_UINT16 end_handle)
 {
 	GF_BOOL status = GF_FAIL;
 	status = mCommand->GATT_FindIncludedServices(conn_handle, start_handle, end_handle);
-	return (status == GF_TRUE) ? GF_SUCCESS : GF_FAIL;
+	return (status == GF_TRUE) ? GF_OK : GF_FAIL;
 }
 
 GF_STATUS GF_CNpiInterface::DiscoveryCharacteristic(GF_UINT16 conn_handle, GF_UINT16 start_handle, GF_UINT16 end_handle)
 {
 	GF_BOOL status = GF_FAIL;
 	status = mCommand->GATT_DiscAllChar(conn_handle, start_handle, end_handle);
-	return (status == GF_TRUE) ? GF_SUCCESS : GF_FAIL;
+	return (status == GF_TRUE) ? GF_OK : GF_FAIL;
 }
 
 GF_STATUS GF_CNpiInterface::ReadCharacteristicValue(GF_UINT16 conn_handle, GF_UINT16 att_handle)
 {
 	GF_BOOL status = GF_FAIL;
 	status = mCommand->GATT_ReadCharVal(conn_handle, att_handle);
-	return (status == GF_TRUE) ? GF_SUCCESS : GF_FAIL;
+	return (status == GF_TRUE) ? GF_OK : GF_FAIL;
 }
 
 GF_STATUS GF_CNpiInterface::ReadCharacteristicLongValue(GF_UINT16 conn_handle, GF_UINT16 att_handle, UINT16 offset)
 {
 	GF_BOOL status = GF_FAIL;
 	status = mCommand->GATT_ReadLongCharValue(conn_handle, att_handle, offset);
-	return (status == GF_TRUE) ? GF_SUCCESS : GF_FAIL;
+	return (status == GF_TRUE) ? GF_OK : GF_FAIL;
 }
 
 GF_STATUS GF_CNpiInterface::FindCharacteristicDescriptor(GF_UINT16 conn_handle, GF_UINT16 start_handle, GF_UINT16 end_handle)
 {
 	GF_BOOL status = GF_FAIL;
 	status = mCommand->GATT_DiscAllCharDesc(conn_handle, start_handle, end_handle);
-	return (status == GF_TRUE) ? GF_SUCCESS : GF_FAIL;
+	return (status == GF_TRUE) ? GF_OK : GF_FAIL;
 }
 
 GF_STATUS GF_CNpiInterface::WriteCharacVlaue(GF_UINT16 conn_handle, GF_UINT16 att_handle, GF_PUINT8 data, GF_UINT8 len)
 {
 	GF_BOOL status = GF_FAIL;
 	status = mCommand->GATT_WriteCharValue(conn_handle, att_handle, data, len);
-	return (status == GF_TRUE) ? GF_SUCCESS : GF_FAIL;
+	return (status == GF_TRUE) ? GF_OK : GF_FAIL;
 }
 
 void setColor(UINT8 color)

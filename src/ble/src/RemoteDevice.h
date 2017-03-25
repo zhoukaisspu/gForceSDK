@@ -175,7 +175,6 @@ private:
 	GF_CPCHAR mTag;
 
 	CThread* mThread;
-	GF_ULONG mThreadID;
 	GF_BOOL mThreadRunning;
 	HANDLE mThrandEvent;
 

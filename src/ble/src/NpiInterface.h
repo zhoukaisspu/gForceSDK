@@ -53,7 +53,6 @@ private:
 	NPI_CMD* mCommand;
 	//LISTCALLBACK mCallback;
 	GF_CCallBack * mCallback[CALLBACK_MAX_INDEX];
-	GF_ULONG mEvtThreadID;
 	CThread *mEvtThread;
 
 	/*event queue.

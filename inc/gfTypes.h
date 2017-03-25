@@ -5,7 +5,7 @@
 #include <string>
 #include <memory>
 
-namespace oym {
+namespace gf {
 
 	typedef char				GF_CHAR;
 	typedef char*				GF_PCHAR;
@@ -24,11 +24,14 @@ namespace oym {
 	typedef size_t				GF_SIZE;
 	typedef GF_INT				GF_STATUS;
 
+
+	const static GF_UINT16 INVALID_HANDLE = 0xFFFF;
+
 #if defined(UNICODE) || defined(_UNICODE)
 
 #define tstring std::wstring
 #define tchar wchar_t
-#ifndef _T
+#if ! defined(WIN32) || ! defined(_T)
 #define _T(x) L ## x
 #endif
 
@@ -36,7 +39,7 @@ namespace oym {
 
 #define tstring std::string
 #define tchar char
-#ifndef _T
+#if ! defined(WIN32) || ! defined(_T)
 #define __T(x) x
 #endif
 
@@ -55,7 +58,7 @@ namespace oym {
 	typedef void(*FunEnumDevice)(WPDEVICE);
 
 
-	typedef enum {
+	enum class GF_RET_CODE : GF_INT{
 		GF_SUCCESS = 0,
 		GF_ERROR,
 		GF_ERROR_BAD_PARAM,
@@ -63,15 +66,30 @@ namespace oym {
 		GF_ERROR_NOT_SUPPORT,
 		GF_ERR_SCAN_BUSY,
 		GF_ERR_NO_RESOURCE,
-	} GF_RET_CODE;
+	};
 
 
 	typedef enum {
 		GF_EVT_EVENTBASE,
+		GF_EVT_DEVICE_RECENTER,
+		GF_EVT_DATA_GESTURE,
+		GF_EVT_DATA_QUATERNION,
 	} GF_EVENT;
 
+	
+	enum class Gesture : GF_UINT8 {
+		Relax = 0x00,
+		Gist = 0x01,
+		SpreadFingers = 0x02,
+		WaveTowardPalm = 0x03,
+		WaveBackwardPalm = 0x04,
+		TuckFingers = 0x05,
+		Shoot = 0x06,
+		Unknown = 0xFF
+	};
 
-	enum class DongleState{
+
+	enum class HubState{
 		Idle,
 		Scanning,
 		Connecting,
@@ -94,5 +112,41 @@ namespace oym {
 		Virtual
 	};
 
+	// define Characteristic read/write handle
+	enum class AttributeHandle : GF_UINT16 {
+		GATTPrimServiceDeclaration1 = 0x0001,
+		GATTCharacteristicDeclaration1,
+		DeviceName,
+		GATTCharacteristicDeclaration2,
+		Appearance,
+		GATTCharacteristicDeclaration3,
+		PreferredConnectParamters,
+		GATTPrimServiceDeclaration2,
+		GATTPrimServiceDeclaration3,
+		GATTCharacteristicDeclaration4,
+		SystemID,
+		GATTCharacteristicDeclaration5,
+		ModelNumberStr,
+		GATTCharacteristicDeclaration6,
+		SerialNumberStr,
+		GATTCharacteristicDeclaration7,
+		FirmwareRevStr,
+		GATTCharacteristicDeclaration8,
+		HardwareRevStr,
+		GATTCharacteristicDeclaration9,
+		SoftwareRevStr,
+		GATTCharacteristicDeclaration10,
+		ManufactureNameStr,
+		GATTCharacteristicDeclaration11,
+		IEEE11073_20601,
+		GATTCharacteristicDeclaration12,
+		PnPID,
+		GATTPrimServiceDeclaration4,
+		GATTCharacteristicDeclaration13,
+		Max
+	};
 
-} // namespace oym
+	static const char charTypes[] =
+		"BBSBBBBBBBBBSBSBSBSBSBSBBBBBBN";
+
+} // namespace gf

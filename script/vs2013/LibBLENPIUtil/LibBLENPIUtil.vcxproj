@@ -14,6 +14,7 @@
     <ProjectGuid>{CF71DC61-5B07-4A40-B274-94D37C50BDC8}</ProjectGuid>
     <RootNamespace>SDK_BLE_GUI</RootNamespace>
     <Keyword>MFCProj</Keyword>
+    <ProjectName>LibBLENpiUtil</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -56,12 +57,14 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>../NPI/Include;$(ProjectDir);./Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\src\ble\npi;$(ProjectDir)..\..\..\src\ble\npi\npiutil;$(ProjectDir)</AdditionalIncludeDirectories>
       <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\..\lib\windows\$(PlatformTarget)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LibBLENPId.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -108,62 +111,57 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\NPI\Include\com.h" />
-    <ClInclude Include="..\NPI\Include\CommonDef.h" />
-    <ClInclude Include="..\NPI\Include\gap.h" />
-    <ClInclude Include="..\NPI\Include\gatt.h" />
-    <ClInclude Include="..\NPI\Include\npi_queue.h" />
-    <ClInclude Include="..\NPI\Include\npi_tl.h" />
-    <ClInclude Include="..\NPI\Include\log.h" />
-    <ClInclude Include="..\NPI\Include\npi_cmd.h" />
-    <ClInclude Include="..\NPI\Include\npi_evt.h" />
-    <ClInclude Include="..\NPI\Include\Thread.h" />
-    <ClInclude Include="Inc\ButtGattView.h" />
-    <ClInclude Include="Inc\CmdTab1_Dlg.h" />
-    <ClInclude Include="Inc\CmdTab2_Dlg.h" />
-    <ClInclude Include="Inc\CmdTab3_Dlg.h" />
-    <ClInclude Include="Inc\CmdTab4_Dlg.h" />
-    <ClInclude Include="Inc\CmdView.h" />
-    <ClInclude Include="Inc\GuiEvtHdl.h" />
-    <ClInclude Include="Inc\LogView.h" />
-    <ClInclude Include="Inc\MainFrm.h" />
-    <ClInclude Include="Inc\NewDeviceDlg.h" />
-    <ClInclude Include="Inc\SDK_BLE_GUI.h" />
-    <ClInclude Include="Inc\TopFrame.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\com.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\CommonDef.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\gap.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\gatt.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\log.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\ButtGattView.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdTab1_Dlg.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdTab2_Dlg.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdTab3_Dlg.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdTab4_Dlg.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdView.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\GuiEvtHdl.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\LogView.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\MainFrm.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\NewDeviceDlg.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\SDK_BLE_GUI.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\npiutil\TopFrame.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\npi_cmd.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\npi_evt.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\npi_queue.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\npi_tl.h" />
+    <ClInclude Include="..\..\..\src\ble\npi\Thread.h" />
+    <ClInclude Include="..\src\ble\npi\Thread.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\NPI\NpiInterface\com.cpp" />
-    <ClCompile Include="..\NPI\NpiInterface\log.cpp" />
-    <ClCompile Include="..\NPI\NpiInterface\npi_cmd.cpp" />
-    <ClCompile Include="..\NPI\NpiInterface\npi_evt.cpp" />
-    <ClCompile Include="..\NPI\NpiInterface\npi_tl.cpp" />
-    <ClCompile Include="..\NPI\NpiInterface\Thread.cpp" />
-    <ClCompile Include="App\ButtGattView.cpp" />
-    <ClCompile Include="App\CmdTab1_Dlg.cpp" />
-    <ClCompile Include="App\CmdTab2_Dlg.cpp" />
-    <ClCompile Include="App\CmdTab3_Dlg.cpp" />
-    <ClCompile Include="App\CmdTab4_Dlg.cpp" />
-    <ClCompile Include="App\CmdView.cpp" />
-    <ClCompile Include="App\GuiEvtHdl.cpp" />
-    <ClCompile Include="App\LogView.cpp" />
-    <ClCompile Include="App\MainFrm.cpp" />
-    <ClCompile Include="App\NewDeviceDlg.cpp" />
-    <ClCompile Include="App\SDK_BLE_GUI.cpp" />
-    <ClCompile Include="App\TopFrame.cpp" />
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\ButtGattView.cpp" />
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdTab1_Dlg.cpp" />
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdTab2_Dlg.cpp" />
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdTab3_Dlg.cpp" />
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdTab4_Dlg.cpp" />
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdView.cpp" />
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\GuiEvtHdl.cpp" />
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\LogView.cpp" />
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\MainFrm.cpp" />
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\NewDeviceDlg.cpp" />
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\SDK_BLE_GUI.cpp" />
+    <ClCompile Include="..\..\..\src\ble\npi\npiutil\TopFrame.cpp" />
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="SDK_BLE_GUI.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="res\SDK_BLE_GUI.rc2" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="res\SDK_BLE_GUI.ico" />
+    <Image Include="res\LibBLENPIUtil.ico" />
     <Image Include="res\Toolbar.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\LibBLENPIUtil.rc2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="LibBLENPIUtil.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

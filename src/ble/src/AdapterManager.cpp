@@ -4,11 +4,14 @@
 #include "ClientCallbackInterface.h"
 #include "NpiInterface.h"
 #include <LogPrint.h>
+#include <mutex>
 
 #define MODUAL_TAG_AM "AdaperManager"
 
 #define ADAPTER_MANAGER_ATT_EVENT  (EVENT_MASK_DEVICE_CONNECTED | EVENT_MASK_INTERNAL_SCAN_FINISHED | EVENT_MASK_ATT_WRITE_MSG | EVENT_MASK_ATT_EXCHANGE_MTU_MSG | EVENT_MASK_ATT_READ_BLOB_RESP_MSG | EVENT_MASK_ATT_NOTI_MSG | EVENT_MASK_ATT_READ_RESP_MSG | EVENT_MASK_ATT_ERROR_MSG | EVENT_MASK_ATT_READ_BY_GRP_TYPE_MSG | EVENT_MASK_ATT_READ_BY_TYPE_MSG | EVENT_MASK_ATT_READ_BY_INFO_MSG)
 #define ADAPTER_MANAGER_EVENT (0x0100FD | ADAPTER_MANAGER_ATT_EVENT)
+static GF_CAdapterManager* SingleInstance = NULL;
+std::mutex SingleInstanceMutex;
 
 GF_CAdapterManager::GF_CAdapterManager() :GF_CCallBack(ADAPTER_MANAGER_EVENT, ADAPTER_MANAGER_CALLBACK_INDEX)
 {
@@ -17,7 +20,7 @@ GF_CAdapterManager::GF_CAdapterManager() :GF_CCallBack(ADAPTER_MANAGER_EVENT, AD
 	mDS = new GF_CDiscoveryService(mInterface, this);
 	mIsConnecting = GF_FALSE;
 	mIsScanning = GF_FALSE;
-	mInitialized = GF_TRUE;
+	//mInitialized = GF_TRUE;
 }
 
 GF_CAdapterManager::~GF_CAdapterManager()
@@ -30,12 +33,17 @@ GF_CAdapterManager::~GF_CAdapterManager()
 
 GF_CAdapterManagerInterface* GF_CAdapterManagerInterface::GetInstance()
 {
-	if (mInitialized == GF_TRUE)
+	if (SingleInstance == NULL)
 	{
-		return NULL;
+		SingleInstanceMutex.lock();
+		if (SingleInstance == NULL)
+		{
+			SingleInstance = new GF_CAdapterManager;
+		}
+		SingleInstanceMutex.unlock();
 	}
 
-	return new GF_CAdapterManager;
+	return SingleInstance;
 }
 
 GF_STATUS GF_CAdapterManager::Init(GF_UINT8 com_num)
@@ -51,7 +59,7 @@ GF_STATUS GF_CAdapterManager::Init(GF_UINT8 com_num)
 		return result;
 	}
 	
-	if (result == GF_SUCCESS)
+	if (result == GF_OK)
 	{
 		//register to receive event form NIF
 		mInterface->RegisterCallback(this);
@@ -132,7 +140,7 @@ GF_STATUS GF_CAdapterManager::StopScan()
 
 GF_STATUS GF_CAdapterManager::OnDeviceFound(GF_BLEDevice new_device)
 {
-	GF_STATUS result = GF_SUCCESS;
+	GF_STATUS result = GF_OK;
 	LOGDEBUG(mTag, "OnNewDeviceFound... \n");
 	if (mClientCallback != NULL)
 	{
@@ -202,7 +210,7 @@ GF_STATUS GF_CAdapterManager::GetConnectedDeviceByIndex(GF_UINT8 index, GF_Conne
 		connected_device->superTO = device->GetSupervisionTimeout();
 		connected_device->MTUsize = device->GetMTUSize();
 
-		return GF_SUCCESS;
+		return GF_OK;
 	}
 	else
 	{
@@ -254,7 +262,7 @@ GF_STATUS GF_CAdapterManager::CancelConnect(GF_PUINT8 addr, GF_UINT8 addr_type)
 	{
 		result = mInterface->Disconnect(0xFFFE);
 		mIsConnecting = GF_FALSE;
-		result = GF_SUCCESS;
+		result = GF_OK;
 	}
 	else
 	{
@@ -294,7 +302,7 @@ GF_STATUS GF_CAdapterManager::OnConnectEvent(GF_PUINT8 data, GF_UINT16 length)
 	list<GF_CRemoteDevice*>::iterator ii;
 	GF_UINT8 status = data[0];
 	GF_UINT8 addr_type = data[1];
-	if (status != GF_SUCCESS)
+	if (status != GF_OK)
 	{
 		LOGDEBUG(mTag, "OnConnectEvent with error status = %d \n", status);
 		for (ii = mConnectingDevice.begin(); ii != mConnectingDevice.end();)
@@ -316,7 +324,7 @@ GF_STATUS GF_CAdapterManager::OnConnectEvent(GF_PUINT8 data, GF_UINT16 length)
 				ii = mConnectingDevice.erase(ii);
 				mIsConnecting = GF_FALSE;
 
-				mClientCallback->onDeviceConnected(GF_SUCCESS, &connecteddevice);
+				mClientCallback->onDeviceConnected(GF_OK, &connecteddevice);
 			}
 			else
 			{
@@ -423,7 +431,7 @@ GF_STATUS GF_CAdapterManager::ReadCharacteristic(GF_UINT16 conn_handle, GF_UINT1
 
 GF_STATUS GF_CAdapterManager::OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16 length)
 {
-	GF_STATUS result = GF_SUCCESS;
+	GF_STATUS result = GF_OK;
 	GF_DEVICE_EVENT message = GF_DEVICE_EVENT_INVALID;
 	list<GF_CRemoteDevice*>::iterator ii;
 	GF_UINT8 handle_offset;
@@ -436,7 +444,7 @@ GF_STATUS GF_CAdapterManager::OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16
 			{
 				mClientCallback->onComDestory();
 			}
-			return GF_SUCCESS;
+			return GF_OK;
 		}
 		case EVENT_MASK_ATT_EXCHANGE_MTU_MSG:
 		{
@@ -545,7 +553,7 @@ GF_STATUS GF_CAdapterManager::OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16
 		case EVENT_MASK_GAP_LINK_ESTABLISHED_MSG:
 		{
 			OnConnectEvent(data, length);
-			return GF_SUCCESS;
+			return GF_OK;
 		}
 
 		case EVENT_MASK_GAP_LINK_TERMINATED_MSG:
@@ -602,7 +610,7 @@ GF_STATUS GF_CAdapterManager::OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16
 
 				if (mClientCallback != NULL)
 				{
-					mClientCallback->onDeviceDisonnected(GF_SUCCESS, &disconnecteddevice, reason);
+					mClientCallback->onDeviceDisonnected(GF_OK, &disconnecteddevice, reason);
 				}
 			}
 			else
@@ -631,7 +639,7 @@ GF_STATUS GF_CAdapterManager::OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16
 					GF_DEVICE_STATE state = device->GetState();
 					if (state == GF_DEVICE_STATE_CONNECTED && mClientCallback != NULL)
 					{
-						mClientCallback->onChracteristicValueRead(data[0], handle, data[GF_ATT_READ_VALUE_RESP_LEN_OFFSET], data + GF_ATT_READ_VALUE_RESP_DATA_OFFSET);
+						mClientCallback->onCharacteristicValueRead(data[0], handle, data[GF_ATT_READ_VALUE_RESP_LEN_OFFSET], data + GF_ATT_READ_VALUE_RESP_DATA_OFFSET);
 					}
 				}
 			}
@@ -662,7 +670,7 @@ GF_STATUS GF_CAdapterManager::OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16
 				connecteddevice.slavelatency = device->GetSlaveLatency();
 				connecteddevice.superTO = device->GetSupervisionTimeout();
 				connecteddevice.MTUsize = device->GetMTUSize();
-				mClientCallback->onDeviceConnected(GF_SUCCESS, &connecteddevice);
+				mClientCallback->onDeviceConnected(GF_OK, &connecteddevice);
 			}
 		}
 	}

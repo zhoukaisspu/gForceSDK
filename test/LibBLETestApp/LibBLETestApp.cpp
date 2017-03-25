@@ -75,12 +75,14 @@ public:
 	void onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device)
 	{
 		printf("\n onDeviceConnected \n");
+		Sleep(5000);
+		mAMInterface->Disconnect(device->handle);
 	}
 
 	void onDeviceDisonnected(GF_STATUS status, GF_ConnectedDevice *device, GF_UINT8 reason)
 	{
 		printf("\n onDeviceDisonnected \n");
-		Sleep(10000);
+		Sleep(5000);
 		mAMInterface->Connect(device->address, device->address_type, GF_TRUE);
 	}
 
@@ -94,7 +96,7 @@ public:
 		printf("\n onConnectionParmeterUpdated \n");
 	}
 
-	void onChracteristicValueRead(GF_STATUS status, GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
+	void onCharacteristicValueRead(GF_STATUS status, GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
 	{
 		printf("\n onChracteristicValueRead \n");
 	}
@@ -113,7 +115,7 @@ private:
 	GF_CAdapterManagerInterface* mAMInterface;
 	list<GF_CDevice*> mAvailabeDevice;
 };
-
+class GF_CAdapterManager;
 int _tmain(int charc, char* argv[]) {
 	GF_STATUS status;
 	GF_UINT8 loop = 0;

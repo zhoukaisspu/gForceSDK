@@ -62,14 +62,14 @@ GF_VOID str2arry(const char* str, GF_PUINT8 array)
 
 GF_CDatabase::GF_CDatabase(GF_PUINT8 address, GF_UINT8 length)
 {
-	GF_STATUS status = GF_SUCCESS;
+	GF_STATUS status = GF_OK;
 	mFilename = (char*)malloc(length * 2 + 1);
 	arry2str(address, length, mFilename);
 
 	mTag = MODUAL_TAG_DB;
 	mDoc = new OYMXMLDocument;
 	status = mDoc->LoadFile((const char*)mFilename);
-	if (status == GF_SUCCESS)
+	if (status == GF_OK)
 	{
 		LOGDEBUG(mTag, "LoadFile success!!! \n");
 	} 
@@ -119,7 +119,7 @@ GF_STATUS GF_CDatabase::DeleteNode(const char* NodeName)
 
 		mDoc->DeleteNode(DeleteNode);
 		mDoc->SaveFile((const char*)mFilename);
-		status = GF_SUCCESS;
+		status = GF_OK;
 	}
 	else
 	{
@@ -148,7 +148,7 @@ GF_STATUS GF_CDatabase::DeleteLinkKey()
 GF_STATUS GF_CDatabase::LoadLinkKey(GF_PUINT8 keysize, GF_PUINT8 key, GF_PUINT16 div, GF_PUINT8 rand)
 {
 	GF_STATUS result = GF_FAIL;
-	GF_STATUS status = GF_SUCCESS;
+	GF_STATUS status = GF_OK;
 	
 	if (mDoc == NULL) 
 	{
@@ -157,7 +157,7 @@ GF_STATUS GF_CDatabase::LoadLinkKey(GF_PUINT8 keysize, GF_PUINT8 key, GF_PUINT16
 	
 	//file do not exist.
 	status = mDoc->LoadFile((const char*)mFilename);
-	if (status == GF_SUCCESS)
+	if (status == GF_OK)
 	{
 		LOGDEBUG(mTag, "LoadFile success!!! \n");
 		XMLElement *rootEle = mDoc->RootElement();	
@@ -167,7 +167,7 @@ GF_STATUS GF_CDatabase::LoadLinkKey(GF_PUINT8 keysize, GF_PUINT8 key, GF_PUINT16
 			if (0 == memcmp(rootEle->Name(), SECURITYINFOMATION, strlen(SECURITYINFOMATION)))
 			{
 				LOGDEBUG(mTag, "SecurityInfomation found \n");
-				result = GF_SUCCESS;
+				result = GF_OK;
 				XMLElement *child = rootEle->FirstChildElement();
 				XMLElement *next_child;
 				const XMLAttribute *attr;
@@ -245,7 +245,7 @@ GF_STATUS GF_CDatabase::SaveLinkKey(GF_UINT8 keysize, GF_PUINT8 key, GF_UINT16 d
 	mDoc->SaveFile((const char*)mFilename);
 
 	LOGDEBUG(mTag, "linkkey successful... \n");
-	return GF_SUCCESS;
+	return GF_OK;
 }
 
 GF_STATUS GF_CDatabase::SaveIncludedService(XMLElement *PriSvc, GF_CIncludeService* IncluSvc)
@@ -263,7 +263,7 @@ GF_STATUS GF_CDatabase::SaveIncludedService(XMLElement *PriSvc, GF_CIncludeServi
 	IncludeService->SetAttribute(END_HANDLE, IncluSvc->mEndHandle);
 	PriSvc->LinkEndChild(IncludeService);
 
-	return GF_SUCCESS;
+	return GF_OK;
 }
 
 GF_STATUS GF_CDatabase::SaveCharacteristicDescriptor(XMLElement *Charc, GF_CCharacteristicDescriptor* Descriptor)
@@ -288,7 +288,7 @@ GF_STATUS GF_CDatabase::SaveCharacteristicDescriptor(XMLElement *Charc, GF_CChar
 	}
 	Charc->LinkEndChild(CharcDescrip);
 	
-	return GF_SUCCESS;
+	return GF_OK;
 }
 
 GF_STATUS GF_CDatabase::SaveChracteristicValue(XMLElement *Charc, GF_CCharacteristicValue* value)
@@ -311,7 +311,7 @@ GF_STATUS GF_CDatabase::SaveChracteristicValue(XMLElement *Charc, GF_CCharacteri
 	}
 
 	Charc->LinkEndChild(CharcValue);
-	return GF_SUCCESS;
+	return GF_OK;
 }
 
 GF_STATUS GF_CDatabase::SaveCharacteristic(XMLElement *PriSvc, GF_CCharacteristic* Characteristic)
@@ -343,7 +343,7 @@ GF_STATUS GF_CDatabase::SaveCharacteristic(XMLElement *PriSvc, GF_CCharacteristi
 		SaveCharacteristicDescriptor(Charc, Descriptor);
 	}
 
-	return GF_SUCCESS;
+	return GF_OK;
 }
 GF_STATUS GF_CDatabase::SaveUUID(XMLElement * Item, GF_UUID uuid)
 {
@@ -376,7 +376,7 @@ GF_STATUS GF_CDatabase::SaveUUID(XMLElement * Item, GF_UUID uuid)
 
 	free(data);
 
-	return GF_SUCCESS;
+	return GF_OK;
 }
 
 GF_STATUS GF_CDatabase::SavePrimaryService(XMLElement * GattSvc, GF_CPrimaryService* PrimaryService)
@@ -403,7 +403,7 @@ GF_STATUS GF_CDatabase::SavePrimaryService(XMLElement * GattSvc, GF_CPrimaryServ
 		SaveCharacteristic(PriSvc, Characteristic);
 	}
 
-	return GF_SUCCESS;
+	return GF_OK;
 }
 
 GF_STATUS GF_CDatabase::SaveService(GF_CService* service)
@@ -411,7 +411,7 @@ GF_STATUS GF_CDatabase::SaveService(GF_CService* service)
 	GF_STATUS status = GF_FAIL;
 	//load file first
 	status = mDoc->LoadFile((const char*)mFilename);
-	if (status != GF_SUCCESS)
+	if (status != GF_OK)
 	{
 		return GF_FAIL;
 	}
@@ -428,7 +428,7 @@ GF_STATUS GF_CDatabase::SaveService(GF_CService* service)
 	}
 
 	mDoc->SaveFile((const char*)mFilename);
-	return GF_SUCCESS;
+	return GF_OK;
 }
 
 void GF_CDatabase::GetUUIDFromChar(GF_UUID *uuid, const char* value)
@@ -833,7 +833,7 @@ GF_STATUS GF_CDatabase::LoadService(GF_CService* service)
 	GF_STATUS status = GF_FAIL;
 	UINT8 index = 0;
 	status = mDoc->LoadFile((const char*)mFilename);
-	if (status != GF_SUCCESS)
+	if (status != GF_OK)
 	{
 		return GF_FAIL;
 	}
@@ -861,5 +861,5 @@ GF_STATUS GF_CDatabase::LoadService(GF_CService* service)
 
 	service->mNumOfPrivateService = index;
 
-	return GF_SUCCESS;
+	return GF_OK;
 }

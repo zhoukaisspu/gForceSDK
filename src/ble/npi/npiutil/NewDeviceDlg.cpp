@@ -71,7 +71,7 @@ void NewDeviceDlg::OnBnClickedOk()
 		                                 parity[m_parity.GetCurSel()], dataBit[m_databit.GetCurSel()],
 		                                 stopBit[m_stopbit.GetCurSel()]);
 
-		if (!theApp.m_cmdHandle->Connect()) {
+		if (!theApp.m_cmdHandle->Connect(2)) {
 			delete theApp.m_cmdHandle;
 			theApp.m_cmdHandle = NULL;
 			AfxMessageBox(L"Can't open port!");
