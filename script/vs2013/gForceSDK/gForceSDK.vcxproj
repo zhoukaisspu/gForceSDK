@@ -84,7 +84,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <OutputFile>$(SolutionDir)..\..\lib\windows\$(PlatformTarget)\$(ProjectName)d.lib</OutputFile>
+      <OutputFile>$(SolutionDir)..\..\lib\windows\$(PlatformTarget)\gforced.lib</OutputFile>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -106,7 +106,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <OutputFile>$(SolutionDir)..\..\lib\windows\$(PlatformTarget)\$(ProjectName).lib</OutputFile>
+      <OutputFile>$(SolutionDir)..\..\lib\windows\$(PlatformTarget)\gforce.lib</OutputFile>
     </Lib>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

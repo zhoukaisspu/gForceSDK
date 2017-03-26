@@ -70,7 +70,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>gForceSDKd.lib;libbled.lib;LibBLENPId.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gForced.lib;libbled.lib;LibBLENPId.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\..\lib\windows\$(PlatformTarget)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -90,7 +90,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>gForceSDK.lib;libble.lib;LibBLENPI.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gForcelib;libble.lib;LibBLENPI.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\..\lib\windows\$(PlatformTarget)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
