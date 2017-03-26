@@ -1,6 +1,6 @@
 #ifndef __ADAPTERMANAGERINTERFACE_H__
 #define __ADAPTERMANAGERINTERFACE_H__
-#include "oym_types.h"
+#include "GFBLETypes.h"
 
 class GF_CClientCallback;
 class GF_CAdapterManager;

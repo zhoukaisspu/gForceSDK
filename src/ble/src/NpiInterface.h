@@ -3,7 +3,7 @@
 
 #include <npi_cmd.h>
 #include <npi_evt.h>
-#include <oym_types.h>
+#include <GFBLETypes.h>
 #include <LogPrint.h>
 #include <iostream>
 #include <list>
@@ -53,7 +53,6 @@ private:
 	NPI_CMD* mCommand;
 	//LISTCALLBACK mCallback;
 	GF_CCallBack * mCallback[CALLBACK_MAX_INDEX];
-	GF_ULONG mEvtThreadID;
 	CThread *mEvtThread;
 
 	/*event queue.

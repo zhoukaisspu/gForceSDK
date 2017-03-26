@@ -25,7 +25,7 @@ GF_STATUS GF_CDiscoveryService::Init()
 	if (mInterface != NULL)
 	{
 		mInterface->RegisterCallback(this);
-		return GF_INNER_SUCCESS;
+		return GF_OK;
 	}
 	else
 	{
@@ -48,12 +48,12 @@ GF_STATUS GF_CDiscoveryService::Deinit()
 	mInterface = NULL;
 	mCallback = NULL;
 
-	return GF_INNER_SUCCESS;
+	return GF_OK;
 }
 
 GF_STATUS GF_CDiscoveryService::StartScan(GF_UINT8 RSSI_Threshold)
 {
-	GF_STATUS result = GF_INNER_SUCCESS;
+	GF_STATUS result = GF_OK;
 	LOGDEBUG(mTag, "StartScan... \n");
 
 	if (mInterface == NULL)
@@ -69,7 +69,7 @@ GF_STATUS GF_CDiscoveryService::StartScan(GF_UINT8 RSSI_Threshold)
 	}
 	
 	result = mInterface->StartLEScan();
-	if (result == GF_INNER_SUCCESS)
+	if (result == GF_OK)
 	{
 		mIsScanning = GF_TRUE;
 		mRSSI_Threshold = RSSI_Threshold;
@@ -80,7 +80,7 @@ GF_STATUS GF_CDiscoveryService::StartScan(GF_UINT8 RSSI_Threshold)
 
 GF_STATUS GF_CDiscoveryService::StopScan()
 {
-	GF_STATUS result = GF_INNER_SUCCESS;
+	GF_STATUS result = GF_OK;
 	if (mInterface == NULL)
 	{
 		LOGERROR(mTag, "StartScan failed, interface not available... \n");
@@ -94,7 +94,7 @@ GF_STATUS GF_CDiscoveryService::StopScan()
 	}
 
 	result = mInterface->StopLEScan();
-	if (result == GF_INNER_SUCCESS)
+	if (result == GF_OK)
 	{
 		mIsScanning = GF_FALSE;
 	}
@@ -116,7 +116,7 @@ GF_STATUS GF_CDiscoveryService::ProcessScanFinished()
 		mAvalbalDevice.clear();
 	}
 
-	return GF_INNER_SUCCESS;
+	return GF_OK;
 }
 
 /*
@@ -251,7 +251,7 @@ GF_STATUS GF_CDiscoveryService::ProcessScanResult(GF_PUINT8 data, GF_UINT16 leng
 		{
 			LOGDEBUG(mTag, "wait for scan response... \n");
 			mAvalbalDevice.push_front(bt_address);
-			return GF_INNER_SUCCESS;
+			return GF_OK;
 		}
 		else if (LE_ADV_PROCESS_OK == result)
 		{
@@ -263,7 +263,7 @@ GF_STATUS GF_CDiscoveryService::ProcessScanResult(GF_PUINT8 data, GF_UINT16 leng
 				{
 					mCallback->OnDeviceFound((bt_address));
 				}
-				return GF_INNER_SUCCESS;
+				return GF_OK;
 			}
 		}
 	}
@@ -303,7 +303,7 @@ GF_STATUS GF_CDiscoveryService::ProcessScanResult(GF_PUINT8 data, GF_UINT16 leng
 		}
 	}
 
-	return GF_INNER_SUCCESS;
+	return GF_OK;
 }
 
 GF_STATUS GF_CDiscoveryService::OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16 length)

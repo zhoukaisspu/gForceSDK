@@ -7,6 +7,7 @@
 #include "afxdialogex.h"
 #include "SDK_BLE_GUI.h"
 #include "MainFrm.h"
+#include "log.h"
 
 #include "NewDeviceDlg.h"
 #ifdef _DEBUG
@@ -170,5 +171,40 @@ void CSDK_BLE_GUIApp::OnCloseDevice()
 }
 // CSDK_BLE_GUIApp message handlers
 
+#define RED_COLOR RGB(255, 0, 0)
+#define BLUE_COLOR RGB(0, 0, 255)
+#define GREEN_COLOR RGB(0, 255, 0)
+CHARFORMAT2 cf;
 
+void setColor(UINT8 color)
+{
+	theApp.m_logView->m_richEdit.GetSelectionCharFormat(cf);
+	cf.dwMask = CFM_COLOR | CFM_SIZE;// | CFM_BOLD | CFM_BACKCOLOR;
+	cf.dwEffects &= ~CFE_AUTOCOLOR;
+	if (color == 0)
+	{
+		cf.crTextColor = GREEN_COLOR;//green
+	}
+	else if (color == 1)
+	{
+		cf.crTextColor = RED_COLOR;//red
+	}
+	else if (color == 2)
+	{
+		cf.crTextColor = BLUE_COLOR;//blue
+	}
+	cf.yHeight = 200;
+}
+
+void setData(WCHAR *buf)
+{
+	theApp.m_logView->m_richEdit.SetSel(-1, -1);
+	theApp.m_logView->m_richEdit.SetSelectionCharFormat(cf);
+	theApp.m_logView->m_richEdit.ReplaceSel((LPCTSTR)buf);
+}
+
+void setMessageBox(WCHAR *buf)
+{
+	AfxMessageBox(buf);
+}
 

@@ -1,7 +1,7 @@
 #ifndef __GATTCLIENT_H__
 #define __GATTCLIENT_H__
 
-#include "oym_types.h"
+#include "GFBLETypes.h"
 #include "list"
 using namespace std;
 

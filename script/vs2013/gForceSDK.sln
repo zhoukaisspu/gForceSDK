@@ -25,6 +25,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LibBLETestApp", "LibBLETest
 		{422D219A-E376-499C-9A18-B7D33A1882CF} = {422D219A-E376-499C-9A18-B7D33A1882CF}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LibBLENpiUtil", "LibBLENPIUtil\LibBLENPIUtil.vcxproj", "{CF71DC61-5B07-4A40-B274-94D37C50BDC8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F2135345-F913-41D3-8AF7-1028FC18E20D} = {F2135345-F913-41D3-8AF7-1028FC18E20D}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -51,6 +56,10 @@ Global
 		{ED547FF7-FEC3-4F8C-B71C-DD6F0AC4541C}.Debug|Win32.Build.0 = Debug|Win32
 		{ED547FF7-FEC3-4F8C-B71C-DD6F0AC4541C}.Release|Win32.ActiveCfg = Release|Win32
 		{ED547FF7-FEC3-4F8C-B71C-DD6F0AC4541C}.Release|Win32.Build.0 = Release|Win32
+		{CF71DC61-5B07-4A40-B274-94D37C50BDC8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CF71DC61-5B07-4A40-B274-94D37C50BDC8}.Debug|Win32.Build.0 = Debug|Win32
+		{CF71DC61-5B07-4A40-B274-94D37C50BDC8}.Release|Win32.ActiveCfg = Release|Win32
+		{CF71DC61-5B07-4A40-B274-94D37C50BDC8}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

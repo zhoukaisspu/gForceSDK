@@ -74,14 +74,22 @@ public:
 
 	void onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device)
 	{
-		printf("\n onDeviceConnected \n");
+		printf("\n onDeviceConnected withs status = %d\n", status);
+		if (status == GF_OK)
+		{
+			Sleep(4000);
+			mAMInterface->Disconnect(device->handle);
+		}
+		
 	}
 
 	void onDeviceDisonnected(GF_STATUS status, GF_ConnectedDevice *device, GF_UINT8 reason)
 	{
-		printf("\n onDeviceDisonnected \n");
-		Sleep(10000);
+		printf("\n onDeviceDisonnected with status = %d\n", status);
+		Sleep(5000);
 		mAMInterface->Connect(device->address, device->address_type, GF_TRUE);
+		Sleep(5000);
+		mAMInterface->CancelConnect(device->address, device->address_type);
 	}
 
 	void onMTUSizeChanged(GF_STATUS status, GF_UINT16 handle, GF_UINT16 mtu_size)

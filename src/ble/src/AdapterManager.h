@@ -1,6 +1,6 @@
 #ifndef __ADAPTERMANAGER_H__
 #define __ADAPTERMANAGER_H__
-#include "oym_types.h"
+#include "GFBLETypes.h"
 #include "AdapterManagerInterface.h"
 #include <list>
 using namespace std;
@@ -11,7 +11,6 @@ class GF_CRemoteDevice;
 class GF_CNpiInterface;
 class GF_CClientCallback;
 class GF_CCallBack;
-static GF_BOOL mInitialized = GF_FALSE;
 
 class GF_CAdapterManager : public GF_CCallBack, public GF_CAdapterManagerInterface
 {
@@ -26,13 +25,13 @@ public:
 	GF_STATUS RegisterClientCallback(GF_CClientCallback* callback)
 	{
 		mClientCallback = callback;
-		return GF_INNER_SUCCESS;
+		return GF_OK;
 	}
 
 	GF_STATUS UnregisterClientCallback()
 	{
 		mClientCallback = NULL;
-		return GF_INNER_SUCCESS;
+		return GF_OK;
 	}
 
 	GF_STATUS ConfigMtuSize(GF_UINT16 conn_handle, GF_UINT16 MTU_Size);
@@ -47,10 +46,14 @@ public:
 
 	GF_STATUS OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16 length);
 	GF_STATUS OnDeviceFound(GF_BLEDevice new_device);
-	static GF_CAdapterManager* mInstance;
+	GF_CAdapterManagerInterface* GetInstance();
+
+protected:
 	GF_CAdapterManager();
 	~GF_CAdapterManager();
+	friend class GF_CAdapterManagerInterface;
 private:
+	static GF_CAdapterManager* mInstance;
 	GF_STATUS ConnectComplete(GF_UINT16 handle);
 	GF_STATUS ScanFinished();
 	GF_STATUS OnConnectEvent(GF_PUINT8 data, GF_UINT16 length);
@@ -64,7 +67,7 @@ private:
 	list<GF_CRemoteDevice*> mAvailabeDevice;
 	list<GF_CRemoteDevice*> mConnectingDevice;
 	list<GF_CRemoteDevice*> mConnectedDevice;
-
+	GF_CRemoteDevice* mCancelConnectingDevice;
 	GF_CClientCallback* mClientCallback;
 };
 #endif

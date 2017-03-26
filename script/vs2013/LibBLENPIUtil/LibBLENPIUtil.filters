@@ -5,21 +5,9 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Header Files\NPI">
-      <UniqueIdentifier>{b182f7f1-e1e9-4ac3-8cdf-777ccddac10a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\GUI">
-      <UniqueIdentifier>{40ed2343-bf6b-41c6-b15f-8311f5f1656c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Source Files\NPI">
-      <UniqueIdentifier>{99ac52ef-0f76-4006-b2f3-7eb913622096}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\GUI">
-      <UniqueIdentifier>{df4700af-c571-4b92-9cfb-f63b8914485f}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
@@ -33,136 +21,118 @@
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\NPI\Include\com.h">
-      <Filter>Header Files\NPI</Filter>
+    <ClInclude Include="..\src\ble\npi\com.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\NPI\Include\gatt.h">
-      <Filter>Header Files\NPI</Filter>
+    <ClInclude Include="..\src\ble\npi\CommonDef.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\NPI\Include\log.h">
-      <Filter>Header Files\NPI</Filter>
+    <ClInclude Include="..\src\ble\npi\gap.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\NPI\Include\npi_cmd.h">
-      <Filter>Header Files\NPI</Filter>
+    <ClInclude Include="..\src\ble\npi\gatt.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\NPI\Include\npi_evt.h">
-      <Filter>Header Files\NPI</Filter>
+    <ClInclude Include="..\src\ble\npi\log.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\NPI\Include\Thread.h">
-      <Filter>Header Files\NPI</Filter>
+    <ClInclude Include="..\src\ble\npi\npi_cmd.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\NPI\Include\CommonDef.h">
-      <Filter>Header Files\NPI</Filter>
+    <ClInclude Include="..\src\ble\npi\npi_evt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ble\npi\npi_queue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ble\npi\npi_tl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ble\npi\Thread.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Inc\ButtGattView.h">
-      <Filter>Header Files\GUI</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Inc\CmdTab1_Dlg.h">
-      <Filter>Header Files\GUI</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Inc\CmdTab2_Dlg.h">
-      <Filter>Header Files\GUI</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Inc\CmdTab3_Dlg.h">
-      <Filter>Header Files\GUI</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Inc\CmdTab4_Dlg.h">
-      <Filter>Header Files\GUI</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Inc\CmdView.h">
-      <Filter>Header Files\GUI</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Inc\GuiEvtHdl.h">
-      <Filter>Header Files\GUI</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Inc\LogView.h">
-      <Filter>Header Files\GUI</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Inc\MainFrm.h">
-      <Filter>Header Files\GUI</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Inc\NewDeviceDlg.h">
-      <Filter>Header Files\GUI</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Inc\SDK_BLE_GUI.h">
-      <Filter>Header Files\GUI</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Inc\TopFrame.h">
-      <Filter>Header Files\GUI</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\NPI\Include\gap.h">
-      <Filter>Header Files\NPI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NPI\Include\npi_queue.h">
-      <Filter>Header Files\NPI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NPI\Include\npi_tl.h">
-      <Filter>Header Files\NPI</Filter>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\NPI\NpiInterface\com.cpp">
-      <Filter>Source Files\NPI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\NPI\NpiInterface\log.cpp">
-      <Filter>Source Files\NPI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\NPI\NpiInterface\npi_cmd.cpp">
-      <Filter>Source Files\NPI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\NPI\NpiInterface\npi_evt.cpp">
-      <Filter>Source Files\NPI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\NPI\NpiInterface\Thread.cpp">
-      <Filter>Source Files\NPI</Filter>
-    </ClCompile>
-    <ClCompile Include="App\ButtGattView.cpp">
-      <Filter>Source Files\GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="App\CmdTab1_Dlg.cpp">
-      <Filter>Source Files\GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="App\CmdTab2_Dlg.cpp">
-      <Filter>Source Files\GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="App\CmdTab3_Dlg.cpp">
-      <Filter>Source Files\GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="App\CmdTab4_Dlg.cpp">
-      <Filter>Source Files\GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="App\CmdView.cpp">
-      <Filter>Source Files\GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="App\GuiEvtHdl.cpp">
-      <Filter>Source Files\GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="App\LogView.cpp">
-      <Filter>Source Files\GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="App\MainFrm.cpp">
-      <Filter>Source Files\GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="App\NewDeviceDlg.cpp">
-      <Filter>Source Files\GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="App\SDK_BLE_GUI.cpp">
-      <Filter>Source Files\GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="App\TopFrame.cpp">
-      <Filter>Source Files\GUI</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\NPI\NpiInterface\npi_tl.cpp">
-      <Filter>Source Files\NPI</Filter>
+    <ClCompile Include="App\ButtGattView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="App\CmdTab1_Dlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="App\CmdTab2_Dlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="App\CmdTab3_Dlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="App\CmdTab4_Dlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="App\CmdView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="App\GuiEvtHdl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="App\LogView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="App\MainFrm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="App\NewDeviceDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="App\SDK_BLE_GUI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="App\TopFrame.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

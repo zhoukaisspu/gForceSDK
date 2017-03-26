@@ -3,17 +3,28 @@
 #include"npi_cmd.h"
 #include"npi_evt.h"
 GF_LogType logType;
+FILE* fileHandle = NULL;
 
 Log::Log(HANDLE hdl, GF_LogType type)
 {
 	comHdl = hdl;
 	logType = type;
+
+	if ((fileHandle = _wfopen(L"Npidump.log", L"wt+,ccs=UTF-8")) == NULL)
+	{
+		printf("open NpiDump.log fail!! \n");
+	}
 }
 
 
 Log::~Log()
 {
 	comHdl = NULL;
+	if (fileHandle && fclose(fileHandle) == 0)
+	{
+		wprintf(L"fclose failed!\n");
+		fileHandle = NULL;
+	}
 }
 
 void Log::Run()
@@ -637,6 +648,11 @@ size_t Log::Log_printf(const wchar_t* fmt, ...)
 	else
 	{
 		fwprintf_s(stdout, buf);
+
+		if (fwrite(buf, sizeof(wchar_t), len, fileHandle) != len)
+		{
+			printf("write data with wrong length \n");
+		}
 	}
 
 	va_end(argp);

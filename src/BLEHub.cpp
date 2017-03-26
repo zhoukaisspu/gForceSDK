@@ -33,7 +33,7 @@ GF_RET_CODE BLEHub::init(GF_UINT8 comPort)
 		GF_LOGD("Memory insurfficient.");
 		return GF_RET_CODE::GF_ERR_NO_RESOURCE;
 	}
-	if (GF_INNER_SUCCESS != mAM->Init(comPort)) {
+	if (GF_OK != mAM->Init(comPort)) {
 		GF_LOGD("Hub init failed.");
 		mAM = nullptr;
 		// TODO: check return value for reason
@@ -88,7 +88,7 @@ GF_RET_CODE BLEHub::deinit()
 	if (nullptr == mAM) {
 		return ret;
 	}
-	if (GF_INNER_SUCCESS != mAM->Deinit()) {
+	if (GF_OK != mAM->Deinit()) {
 		GF_LOGE("Hub deinit failed.");
 	}
 	mAM->UnregisterClientCallback();
@@ -178,7 +178,7 @@ GF_RET_CODE BLEHub::startScan(GF_UINT8 rssiThreshold)
 	{
 		cleanInvalidWeakP(ls);
 		GF_UINT32 ret = static_cast<GF_UINT32>(am->StartScan(rssiThreshold));
-		if (GF_INNER_SUCCESS == ret)
+		if (GF_OK == ret)
 		{
 			// if scan started, remove all disconnected devices
 			for (auto itor = dd.begin(); itor != dd.end();)
@@ -203,7 +203,7 @@ GF_RET_CODE BLEHub::startScan(GF_UINT8 rssiThreshold)
 		}
 		return ret;
 	})));
-	if (GF_INNER_SUCCESS == ret)
+	if (GF_OK == ret)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
 		return GF_RET_CODE::GF_ERROR;
@@ -220,7 +220,7 @@ GF_RET_CODE BLEHub::stopScan()
 	GF_UINT32 ret = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, &ls]()
 	{
 		GF_UINT32 ret = static_cast<GF_UINT32>(am->StopScan());
-		if (GF_INNER_SUCCESS == ret)
+		if (GF_OK == ret)
 		{
 			cleanInvalidWeakP(ls);
 			GF_LOGD("Scan stopped.");
@@ -233,7 +233,7 @@ GF_RET_CODE BLEHub::stopScan()
 		}
 		return ret;
 	})));
-	if (GF_INNER_SUCCESS == ret)
+	if (GF_OK == ret)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
 		return GF_RET_CODE::GF_ERROR;
@@ -529,7 +529,7 @@ GF_RET_CODE BLEHub::connect(BLEDevice& dev, bool directConn)
 		GF_STATUS status = am->Connect(addr, type, directConn ? GF_TRUE : GF_FALSE);
 		return static_cast<GF_UINT32>(status);
 	})));
-	if (GF_INNER_SUCCESS == status)
+	if (GF_OK == status)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
 		return GF_RET_CODE::GF_ERROR;
@@ -551,7 +551,7 @@ GF_RET_CODE BLEHub::cancelConnect(BLEDevice& dev)
 		GF_STATUS status = am->CancelConnect(addr, type);
 		return static_cast<GF_UINT32>(status);
 	})));
-	if (GF_INNER_SUCCESS == status)
+	if (GF_OK == status)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
 		return GF_RET_CODE::GF_ERROR;
@@ -569,7 +569,7 @@ GF_RET_CODE BLEHub::disconnect(BLEDevice& dev)
 		GF_STATUS status = am->Disconnect(handle);
 		return static_cast<GF_UINT32>(status);
 	})));
-	if (GF_INNER_SUCCESS == status)
+	if (GF_OK == status)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
 		return GF_RET_CODE::GF_ERROR;
@@ -587,7 +587,7 @@ GF_RET_CODE BLEHub::configMtuSize(BLEDevice& dev, GF_UINT16 mtuSize)
 		GF_STATUS status = am->ConfigMtuSize(handle, mtuSize);
 		return static_cast<GF_UINT32>(status);
 	})));
-	if (GF_INNER_SUCCESS == status)
+	if (GF_OK == status)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
 		return GF_RET_CODE::GF_ERROR;
@@ -608,7 +608,7 @@ GF_RET_CODE BLEHub::connectionParameterUpdate(BLEDevice& dev, GF_UINT16 conn_int
 			conn_interval_max, slave_latence, supervision_timeout);
 		return static_cast<GF_UINT32>(status);
 	})));
-	if (GF_INNER_SUCCESS == status)
+	if (GF_OK == status)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
 		return GF_RET_CODE::GF_ERROR;
@@ -629,7 +629,7 @@ GF_RET_CODE BLEHub::writeCharacteristic(BLEDevice& dev,
 			data_length, data);
 		return static_cast<GF_UINT32>(status);
 	})));
-	if (GF_INNER_SUCCESS == status)
+	if (GF_OK == status)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
 		return GF_RET_CODE::GF_ERROR;
@@ -647,7 +647,7 @@ GF_RET_CODE BLEHub::readCharacteristic(BLEDevice& dev, AttributeHandle attribute
 		GF_STATUS status = am->ReadCharacteristic(handle, static_cast<GF_UINT16>(attribute_handle));
 		return static_cast<GF_UINT32>(status);
 	})));
-	if (GF_INNER_SUCCESS == status)
+	if (GF_OK == status)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
 		return GF_RET_CODE::GF_ERROR;

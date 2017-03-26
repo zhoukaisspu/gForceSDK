@@ -2,7 +2,7 @@
 #define __GF_CLog_H__
 
 #include "stdio.h"
-#include "oym_types.h"
+#include "GFBLETypes.h"
 
 #define LOG_LEVEL_DEBUG 1
 #define LOG_LEVEL_WARNING 2
