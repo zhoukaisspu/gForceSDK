@@ -3,7 +3,7 @@
 
 #include <npi_cmd.h>
 #include <npi_evt.h>
-#include <oym_types.h>
+#include <GFBLETypes.h>
 #include <LogPrint.h>
 #include <iostream>
 #include <list>

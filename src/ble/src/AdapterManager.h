@@ -1,6 +1,6 @@
 #ifndef __ADAPTERMANAGER_H__
 #define __ADAPTERMANAGER_H__
-#include "oym_types.h"
+#include "GFBLETypes.h"
 #include "AdapterManagerInterface.h"
 #include <list>
 using namespace std;
@@ -67,7 +67,7 @@ private:
 	list<GF_CRemoteDevice*> mAvailabeDevice;
 	list<GF_CRemoteDevice*> mConnectingDevice;
 	list<GF_CRemoteDevice*> mConnectedDevice;
-
+	GF_CRemoteDevice* mCancelConnectingDevice;
 	GF_CClientCallback* mClientCallback;
 };
 #endif

@@ -1,7 +1,7 @@
 #ifndef __DISCOVERYSERVICE_H_HH
 #define __DISCOVERYSERVICE_H_HH
 
-#include <oym_types.h>
+#include <GFBLETypes.h>
 #include <NpiInterface.h>
 #include <LogPrint.h>
 //#include "AdapterManager.h"

@@ -74,16 +74,22 @@ public:
 
 	void onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device)
 	{
-		printf("\n onDeviceConnected \n");
-		Sleep(5000);
-		mAMInterface->Disconnect(device->handle);
+		printf("\n onDeviceConnected withs status = %d\n", status);
+		if (status == GF_OK)
+		{
+			Sleep(4000);
+			mAMInterface->Disconnect(device->handle);
+		}
+		
 	}
 
 	void onDeviceDisonnected(GF_STATUS status, GF_ConnectedDevice *device, GF_UINT8 reason)
 	{
-		printf("\n onDeviceDisonnected \n");
+		printf("\n onDeviceDisonnected with status = %d\n", status);
 		Sleep(5000);
 		mAMInterface->Connect(device->address, device->address_type, GF_TRUE);
+		Sleep(5000);
+		mAMInterface->CancelConnect(device->address, device->address_type);
 	}
 
 	void onMTUSizeChanged(GF_STATUS status, GF_UINT16 handle, GF_UINT16 mtu_size)
@@ -115,7 +121,7 @@ private:
 	GF_CAdapterManagerInterface* mAMInterface;
 	list<GF_CDevice*> mAvailabeDevice;
 };
-class GF_CAdapterManager;
+
 int _tmain(int charc, char* argv[]) {
 	GF_STATUS status;
 	GF_UINT8 loop = 0;

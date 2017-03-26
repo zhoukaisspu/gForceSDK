@@ -1,4 +1,5 @@
 #include "RemoteDevice.h"
+#include <assert.h>
 #define LOCAL_GATT_CLIENT_MTU_SIZE 23
 
 /*RemoteDevice is a abstract of Remote Device.*/
@@ -16,6 +17,7 @@ GF_VOID GF_CRemoteDevice::Run()
 
 	while (1) {
 		N++;
+#if 0
 		if (mThreadRunning == GF_FALSE)
 		{
 			if (mThrandEvent != NULL)
@@ -26,9 +28,17 @@ GF_VOID GF_CRemoteDevice::Run()
 			}
 			/*why execute this code after return??*/
 			printf(("num = %d, threads exit with err=%d\n"), N, GetLastError());
+			Running = GF_FALSE;
+			mMessage.clear();
 			return;
 		}
-
+#else
+		if (WaitForSingleObject(mThreadEvent, 0) == WAIT_OBJECT_0){
+			CloseHandle(mThreadEvent);
+			::SetEvent(mThreadStopEvent);
+			return;
+		}
+#endif
 		EnterCriticalSection(&mMutex);
 		if (mMessage.size() != 0) //get msg from message queue
 		{
@@ -123,7 +133,6 @@ GF_CRemoteDevice::~GF_CRemoteDevice()
 	delete mDatabase;
 }
 
-
 GF_VOID GF_CRemoteDevice::Init()
 {
 	LOGDEBUG(mTag, "Init thread to process message... \n");
@@ -133,8 +142,9 @@ GF_VOID GF_CRemoteDevice::Init()
 	mThread = new CThread(this);
 	mThread->Start();
 	mThread->Join(100);
-	mThrandEvent = mThread->GetEvent();
+	mThreadEvent = mThread->GetEvent();
 	mThreadRunning = GF_TRUE;
+	mThreadStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	mNeedSaveLTK = GF_TRUE;
 	mNeedSaveService = GF_TRUE;
 	mHandle = INVALID_HANDLE;
@@ -146,10 +156,16 @@ GF_VOID GF_CRemoteDevice::DeInit()
 	LOGDEBUG(mTag, "DeInit... \n");
 	if (mThread != NULL)
 	{
-		mThreadRunning = GF_FALSE;
+		mThread->Terminate(0);
+		LOGDEBUG(mTag, "start to stop thread ... \n");
+		WaitForSingleObject(mThreadStopEvent, INFINITE);
+		CloseHandle(mThreadStopEvent);
+		LOGDEBUG(mTag, "thread stoped... \n");
 	}
+	
 	mState = GF_DEVICE_STATE_IDLE;
 	mHandle = INVALID_HANDLE;
+	mMessage.clear();
 }
 
 GF_STATUS GF_CRemoteDevice::OnDeviceConnected(GF_PUINT8 data, GF_UINT16 length)
@@ -163,6 +179,7 @@ GF_STATUS GF_CRemoteDevice::OnDeviceConnected(GF_PUINT8 data, GF_UINT16 length)
 	status = data[EVENT_DEVICE_CCONNECTED_STATUS];
 	if (status != GF_OK)
 	{
+		assert(GF_FALSE);
 		return status;
 	}
 
@@ -199,6 +216,11 @@ GF_STATUS GF_CRemoteDevice::OnDeviceConnected(GF_PUINT8 data, GF_UINT16 length)
 		status = mInterface->Authenticate(mHandle);
 	}
 
+	if (status != GF_OK)
+	{
+		status = GF_AUTH_FAIL;
+	}
+
 	return status;
 }
 
@@ -214,6 +236,11 @@ GF_STATUS GF_CRemoteDevice::IdleStateProcessMessage(GF_DEVICE_EVENT event, GF_PU
 			if (result == GF_OK)
 			{
 				mState = GF_DEVICE_STATE_W4SECU;
+			}
+			else if (result == GF_AUTH_FAIL)
+			{
+				/*Start to disconnect if initial authtication fail*/
+				mInterface->Disconnect(mHandle);
 			}
 			else
 			{
@@ -246,9 +273,15 @@ GF_STATUS GF_CRemoteDevice::W4ConnStateProcessMessage(GF_DEVICE_EVENT event, GF_
 			{
 				mState = GF_DEVICE_STATE_W4SECU;
 			}
+			else if (result == GF_AUTH_FAIL)
+			{
+				/*Start to disconnect if initial authtication fail*/
+				mInterface->Disconnect(mHandle);
+			}
 			else
 			{
 				mState = GF_DEVICE_STATE_IDLE;
+				assert(GF_FALSE);
 			}
 			break;
 		}
@@ -310,6 +343,7 @@ GF_STATUS GF_CRemoteDevice::AuthenticationComplete(GF_PUINT8 data, GF_UINT16 len
 	if (data[EVENT_AUTH_COMPLETE_STATUS_OFFSET] != GF_OK)
 	{
 		LOGDEBUG(mTag, "GF_DEVICE_EVENT_AUTH_COMPLETE with error!! \n");
+		assert(GF_FALSE);
 		return GF_FAIL;
 	}
 
@@ -386,6 +420,7 @@ GF_STATUS GF_CRemoteDevice::BondComplete(GF_PUINT8 data, GF_UINT16 length)
 		else
 		{
 			//fail to discovery all primary service, disconnect connection
+			assert(GF_FALSE);
 		}
 	}
 	else if (status == 0x06) //key missing
@@ -396,7 +431,7 @@ GF_STATUS GF_CRemoteDevice::BondComplete(GF_PUINT8 data, GF_UINT16 length)
 		mDatabase->DeleteGattService();
 		mNeedSaveLTK = GF_TRUE;
 		mNeedSaveService = GF_TRUE;
-		//mInterface->Authenticate(mHandle);
+		mInterface->Disconnect(mHandle);
 	}
 	return status;
 }
@@ -417,6 +452,7 @@ GF_STATUS GF_CRemoteDevice::ConnectionParameterUpdated(GF_PUINT8 data, GF_UINT16
 	}
 	return status;
 }
+
 GF_STATUS GF_CRemoteDevice::W4SecuStateProcessMessage(GF_DEVICE_EVENT event, GF_PUINT8 data, GF_UINT16 length)
 {
 	GF_STATUS result = GF_FAIL;
@@ -435,7 +471,8 @@ GF_STATUS GF_CRemoteDevice::W4SecuStateProcessMessage(GF_DEVICE_EVENT event, GF_
 			result = AuthenticationComplete(data, length);
 			if(result != GF_OK)
 			{
-				LOGDEBUG(mTag, "Authentication Failed!!! \n");
+				/*Start to disconnect if authtication fail*/
+				mInterface->Disconnect(mHandle);
 			}
 			break;
 		}
@@ -512,14 +549,11 @@ GF_STATUS GF_CRemoteDevice::W4GattPriSvcStateProcessMessage(GF_DEVICE_EVENT even
 		{
 			//start to discaovery all primary service.
 			LOGDEBUG(mTag, "start to discaovery all primary service.\n");
-			if (GF_OK == mInterface->DiscoveryAllPrimaryService(mHandle))
-			{
-				//mState = GF_DEVICE_STATE_GATT_PRI_SVC;
-			}
-			else
+			if (GF_OK != mInterface->DiscoveryAllPrimaryService(mHandle))
 			{
 				//fail to discovery all primary service, disconnect connection
 				LOGDEBUG(mTag, "DiscoveryAllPrimaryService failed \n");
+				assert(GF_FALSE);
 			}
 		}
 		
@@ -538,6 +572,10 @@ GF_STATUS GF_CRemoteDevice::W4GattPriSvcStateProcessMessage(GF_DEVICE_EVENT even
 		{
 			num_svc = (length - 1) / pair_len;
 		}
+		else
+		{
+			assert(GF_FALSE);
+		}
 		GF_PUINT8 p = data + 5;
 
 		LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_BY_GRP_TYPE_MSG with status = %d\n", status);
@@ -548,12 +586,19 @@ GF_STATUS GF_CRemoteDevice::W4GattPriSvcStateProcessMessage(GF_DEVICE_EVENT even
 			GF_CPrimaryService* service = mService.FindPriSvcbyIndex(mService.mCurrentPriService);
 			if (NULL != service)
 			{
-				LOGDEBUG(mTag, "start to discovery %dth primary service!!!\n", mService.mCurrentPriService);
-				mInterface->DiscoveryIncludedPrimaryService(mHandle, service->mStartHandle, service->mEndHandle);
-				mState = GF_DEVICE_STATE_GATT_INC_SVC;
+				LOGDEBUG(mTag, "start to discovery included service of %dth primary service!!!\n", mService.mCurrentPriService);
+				if (GF_OK == mInterface->DiscoveryIncludedPrimaryService(mHandle, service->mStartHandle, service->mEndHandle))
+				{
+					mState = GF_DEVICE_STATE_GATT_INC_SVC;
+				}
+				else
+				{
+					assert(GF_FALSE);
+				}
 			}
 			else
 			{
+				assert(GF_FALSE);
 				LOGDEBUG(mTag, "mService.mCurrentPriService = %d is not available. \n", mService.mCurrentPriService);
 			}
 		}
@@ -569,11 +614,13 @@ GF_STATUS GF_CRemoteDevice::W4GattPriSvcStateProcessMessage(GF_DEVICE_EVENT even
 			}
 			else
 			{
+				assert(GF_FALSE);
 				LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_BY_GRP_TYPE_MSG with wrong length = %d, pair_len = %d\n", length, pair_len);
 			}
 		}
 		else
 		{
+			assert(GF_FALSE);
 			LOGERROR(mTag, "GF_DEVICE_EVENT_ATT_READ_BY_GRP_TYPE_MSG with error status! %d\n");
 		}
 	}
@@ -615,7 +662,10 @@ GF_STATUS GF_CRemoteDevice::W4GattIncSvcStateProcessMessage(GF_DEVICE_EVENT even
 			if (GF_ERROR_CODE_ATTR_NOT_FOUND == error_code)
 			{
 				//no included service found, start to discovery charactistic.
-				this->StartDiscoveryCharacteristic();
+				if (GF_OK != this->StartDiscoveryCharacteristic())
+				{
+					assert(GF_FALSE);
+				}
 			}
 			break;
 		}	
@@ -635,9 +685,15 @@ GF_STATUS GF_CRemoteDevice::W4GattIncSvcStateProcessMessage(GF_DEVICE_EVENT even
 				else
 				{
 					LOGERROR(mTag, "pair_len error!!!");
+					assert(GF_FALSE);
 				}
 
 				GF_CPrimaryService* service = mService.FindPriSvcbyIndex(mService.mCurrentPriService);
+				if (NULL == service)
+				{
+					assert(GF_FALSE);
+				}
+				
 				if ((pdu_len - 1) % pair_len == 0)
 				{
 					for (GF_UINT8 i = 0; i < num_svc; i++)
@@ -649,18 +705,22 @@ GF_STATUS GF_CRemoteDevice::W4GattIncSvcStateProcessMessage(GF_DEVICE_EVENT even
 				else
 				{
 					LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_BY_TYPE_MSG with wrong length = %d, pair_len = %d\n", length, pair_len);
+					assert(GF_FALSE);
 				}
 				//UUID handle = data[GF_ATT_READ_BY_TYPE_RES_START_HANDLE_OFFSET] + data[GF_ATT_READ_BY_TYPE_RES_HANDLE_OFFSET + 1] << 8;
 			}
 			else if (GF_ATT_PRODECURE_COMPLETE == status)
 			{
-				//included service find completeed.
-				this->StartDiscoveryCharacteristic();
+				/*included service find completeed.*/
+				if (GF_OK != this->StartDiscoveryCharacteristic())
+				{
+					assert(GF_FALSE);
+				}
 			}
 			else
 			{
 				LOGERROR(mTag, "included service end with error status!!!");
-				//ERROR handle to do...
+				assert(GF_FALSE);
 			}
 		}
 		default:
@@ -699,12 +759,22 @@ GF_STATUS GF_CRemoteDevice::W4GattDisCharcStateProcessMessage(GF_DEVICE_EVENT ev
 		{
 			//no characteristic found, start to discovery next primary service.
 			GF_CPrimaryService* service;
-			if((service = mService.GetNextAvailablePriSvc()) != NULL)
+			if((service = mService.GetNextAvailablePriSvc()) != NULL && mInterface != NULL)
 			{
-				LOGDEBUG(mTag, "start to discovery %dth primary service!!!\n", mService.mCurrentPriService);
-				mInterface->DiscoveryIncludedPrimaryService(mHandle, service->mStartHandle, service->mEndHandle);
-				mState = GF_DEVICE_STATE_GATT_INC_SVC;
+				LOGDEBUG(mTag, "start to discovery included service of %dth primary service!!!\n", mService.mCurrentPriService);
+				if (mInterface->DiscoveryIncludedPrimaryService(mHandle, service->mStartHandle, service->mEndHandle))
+				{
+					mState = GF_DEVICE_STATE_GATT_INC_SVC;
+				}
+				else
+				{
+					assert(GF_FALSE);
+				}
 				return GF_OK;
+			}
+			else
+			{
+				/*discovery service completed, to do...*/
 			}
 		}
 		break;
@@ -732,15 +802,25 @@ GF_STATUS GF_CRemoteDevice::W4GattDisCharcStateProcessMessage(GF_DEVICE_EVENT ev
 						if (characteristic->mProperty & GF_ATT_PROPERTY_READ)
 						{
 							//characteristic is readable
-							mInterface->ReadCharacteristicValue(mHandle, characteristic->mValueHandle);
-							mState = GF_DEVICE_STATE_GATT_READ_CHARC_VALUE;
+							if (GF_OK == mInterface->ReadCharacteristicValue(mHandle, characteristic->mValueHandle))
+							{
+								mState = GF_DEVICE_STATE_GATT_READ_CHARC_VALUE;
+							}
+							else
+							{
+								assert(GF_FALSE);
+							}
 						}
 						else
 						{
 							//do not need to read characteristic value. start to read characteristic descriptor if need.
 							this->DiscoveryDescriptor();
 						}
-					}	
+					}
+					else
+					{
+						assert(GF_FALSE);
+					}
 				}
 				else
 				{
@@ -753,6 +833,7 @@ GF_STATUS GF_CRemoteDevice::W4GattDisCharcStateProcessMessage(GF_DEVICE_EVENT ev
 			else
 			{
 				LOGDEBUG(mTag, "mService.mCurrentPriService = %d is not available. \n", mService.mCurrentPriService);
+				assert(GF_FALSE);
 			}
 		}
 		else if (GF_ATT_PROCEDURE_SUCCESS == status)
@@ -767,6 +848,7 @@ GF_STATUS GF_CRemoteDevice::W4GattDisCharcStateProcessMessage(GF_DEVICE_EVENT ev
 			else
 			{
 				LOGERROR(mTag, "pair_len with error!!!");
+				assert(GF_FALSE);
 			}
 
 			LOGDEBUG(mTag, "mService.mCurrentPriService = %d characteristic number = %d. \n", mService.mCurrentPriService, num_chars);
@@ -781,6 +863,7 @@ GF_STATUS GF_CRemoteDevice::W4GattDisCharcStateProcessMessage(GF_DEVICE_EVENT ev
 			else
 			{
 				LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_BY_GRP_TYPE_MSG with wrong length = %d, pair_len = %d\n", length, pair_len);
+				assert(GF_FALSE);
 			}
 		}
 		else
@@ -822,16 +905,17 @@ GF_STATUS GF_CRemoteDevice::W4GattReadCharcValueStateProcessMessage(GF_DEVICE_EV
 			LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_ERROR_MSG with error code = %d \n", error_code);
 			LOGDEBUG(mTag, "read value error, start to discovery discriptor... \n");
 			GF_CPrimaryService* service = mService.FindPriSvcbyIndex(mService.mCurrentPriService);
-			if (service != NULL)
+			assert(service);
+			
+			GF_CCharacteristic* characteristic = service->FindCharacteristicbyIndex(service->mCurrentCharateristic);
+			assert(characteristic);
+
+			LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_RESP_MSG with GF_DEVICE_EVENT_ATT_ERROR_MSG!!!\n");
+			if (characteristic != NULL)
 			{
-				GF_CCharacteristic* characteristic = service->FindCharacteristicbyIndex(service->mCurrentCharateristic);
-				LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_RESP_MSG success!!!\n");
-				if (characteristic != NULL)
-				{
-					characteristic->mAttriValue->mLength = 0;
-					characteristic->mAttriValue->mData = NULL;
-					DiscoveryDescriptor();
-				}
+				characteristic->mAttriValue->mLength = 0;
+				characteristic->mAttriValue->mData = NULL;
+				DiscoveryDescriptor();
 			}
 		}
 		
@@ -843,43 +927,38 @@ GF_STATUS GF_CRemoteDevice::W4GattReadCharcValueStateProcessMessage(GF_DEVICE_EV
 		{
 			LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_RESP_MSG \n");
 			GF_CPrimaryService* service = mService.FindPriSvcbyIndex(mService.mCurrentPriService);
-			if (service != NULL)
+			assert(service);
+
+			GF_CCharacteristic* characteristic = service->FindCharacteristicbyIndex(service->mCurrentCharateristic);
+			LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_RESP_MSG success!!!\n");
+			assert(characteristic);
+
+			GF_UINT8 length = data[GF_ATT_READ_VALUE_RESP_LEN_OFFSET];
+			LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_RESP_MSG with length = %d !!!\n", length);
+			if (length < 22)
 			{
-				GF_CCharacteristic* characteristic = service->FindCharacteristicbyIndex(service->mCurrentCharateristic);
+				characteristic->mAttriValue->mLength = length;
+				characteristic->mAttriValue->mData = (GF_PUINT8)malloc(length);
+				if (characteristic->mAttriValue->mData != NULL)
+				{
+					memcpy(characteristic->mAttriValue->mData, data + GF_ATT_READ_VALUE_RESP_DATA_OFFSET, length);
+				}
 				LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_RESP_MSG success!!!\n");
-				if (characteristic != NULL)
-				{
-					GF_UINT8 length = data[GF_ATT_READ_VALUE_RESP_LEN_OFFSET];
-					LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_RESP_MSG with length = %d !!!\n", length);
-					if (length < 22)
-					{
-						characteristic->mAttriValue->mLength = length;
-						characteristic->mAttriValue->mData = (GF_PUINT8)malloc(length);
-						if (characteristic->mAttriValue->mData != NULL)
-						{
-							memcpy(characteristic->mAttriValue->mData, data + GF_ATT_READ_VALUE_RESP_DATA_OFFSET, length);
-						}
-						LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_RESP_MSG success!!!\n");
-						this->DiscoveryDescriptor();
-					}
-					else
-					{
-						mInterface->ReadCharacteristicLongValue(mHandle, characteristic->mValueHandle, 0x00);
-						Total = 0;
-						memset(Temp_Buffer, 0, TEMP_BUFFER_SIZE);
-						LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_RESP_MSG too long, use ReadLongValue instand!!!\n");
-					}
-				}
-				else
-				{
-					LOGERROR(mTag, "GF_DEVICE_EVENT_ATT_READ_RESP_MSG characteristic not found!!!\n");
-				}
+				this->DiscoveryDescriptor();
 			}
 			else
 			{
-				LOGERROR(mTag, "GF_DEVICE_EVENT_ATT_READ_RESP_MSG service not found!!!\n");
+				if (GF_OK == mInterface->ReadCharacteristicLongValue(mHandle, characteristic->mValueHandle, 0x00))
+				{
+					Total = 0;
+					memset(Temp_Buffer, 0, TEMP_BUFFER_SIZE);
+					LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_RESP_MSG too long, use ReadLongValue instand!!!\n");
+				}
+				else
+				{
+					assert(GF_FALSE);
+				}
 			}
-			
 		}
 			break;
 
@@ -888,34 +967,27 @@ GF_STATUS GF_CRemoteDevice::W4GattReadCharcValueStateProcessMessage(GF_DEVICE_EV
 			LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_BLOB_RESP_MSG with status %d\n", status);
 			GF_CPrimaryService* service = mService.FindPriSvcbyIndex(mService.mCurrentPriService);
 			GF_CCharacteristic* characteristic = NULL;
-			if (service != NULL)
-			{
-				characteristic = service->FindCharacteristicbyIndex(service->mCurrentCharateristic);
-			}
+			assert(service);
+			
+			characteristic = service->FindCharacteristicbyIndex(service->mCurrentCharateristic);
+			assert(characteristic);
 
 			if (status == GF_ATT_PROCEDURE_SUCCESS)
-			{
-				if (characteristic != NULL)
-				{
-					GF_UINT8 length = data[GF_ATT_READ_VALUE_RESP_LEN_OFFSET];
-					LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_BLOB_RESP_MSG with length = %d !!!\n", length);
-					memcpy(Temp_Buffer+Total, data + GF_ATT_READ_VALUE_RESP_DATA_OFFSET, length);
-					Total += length;
-				}
+			{		
+				GF_UINT8 length = data[GF_ATT_READ_VALUE_RESP_LEN_OFFSET];
+				LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_BLOB_RESP_MSG with length = %d !!!\n", length);
+				memcpy(Temp_Buffer+Total, data + GF_ATT_READ_VALUE_RESP_DATA_OFFSET, length);
+				Total += length;
 			}
 			else if (status == GF_ATT_PRODECURE_COMPLETE)
 			{
-				if (characteristic != NULL)
-				{
-					characteristic->mAttriValue->mLength = Total;
-					characteristic->mAttriValue->mData = (GF_PUINT8)malloc(Total);
-					if (characteristic->mAttriValue->mData != NULL)
-					{
-						memcpy(characteristic->mAttriValue->mData, Temp_Buffer, Total);
-					}
-					LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_BLOB_RESP_MSG with Total length = %d !!!\n", Total);
-					this->DiscoveryDescriptor();
-				}
+				characteristic->mAttriValue->mLength = Total;
+				characteristic->mAttriValue->mData = (GF_PUINT8)malloc(Total);
+				assert(characteristic->mAttriValue->mData);
+				
+				memcpy(characteristic->mAttriValue->mData, Temp_Buffer, Total);
+				LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_BLOB_RESP_MSG with Total length = %d !!!\n", Total);
+				this->DiscoveryDescriptor();
 			}
 			break;
 		}
@@ -924,62 +996,54 @@ GF_STATUS GF_CRemoteDevice::W4GattReadCharcValueStateProcessMessage(GF_DEVICE_EV
 		{
 			LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_BY_INFO_MSG with length %d\n", length);
 			GF_CPrimaryService* service = mService.FindPriSvcbyIndex(mService.mCurrentPriService);
+			assert(service);
+			
 			if (status == GF_ATT_PROCEDURE_SUCCESS)
 			{
-				if (service != NULL)
+				GF_CCharacteristic* characteristic = service->FindCharacteristicbyIndex(service->mCurrentCharateristic);
+				assert(characteristic);
+
+				LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_BY_INFO_MSG success!!!\n");
+				if (characteristic != NULL)
 				{
-					GF_CCharacteristic* characteristic = service->FindCharacteristicbyIndex(service->mCurrentCharateristic);
-					LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_BY_INFO_MSG success!!!\n");
-					if (characteristic != NULL)
+					GF_UINT8 len = data[3];
+					GF_UINT8 format = data[4];
+					GF_UINT8 num_char_des = 0;
+					GF_PUINT8 p = data + 5;
+					/*16bit UUID*/
+					if (format == 1)
 					{
-						GF_UINT8 len = data[3];
-						GF_UINT8 format = data[4];
-						GF_UINT8 num_char_des = 0;
-						GF_PUINT8 p = data + 5;
-						/*16bit UUID*/
-						if (format == 1)
+						if ((len - 1) % 4 == 0)
 						{
-							if ((len - 1) % 4 == 0)
+							num_char_des = (len - 1) / 4;
+							for (GF_UINT8 i = 0; i< num_char_des; i++)
 							{
-								num_char_des = (len - 1) / 4;
-								for (GF_UINT8 i = 0; i< num_char_des; i++)
-								{
-									characteristic->AddDescriptorIntoCharacteristic(p, 4);
-									LOGDEBUG(mTag, "UUID of descriptor = 0x%02x!!!\n", (p[2] + (p[3] << 8) ));
-									p += 4;
-								}
+								characteristic->AddDescriptorIntoCharacteristic(p, 4);
+								LOGDEBUG(mTag, "UUID of descriptor = 0x%02x!!!\n", (p[2] + (p[3] << 8) ));
+								p += 4;
 							}
 						}
-						/*128bit UUID*/
-						else if (format == 2)
+					}
+					/*128bit UUID*/
+					else if (format == 2)
+					{
+						if ((len - 1) % 18 == 0)
 						{
-							if ((len - 1) % 18 == 0)
+							num_char_des = (len - 1) / 18;
+							for (GF_UINT8 i = 0; i< num_char_des; i++)
 							{
-								num_char_des = (len - 1) / 18;
-								for (GF_UINT8 i = 0; i< num_char_des; i++)
-								{
-									characteristic->AddDescriptorIntoCharacteristic(p, 18);
-									p += 18;
-								}
+								characteristic->AddDescriptorIntoCharacteristic(p, 18);
+								p += 18;
 							}
-
-						}
-						else
-						{
-							LOGERROR(mTag, "GF_DEVICE_EVENT_ATT_READ_BY_INFO_MSG invalid format = %d !!!\n", format);
 						}
 
-						LOGDEBUG(mTag, "descriptor number is %d !!!\n", characteristic->mNumOfDescriptor);
 					}
 					else
 					{
-						LOGERROR(mTag, "GF_DEVICE_EVENT_ATT_READ_BY_INFO_MSG characteristic not found!!!\n");
-
+						LOGERROR(mTag, "GF_DEVICE_EVENT_ATT_READ_BY_INFO_MSG invalid format = %d !!!\n", format);
 					}
-				}
-				else
-				{
-					LOGERROR(mTag, "GF_DEVICE_EVENT_ATT_READ_BY_INFO_MSG service not found!!!\n");
+
+					LOGDEBUG(mTag, "descriptor number is %d !!!\n", characteristic->mNumOfDescriptor);
 				}
 			}
 			else if (status == GF_ATT_PRODECURE_COMPLETE)
@@ -1024,8 +1088,13 @@ GF_STATUS GF_CRemoteDevice::W4GattReadCharcDesValueStateProcessMessage(GF_DEVICE
 		{
 			LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_RESP_MSG! \n");
 			GF_CPrimaryService* service = mService.FindPriSvcbyIndex(mCurrentPrimaryServiceIndex);
+			assert(service);
+			
 			GF_CCharacteristic* characteristic = service->FindCharacteristicbyIndex(mCurrentCharactericticIndex);
+			assert(characteristic);
+			
 			GF_CCharacteristicDescriptor* descriptor = characteristic->FindDescriptorByIndex(mCurrentCharactericticDescriptorIndex);
+			assert(descriptor);
 			descriptor->mDataLen = data[GF_ATT_READ_VALUE_RESP_LEN_OFFSET];
 			LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_RESP_MSG! with length = %d \n", descriptor->mDataLen);
 			descriptor->mData = (GF_PUINT8)malloc(descriptor->mDataLen + 1);
@@ -1033,6 +1102,7 @@ GF_STATUS GF_CRemoteDevice::W4GattReadCharcDesValueStateProcessMessage(GF_DEVICE
 			{
 				memcpy(descriptor->mData, data + GF_ATT_READ_VALUE_RESP_DATA_OFFSET, descriptor->mDataLen);
 			}
+			
 			mCurrentCharactericticDescriptorIndex += 1;
 			if (GF_OK == ProcessCharacteristicConfiguration(mCurrentPrimaryServiceIndex, mCurrentCharactericticIndex, mCurrentCharactericticDescriptorIndex))
 			{
@@ -1040,6 +1110,7 @@ GF_STATUS GF_CRemoteDevice::W4GattReadCharcDesValueStateProcessMessage(GF_DEVICE
 				{
 					mDatabase->SaveService(&mService);
 				}
+				
 				mState = GF_DEVICE_STATE_CONNECTED;
 				if (mCallback != NULL)
 				{
@@ -1059,12 +1130,13 @@ GF_STATUS GF_CRemoteDevice::W4GattReadCharcDesValueStateProcessMessage(GF_DEVICE
 				if (mNeedSaveService == GF_TRUE)
 				{
 					mDatabase->SaveService(&mService);
-					mState = GF_DEVICE_STATE_CONNECTED;
-					if (mCallback != NULL)
-					{
-						GF_UINT8 data[2] = {mHandle&0xFF, ((mHandle&0xFF00)>>8)};
-						mCallback->OnEvent(EVENT_MASK_DEVICE_CONNECTED, data, 2);
-					}
+				}
+				
+				mState = GF_DEVICE_STATE_CONNECTED;
+				if (mCallback != NULL)
+				{
+					GF_UINT8 data[2] = {mHandle&0xFF, ((mHandle&0xFF00)>>8)};
+					mCallback->OnEvent(EVENT_MASK_DEVICE_CONNECTED, data, 2);
 				}
 			}
 			break;
@@ -1192,7 +1264,11 @@ GF_STATUS GF_CRemoteDevice::DiscoveryDescriptor()
 {
 	LOGERROR(mTag, "start to DiscoveryDescriptor!!!\n");
 	GF_CPrimaryService* service = mService.FindPriSvcbyIndex(mService.mCurrentPriService);
+	assert(service);
+	
 	GF_CCharacteristic* characteristic = service->FindCharacteristicbyIndex(service->mCurrentCharateristic);
+	assert(characteristic);
+	
 	GF_UINT16 start_handle = (characteristic->mValueHandle + 1);
 	GF_UINT16 end_handle;
 	/*if next charcteristic exist, end handle is the start handle of next charcteristic*/
@@ -1217,8 +1293,14 @@ GF_STATUS GF_CRemoteDevice::DiscoveryDescriptor()
 	if (end_handle >= start_handle)
 	{
 		LOGDEBUG(mTag, "start to find charcteristic descriptor!!!\n");
-		mInterface->FindCharacteristicDescriptor(mHandle, start_handle, end_handle);
-		mState = GF_DEVICE_STATE_GATT_READ_CHARC_VALUE;
+		if (GF_OK == mInterface->FindCharacteristicDescriptor(mHandle, start_handle, end_handle))
+		{
+			mState = GF_DEVICE_STATE_GATT_READ_CHARC_VALUE;
+		}
+		else
+		{
+			assert(GF_FALSE);
+		}
 	}
 	else
 	{
@@ -1228,32 +1310,39 @@ GF_STATUS GF_CRemoteDevice::DiscoveryDescriptor()
 			service->mCurrentCharateristic++;
 			/*find the next characteristic*/
 			characteristic = service->FindCharacteristicbyIndex(service->mCurrentCharateristic);
-			if (characteristic != NULL)
+			assert(characteristic);
+			
+			if (characteristic->mProperty & GF_ATT_PROPERTY_READ)
 			{
-				if (characteristic->mProperty & GF_ATT_PROPERTY_READ)
+				//characteristic is readable
+				if (GF_OK == mInterface->ReadCharacteristicValue(mHandle, characteristic->mValueHandle))
 				{
-					//characteristic is readable
-					mInterface->ReadCharacteristicValue(mHandle, characteristic->mValueHandle);
 					mState = GF_DEVICE_STATE_GATT_READ_CHARC_VALUE;
 				}
 				else
 				{
-					//do not need to read characteristic value. start to read characteristic descriptor if need.
-					this->DiscoveryDescriptor();
+					assert(GF_FALSE);
 				}
 			}
 			else
 			{
-				LOGERROR(mTag, "find charcteristic error!!!\n");
+				//do not need to read characteristic value. start to read characteristic descriptor if need.
+				this->DiscoveryDescriptor();
 			}
 		}
 		/*no more chracteristic exist, move to next private service if exist*/
 		else if ((service = mService.GetNextAvailablePriSvc()) != NULL)
 		{
 			LOGDEBUG(mTag, "start to discovery %dth primary service!!!\n", mService.mCurrentPriService);
-			mInterface->DiscoveryIncludedPrimaryService(mHandle, service->mStartHandle, service->mEndHandle);
-			mState = GF_DEVICE_STATE_GATT_INC_SVC;
-			return GF_OK;
+			if (GF_OK == mInterface->DiscoveryIncludedPrimaryService(mHandle, service->mStartHandle, service->mEndHandle))
+			{
+				mState = GF_DEVICE_STATE_GATT_INC_SVC;
+				return GF_OK;
+			}
+			else
+			{
+				assert(GF_FALSE);
+			}
 		}
 		/*no more characteristic and no more priamry service exist.*/
 		else
@@ -1275,25 +1364,24 @@ GF_STATUS GF_CRemoteDevice::StartDiscoveryCharacteristic()
 {
 	GF_STATUS result;
 	GF_CPrimaryService* service = mService.FindPriSvcbyIndex(mService.mCurrentPriService);
-	if (NULL != service)
+	if (mInterface != NULL && service != NULL)
 	{
 		LOGDEBUG(mTag, "start to find the characteristic of  %dth service. \n", mService.mCurrentPriService);
-		if (mInterface != NULL)
+		
+		result = mInterface->DiscoveryCharacteristic(mHandle, service->mStartHandle, service->mEndHandle);
+		if (result == GF_OK)
 		{
-			result = mInterface->DiscoveryCharacteristic(mHandle, service->mStartHandle, service->mEndHandle);
-			if (result == GF_OK)
-			{
-				mState = GF_DEVICE_STATE_GATT_DIS_CHARC;
-			}
+			mState = GF_DEVICE_STATE_GATT_DIS_CHARC;
 		}
 		else
 		{
-			//error handling.
+			assert(GF_FALSE);
 		}
 	}
 	else
 	{
 		LOGDEBUG(mTag, "mService.mCurrentPriService = %d is not available. \n", mService.mCurrentPriService);
+		assert(GF_FALSE);
 	}
 
 	return result;
@@ -1312,11 +1400,14 @@ GF_STATUS GF_CRemoteDevice::ProcessCharacteristicConfiguration(GF_UINT8 currentp
 	while (currentprisvc < mService.mNumOfPrivateService)
 	{
 		service = mService.FindPriSvcbyIndex(currentprisvc);
+		assert(service);
+		
 		service->mCurrentCharateristic = 0;
 		LOGDEBUG(mTag, "%d characteristic in %d th primary service. \n", service->mNumOfCharacteristic, currentprisvc);
 		while (currentchrac < service->mNumOfCharacteristic)
 		{
 			characteristic = service->FindCharacteristicbyIndex(currentchrac);
+			assert(characteristic);
 			LOGDEBUG(mTag, "      %d th characteristic finding... with descriptor num = %d\n", currentchrac, characteristic->mNumOfDescriptor);
 			while (currentchracdes < characteristic->mNumOfDescriptor)
 			{

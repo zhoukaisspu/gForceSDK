@@ -1,5 +1,5 @@
 #include "Database.h"
-#include "oym_types.h"
+#include "GFBLETypes.h"
 using namespace tinyxml2;
 using namespace std;
 
@@ -554,7 +554,7 @@ void GF_CDatabase::GetCharacteristicValue(XMLElement *chara, GF_CCharacteristic*
 			if (attribute != NULL)
 			{
 				value = attribute->Value();
-				LOGDEBUG(mTag, "GetCharacteristicValue  value = %x\n", value);
+				//LOGDEBUG(mTag, "GetCharacteristicValue  value = %x\n", value);
 				if (value != NULL)
 				{
 					charcteristic->mAttriValue->mLength = (strlen(value) / 2);

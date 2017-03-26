@@ -17,6 +17,7 @@ typedef GF_INT				GF_BOOL;
 #define GF_SUCCEEDED		(GF_OK == status)
 
 #define BT_ADDRESS_SIZE		6
+#define GF_AUTH_FAIL		0x1000
 
 typedef enum {
 	GF_ERR_CODE_SCAN_BUSY = 0x60,

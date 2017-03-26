@@ -1,5 +1,5 @@
 #include "GattClient.h"
-
+#include <assert.h>
 /*used as GATT client. the sequence of gatt service discovery
 *1. discovery all primary service
 *2. do for every primary service:
@@ -99,6 +99,8 @@ GF_STATUS GF_CCharacteristic::AddDescriptorIntoCharacteristic(GF_PUINT8 data, GF
 	GF_STATUS result = GF_OK;
 	GF_UINT16 handle = data[0] + (data[1] << 8);
 	GF_CCharacteristicDescriptor* descriptor = new GF_CCharacteristicDescriptor(handle, mNumOfDescriptor);
+	assert(descriptor);
+	
 	if (pair_len == 4)
 	{
 		descriptor->mUUID.type = GF_UUID_16;
@@ -128,7 +130,8 @@ GF_STATUS GF_CPrimaryService::AddCharacterIntoPriService(GF_PUINT8 data, GF_UINT
 	value_handle = data[3] + (data[4] << 8);
 	//LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_BY_TYPE_MSG with start_handle = 0x%04x, property = 0x%02x, value_handle = 0x%02x\n", start_handle, property, value_handle);
 	GF_CCharacteristic* characteristic = new GF_CCharacteristic(start_handle, property, value_handle, mNumOfCharacteristic);
-
+	assert(characteristic);
+	
 	if (pair_len == 7)
 	{
 		characteristic->mUUID.type = GF_UUID_16;
@@ -167,6 +170,11 @@ GF_STATUS GF_CPrimaryService::AddIncSvcIntoPriService(GF_PUINT8 data, GF_UINT8 p
 	end_handle = data[4] + (data[5] << 8);
 	//LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_BY_TYPE_MSG with start_handle = 0x%04x, property = 0x%02x, value_handle = 0x%02x\n", start_handle, property, value_handle);
 	GF_CIncludeService* incService = new GF_CIncludeService(handle, start_handle, end_handle, mNumOfIncludedService);
+	if ( incService == NULL)
+	{
+		assert(GF_FALSE);
+	}
+	
 	if (pair_len == 8)
 	{
 		incService->mUUID.type = GF_UUID_16;
@@ -186,6 +194,7 @@ GF_STATUS GF_CPrimaryService::AddIncSvcIntoPriService(GF_PUINT8 data, GF_UINT8 p
 	else
 	{
 		//LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_BY_GRP_TYPE_MSG with wrong pair length = %d\n", pair_len);
+		assert(GF_FALSE);
 	}
 
 	mNumOfIncludedService++;
@@ -228,6 +237,7 @@ GF_CPrimaryService::GF_CPrimaryService(GF_UINT16 sHandle, GF_UINT16 eHandle, GF_
 	mIndex = index;
 	mNumOfIncludedService = 0;
 	mNumOfCharacteristic = 0;
+	mCurrentCharateristic = 0;
 }
 
 GF_CPrimaryService::~GF_CPrimaryService()
@@ -287,7 +297,11 @@ GF_STATUS GF_CService::AddPriSvcIntoService(GF_PUINT8 data, GF_UINT8 pair_len)
 	GF_UINT16 end_handle = data[2] + (data[3] << 8);
 	
 	GF_CPrimaryService* service = new GF_CPrimaryService(start_handle, end_handle, mNumOfPrivateService);
-
+	if ( service == NULL)
+	{
+		assert(GF_FALSE);
+	}
+	
 	if (pair_len == 6)
 	{
 		service->mUUID.type = GF_UUID_16;
@@ -307,6 +321,7 @@ GF_STATUS GF_CService::AddPriSvcIntoService(GF_PUINT8 data, GF_UINT8 pair_len)
 	else
 	{
 		//LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_READ_BY_GRP_TYPE_MSG with wrong pair length = %d\n", pair_len);
+		assert(GF_FALSE);
 	}
 
 	mPrivateService.push_front(service);

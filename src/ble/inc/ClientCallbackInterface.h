@@ -1,6 +1,6 @@
 #ifndef ICLIENTCALLBADK
 #define ICLIENTCALLBADK
-#include "oym_types.h"
+#include "GFBLETypes.h"
 
 class GF_CClientCallback
 {

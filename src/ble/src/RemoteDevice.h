@@ -1,7 +1,7 @@
 #ifndef __REMOTEDEVICE_H__
 #define __REMOTEDEVICE_H__
 
-#include "oym_types.h"
+#include "GFBLETypes.h"
 #include "LogPrint.h"
 #include <NpiInterface.h>
 #include "GattClient.h"
@@ -176,7 +176,8 @@ private:
 
 	CThread* mThread;
 	GF_BOOL mThreadRunning;
-	HANDLE mThrandEvent;
+	HANDLE mThreadEvent;
+	HANDLE mThreadStopEvent;
 
 	list<MESSAGE*> mMessage;
 	CRITICAL_SECTION mMutex;

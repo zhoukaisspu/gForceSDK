@@ -1,7 +1,7 @@
 #ifndef __GF_CDatabase_H__
 #define __GF_CDatabase_H__
 #include <LogPrint.h>
-#include "oym_types.h"
+#include "GFBLETypes.h"
 #include "tinyxml2.h"
 #include "GattClient.h"
 using namespace tinyxml2;

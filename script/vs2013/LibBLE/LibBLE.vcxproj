@@ -90,8 +90,8 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\src\ble\inc\AdapterManagerInterface.h" />
     <ClInclude Include="..\..\..\src\ble\inc\ClientCallbackInterface.h" />
+    <ClInclude Include="..\..\..\src\ble\inc\GFBLETypes.h" />
     <ClInclude Include="..\..\..\src\ble\inc\LogPrint.h" />
-    <ClInclude Include="..\..\..\src\ble\inc\oym_types.h" />
     <ClInclude Include="..\..\..\src\ble\src\AdapterManager.h" />
     <ClInclude Include="..\..\..\src\ble\src\DataBase.h" />
     <ClInclude Include="..\..\..\src\ble\src\DiscoveryService.h" />

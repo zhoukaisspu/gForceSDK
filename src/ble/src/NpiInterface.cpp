@@ -1,5 +1,5 @@
 #include "NpiInterface.h"
-#include <oym_types.h>
+#include <GFBLETypes.h>
 #define COM_PORT_NUM 3
 
 /* GF_NIF as a abstract of NPI_Interface, upper level get GF_NIF instant, which is able send command to  
@@ -16,6 +16,8 @@ GF_STATUS GF_CNpiInterface::GF_Process_Event(GF_UINT16 event_code, GF_PUINT8 dat
 	switch (event_code) {
 		case HCI_EXT_GAP_DEVICE_INIT_DONE_EVENT: //0x0700
 			LOGDEBUG(mTag, "HCI_EXT_GAP_DEVICE_INIT_DONE_MSG \n");
+			mCommand->GAP_SetParam(eGapParamIDs(0x15), 0x20);
+			mCommand->GAP_SetParam(eGapParamIDs(0x16), 0x20);
 			break;
 
 		case HCI_EXT_GAP_DEVICE_DISCOVERY_EVENT: //0x0701

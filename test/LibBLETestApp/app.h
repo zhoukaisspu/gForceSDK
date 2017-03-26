@@ -1,5 +1,5 @@
 #pragma once
-#include "oym_types.h"
+#include "GFBLETypes.h"
 //define com port number
 #define COM_PORT_NUM 3
 
