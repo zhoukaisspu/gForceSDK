@@ -3,14 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gForceSDK", "gForceSDK\gForceSDK.vcxproj", "{AD84BB21-766A-4485-84A5-13490CB129A2}"
-	ProjectSection(ProjectDependencies) = postProject
-		{422D219A-E376-499C-9A18-B7D33A1882CF} = {422D219A-E376-499C-9A18-B7D33A1882CF}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NativeTestApp", "NativeTestApp\NativeTestApp.vcxproj", "{DD4E5B9B-A6DB-4D3E-BFBC-148BA7204D4D}"
 	ProjectSection(ProjectDependencies) = postProject
-		{AD84BB21-766A-4485-84A5-13490CB129A2} = {AD84BB21-766A-4485-84A5-13490CB129A2}
+		{65A6F41A-C8B4-4A42-BF2A-B107AB148686} = {65A6F41A-C8B4-4A42-BF2A-B107AB148686}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LibBLENPI", "LibBLENPI\LibBLENPI.vcxproj", "{F2135345-F913-41D3-8AF7-1028FC18E20D}"
@@ -30,16 +25,22 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LibBLENpiUtil", "LibBLENPIU
 		{F2135345-F913-41D3-8AF7-1028FC18E20D} = {F2135345-F913-41D3-8AF7-1028FC18E20D}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgForceSDK", "libgForceSDK\libgForceSDK.vcxproj", "{741BC78C-1167-43E1-9A3B-0AAA9F6FF2DF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{422D219A-E376-499C-9A18-B7D33A1882CF} = {422D219A-E376-499C-9A18-B7D33A1882CF}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gForceSDK", "gForceSDK\gForceSDK.vcxproj", "{65A6F41A-C8B4-4A42-BF2A-B107AB148686}"
+	ProjectSection(ProjectDependencies) = postProject
+		{741BC78C-1167-43E1-9A3B-0AAA9F6FF2DF} = {741BC78C-1167-43E1-9A3B-0AAA9F6FF2DF}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AD84BB21-766A-4485-84A5-13490CB129A2}.Debug|Win32.ActiveCfg = Debug|Win32
-		{AD84BB21-766A-4485-84A5-13490CB129A2}.Debug|Win32.Build.0 = Debug|Win32
-		{AD84BB21-766A-4485-84A5-13490CB129A2}.Release|Win32.ActiveCfg = Release|Win32
-		{AD84BB21-766A-4485-84A5-13490CB129A2}.Release|Win32.Build.0 = Release|Win32
 		{DD4E5B9B-A6DB-4D3E-BFBC-148BA7204D4D}.Debug|Win32.ActiveCfg = Debug|Win32
 		{DD4E5B9B-A6DB-4D3E-BFBC-148BA7204D4D}.Debug|Win32.Build.0 = Debug|Win32
 		{DD4E5B9B-A6DB-4D3E-BFBC-148BA7204D4D}.Release|Win32.ActiveCfg = Release|Win32
@@ -60,6 +61,14 @@ Global
 		{CF71DC61-5B07-4A40-B274-94D37C50BDC8}.Debug|Win32.Build.0 = Debug|Win32
 		{CF71DC61-5B07-4A40-B274-94D37C50BDC8}.Release|Win32.ActiveCfg = Release|Win32
 		{CF71DC61-5B07-4A40-B274-94D37C50BDC8}.Release|Win32.Build.0 = Release|Win32
+		{741BC78C-1167-43E1-9A3B-0AAA9F6FF2DF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{741BC78C-1167-43E1-9A3B-0AAA9F6FF2DF}.Debug|Win32.Build.0 = Debug|Win32
+		{741BC78C-1167-43E1-9A3B-0AAA9F6FF2DF}.Release|Win32.ActiveCfg = Release|Win32
+		{741BC78C-1167-43E1-9A3B-0AAA9F6FF2DF}.Release|Win32.Build.0 = Release|Win32
+		{65A6F41A-C8B4-4A42-BF2A-B107AB148686}.Debug|Win32.ActiveCfg = Debug|Win32
+		{65A6F41A-C8B4-4A42-BF2A-B107AB148686}.Debug|Win32.Build.0 = Debug|Win32
+		{65A6F41A-C8B4-4A42-BF2A-B107AB148686}.Release|Win32.ActiveCfg = Release|Win32
+		{65A6F41A-C8B4-4A42-BF2A-B107AB148686}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -76,7 +76,7 @@ void GForceDevice::onQuaternion(GF_UINT8 length, GF_PUINT8 data)
 	y = *(float*)&data[8];
 	z = *(float*)&data[12];
 	Quaternion<float> q(w, x, y, z);
-	GF_LOGD("Quaternion: %s", q.toString().c_str());
+	GF_LOGD("Device: %s, Quaternion: %s", utils::tostring(getName()).c_str(), q.toString().c_str());
 }
 
 void GForceDevice::onGesture(GF_UINT8 length, GF_PUINT8 data)

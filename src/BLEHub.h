@@ -104,39 +104,14 @@ namespace gf
 	protected:
 		struct HubMsg
 		{
-			function<GF_UINT32()> fun6param;
+			function<GF_UINT32()> fun;
 			GF_UINT32 ret = 0;
 			atomic<bool> executed = false;
 			condition_variable syncCallCond;
-			HubMsg(decltype(fun6param) foo) : fun6param(foo) {}
+			HubMsg(decltype(fun) foo) : fun(foo) {}
 		};
-		GF_UINT32 executeCommand(gfsPtr<HubMsg> msg)
-		{
-			msg->executed = false;
-			unique_lock<mutex> lock(mTaskMutex);
-			mMsgQ.push(msg);
-			msg->syncCallCond.wait(lock, [&msg]()->bool{ return msg->executed; });
-			return msg->ret;
-		}
-		void commandTask()
-		{
-			while (true)
-			{
-				auto msg = mMsgQ.pop();
-				if (nullptr == msg)
-				{
-					GF_LOGD("Wake me up and exit!");
-					break;
-				}
-				{
-					lock_guard<mutex> lock(mTaskMutex);
-					msg->ret = msg->fun6param();
-				}
-				GF_LOGD("Msg received and executed: ret = %u", msg->ret);
-				msg->executed = true;
-				msg->syncCallCond.notify_all();
-			}
-		}
+		GF_UINT32 executeCommand(gfsPtr<HubMsg> msg);
+		void commandTask();
 		mutex mTaskMutex;
 		thread mCommandThread;
 		BQueue<gfsPtr<HubMsg>> mMsgQ;
@@ -144,6 +119,7 @@ namespace gf
 	public:
 		virtual GF_RET_CODE poll(Event& event)
 		{
+			event;
 			if (mWorkMode == WorkMode::Messaging)
 				return GF_RET_CODE::GF_ERROR_BAD_STATE;
 			return GF_RET_CODE::GF_SUCCESS;

@@ -22,7 +22,7 @@ namespace gf
 		_Ty y() const { return mY; }
 		_Ty z() const { return mZ; }
 
-		string toString() const
+		std::string toString() const
 		{
 			std::ostringstream stm;
 			stm << "w: " << mW << ", x: " << mX << ", y: " << mY << ", z: " << mZ;

@@ -11,40 +11,49 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\binding\windll\dllmain.cpp" />
-    <ClCompile Include="..\..\..\binding\windll\stdafx.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\gforce.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\HubManager.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="..\..\..\src\BLEDevice.cpp" />
+    <ClCompile Include="..\..\..\src\BLEHub.cpp" />
+    <ClCompile Include="..\..\..\src\GForceDevice.cpp" />
+    <ClCompile Include="..\..\..\src\HubManagerImpl.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\binding\windll\stdafx.h" />
-    <ClInclude Include="..\..\..\binding\windll\targetver.h" />
-    <ClInclude Include="..\..\..\inc\gforce.h" />
+    <ClInclude Include="..\..\..\inc\Device.h" />
+    <ClInclude Include="..\..\..\inc\DeviceListener.h" />
+    <ClInclude Include="..\..\..\inc\gfTypes.h" />
+    <ClInclude Include="..\..\..\inc\Hub.h" />
+    <ClInclude Include="..\..\..\inc\HubListener.h" />
     <ClInclude Include="..\..\..\inc\HubManager.h" />
+    <ClInclude Include="..\..\..\inc\Quaternion.h" />
+    <ClInclude Include="..\..\..\src\BLEDevice.h" />
+    <ClInclude Include="..\..\..\src\BLEHub.h" />
+    <ClInclude Include="..\..\..\src\ble\inc\AdapterManagerInterface.h" />
+    <ClInclude Include="..\..\..\src\ble\inc\ClientCallbackInterface.h" />
+    <ClInclude Include="..\..\..\src\ble\inc\oym_types.h" />
+    <ClInclude Include="..\..\..\src\common\LogUtils.h" />
+    <ClInclude Include="..\..\..\src\common\utils\LogUtils_Linux.h" />
+    <ClInclude Include="..\..\..\src\common\utils\LogUtil_Android.h" />
+    <ClInclude Include="..\..\..\src\common\utils\LogUtil_Win.h" />
+    <ClInclude Include="..\..\..\src\DeviceHelper.h" />
+    <ClInclude Include="..\..\..\src\GForceDevice.h" />
+    <ClInclude Include="..\..\..\src\HubManagerImpl.h" />
+    <ClInclude Include="..\..\..\src\IHub.h" />
+    <ClInclude Include="..\..\..\src\Utils.h" />
+    <ClInclude Include="..\..\..\src\VirtualDevice.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{65A6F41A-C8B4-4A42-BF2A-B107AB148686}</ProjectGuid>
+    <ProjectGuid>{741BC78C-1167-43E1-9A3B-0AAA9F6FF2DF}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>gForceSDK</RootNamespace>
+    <RootNamespace>libgForceSDK</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -60,54 +69,39 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)..\..\lib\windows\</OutDir>
-    <TargetName>gforce32d</TargetName>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)..\..\lib\windows\</OutDir>
-    <TargetName>gforce32</TargetName>
-  </PropertyGroup>
+  <PropertyGroup />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;GFORCESDK_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\inc;$(ProjectDir)..\..\..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\inc;$(ProjectDir)..\..\..\src;$(ProjectDir)..\..\..\src\common;$(ProjectDir)..\..\..\src\ble\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libgForceSDK.lib;libble.lib;LibBLENPI.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\</AdditionalLibraryDirectories>
-      <ModuleDefinitionFile>
-      </ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;GFORCESDK_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\inc;$(ProjectDir)..\..\..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\inc;$(ProjectDir)..\..\..\src;$(ProjectDir)..\..\..\src\common;$(ProjectDir)..\..\..\src\ble\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>libgForceSDK.lib;libble.lib;LibBLENPI.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\</AdditionalLibraryDirectories>
-      <ModuleDefinitionFile>
-      </ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -18,6 +18,34 @@ BLEHub::~BLEHub()
 	GF_LOGD("BLEHub--");
 }
 
+GF_UINT32 BLEHub::executeCommand(gfsPtr<HubMsg> msg)
+{
+	msg->executed = false;
+	unique_lock<mutex> lock(mTaskMutex);
+	mMsgQ.push(msg);
+	msg->syncCallCond.wait(lock, [&msg]()->bool{ return msg->executed; });
+	return msg->ret;
+}
+void BLEHub::commandTask()
+{
+	while (true)
+	{
+		auto msg = mMsgQ.pop();
+		if (nullptr == msg)
+		{
+			GF_LOGD("Wake me up and exit!");
+			break;
+		}
+				{
+					lock_guard<mutex> lock(mTaskMutex);
+					msg->ret = msg->fun();
+				}
+				GF_LOGD("Msg received and executed: ret = %u", msg->ret);
+				msg->executed = true;
+				msg->syncCallCond.notify_all();
+	}
+}
+
 // module management
 GF_RET_CODE BLEHub::init(GF_UINT8 comPort)
 {
