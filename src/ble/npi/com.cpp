@@ -26,6 +26,11 @@ Com::Com(UINT8 nPort, DWORD nBaud, UINT8 nParity, UINT8 nByteSize,
 	txThread = NULL;
 	rxThread = NULL;
 	evtThread = NULL;
+	spDetectThread = NULL;
+	m_SPDetect = NULL;
+	m_log = NULL;
+	m_rx = NULL;
+	m_tx = NULL;
 	memset(&osWait, 0, sizeof(OVERLAPPED));
 }
 Com::~Com()
@@ -33,11 +38,19 @@ Com::~Com()
 	if (logThread) {
 		delete[] logThread;
 	}
+	if (txThread) {
+		delete[] txThread;
+	}
 	if (rxThread) {
 		delete[] rxThread;
 	}
 	if (evtThread) {
 		delete[] evtThread;
+		delete[] m_evt;
+	}
+
+	if (spDetectThread) {
+		delete[] spDetectThread;
 	}
 	if (m_rx) {
 		delete[] m_rx;
@@ -48,7 +61,9 @@ Com::~Com()
 	if (m_log) {
 		delete[] m_log;
 	}
-
+	if (m_SPDetect){
+		delete[] m_SPDetect;
+	}
 	logThread = NULL;
 	txThread = NULL;
 	rxThread = NULL;
@@ -377,7 +392,7 @@ BOOL Com::OpenSerialPort()
 		{
 			LogE(L"CreateFile() with error:%d \n", GetLastError());
 			/*Open specify serial port fail, try to enmulate all serial port*/
-			if (EnumSerialPort() == FALSE)
+			//if (EnumSerialPort() == FALSE)
 			{
 				return false;
 			}

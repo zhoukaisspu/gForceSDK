@@ -42,11 +42,6 @@ public:
 	GattClient(GF_CAdapterManagerInterface* am)
 	{
 		mAMInterface = am;
-
-		if (mAMInterface != NULL)
-		{
-			mAMInterface->Init(COM_PORT_NUM);
-		}
 	}
 
 	void onScanResult(GF_BLEDevice* GF_BLEDevice)
@@ -126,22 +121,19 @@ int _tmain(int charc, char* argv[]) {
 	GF_STATUS status;
 	GF_UINT8 loop = 0;
 	GF_CAdapterManagerInterface* amInterface = GF_CAdapterManagerInterface::GetInstance();
-	if (amInterface == NULL)
-	{
-		return 10;
-	}
 	GattClient gattclient(amInterface);
-
-	amInterface->RegisterClientCallback(&gattclient);
-#if 1
-	status = amInterface->StartScan(100);
-	if (!GF_SUCCEEDED)
+	if (amInterface != NULL && amInterface->Init(COM_PORT_NUM) == GF_OK)
 	{
-		return GF_FAIL;
-		printf("main thread! status = %d\n", status);
+		amInterface->RegisterClientCallback(&gattclient);
+		status = amInterface->StartScan(100);
 	}
-#endif
-
+	else
+	{
+		printf("\n Com Open Failed!! \n");
+		Sleep(5000);
+		exit(0);
+	}
+	
 	if (SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrlhandler, true))
 	{
 		while (1)
