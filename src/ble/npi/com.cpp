@@ -1,3 +1,31 @@
+/*
+ * Copyright 2017, OYMotion Inc.
+ * All rights reserved.
+ *
+ * IMPORTANT: Your use of this Software is limited to those specific rights
+ * granted under the terms of a software license agreement between you and
+ * OYMotion.  You may not use this Software unless you agree to abide by the
+ * terms of the License. The License limits your use, and you acknowledge,
+ * that the Software may not be modified, copied or distributed unless used
+ * solely and exclusively in conjunction with an OYMotion product.  Other
+ * than for the foregoing purpose, you may not use, reproduce, copy, prepare
+ * derivative works of, modify, distribute, perform, display or sell this
+ * Software and/or its documentation for any purpose.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
+ * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ *
+ */
 #include"npi_cmd.h"
 #include"npi_evt.h"
 #include"CommonDef.h"
@@ -88,7 +116,7 @@ BOOL Com::ReadEventFromSerialPort()
 		return FALSE;
 	}
 
-	printf("start to read event for SerialPort!!! \n");
+	printf("Start Wait Response from SerialPort... \n");
 	while (remaining > 0) {
 		if (ReadFile(com_file, (PUINT8)event + offset, remaining,
 			&nLenOut, &osRead)) {
@@ -99,16 +127,15 @@ BOOL Com::ReadEventFromSerialPort()
 			if (GetLastError() == ERROR_IO_PENDING) {
 				if (WaitForSingleObject(osRead.hEvent, 1000) == WAIT_OBJECT_0)
 				{
-					printf("ReadEvent success!!! \n");
+					printf("Response Received! \n");
 				}
 				else
 				{
-					printf("ReadEvent timeout!!! \n");
+					printf("Wait Response timeout!!! \n");
 					return FALSE;
 				}
 
 				GetOverlappedResult(com_file, &osRead, &nLenOut, true);
-				printf("ReadFile data read = %d !!! \n", nLenOut);
 				if (nLenOut) {
 					remaining -= nLenOut;
 					offset += nLenOut;
@@ -116,12 +143,6 @@ BOOL Com::ReadEventFromSerialPort()
 			}
 		}
 
-	}
-
-	printf("----------------->>read end !!! \n");
-	for (UINT8 i = 0; i < 9; i++)
-	{
-		printf("event[%d]= 0x%02x !!! \n", i, event[i]);
 	}
 
 	if (memcmp(event, event_expected, 9) == 0)
@@ -212,7 +233,7 @@ BOOL Com::EnumSerialPort()
 	dcb.StopBits = ONESTOPBIT;
 	HKEY hKey;
 	LPCTSTR lpSubKey = (LPCTSTR)"HARDWARE\\DEVICEMAP\\SERIALCOMM\\";
-	printf("start to enum all serial port by register \n");
+	printf("Start to Enumulate SerialPort\n");
 
 	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DEVICEMAP\\SERIALCOMM\\"), 0, KEY_READ, &hKey) != ERROR_SUCCESS)
 	{
@@ -222,7 +243,6 @@ BOOL Com::EnumSerialPort()
 
 	char szValueName[NAME_LEN];
 	BYTE szPortName[NAME_LEN];
-	TCHAR *wStr = new TCHAR[NAME_LEN];
 	LONG status;
 	DWORD dwIndex = 0;
 	DWORD dwSizeValueName = 100;
@@ -239,7 +259,7 @@ BOOL Com::EnumSerialPort()
 		if ((status == ERROR_SUCCESS))
 		{
 			sCom.Format(_T("\\\\.\\%s"), szPortName);
-			wprintf(L"%s \n", (const char*)sCom.GetBuffer(50));
+			wprintf(L"%s found\n", (const char*)sCom.GetBuffer(50));
 			com_file = CreateFile(sCom.GetBuffer(50),
 				GENERIC_READ | GENERIC_WRITE,
 				0,/* do not share*/
@@ -250,10 +270,9 @@ BOOL Com::EnumSerialPort()
 
 			if (com_file == INVALID_HANDLE_VALUE)
 			{
-				printf("open com%d error:%d \n", GetLastError());
 				if (ERROR_ACCESS_DENIED == GetLastError())
 				{
-					printf("com%d is opened by others applications!! \n", GetLastError());
+					printf("SerialPort is opened by others applications!! \n");
 				}
 				continue;
 			}
@@ -270,18 +289,17 @@ BOOL Com::EnumSerialPort()
 
 				if (!WriteFile(com_file, data, 5, &dwBytesWritten, &osWrite))
 				{
-					printf("after WriteFile GetLastError() = %d!!! \n", GetLastError());
 					if (GetLastError() == ERROR_IO_PENDING) {
 						GetOverlappedResult(com_file, &osWrite, &dwBytesWritten, true);
 						if (dwBytesWritten != 5){
-							printf("WriteFile failed dwBytesWritten = %d!!! \n", dwBytesWritten);
+							printf("Send Request with length = %d!!! \n", dwBytesWritten);
 							CloseHandle(com_file);
 							com_file = INVALID_HANDLE_VALUE;
 							continue;
 						}
 						else
 						{
-							printf("WriteFile success dwBytesWritten = %d!!! \n", dwBytesWritten);
+							printf("Send Request with length = %d!!! \n", dwBytesWritten);
 							if (TRUE == ReadEventFromSerialPort())
 							{
 								mComName = sCom;
@@ -425,7 +443,7 @@ NPI_Queue<sEvt*, EVT_QUEUE_SIZE>* Com::Connect(HANDLE evtHdl, GF_LogType logType
 	if (false == OpenSerialPort())
 	{
 		printf("*****************************WARNING************************************* \n");
-		printf("******Serial Port is not available, please plguin the dondle !!!********* \n");
+		printf("******SerialPort is not available, please plguin the dondle !!!********* \n");
 		printf("*****************************WARNING************************************* \n");
 		return NULL;
 	}
@@ -469,7 +487,7 @@ int Com::Connect(GF_LogType logType)
 	if (false == OpenSerialPort())
 	{
 		printf("*****************************WARNING************************************* \n");
-		printf("******Serial Port is not available, please plguin the dondle !!!********* \n");
+		printf("******SerialPort is not available, please plguin the dondle !!!********* \n");
 		printf("*****************************WARNING************************************* \n");
 		return false;
 	}

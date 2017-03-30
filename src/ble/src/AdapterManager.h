@@ -43,7 +43,7 @@ class GF_CCallBack;
 class GF_CAdapterManager : public GF_CCallBack, public GF_CAdapterManagerInterface
 {
 public:
-	GF_STATUS Init(GF_UINT8 com_num);
+	GF_STATUS Init(GF_UINT8 com_num, GF_UINT8 log_type);
 	GF_STATUS Deinit();
 	GF_STATUS StartScan(GF_UINT8 RSSI_Threshold);
 	GF_STATUS StopScan();

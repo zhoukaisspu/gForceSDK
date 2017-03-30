@@ -51,7 +51,7 @@ public:
 	GF_VOID Run();
 	GF_CNpiInterface();
 	~GF_CNpiInterface();
-	GF_STATUS Init(GF_UINT8 com_num);
+	GF_STATUS Init(GF_UINT8 com_num, GF_UINT8 log_type);
 	GF_STATUS Deinit();
 
 	GF_STATUS InitDevice();

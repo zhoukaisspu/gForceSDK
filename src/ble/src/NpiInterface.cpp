@@ -238,7 +238,7 @@ GF_CNpiInterface::~GF_CNpiInterface()
 {
 }
 
-GF_STATUS GF_CNpiInterface::Init(GF_UINT8 com_num)
+GF_STATUS GF_CNpiInterface::Init(GF_UINT8 com_num, GF_UINT8 log_type)
 {
 	mCommand = new NPI_CMD(com_num);
 	if (mCommand == NULL)
@@ -246,7 +246,12 @@ GF_STATUS GF_CNpiInterface::Init(GF_UINT8 com_num)
 		return GF_FAIL;
 	}
 
-	if (NULL == (mEventQueue = (mCommand->Connect(NULL, 1))))
+	if (log_type > LOGTYPE_MAX)
+	{
+		log_type = LOGTYPE_MAX;
+	}
+
+	if (NULL == (mEventQueue = (mCommand->Connect(NULL, log_type))))
 	{
 		delete mCommand;
 
