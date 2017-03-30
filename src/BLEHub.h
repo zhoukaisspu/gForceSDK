@@ -145,11 +145,14 @@ namespace gf
 		BQueue<gfsPtr<HubMsg>> mMsgQ;
 
 	public:
-		virtual GF_RET_CODE poll(Event& event)
+		virtual GF_RET_CODE poll(Event& event, GF_UINT32 ms = 0)
 		{
 			event;
 			if (mWorkMode == WorkMode::Messaging)
 				return GF_RET_CODE::GF_ERROR_BAD_STATE;
+
+			//unique_lock<mutex> lock(mPollMutex);
+			//mPollCond.wait_for(lock, duration, pred);
 			return GF_RET_CODE::GF_SUCCESS;
 		}
 	protected:

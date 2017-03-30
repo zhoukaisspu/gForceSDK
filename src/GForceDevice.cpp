@@ -33,12 +33,38 @@
 
 using namespace gf;
 
+#if defined(DEBUG) || defined(_DEBUG)
+atomic<GF_UINT32> GForceDevice::dataCnt = 0;
+atomic<GF_UINT32> GForceDevice::lastUpdated = 0;
+thread GForceDevice::dbgThread;
+void GForceDevice::timefun()
+{
+	while (true)
+	{
+#ifdef WIN32
+		Sleep(1000);
+#else
+		sleep(1);
+#endif
+		if (lastUpdated < dataCnt)
+		{
+			GF_LOGD("gForce data package rate: %d", dataCnt - lastUpdated);
+			lastUpdated = dataCnt.load();
+		}
+	}
+}
+#endif
 
 void GForceDevice::onData(GF_UINT8 length, GF_PUINT8 data)
 {
 	if (length <= 1)
 		return;
 
+#if defined(DEBUG) || defined(_DEBUG)
+	if (!dbgThread.joinable())
+		dbgThread = thread(GForceDevice::timefun);
+	dataCnt++;
+#endif
 	GF_UINT8 evtType = data[0] & EVENT_MASK;
 	GF_UINT8 packageIdFlag = (data[0] >> 7) & PCKID_FLAG_MASK;
 	GF_UINT8 payloadLength = data[1];
@@ -63,8 +89,8 @@ void GForceDevice::onData(GF_UINT8 length, GF_PUINT8 data)
 				mPackageId = 0;
 			if (mPackageId != currPackageId)
 			{
-				//GF_LOGE("%s:%s: package id error. new id = %u", __FUNCTION__,
-				//	utils::tostring(getName()).c_str(), mPackageId);
+				GF_LOGE("%s:%s: package id error. id supposed is %u, but now is %u, gap is %u", __FUNCTION__,
+					utils::tostring(getName()).c_str(), mPackageId, currPackageId, (GF_UINT8)(currPackageId - mPackageId));
 				mPackageId = currPackageId;
 			}
 		}
@@ -85,7 +111,7 @@ void GForceDevice::onData(GF_UINT8 length, GF_PUINT8 data)
 	case EVENT_STATUS:
 		onStatus(payloadLength, payload);
 	default:
-		//GF_LOGE("%s: unknown event ID: %2.2X", __FUNCTION__, evtType);
+		GF_LOGE("%s: unknown event ID: %2.2X", __FUNCTION__, evtType);
 		;
 	}
 }
@@ -104,7 +130,7 @@ void GForceDevice::onQuaternion(GF_UINT8 length, GF_PUINT8 data)
 	y = *(float*)&data[8];
 	z = *(float*)&data[12];
 	Quaternion<float> q(w, x, y, z);
-	GF_LOGD("Device: %s, Quaternion: %s", utils::tostring(getName()).c_str(), q.toString().c_str());
+	//GF_LOGD("Device: %s, Quaternion: %s", utils::tostring(getName()).c_str(), q.toString().c_str());
 }
 
 void GForceDevice::onGesture(GF_UINT8 length, GF_PUINT8 data)

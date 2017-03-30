@@ -69,7 +69,7 @@ namespace gf
 		// removing method releaseDevice, virtual device can be destoryed by calling disconnect
 		//virtual int releaseDevice(SPTR_DEV& device) = 0;
 
-		virtual GF_RET_CODE poll(Event& event) = 0;
+		virtual GF_RET_CODE poll(Event& event, GF_UINT32 ms = 0) = 0;
 
 	protected:
 		Hub() {}

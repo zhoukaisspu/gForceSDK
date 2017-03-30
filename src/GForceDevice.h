@@ -32,6 +32,12 @@
 
 #include "BLEDevice.h"
 
+#if defined(DEBUG) || defined(_DEBUG)
+#include <chrono>
+#include <atomic>
+#include <thread>
+#endif
+
 namespace gf
 {
 	class BLEHub;
@@ -63,6 +69,14 @@ namespace gf
 
 	private:
 		GF_UINT16 mPackageId = INVALID_PACKAGE_ID;
+
+#if defined(DEBUG) || defined(_DEBUG)
+	private:
+		static atomic<GF_UINT32> dataCnt;
+		static atomic<GF_UINT32> lastUpdated;
+		static void timefun();
+		static thread dbgThread;
+#endif
 	};
 
 } // namespace gf
