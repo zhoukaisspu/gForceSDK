@@ -30,18 +30,58 @@
 
 #include "gfTypes.h"
 
+/// \namespace gf
 namespace gf
 {
+
+	/// \class HubListener
+	/// \brief
+	///		The callback interface for processing events from the Hub. The
+	///     application needs to implement this class and pass its instance
+	///     to Hub::registerListener()
+	///
+	///
 	class HubListener
 	{
 	public:
+		/// This callback is called when the Hub finishes scanning devices.
+		///
+		/// \remark
+		///		This callback may be called after a series of onDeviceFound()
+		///     are called.
 		virtual void onScanfinished() = 0;
+
+		/// This callback is called when the hub finds a device.
+		///
+		/// \param device The pointer to Device that was found.
 		virtual void onDeviceFound(WPDEVICE device) = 0;
+
+		/// This callback is called when a previous connected device has
+		/// disconnected from the hub.
+		///
+		/// \param device The pointer to Device that was previously found and
+		///				  passed to the application.
+		///
 		virtual void onDeviceDiscard(WPDEVICE device) = 0;
-		// when a device is specialized, it means that more functionalities
-		// are recongnized, a subclass is created to take over the old one,
-		// nothing more to be cared but discard the oldPtr.
-		virtual void onDeviceSpecialized(WPDEVICE oldPtr, WPDEVICE newPtr) = 0;
+
+		/// This callback is called when a device is specialized.
+		///
+		/// \param oldDevice
+		/// 	The pointer to an Device object, which has become invalid.
+		/// \param newDevice
+		///		The pointer to and Device object, which is the substitue to
+		///     oldDevice.
+		///
+		/// \remark
+		///		When a device is specialized, it means that more functionalities
+		///     of it are recongnized. In such case, a new Device object pointed
+		///     by newDevice is created to take over the old one pointed by
+		///	    oldDevice, nothing more to be cared but discard the oldDevice.
+		virtual void onDeviceSpecialized(WPDEVICE oldDevice, WPDEVICE newDevice) = 0;
+
+		/// This callback is called when the state of the hub changed
+		/// \param state
+		///		An enumerate of HubState which indicates the state of the hub. 
 		virtual void onStateChanged(HubState state) = 0;
 	};
 
