@@ -148,9 +148,10 @@ private:
 int _tmain(int charc, char* argv[]) {
 	GF_STATUS status;
 	GF_UINT8 loop = 0;
+
 	GF_CAdapterManagerInterface* amInterface = GF_CAdapterManagerInterface::GetInstance();
 	GattClient gattclient(amInterface);
-	if (amInterface != NULL && amInterface->Init(COM_PORT_NUM) == GF_OK)
+	if (amInterface != NULL && amInterface->Init(0, LOGTYPE_FILE) == GF_OK)
 	{
 		amInterface->RegisterClientCallback(&gattclient);
 		status = amInterface->StartScan(100);
@@ -161,7 +162,7 @@ int _tmain(int charc, char* argv[]) {
 		Sleep(5000);
 		exit(0);
 	}
-	
+
 	if (SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrlhandler, true))
 	{
 		while (1)

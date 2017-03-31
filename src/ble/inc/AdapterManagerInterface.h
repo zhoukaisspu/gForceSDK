@@ -37,7 +37,7 @@ class GF_CAdapterManagerInterface
 {
 public:
 	static GF_CAdapterManagerInterface* GetInstance();
-	virtual GF_STATUS Init(GF_UINT8 com_num) = 0;
+	virtual GF_STATUS Init(GF_UINT8 com_num, GF_UINT8 log_type) = 0;
 	virtual GF_STATUS Deinit() = 0;
 	virtual GF_STATUS StartScan(GF_UINT8 RSSI_Threshold) = 0;
 	virtual GF_STATUS StopScan() = 0;

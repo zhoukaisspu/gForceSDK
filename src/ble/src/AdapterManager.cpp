@@ -76,13 +76,13 @@ GF_CAdapterManagerInterface* GF_CAdapterManagerInterface::GetInstance()
 	return SingleInstance;
 }
 
-GF_STATUS GF_CAdapterManager::Init(GF_UINT8 com_num)
+GF_STATUS GF_CAdapterManager::Init(GF_UINT8 com_num, GF_UINT8 log_type)
 {
 	GF_STATUS result = GF_FAIL;
 
 	if (mInterface != NULL)
 	{
-		result = mInterface->Init(com_num);
+		result = mInterface->Init(com_num, log_type);
 	}
 	else
 	{

@@ -38,6 +38,8 @@ extern void setMessageBox(WCHAR *buf);
 
 #define	LOGTYPE_CONSOLE 1
 #define	LOGTYPE_MFC     2
+#define	LOGTYPE_FILE    3
+#define	LOGTYPE_MAX     3
 typedef UINT8 GF_LogType;
 
 class Log: public Runnable

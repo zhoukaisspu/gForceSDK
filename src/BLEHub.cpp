@@ -31,6 +31,7 @@
 #include "HubListener.h"
 #include "GForceDevice.h"
 #include "Utils.h"
+#include "GFBLETypes.h"
 
 using namespace gf;
 
@@ -91,7 +92,7 @@ GF_RET_CODE BLEHub::init(GF_UINT8 comPort)
 		GF_LOGD("Memory insurfficient.");
 		return GF_RET_CODE::GF_ERR_NO_RESOURCE;
 	}
-	if (GF_OK != mAM->Init(comPort)) {
+	if (GF_OK != mAM->Init(comPort, LOGTYPE_FILE)) {
 		GF_LOGD("Hub init failed.");
 		mAM = nullptr;
 		// TODO: check return value for reason

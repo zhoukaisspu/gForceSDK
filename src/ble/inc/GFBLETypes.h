@@ -68,6 +68,11 @@ struct GF_BLEDevice{
 
 };
 
+#define	LOGTYPE_CONSOLE 1
+#define	LOGTYPE_MFC     2
+#define	LOGTYPE_FILE    3
+#define	LOGTYPE_MAX     3
+
 class GF_CCallBack
 {
 public:
