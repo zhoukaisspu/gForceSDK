@@ -44,7 +44,7 @@ namespace gf
 		virtual GF_RET_CODE init(GF_UINT8 comPort = 0) = 0;
 		virtual GF_RET_CODE deinit() = 0;
 		virtual WorkMode getWorkMode() const = 0;
-		virtual WorkMode setWorkMode(WorkMode newMode) = 0;
+		virtual void setWorkMode(WorkMode newMode) = 0;
 		// get status, version, etc.
 		virtual HubState getStatus() = 0;
 		virtual tstring getDescString() const = 0;
@@ -66,15 +66,11 @@ namespace gf
 		//   data if it happens
 		virtual GF_RET_CODE createVirtualDevice(int numDevices, std::vector<WPDEVICE> realDevices, WPDEVICE& newDevice) = 0;
 
-		// removing method releaseDevice, virtual device can be destoryed by calling disconnect
-		//virtual int releaseDevice(SPTR_DEV& device) = 0;
-
-		virtual GF_RET_CODE poll(Event& event, GF_UINT32 ms = 0) = 0;
+		virtual GF_RET_CODE run(bool once, GF_UINT32 ms = 0) = 0;
 
 	protected:
 		Hub() {}
 		virtual ~Hub() {}
-		friend class HubManager;
 	};
 
 } // namespace gf

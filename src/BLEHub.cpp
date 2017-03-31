@@ -35,6 +35,7 @@
 using namespace gf;
 
 BLEHub::BLEHub(const tstring& sIdentifier)
+	: mNotifHelper(*this)
 {
 	GF_LOGD("BLEHub++: identfiler: %s", utils::tostring(sIdentifier).c_str());
 }
@@ -46,7 +47,7 @@ BLEHub::~BLEHub()
 	GF_LOGD("BLEHub--");
 }
 
-GF_UINT32 BLEHub::executeCommand(gfsPtr<HubMsg> msg)
+GF_UINT32 BLEHub::executeCommand(gfsPtr<HubMsg>& msg)
 {
 	msg->executed = false;
 	unique_lock<mutex> lock(mTaskMutex);
@@ -56,7 +57,8 @@ GF_UINT32 BLEHub::executeCommand(gfsPtr<HubMsg> msg)
 }
 void BLEHub::commandTask()
 {
-	while (true)
+	bool loop = true;
+	while (loop)
 	{
 		auto msg = mMsgQ.pop();
 		if (nullptr == msg)
@@ -64,13 +66,13 @@ void BLEHub::commandTask()
 			GF_LOGD("Wake me up and exit!");
 			break;
 		}
-				{
-					lock_guard<mutex> lock(mTaskMutex);
-					msg->ret = msg->fun();
-				}
-				GF_LOGD("Msg received and executed: ret = %u", msg->ret);
-				msg->executed = true;
-				msg->syncCallCond.notify_all();
+		{
+			lock_guard<mutex> lock(mTaskMutex);
+			msg->ret = msg->fun();
+		}
+		GF_LOGD("Msg received and executed: ret = %u", msg->ret);
+		msg->executed = true;
+		msg->syncCallCond.notify_all();
 	}
 }
 
@@ -153,14 +155,6 @@ GF_RET_CODE BLEHub::deinit()
 	return ret;
 }
 
-WorkMode BLEHub::setWorkMode(WorkMode newMode)
-{
-	lock_guard<mutex> lock(mTaskMutex);
-	auto oldMode = mWorkMode;
-	mWorkMode = newMode;
-	return oldMode;
-}
-
 HubState BLEHub::getStatus()
 {
 	HubState ret = HubState::Unknown;
@@ -193,7 +187,7 @@ HubState BLEHub::getStatus()
 
 tstring BLEHub::getDescString() const
 {
-	return tstring(_T("The first version of hw and sw."));
+	return tstring(_T("Welcome to the gForce world."));
 }
 
 // setup listener
@@ -228,11 +222,10 @@ GF_RET_CODE BLEHub::startScan(GF_UINT8 rssiThreshold)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
 	auto am = mAM;
-	decltype(mListeners)& ls = mListeners;
+	decltype(mNotifHelper)& notif = mNotifHelper;
 	decltype(mDisconnDevices)& dd = mDisconnDevices;
-	GF_UINT32 ret = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, &ls, &dd, rssiThreshold]()
+	GF_UINT32 ret = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, &notif, &dd, rssiThreshold]()
 	{
-		cleanInvalidWeakP(ls);
 		GF_UINT32 ret = static_cast<GF_UINT32>(am->StartScan(rssiThreshold));
 		if (GF_OK == ret)
 		{
@@ -242,12 +235,7 @@ GF_RET_CODE BLEHub::startScan(GF_UINT8 rssiThreshold)
 				if ((*itor)->getConnectionStatus() == DeviceConnectionStatus::Disconnected)
 				{
 					// notify client that the device will be erased.
-					for (auto& listener : ls)
-					{
-						auto ptr = listener.lock();
-						if (nullptr != ptr)
-							ptr->onDeviceDiscard(*itor);
-					}
+					notif.onDeviceDiscard(*itor);
 					GF_LOGD("Disconnected device removed.");
 					dd.erase(itor++);
 				}
@@ -272,20 +260,14 @@ GF_RET_CODE BLEHub::stopScan()
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
 	auto am = mAM;
-	decltype(mListeners)& ls = mListeners;
-	GF_UINT32 ret = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, &ls]()
+	decltype(mNotifHelper)& notif = mNotifHelper;
+	GF_UINT32 ret = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, &notif]()
 	{
 		GF_UINT32 ret = static_cast<GF_UINT32>(am->StopScan());
 		if (GF_OK == ret)
 		{
-			cleanInvalidWeakP(ls);
 			GF_LOGD("Scan stopped.");
-			for (auto& itor : ls)
-			{
-				auto ptr = itor.lock();
-				if (nullptr != ptr)
-					ptr->onScanfinished();
-			}
+			notif.onScanfinished();
 		}
 		return ret;
 	})));
@@ -302,14 +284,14 @@ void BLEHub::enumDevices(FunEnumDevice funEnum, bool bConnectedOnly)
 	lock_guard<mutex> lock(mTaskMutex);
 	for (auto& itor : mConnectedDevices)
 	{
-		funEnum(dynamic_pointer_cast<Device>(itor));
+		funEnum(static_pointer_cast<Device>(itor));
 	}
 	if (bConnectedOnly)
 		return;
 
 	for (auto& itor : mDisconnDevices)
 	{
-		funEnum(dynamic_pointer_cast<Device>(itor));
+		funEnum(static_pointer_cast<Device>(itor));
 	}
 }
 
@@ -322,14 +304,14 @@ WPDEVICE BLEHub::findDevice(GF_UINT8 addrType, tstring address)
 	for (auto& itor : mConnectedDevices)
 	{
 		if (itor->isMyself(addrType, address))
-			ret = dynamic_pointer_cast<Device>(itor);
+			ret = static_pointer_cast<Device>(itor);
 	}
 	if (nullptr != ret)
 		return ret;
 	for (auto& itor : mDisconnDevices)
 	{
 		if (itor->isMyself(addrType, address))
-			ret = dynamic_pointer_cast<Device>(itor);
+			ret = static_pointer_cast<Device>(itor);
 	}
 	return ret;
 }
@@ -362,24 +344,14 @@ void BLEHub::onScanResult(GF_BLEDevice* device)
 	{
 		(*exists)->updateData(*device);
 	}
-	for (auto& itor : mListeners)
-	{
-		auto ptr = itor.lock();
-		if (nullptr != ptr)
-			ptr->onDeviceFound(*exists);
-	}
+	mNotifHelper.onDeviceFound(*exists);
 }
 
 void BLEHub::onScanFinished()
 {
 	GF_LOGD(__FUNCTION__);
 	lock_guard<mutex> lock(mTaskMutex);
-	for (auto& itor : mListeners)
-	{
-		auto ptr = itor.lock();
-		if (nullptr != ptr)
-			ptr->onScanfinished();
-	}
+	mNotifHelper.onScanfinished();
 }
 
 void BLEHub::onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device)
@@ -404,7 +376,7 @@ void BLEHub::onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device)
 	{
 		GF_LOGW("No device found in disconnect_list. %u:%s",
 			(GF_UINT)device->address_type,
-			utils::tostring(utils::deviceAddressToString(device->address, sizeof(device->address)).c_str()));
+			utils::deviceAddressToString(device->address, sizeof(device->address)).c_str());
 		for (auto& itor : mConnectedDevices)
 		{
 			if (itor->isMyself(device->address_type, device->address))
@@ -418,7 +390,7 @@ void BLEHub::onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device)
 	{
 		GF_LOGW("No device found in connect_list either. %u:%s",
 			(GF_UINT)device->address_type,
-			utils::tostring(utils::deviceAddressToString(device->address, sizeof(device->address)).c_str()));
+			utils::deviceAddressToString(device->address, sizeof(device->address)).c_str());
 
 		// TODO: add new device using GF_ConnectedDevice
 		// need more info to do it
@@ -426,6 +398,7 @@ void BLEHub::onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device)
 	}
 	mConnectedDevices.insert(dev);
 	dev->onConnected(status, *device);
+	mNotifHelper.onDeviceConnected(dev);
 	// TODO: when a device is found, no later than it is connected, need to find
 	// it's detail information, then specialize it.
 	/*
@@ -437,7 +410,7 @@ void BLEHub::onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device)
 	*/
 }
 
-void BLEHub::onDeviceDisonnected(GF_STATUS status, GF_ConnectedDevice *device, GF_UINT8 reason)
+void BLEHub::onDeviceDisconnected(GF_STATUS status, GF_ConnectedDevice *device, GF_UINT8 reason)
 {
 	status;
 	GF_LOGD(__FUNCTION__);
@@ -460,7 +433,7 @@ void BLEHub::onDeviceDisonnected(GF_STATUS status, GF_ConnectedDevice *device, G
 	{
 		GF_LOGW("No device found in connect_list. handle is %u, %u:%s, reason is %u",
 			(GF_UINT)device->handle, (GF_UINT)device->address_type,
-			utils::tostring(utils::deviceAddressToString(device->address, sizeof(device->address))).c_str(),
+			utils::deviceAddressToString(device->address, sizeof(device->address)).c_str(),
 			(GF_UINT)reason);
 		for (auto& itor : mDisconnDevices)
 		{
@@ -475,12 +448,13 @@ void BLEHub::onDeviceDisonnected(GF_STATUS status, GF_ConnectedDevice *device, G
 	{
 		GF_LOGW("No device found in disconnect_list. either handle is %u, %u:%s, reason is %u",
 			(GF_UINT)device->handle, (GF_UINT)device->address_type,
-			utils::tostring(utils::deviceAddressToString(device->address, sizeof(device->address))).c_str(),
+			utils::deviceAddressToString(device->address, sizeof(device->address)).c_str(),
 			(GF_UINT)reason);
 		return;
 	}
 	mDisconnDevices.insert(dev);
 	dev->onDisconnected(status, reason);
+	mNotifHelper.onDeviceDisconnected(dev, reason);
 }
 
 
@@ -540,16 +514,16 @@ void BLEHub::onNotificationReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8
 		GF_LOGD("%s: not a event type. attrib_handle is %u", attrib_handle);
 		return;
 	}
-	unique_lock<mutex> lock(mTaskMutex);
+	lock_guard<mutex> lock(mTaskMutex);
 	gfsPtr<BLEDevice> dev;
 	for (auto& itor : mConnectedDevices)
 	{
 		if (itor->getHandle() == handle)
 		{
 			dev = itor;
+			break;
 		}
 	}
-	lock.unlock();
 	if (nullptr != dev)
 		dev->onData(length - 3, data + 3);
 }
@@ -560,12 +534,7 @@ void BLEHub::onComDestory()
 	// TODO: do something after com destoryed
 
 	lock_guard<mutex> lock(mTaskMutex);
-	for (auto& itor : mListeners)
-	{
-		auto ptr = itor.lock();
-		if (nullptr != ptr)
-			ptr->onStateChanged(HubState::Unknown);
-	}
+	mNotifHelper.onStateChanged(HubState::Unknown);
 }
 
 
@@ -709,13 +678,49 @@ GF_RET_CODE BLEHub::readCharacteristic(BLEDevice& dev, AttributeHandle attribute
 		return GF_RET_CODE::GF_ERROR;
 }
 
+void BLEHub::notifyOrientationData(BLEDevice& dev, const Quaternion<float>& rotation)
+{
+	for (auto& itor : mConnectedDevices)
+	{
+		if (itor.get() == &dev)
+		{
+			mNotifHelper.onOrientationData(itor, rotation);
+			break;
+		}
+	}
+}
+
+void BLEHub::notifyGestureData(BLEDevice& dev, Gesture gest)
+{
+	for (auto& itor : mConnectedDevices)
+	{
+		if (itor.get() == &dev)
+		{
+			mNotifHelper.onGestureData(itor, gest);
+			break;
+		}
+	}
+}
+
+void BLEHub::notifyReCenter(BLEDevice& dev)
+{
+	for (auto& itor : mConnectedDevices)
+	{
+		if (itor.get() == &dev)
+		{
+			mNotifHelper.onReCenter(itor);
+			break;
+		}
+	}
+}
+
 const char* gForcePrefix = "gForceBLE";
 
 gfsPtr<BLEDevice> BLEHub::createDeviceBeforeConnect(const GF_BLEDevice& bleDev)
 {
 	if (nullptr != strstr(bleDev.dev_name, gForcePrefix))
 	{
-		return dynamic_pointer_cast<BLEDevice>(make_shared<GForceDevice>(this, bleDev));
+		return static_pointer_cast<BLEDevice>(make_shared<GForceDevice>(this, bleDev));
 	}
 	else
 	{
@@ -728,3 +733,279 @@ gfsPtr<BLEDevice> BLEHub::createDeviceBeforeConnect(const GF_BLEDevice& bleDev)
 	}
 }
 
+void BLEHub::NotifyHelper::onScanfinished()
+{
+	if (WorkMode::ClientThread == mHub.mWorkMode)
+	{
+		for (auto& itor : mHub.mListeners)
+		{
+			mHub.mPollMsgQ.push(make_shared<PollingMsg>(
+				[itor](){
+				auto sp = itor.lock();
+				if (nullptr != sp)
+					sp->onScanfinished();
+			}
+			));
+		}
+	}
+	else
+	{
+		for (auto& itor : mHub.mListeners)
+		{
+			auto sp = itor.lock();
+			if (nullptr != sp)
+				sp->onScanfinished();
+		}
+	}
+}
+
+void BLEHub::NotifyHelper::onStateChanged(HubState state)
+{
+	if (WorkMode::ClientThread == mHub.mWorkMode)
+	{
+		for (auto& itor : mHub.mListeners)
+		{
+			mHub.mPollMsgQ.push(make_shared<PollingMsg>(
+				[itor, state](){
+				auto sp = itor.lock();
+				if (nullptr != sp)
+					sp->onStateChanged(state);
+			}
+			));
+		}
+	}
+	else
+	{
+		for (auto& itor : mHub.mListeners)
+		{
+			auto sp = itor.lock();
+			if (nullptr != sp)
+				sp->onStateChanged(state);
+		}
+	}
+}
+
+void BLEHub::NotifyHelper::onDeviceFound(WPDEVICE device)
+{
+	if (WorkMode::ClientThread == mHub.mWorkMode)
+	{
+		for (auto& itor : mHub.mListeners)
+		{
+			mHub.mPollMsgQ.push(make_shared<PollingMsg>(
+				[itor, device](){
+				auto sp = itor.lock();
+				if (nullptr != sp)
+					sp->onDeviceFound(device);
+			}
+			));
+		}
+	}
+	else
+	{
+		for (auto& itor : mHub.mListeners)
+		{
+			auto sp = itor.lock();
+			if (nullptr != sp)
+				sp->onDeviceFound(device);
+		}
+	}
+}
+
+void BLEHub::NotifyHelper::onDeviceDiscard(WPDEVICE device)
+{
+	if (WorkMode::ClientThread == mHub.mWorkMode)
+	{
+		for (auto& itor : mHub.mListeners)
+		{
+			mHub.mPollMsgQ.push(make_shared<PollingMsg>(
+				[itor, device](){
+				auto sp = itor.lock();
+				if (nullptr != sp)
+					sp->onDeviceDiscard(device);
+			}
+			));
+		}
+	}
+	else
+	{
+		for (auto& itor : mHub.mListeners)
+		{
+			auto sp = itor.lock();
+			if (nullptr != sp)
+				sp->onDeviceDiscard(device);
+		}
+	}
+}
+
+void BLEHub::NotifyHelper::onDeviceConnected(WPDEVICE device)
+{
+	if (WorkMode::ClientThread == mHub.mWorkMode)
+	{
+		for (auto& itor : mHub.mListeners)
+		{
+			mHub.mPollMsgQ.push(make_shared<PollingMsg>(
+				[itor, device](){
+				auto sp = itor.lock();
+				if (nullptr != sp)
+					sp->onDeviceConnected(device);
+			}
+			));
+		}
+	}
+	else
+	{
+		for (auto& itor : mHub.mListeners)
+		{
+			auto sp = itor.lock();
+			if (nullptr != sp)
+				sp->onDeviceConnected(device);
+		}
+	}
+}
+
+void BLEHub::NotifyHelper::onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason)
+{
+	if (WorkMode::ClientThread == mHub.mWorkMode)
+	{
+		for (auto& itor : mHub.mListeners)
+		{
+			mHub.mPollMsgQ.push(make_shared<PollingMsg>(
+				[itor, device, reason](){
+				auto sp = itor.lock();
+				if (nullptr != sp)
+					sp->onDeviceDisconnected(device, reason);
+			}
+			));
+		}
+	}
+	else
+	{
+		for (auto& itor : mHub.mListeners)
+		{
+			auto sp = itor.lock();
+			if (nullptr != sp)
+				sp->onDeviceDisconnected(device, reason);
+		}
+	}
+}
+
+void BLEHub::NotifyHelper::onOrientationData(WPDEVICE device, const Quaternion<float>& rotation)
+{
+	if (WorkMode::ClientThread == mHub.mWorkMode)
+	{
+		for (auto& itor : mHub.mListeners)
+		{
+			mHub.mPollMsgQ.push(make_shared<PollingMsg>(
+				[itor, device, rotation](){
+				auto sp = itor.lock();
+				if (nullptr != sp)
+					sp->onOrientationData(device, rotation);
+			}
+			));
+		}
+	}
+	else
+	{
+		for (auto& itor : mHub.mListeners)
+		{
+			auto sp = itor.lock();
+			if (nullptr != sp)
+				sp->onOrientationData(device, rotation);
+		}
+	}
+}
+
+void BLEHub::NotifyHelper::onGestureData(WPDEVICE device, Gesture gest)
+{
+	if (WorkMode::ClientThread == mHub.mWorkMode)
+	{
+		for (auto& itor : mHub.mListeners)
+		{
+			mHub.mPollMsgQ.push(make_shared<PollingMsg>(
+				[itor, device, gest](){
+				auto sp = itor.lock();
+				if (nullptr != sp)
+					sp->onGestureData(device, gest);
+			}
+			));
+		}
+	}
+	else
+	{
+		for (auto& itor : mHub.mListeners)
+		{
+			auto sp = itor.lock();
+			if (nullptr != sp)
+				sp->onGestureData(device, gest);
+		}
+	}
+}
+
+void BLEHub::NotifyHelper::onReCenter(WPDEVICE device)
+{
+	if (WorkMode::ClientThread == mHub.mWorkMode)
+	{
+		for (auto& itor : mHub.mListeners)
+		{
+			mHub.mPollMsgQ.push(make_shared<PollingMsg>(
+				[itor, device](){
+				auto sp = itor.lock();
+				if (nullptr != sp)
+					sp->onReCenter(device);
+			}
+			));
+		}
+	}
+	else
+	{
+		for (auto& itor : mHub.mListeners)
+		{
+			auto sp = itor.lock();
+			if (nullptr != sp)
+				sp->onReCenter(device);
+		}
+	}
+}
+
+GF_RET_CODE BLEHub::run(bool once, GF_UINT32 ms)
+{
+	GF_RET_CODE ret = GF_RET_CODE::GF_ERROR_BAD_STATE;
+	unique_lock<mutex> lock(mPollMutex, try_to_lock);
+	if (!lock.owns_lock())
+		return ret;
+	if (mWorkMode == WorkMode::Freerun)
+		return ret;
+	if (mPolling)
+		return ret;
+
+	mPolling = true;
+	ret = GF_RET_CODE::GF_SUCCESS;
+
+	///
+	lock.unlock();
+	bool loop = !once;
+	auto until = chrono::steady_clock::now() + chrono::duration<GF_UINT32, milli>(ms);
+	GF_UINT32 time_last = ms;
+	do {
+		gfsPtr<PollingMsg> msg;
+		if (0 != ms)
+		{
+			if (!mPollMsgQ.pop_until(msg, until))
+			{
+				// timer out
+				ret = GF_RET_CODE::GF_ERROR_TIMEOUT;
+				break;
+			}
+		}
+		else
+		{
+			msg = mPollMsgQ.pop();
+		}
+		msg->fun();
+	} while (loop);
+	///
+
+	lock.lock();
+	mPolling = false;
+	return ret;
+}

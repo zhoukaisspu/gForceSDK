@@ -29,20 +29,26 @@
 #pragma once
 
 #include "gfTypes.h"
+#include "Quaternion.h"
 
 namespace gf
 {
+
 	class HubListener
 	{
 	public:
 		virtual void onScanfinished() = 0;
+		virtual void onStateChanged(HubState state) = 0;
 		virtual void onDeviceFound(WPDEVICE device) = 0;
 		virtual void onDeviceDiscard(WPDEVICE device) = 0;
-		// when a device is specialized, it means that more functionalities
-		// are recongnized, a subclass is created to take over the old one,
-		// nothing more to be cared but discard the oldPtr.
-		virtual void onDeviceSpecialized(WPDEVICE oldPtr, WPDEVICE newPtr) = 0;
-		virtual void onStateChanged(HubState state) = 0;
-	};
+		// regarding the device data/status updates
+		virtual void onDeviceConnected(WPDEVICE device) = 0;
+		virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason) = 0;
 
+		virtual void onOrientationData(WPDEVICE device, const Quaternion<float>& rotation) = 0;
+		virtual void onGestureData(WPDEVICE device, Gesture gest) = 0;
+		virtual void onReCenter(WPDEVICE device) = 0;
+
+		virtual ~HubListener() {}
+	};
 }

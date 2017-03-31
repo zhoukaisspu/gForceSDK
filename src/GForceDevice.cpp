@@ -33,13 +33,14 @@
 
 using namespace gf;
 
-#if defined(DEBUG) || defined(_DEBUG)
+#if (defined(DEBUG) || defined(_DEBUG)) && defined(DEBUG_ANALYSE_PACKAGE_LOST)
 atomic<GF_UINT32> GForceDevice::dataCnt = 0;
 atomic<GF_UINT32> GForceDevice::lastUpdated = 0;
 thread GForceDevice::dbgThread;
 void GForceDevice::timefun()
 {
-	while (true)
+	bool loop = true;
+	while (loop)
 	{
 #ifdef WIN32
 		Sleep(1000);
@@ -60,7 +61,7 @@ void GForceDevice::onData(GF_UINT8 length, GF_PUINT8 data)
 	if (length <= 1)
 		return;
 
-#if defined(DEBUG) || defined(_DEBUG)
+#if (defined(DEBUG) || defined(_DEBUG)) && defined(DEBUG_ANALYSE_PACKAGE_LOST)
 	if (!dbgThread.joinable())
 		dbgThread = thread(GForceDevice::timefun);
 	dataCnt++;
@@ -89,8 +90,10 @@ void GForceDevice::onData(GF_UINT8 length, GF_PUINT8 data)
 				mPackageId = 0;
 			if (mPackageId != currPackageId)
 			{
+#if (defined(DEBUG) || defined(_DEBUG)) && defined(DEBUG_ANALYSE_PACKAGE_LOST)
 				GF_LOGE("%s:%s: package id error. id supposed is %u, but now is %u, gap is %u", __FUNCTION__,
 					utils::tostring(getName()).c_str(), mPackageId, currPackageId, (GF_UINT8)(currPackageId - mPackageId));
+#endif
 				mPackageId = currPackageId;
 			}
 		}
@@ -110,6 +113,7 @@ void GForceDevice::onData(GF_UINT8 length, GF_PUINT8 data)
 		break;
 	case EVENT_STATUS:
 		onStatus(payloadLength, payload);
+		break;
 	default:
 		GF_LOGE("%s: unknown event ID: %2.2X", __FUNCTION__, evtType);
 		;
@@ -131,6 +135,8 @@ void GForceDevice::onQuaternion(GF_UINT8 length, GF_PUINT8 data)
 	z = *(float*)&data[12];
 	Quaternion<float> q(w, x, y, z);
 	//GF_LOGD("Device: %s, Quaternion: %s", utils::tostring(getName()).c_str(), q.toString().c_str());
+
+	mHub->notifyOrientationData(*this, q);
 }
 
 void GForceDevice::onGesture(GF_UINT8 length, GF_PUINT8 data)
@@ -138,13 +144,35 @@ void GForceDevice::onGesture(GF_UINT8 length, GF_PUINT8 data)
 	GF_LOGD("%s, length: %u", __FUNCTION__, length);
 	if (length > 0)
 	{
-		lock_guard<mutex> lock(mMutex);
-		for (auto& itor : mListeners)
+		Gesture gesture;
+		switch (data[0])
 		{
-			auto ptr = itor.lock();
-			if (nullptr != ptr)
-				ptr->onEvent(this, GF_EVT_DATA_GESTURE, 1, data);
+		case static_cast<GF_UINT8>(Gesture::Relax) :
+			gesture = Gesture::Relax;
+			break;
+		case static_cast<GF_UINT8>(Gesture::Gist) :
+			gesture = Gesture::Gist;
+			break;
+		case static_cast<GF_UINT8>(Gesture::SpreadFingers) :
+			gesture = Gesture::SpreadFingers;
+			break;
+		case static_cast<GF_UINT8>(Gesture::WaveTowardPalm) :
+			gesture = Gesture::WaveTowardPalm;
+			break;
+		case static_cast<GF_UINT8>(Gesture::WaveBackwardPalm) :
+			gesture = Gesture::WaveBackwardPalm;
+			break;
+		case static_cast<GF_UINT8>(Gesture::TuckFingers) :
+			gesture = Gesture::TuckFingers;
+			break;
+		case static_cast<GF_UINT8>(Gesture::Shoot) :
+			gesture = Gesture::Shoot;
+			break;
+		case static_cast<GF_UINT8>(Gesture::Unknown) :
+		default:
+			gesture = Gesture::Unknown;
 		}
+		mHub->notifyGestureData(*this, gesture);
 	}
 }
 
@@ -156,13 +184,7 @@ void GForceDevice::onStatus(GF_UINT8 length, GF_PUINT8 data)
 		GF_UINT8 status = data[0] & EVENT_RECENTER_MASK;
 		if (1 == status)
 		{
-			lock_guard<mutex> lock(mMutex);
-			for (auto& itor : mListeners)
-			{
-				auto ptr = itor.lock();
-				if (nullptr != ptr)
-					ptr->onEvent(this, GF_EVT_DEVICE_RECENTER, 0, nullptr);
-			}
+			mHub->notifyReCenter(*this);
 		}
 	}
 }

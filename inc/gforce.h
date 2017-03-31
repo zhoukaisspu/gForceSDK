@@ -41,7 +41,6 @@
 #include "gfTypes.h"
 #include "Quaternion.h"
 #include "HubManager.h"
-#include "DeviceListener.h"
 #include "HubListener.h"
 #include "Hub.h"
 #include "Device.h"

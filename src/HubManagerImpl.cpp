@@ -50,7 +50,7 @@ gfsPtr<Hub> HubManagerImpl::getHubInstanceImpl(const tstring& sIdentifier)
 			if (nullptr == mTheSharedPtr)
 			{
 				GF_LOGD("Creating hub instance.");
-				mTheSharedPtr = dynamic_pointer_cast<Hub>(make_shared<BLEHub>(sIdentifier));
+				mTheSharedPtr = static_pointer_cast<Hub>(make_shared<BLEHub>(sIdentifier));
 			}
 			mTheHub.store(mTheSharedPtr.get(), memory_order_release);
 		}

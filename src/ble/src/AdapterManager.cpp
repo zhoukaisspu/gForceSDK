@@ -624,7 +624,7 @@ GF_STATUS GF_CAdapterManager::OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16
 
 				if (mClientCallback != NULL)
 				{
-					mClientCallback->onDeviceDisonnected(GF_OK, &disconnecteddevice, reason);
+					mClientCallback->onDeviceDisconnected(GF_OK, &disconnecteddevice, reason);
 				}
 
 				if (device != NULL)

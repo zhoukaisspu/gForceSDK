@@ -32,7 +32,9 @@
 
 #include "BLEDevice.h"
 
-#if defined(DEBUG) || defined(_DEBUG)
+//#define DEBUG_ANALYSE_PACKAGE_LOST
+
+#if (defined(DEBUG) || defined(_DEBUG)) && defined(DEBUG_ANALYSE_PACKAGE_LOST)
 #include <chrono>
 #include <atomic>
 #include <thread>
@@ -70,7 +72,7 @@ namespace gf
 	private:
 		GF_UINT16 mPackageId = INVALID_PACKAGE_ID;
 
-#if defined(DEBUG) || defined(_DEBUG)
+#if (defined(DEBUG) || defined(_DEBUG)) && defined(DEBUG_ANALYSE_PACKAGE_LOST)
 	private:
 		static atomic<GF_UINT32> dataCnt;
 		static atomic<GF_UINT32> lastUpdated;

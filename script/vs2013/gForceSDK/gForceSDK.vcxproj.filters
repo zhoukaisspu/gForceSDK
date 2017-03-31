@@ -27,9 +27,6 @@
     <ClCompile Include="..\..\..\src\gforce.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\HubManagerImpl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\binding\windll\stdafx.h">

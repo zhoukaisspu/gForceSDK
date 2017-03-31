@@ -36,7 +36,7 @@ public:
 	virtual void onScanResult(GF_BLEDevice* device) = 0;
 	virtual void onScanFinished() = 0;
 	virtual void onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device) = 0;
-	virtual void onDeviceDisonnected(GF_STATUS status, GF_ConnectedDevice *device, GF_UINT8 reason) = 0;
+	virtual void onDeviceDisconnected(GF_STATUS status, GF_ConnectedDevice *device, GF_UINT8 reason) = 0;
 
 	virtual void onMTUSizeChanged(GF_STATUS status, GF_UINT16 handle, GF_UINT16 mtu_size) = 0;
 	virtual void onConnectionParmeterUpdated(GF_STATUS status, GF_UINT16 handle, GF_UINT16 conn_int, GF_UINT16 superTO, GF_UINT16 slavelatency) = 0;

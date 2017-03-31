@@ -85,12 +85,11 @@ namespace gf {
 	typedef gfwPtr<Device> WPDEVICE;
 	typedef void(*FunEnumDevice)(WPDEVICE);
 
-	// Messaging mode: set up callbacks and waiting for callback and event.
-	// Polling mode: call the Poll method and block until an event received
-	//     or a devices status changed.
+	// Freerun mode: callbacks are called in the callers' threads
+	// ClientThread mode: callbacks are called in the client thread given by method Hub::run
 	enum class WorkMode {
-		Messaging,
-		Polling,
+		Freerun,
+		ClientThread,
 	};
 
 	enum class GF_RET_CODE : GF_UINT32{
@@ -101,6 +100,7 @@ namespace gf {
 		GF_ERROR_NOT_SUPPORT,
 		GF_ERR_SCAN_BUSY,
 		GF_ERR_NO_RESOURCE,
+		GF_ERROR_TIMEOUT,
 	};
 
 
@@ -110,10 +110,6 @@ namespace gf {
 		GF_EVT_DATA_GESTURE,
 		GF_EVT_DATA_QUATERNION,
 	} GF_EVENT_TYPE;
-
-	struct Event
-	{
-	};
 	
 	enum class Gesture : GF_UINT8 {
 		Relax = 0x00,
@@ -125,7 +121,6 @@ namespace gf {
 		Shoot = 0x06,
 		Unknown = 0xFF
 	};
-
 
 	enum class HubState{
 		Idle,
@@ -150,41 +145,7 @@ namespace gf {
 		Virtual
 	};
 
-	// define Characteristic read/write handle
 	enum class AttributeHandle : GF_UINT16 {
-		GATTPrimServiceDeclaration1 = 0x0001,
-		GATTCharacteristicDeclaration1,
-		DeviceName,
-		GATTCharacteristicDeclaration2,
-		Appearance,
-		GATTCharacteristicDeclaration3,
-		PreferredConnectParamters,
-		GATTPrimServiceDeclaration2,
-		GATTPrimServiceDeclaration3,
-		GATTCharacteristicDeclaration4,
-		SystemID,
-		GATTCharacteristicDeclaration5,
-		ModelNumberStr,
-		GATTCharacteristicDeclaration6,
-		SerialNumberStr,
-		GATTCharacteristicDeclaration7,
-		FirmwareRevStr,
-		GATTCharacteristicDeclaration8,
-		HardwareRevStr,
-		GATTCharacteristicDeclaration9,
-		SoftwareRevStr,
-		GATTCharacteristicDeclaration10,
-		ManufactureNameStr,
-		GATTCharacteristicDeclaration11,
-		IEEE11073_20601,
-		GATTCharacteristicDeclaration12,
-		PnPID,
-		GATTPrimServiceDeclaration4,
-		GATTCharacteristicDeclaration13,
-		Max
+		Max,
 	};
-
-	static const char charTypes[] =
-		"BBSBBBBBBBBBSBSBSBSBSBSBBBBBBN";
-
 } // namespace gf

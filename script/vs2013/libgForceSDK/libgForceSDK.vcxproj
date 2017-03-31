@@ -18,7 +18,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\inc\Device.h" />
-    <ClInclude Include="..\..\..\inc\DeviceListener.h" />
     <ClInclude Include="..\..\..\inc\gfTypes.h" />
     <ClInclude Include="..\..\..\inc\Hub.h" />
     <ClInclude Include="..\..\..\inc\HubListener.h" />
@@ -74,7 +73,7 @@
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>

@@ -32,7 +32,7 @@
 #include "Device.h"
 #include "IHub.h"
 #include "Utils.h"
-#include "DeviceListener.h"
+#include "HubListener.h"
 #include "ClientCallbackInterface.h"
 
 #include <set>
@@ -59,10 +59,7 @@ namespace gf
 		virtual GF_UINT16 getSlavelatency() const { return mSlavelatency; }
 		virtual GF_UINT16 getMTUsize() const { return mMTUsize; }
 
-		virtual GF_RET_CODE identifyDevice(int msec = 1000);
-
-		virtual GF_RET_CODE registerListener(const gfwPtr<DeviceListener>& listener);
-		virtual GF_RET_CODE unRegisterListener(const gfwPtr<DeviceListener>& listener);
+		virtual GF_RET_CODE identify(int msec = 1000);
 
 		virtual DeviceConnectionStatus getConnectionStatus() const { return mCnntStatus; }
 		virtual GF_RET_CODE setPostion(DevicePosition pos);
@@ -119,7 +116,6 @@ namespace gf
 		GF_UINT16	mMTUsize = 0;
 
 	protected:
-		set<gfwPtr<DeviceListener>, WeakPtrComp<DeviceListener>> mListeners;
 		// TODO: thread-safe
 		mutex mMutex;
 	};

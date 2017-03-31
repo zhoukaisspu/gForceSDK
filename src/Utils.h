@@ -37,6 +37,8 @@
 #include <mutex>
 #include <deque>
 #include <functional>
+#include <thread>
+#include <sstream>
 using namespace std;
 
 namespace gf {
@@ -105,10 +107,10 @@ namespace gf {
 #endif
 		}
 
-		__GF_INLINE__ tstring deviceAddressToString(const GF_UINT8 addr[], GF_SIZE len)
+		__GF_INLINE__ string deviceAddressToString(const GF_UINT8 addr[], GF_SIZE len)
 		{
 			if (nullptr == addr)
-				return tstring();
+				return string();
 			GF_SIZE alloclen = len*(3) + 1;
 			unique_ptr<char[]> up(new char[alloclen]);
 			char* str = up.get();
@@ -121,9 +123,20 @@ namespace gf {
 #endif
 			}
 			str[alloclen - 2] = '\0';
-			return totstring(string(str));
+			return string(str);
 		}
 
+		__GF_INLINE__ tstring deviceAddressToStringT(const GF_UINT8 addr[], GF_SIZE len)
+		{
+			return totstring(deviceAddressToString(addr, len));
+		}
+
+		__GF_INLINE__ string threadIdToString(thread::id id)
+		{
+			std::ostringstream stm;
+			stm << id;
+			return stm.str();
+		}
 	};
 
 	template <class _T> struct DevComp {
@@ -181,6 +194,24 @@ namespace gf {
 			_Type r = q.front();
 			q.pop_front();
 			return r;
+		}
+
+		template< class Clock, class Duration>
+		bool pop_until(_Type& r, const std::chrono::time_point<Clock, Duration>& tp)
+		{
+			unique_lock<mutex> lock(mMutex);
+			auto& q = mQ;
+			bool ret = mCondition.wait_until(lock, tp, [&q](){ return !q.empty(); });
+			if (ret)
+			{
+				r = q.front();
+				q.pop_front();
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 
 		void clear()

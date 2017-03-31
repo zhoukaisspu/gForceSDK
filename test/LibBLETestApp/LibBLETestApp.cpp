@@ -106,9 +106,9 @@ public:
 		
 	}
 
-	void onDeviceDisonnected(GF_STATUS status, GF_ConnectedDevice *device, GF_UINT8 reason)
+	void onDeviceDisconnected(GF_STATUS status, GF_ConnectedDevice *device, GF_UINT8 reason)
 	{
-		printf("\n onDeviceDisonnected with status = %d\n", status);
+		printf("\n onDeviceDisconnected with status = %d\n", status);
 		Sleep(5000);
 		mAMInterface->Connect(device->address, device->address_type, GF_TRUE);
 		Sleep(5000);

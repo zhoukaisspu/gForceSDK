@@ -46,6 +46,44 @@
 
 namespace gf
 {
+	// define Characteristic read/write handle
+	// will be deleted
+#if 0
+	enum class AttributeHandle : GF_UINT16 {
+		GATTPrimServiceDeclaration1 = 0x0001,
+		GATTCharacteristicDeclaration1,
+		DeviceName,
+		GATTCharacteristicDeclaration2,
+		Appearance,
+		GATTCharacteristicDeclaration3,
+		PreferredConnectParamters,
+		GATTPrimServiceDeclaration2,
+		GATTPrimServiceDeclaration3,
+		GATTCharacteristicDeclaration4,
+		SystemID,
+		GATTCharacteristicDeclaration5,
+		ModelNumberStr,
+		GATTCharacteristicDeclaration6,
+		SerialNumberStr,
+		GATTCharacteristicDeclaration7,
+		FirmwareRevStr,
+		GATTCharacteristicDeclaration8,
+		HardwareRevStr,
+		GATTCharacteristicDeclaration9,
+		SoftwareRevStr,
+		GATTCharacteristicDeclaration10,
+		ManufactureNameStr,
+		GATTCharacteristicDeclaration11,
+		IEEE11073_20601,
+		GATTCharacteristicDeclaration12,
+		PnPID,
+		GATTPrimServiceDeclaration4,
+		GATTCharacteristicDeclaration13,
+		Max
+	};
+	static const char charTypes[] =
+		"BBSBBBBBBBBBSBSBSBSBSBSBBBBBBN";
+#endif
 
 	class BLEHub :
 		public Hub, public GF_CClientCallback, public IHub
@@ -54,15 +92,17 @@ namespace gf
 		BLEHub(const tstring& sIdentifier);
 		virtual ~BLEHub();
 
-
+		//////////////////////////////////////////////////////////////
+		// Derived from class Hub
 		// module management
 		virtual GF_RET_CODE init(GF_UINT8 comPort);
 		virtual GF_RET_CODE deinit();
 		virtual WorkMode getWorkMode() const {
-			lock_guard<mutex> lock(const_cast<mutex&>(mTaskMutex));
 			return mWorkMode;
 		}
-		virtual WorkMode setWorkMode(WorkMode newMode);
+		virtual void setWorkMode(WorkMode newMode) {
+			mWorkMode = newMode;
+		}
 		// get status, version, etc.
 		virtual HubState getStatus();
 		virtual tstring getDescString() const;
@@ -91,11 +131,12 @@ namespace gf
 		virtual GF_RET_CODE createVirtualDevice(int numDevices, vector<WPDEVICE> realDevices, WPDEVICE& newDevice);
 
 	protected:
-
+		//////////////////////////////////////////////////////////////
+		// Derived from class IClientCallback to receive BLE event
 		virtual void onScanResult(GF_BLEDevice* device);
 		virtual void onScanFinished();
 		virtual void onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device);
-		virtual void onDeviceDisonnected(GF_STATUS status, GF_ConnectedDevice *device, GF_UINT8 reason);
+		virtual void onDeviceDisconnected(GF_STATUS status, GF_ConnectedDevice *device, GF_UINT8 reason);
 
 		virtual void onMTUSizeChanged(GF_STATUS status, GF_UINT16 handle, GF_UINT16 mtu_size);
 		virtual void onConnectionParmeterUpdated(GF_STATUS status, GF_UINT16 handle,
@@ -108,6 +149,7 @@ namespace gf
 		virtual void onComDestory();
 
 	protected:
+		//////////////////////////////////////////////////////////////
 		// IHub for device usage
 		virtual GF_RET_CODE connect(BLEDevice& dev, bool directConn = true);
 		virtual GF_RET_CODE cancelConnect(BLEDevice& dev);
@@ -119,17 +161,25 @@ namespace gf
 		virtual GF_RET_CODE writeCharacteristic(BLEDevice& dev,
 			AttributeHandle attribute_handle, GF_UINT8 data_length, GF_PUINT8 data);
 		virtual GF_RET_CODE readCharacteristic(BLEDevice& dev, AttributeHandle attribute_handle);
+		virtual void notifyOrientationData(BLEDevice& dev, const Quaternion<float>& rotation);
+		virtual void notifyGestureData(BLEDevice& dev, Gesture gest);
+		virtual void notifyReCenter(BLEDevice& dev);
 
 	protected:
+		//////////////////////////////////////////////////////////////
 		// device factory methods
 		gfsPtr<BLEDevice> createDeviceBeforeConnect(const GF_BLEDevice& bleDev);
 	protected:
+		//////////////////////////////////////////////////////////////
+		// generic members
 		GF_CAdapterManagerInterface* mAM = nullptr;
 		set<gfsPtr<BLEDevice>, DevComp<gfsPtr<BLEDevice>>> mDisconnDevices;
 		set<gfsPtr<BLEDevice>, ConnectedDevComp<gfsPtr<BLEDevice>>> mConnectedDevices;
 		set<gfwPtr<HubListener>, WeakPtrComp<HubListener>> mListeners;
 
 	protected:
+		//////////////////////////////////////////////////////////////
+		// Inner working thread to process call to AdapterManager
 		struct HubMsg
 		{
 			function<GF_UINT32()> fun;
@@ -138,26 +188,47 @@ namespace gf
 			condition_variable syncCallCond;
 			HubMsg(decltype(fun) foo) : fun(foo) {}
 		};
-		GF_UINT32 executeCommand(gfsPtr<HubMsg> msg);
+		GF_UINT32 executeCommand(gfsPtr<HubMsg>& msg);
 		void commandTask();
 		mutex mTaskMutex;
 		thread mCommandThread;
 		BQueue<gfsPtr<HubMsg>> mMsgQ;
 
 	public:
-		virtual GF_RET_CODE poll(Event& event, GF_UINT32 ms = 0)
-		{
-			event;
-			if (mWorkMode == WorkMode::Messaging)
-				return GF_RET_CODE::GF_ERROR_BAD_STATE;
-
-			//unique_lock<mutex> lock(mPollMutex);
-			//mPollCond.wait_for(lock, duration, pred);
-			return GF_RET_CODE::GF_SUCCESS;
-		}
+		//////////////////////////////////////////////////////////////
+		// Inner working thread to process AsClient mode
+		virtual GF_RET_CODE run(bool once, GF_UINT32 ms = 0);
 	protected:
-		WorkMode mWorkMode = WorkMode::Messaging;
+		class NotifyHelper
+		{
+		public:
+			NotifyHelper(BLEHub& theHub) : mHub(theHub) {}
+			virtual void onScanfinished();
+			virtual void onStateChanged(HubState state);
+			virtual void onDeviceFound(WPDEVICE device);
+			virtual void onDeviceDiscard(WPDEVICE device);
+			// regarding the device data/status updates
+			virtual void onDeviceConnected(WPDEVICE device);
+			virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason);
+
+			virtual void onOrientationData(WPDEVICE device, const Quaternion<float>& rotation);
+			virtual void onGestureData(WPDEVICE device, Gesture gest);
+			virtual void onReCenter(WPDEVICE device);
+
+			// remove warning
+			NotifyHelper& operator = (const NotifyHelper& right) = delete;
+		private:
+			BLEHub& mHub;
+		} mNotifHelper;
+		struct PollingMsg
+		{
+			function<void()> fun;
+			PollingMsg(decltype(fun) foo) : fun(foo) {}
+		};
+		BQueue<gfsPtr<PollingMsg>> mPollMsgQ;
+		atomic<WorkMode> mWorkMode = WorkMode::Freerun;
 		mutex mPollMutex;
+		bool mPolling = false;
 		condition_variable mPollCond;
 	};
 
