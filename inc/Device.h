@@ -30,33 +30,90 @@
 
 #include "gfTypes.h"
 
+/// \namespace gf
 namespace gf
 {
 	class DeviceListener;
 
+	/// \class Device
+	/// \brief
+	///             The abstract of a gForce device.
+	///             All devices are created and maintained by the Hub instance
+	///
 	class Device
 	{
 	public:
+		/// This method provides the device address type
+		///
+		/// \param state
+		///             An enumerate of HubState which indicates the state of the hub.
 		virtual GF_UINT8 getAddrType() const = 0;
-		virtual tstring getAddress() const = 0;
-		virtual tstring getName() const = 0;
-		// configuration
 
-		// control, like light, vibration, etc
+		/// This callback is called when the Hub finishes scanning devices.
+		///
+		/// \remark
+		///             This callback may be called after a series of onDeviceFound()
+		///     are called.
+		virtual tstring getAddress() const = 0;
+
+		/// This callback is called when the Hub finishes scanning devices.
+		///
+		/// \remark
+		///             This callback may be called after a series of onDeviceFound()
+		///     are called.
+		virtual tstring getName() const = 0;
+
+		/// This callback is called when the Hub finishes scanning devices.
+		///
+		/// \remark
+		///             This callback may be called after a series of onDeviceFound()
+		///     are called.
 		// identify a device by vibration or light, if the device support
 		virtual GF_RET_CODE identify(int msec = 1000) = 0;
 
-		// read info, like status, power, version, capacity, etc
+		/// This callback is called when the Hub finishes scanning devices.
+		///
+		/// \remark
+		///             This callback may be called after a series of onDeviceFound()
+		///     are called.
 		virtual DeviceConnectionStatus getConnectionStatus() const = 0;
+
+		/// This callback is called when the Hub finishes scanning devices.
+		///
+		/// \remark
+		///             This callback may be called after a series of onDeviceFound()
+		///     are called.
 		virtual GF_RET_CODE setPostion(DevicePosition pos) = 0;
+
+		/// This callback is called when the Hub finishes scanning devices.
+		///
+		/// \remark
+		///             This callback may be called after a series of onDeviceFound()
+		///     are called.
 		virtual DevicePosition getPosition() const = 0;
 
+		/// This callback is called when the Hub finishes scanning devices.
+		///
+		/// \remark
+		///             This callback may be called after a series of onDeviceFound()
+		///     are called.
 		virtual GF_RET_CODE connect(bool directConn = true) = 0;
+
+		/// This callback is called when the Hub finishes scanning devices.
+		///
+		/// \remark
+		///             This callback may be called after a series of onDeviceFound()
+		///     are called.
 		virtual GF_RET_CODE disconnect() = 0;
+
+		/// This callback is called when the Hub finishes scanning devices.
+		///
+		/// \remark
+		///             This callback may be called after a series of onDeviceFound()
+		///     are called.
 		virtual GF_RET_CODE cancelConnect() = 0;
 
 	protected:
-		// all devices have to be created by hub
 		virtual ~Device() {}
 	};
 

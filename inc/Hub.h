@@ -32,6 +32,7 @@
 #include "gfTypes.h"
 #include <vector>
 
+/// \namespace gf
 namespace gf
 {
 	class HubListener;
@@ -66,7 +67,7 @@ namespace gf
 		//   data if it happens
 		virtual GF_RET_CODE createVirtualDevice(int numDevices, std::vector<WPDEVICE> realDevices, WPDEVICE& newDevice) = 0;
 
-		virtual GF_RET_CODE run(bool once, GF_UINT32 ms = 0) = 0;
+		virtual GF_RET_CODE run(GF_UINT32 ms = 0, bool once = false) = 0;
 
 	protected:
 		Hub() {}

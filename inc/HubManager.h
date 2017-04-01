@@ -32,6 +32,7 @@
 #include "gfTypes.h"
 #include "Hub.h"
 
+/// \namespace gf
 namespace gf
 {
 

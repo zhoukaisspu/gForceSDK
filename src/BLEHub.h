@@ -197,7 +197,7 @@ namespace gf
 	public:
 		//////////////////////////////////////////////////////////////
 		// Inner working thread to process ClientThread mode
-		virtual GF_RET_CODE run(bool once, GF_UINT32 ms = 0);
+		virtual GF_RET_CODE run(GF_UINT32 ms = 0, bool once = false);
 	protected:
 		class NotifyHelper
 		{

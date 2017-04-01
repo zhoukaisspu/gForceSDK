@@ -49,6 +49,7 @@ typedef enum {
 	GF_LOG_MAX
 } GF_LOG_LEVEL;
 const GF_LOG_LEVEL CURRENT_LOG_LEVEL = GF_LOG_DEBUG;
+//const GF_LOG_LEVEL CURRENT_LOG_LEVEL = GF_LOG_ERROR;
 
 #include "utils/LogUtil_Win.h"
 

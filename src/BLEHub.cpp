@@ -92,7 +92,7 @@ GF_RET_CODE BLEHub::init(GF_UINT8 comPort)
 		GF_LOGD("Memory insurfficient.");
 		return GF_RET_CODE::GF_ERR_NO_RESOURCE;
 	}
-	if (GF_OK != mAM->Init(comPort, LOGTYPE_FILE)) {
+	if (GF_OK != mAM->Init(comPort, LOGTYPE_MFC)) {
 		GF_LOGD("Hub init failed.");
 		mAM = nullptr;
 		// TODO: check return value for reason
@@ -968,7 +968,7 @@ void BLEHub::NotifyHelper::onReCenter(WPDEVICE device)
 	}
 }
 
-GF_RET_CODE BLEHub::run(bool once, GF_UINT32 ms)
+GF_RET_CODE BLEHub::run(GF_UINT32 ms, bool once)
 {
 	GF_RET_CODE ret = GF_RET_CODE::GF_ERROR_BAD_STATE;
 	unique_lock<mutex> lock(mPollMutex, try_to_lock);

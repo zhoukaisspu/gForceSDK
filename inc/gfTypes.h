@@ -33,6 +33,7 @@
 #include <string>
 #include <memory>
 
+/// \namespace gf
 namespace gf {
 
 	typedef char				GF_CHAR;

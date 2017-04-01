@@ -286,7 +286,7 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 		int tryit = 5;
 		while (tryit--)
 		{
-			pHub->run(false, 2000);
+			pHub->run(2000);
 		}
 		pHub->setWorkMode(WorkMode::Freerun);
 		break;
@@ -307,7 +307,7 @@ int _tmain()
 		GF_LOGE("failed to get hub.");
 		return 0;
 	}
-
+	
 	pHub->setWorkMode(WorkMode::Freerun);
 	GF_LOGI("Hub work mode is %d now.", static_cast<GF_INT>(pHub->getWorkMode()));
 	GF_LOGI("Main thread id is %s.\n", utils::threadIdToString(this_thread::get_id()).c_str());

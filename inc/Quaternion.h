@@ -30,6 +30,7 @@
 
 #include <sstream>
 
+/// \namespace gf
 namespace gf
 {
 

@@ -16,7 +16,7 @@ cscope.out
 x64/
 build/
 bld/
-[Bb]in/
+#[Bb]in/
 [Oo]bj/
 
 # Roslyn cache directories
