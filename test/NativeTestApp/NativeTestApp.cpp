@@ -178,7 +178,13 @@ class HubListenerImp : public HubListener
 			break;
 		case Gesture::Unknown:
 		default:
-			gesture = "Unknown";
+		{
+			gesture = "Unknown: ";
+			string s;
+			stringstream ss(s);
+			ss << static_cast<int>(gest);
+			gesture += ss.str();
+		}
 		}
 		GF_LOGD("ThreadId: %s: %s: Device: %s, Gesture data received: %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()), gesture.c_str());

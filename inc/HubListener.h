@@ -50,17 +50,17 @@ namespace gf
 		/// \remark
 		///             This callback may be called after a series of onDeviceFound()
 		///     are called.
-		virtual void onScanfinished() = 0;
+		virtual void onScanfinished() {}
 
 		/// This callback is called when the state of the hub changed
 		/// \param state
 		///             An enumerate of HubState which indicates the state of the hub.
-		virtual void onStateChanged(HubState state) = 0;
+		virtual void onStateChanged(HubState state) {}
 
 		/// This callback is called when the hub finds a device.
 		///
 		/// \param device The pointer to Device that was found.
-		virtual void onDeviceFound(WPDEVICE device) = 0;
+		virtual void onDeviceFound(WPDEVICE device) {}
 
 		/// This callback is called when a previous connected device has
 		/// disconnected from the hub.
@@ -68,13 +68,13 @@ namespace gf
 		/// \param device The pointer to Device that was previously found and
 		///                               passed to the application.
 		///
-		virtual void onDeviceDiscard(WPDEVICE device) = 0;
+		virtual void onDeviceDiscard(WPDEVICE device) {}
 
 		/// This callback is called a device has been connected successfully
 		///
 		/// \param device The pointer to Device that was connected
 		///
-		virtual void onDeviceConnected(WPDEVICE device) = 0;
+		virtual void onDeviceConnected(WPDEVICE device) {}
 
 		/// This callback is called when a device has been disconnected from
 		///                                 connection state or failed to connect to
@@ -82,27 +82,27 @@ namespace gf
 		/// \param device The pointer to Device that was disconnected
 		///
 		/// \reason The reason of disconnection
-		virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason) = 0;
+		virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason) {}
 
 		/// This callback is called when the quaternion data is received
 		///
 		/// \param device The pointer to Device that is sending the data
 		///
 		/// \param rotation The Quaternion type of quaternion data received
-		virtual void onOrientationData(WPDEVICE device, const Quaternion<float>& rotation) = 0;
+		virtual void onOrientationData(WPDEVICE device, const Quaternion<float>& rotation) {}
 
 		/// This callback is called when the gesture data is recevied
 		///
 		/// \param device The pointer to Device that is sending the data
 		///
 		/// \param gest The Gesture type of data received
-		virtual void onGestureData(WPDEVICE device, Gesture gest) = 0;
+		virtual void onGestureData(WPDEVICE device, Gesture gest) {}
 
 		/// This callback is called when the button on gForce is pressed by user
 		///
 		/// \param device The pointer to Device sending the data
 		///
-		virtual void onReCenter(WPDEVICE device) = 0;
+		virtual void onReCenter(WPDEVICE device) {}
 
 		virtual ~HubListener() {}
 	};
