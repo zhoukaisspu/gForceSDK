@@ -48,8 +48,12 @@ typedef enum {
 	GF_LOG_FATAL,
 	GF_LOG_MAX
 } GF_LOG_LEVEL;
+
+#ifdef GF_OPTION_LOGLEVEL // allow config log level from compiler option
+const GF_LOG_LEVEL CURRENT_LOG_LEVEL = GF_OPTION_LOGLEVEL;
+#else
 const GF_LOG_LEVEL CURRENT_LOG_LEVEL = GF_LOG_DEBUG;
-//const GF_LOG_LEVEL CURRENT_LOG_LEVEL = GF_LOG_ERROR;
+#endif
 
 #include "utils/LogUtil_Win.h"
 

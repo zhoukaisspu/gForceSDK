@@ -104,7 +104,7 @@ namespace gf
 			mWorkMode = newMode;
 		}
 		// get status, version, etc.
-		virtual HubState getStatus();
+		virtual HubState getState();
 		virtual tstring getDescString() const;
 
 		// setup listener
@@ -128,7 +128,7 @@ namespace gf
 		//   defferent location into one virtual device. client still can receive gesture
 		//   data of these devices seperately, and can get one combined gesture
 		//   data if it happens
-		virtual GF_RET_CODE createVirtualDevice(int numDevices, vector<WPDEVICE> realDevices, WPDEVICE& newDevice);
+		virtual GF_RET_CODE createVirtualDevice(vector<WPDEVICE> realDevices, WPDEVICE& newDevice);
 
 	protected:
 		//////////////////////////////////////////////////////////////
@@ -161,7 +161,7 @@ namespace gf
 		virtual GF_RET_CODE writeCharacteristic(BLEDevice& dev,
 			AttributeHandle attribute_handle, GF_UINT8 data_length, GF_PUINT8 data);
 		virtual GF_RET_CODE readCharacteristic(BLEDevice& dev, AttributeHandle attribute_handle);
-		virtual void notifyOrientationData(BLEDevice& dev, const Quaternion<float>& rotation);
+		virtual void notifyOrientationData(BLEDevice& dev, const Quaternion<GF_FLOAT>& rotation);
 		virtual void notifyGestureData(BLEDevice& dev, Gesture gest);
 		virtual void notifyReCenter(BLEDevice& dev);
 
@@ -196,8 +196,8 @@ namespace gf
 
 	public:
 		//////////////////////////////////////////////////////////////
-		// Inner working thread to process ClientThread mode
-		virtual GF_RET_CODE run(GF_UINT32 ms = 0, bool once = false);
+		// Inner working thread to process Polling mode
+		virtual GF_RET_CODE run(GF_UINT32 ms, bool once = false);
 	protected:
 		class NotifyHelper
 		{
@@ -211,7 +211,7 @@ namespace gf
 			virtual void onDeviceConnected(WPDEVICE device);
 			virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason);
 
-			virtual void onOrientationData(WPDEVICE device, const Quaternion<float>& rotation);
+			virtual void onOrientationData(WPDEVICE device, const Quaternion<GF_FLOAT>& rotation);
 			virtual void onGestureData(WPDEVICE device, Gesture gest);
 			virtual void onReCenter(WPDEVICE device);
 

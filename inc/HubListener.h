@@ -26,81 +26,86 @@
  * DAMAGE.
  *
  */
+/*!
+ * \file HubListener.h
+ * \brief The definition of gForce callbacks
+ *
+ * \version 0.1
+ * \date 2017.4.3
+ */
 #pragma once
 
 #include "gfTypes.h"
 #include "Quaternion.h"
 
-/// \namespace gf
 namespace gf
 {
 
 	/// \class HubListener
 	/// \brief
-	///             The callback interface for processing events from the Hub. The
-	///     application needs to implement this class and pass its instance
-	///     to Hub::registerListener()
+	///             The callback interface for processing messages from the Hub.
 	///
+	///     The application needs to implement this class and pass its instance
+	///     to Hub::registerListener()
 	///
 	class HubListener
 	{
 	public:
-		/// This callback is called when the Hub finishes scanning devices.
+		/// \brief This callback is called when the Hub finishes scanning devices.
 		///
 		/// \remark
 		///             This callback may be called after a series of onDeviceFound()
 		///     are called.
 		virtual void onScanfinished() {}
 
-		/// This callback is called when the state of the hub changed
+		/// \brief This callback is called when the state of the hub changed
 		/// \param state
 		///             An enumerate of HubState which indicates the state of the hub.
 		virtual void onStateChanged(HubState state) {}
 
-		/// This callback is called when the hub finds a device.
+		/// \brief This callback is called when the hub finds a device during scanning.
 		///
-		/// \param device The pointer to Device that was found.
+		/// \param device Pointer to the Device that was found.
 		virtual void onDeviceFound(WPDEVICE device) {}
 
-		/// This callback is called when a previous connected device has
-		/// disconnected from the hub.
+		/// \brief This callback is called when a previous found but not connected device has been dropped by the Hub
 		///
-		/// \param device The pointer to Device that was previously found and
+		/// \param device Pointer to the Device that was previously found and
 		///                               passed to the application.
 		///
 		virtual void onDeviceDiscard(WPDEVICE device) {}
 
-		/// This callback is called a device has been connected successfully
+		/// \brief This callback is called when a device has been connected successfully
 		///
-		/// \param device The pointer to Device that was connected
+		/// \param device Pointer to the Device that was connected
 		///
 		virtual void onDeviceConnected(WPDEVICE device) {}
 
-		/// This callback is called when a device has been disconnected from
+		/// \brief This callback is called when a device has been disconnected from
 		///                                 connection state or failed to connect to
 		///
-		/// \param device The pointer to Device that was disconnected
+		/// \param device Pointer to the Device that was disconnected
+		/// \param reason The reason of why device disconnected
 		///
-		/// \reason The reason of disconnection
 		virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason) {}
 
-		/// This callback is called when the quaternion data is received
+		/// \brief This callback is called when the quaternion data is received
 		///
-		/// \param device The pointer to Device that is sending the data
+		/// \param device Pointer to the Device sending data
 		///
 		/// \param rotation The Quaternion type of quaternion data received
-		virtual void onOrientationData(WPDEVICE device, const Quaternion<float>& rotation) {}
+		virtual void onOrientationData(WPDEVICE device, const Quaternion<GF_FLOAT>& rotation) {}
 
-		/// This callback is called when the gesture data is recevied
+		/// \brief This callback is called when the gesture data is recevied
 		///
-		/// \param device The pointer to Device that is sending the data
+		/// \param device Pointer to the Device sending data
 		///
 		/// \param gest The Gesture type of data received
 		virtual void onGestureData(WPDEVICE device, Gesture gest) {}
 
-		/// This callback is called when the button on gForce is pressed by user
+		/// \brief This callback is called when the button on gForce is pressed by user
 		///
-		/// \param device The pointer to Device sending the data
+		/// \param device Pointer to the Device sending data
 		///
 		virtual void onReCenter(WPDEVICE device) {}
 

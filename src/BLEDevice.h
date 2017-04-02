@@ -42,6 +42,8 @@ using namespace std;
 namespace gf
 {
 
+	const static GF_UINT16 INVALID_HANDLE = 0xFFFF;
+
 	class BLEDevice : public Device
 	{
 	public:

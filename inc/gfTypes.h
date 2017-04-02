@@ -26,6 +26,13 @@
  * DAMAGE.
  *
  */
+/*!
+ * \file gfTypes.h
+ * \brief The basic type definitions using in gForceSDK
+ *
+ * \version 0.1
+ * \date 2017.4.3
+ */
 #pragma once
 
 
@@ -33,85 +40,115 @@
 #include <string>
 #include <memory>
 
-/// \namespace gf
 namespace gf {
 
+	/// type definition
 	typedef char				GF_CHAR;
+	/// type definition
 	typedef char*				GF_PCHAR;
+	/// type definition
 	typedef const char*			GF_CPCHAR;
+	/// type definition
 	typedef unsigned int		GF_UINT;
+	/// type definition
 	typedef int					GF_INT;
+	/// type definition
 	typedef float				GF_FLOAT;
 
+	/// type definition
 	typedef unsigned char		GF_UINT8;
+	/// type definition
 	typedef unsigned char*		GF_PUINT8;
+	/// type definition
 	typedef unsigned short		GF_UINT16;
+	/// type definition
 	typedef unsigned short*		GF_PUINT16;
+	/// type definition
 	typedef unsigned int		GF_UINT32;
+	/// type definition
 	typedef unsigned long long	GF_UINT64;
 
+	/// type definition
 	typedef size_t				GF_SIZE;
+	/// type definition
 	typedef GF_INT				GF_STATUS;
 
 
-	const static GF_UINT16 INVALID_HANDLE = 0xFFFF;
-
 #if defined(UNICODE) || defined(_UNICODE)
 
-#define tstring std::wstring
-#define tchar wchar_t
+	/// std::string type definition for ANSI/UNICODE compatible 
+	using tstring = std::wstring;
+	/// char type definition for ANSI/UNICODE compatible 
+	typedef wchar_t tchar;
 #if ! defined(WIN32) || ! defined(_T)
+	///
 #define _T(x) L ## x
 #endif
 
 #else // UNICODE
 
-#define tstring std::string
-#define tchar char
+	/// std::string type definition for ANSI/UNICODE convenience 
+	using tstring = std::string;
+	/// char type definition for ANSI/UNICODE convenience 
+	typedef char tchar;
 #if ! defined(WIN32) || ! defined(_T)
+	/// ANSI/UNICODE convenience
 #define __T(x) x
 #endif
 
 #endif // UNICODE
 
-	//----------------------------------------------------------
-	// gfwPtr, gfsPtr
-	//----------------------------------------------------------
+	/// The weak pointer
 	template <typename T>
 	using gfwPtr = std::weak_ptr < T > ;
+	/// The strong pointer
 	template <typename T>
 	using gfsPtr = std::shared_ptr < T > ;
 
 	class Device;
+	/// the weak pointer to Device
 	typedef gfwPtr<Device> WPDEVICE;
+	/// The devices enumerate callback
 	typedef void(*FunEnumDevice)(WPDEVICE);
 
-	// Freerun mode: callbacks are called in the callers' threads
-	// ClientThread mode: callbacks are called in the client thread given by method Hub::run
+	/// \brief Defines how callbacks are called in threads
+	///
 	enum class WorkMode {
+		/// Callbacks are called in the message senders' threads
+		/// \remark
+		/// 1. Callbacks are called in various threads.
+		/// 2. No need to call Hub::run, the method will return immediately in this mode.
 		Freerun,
-		ClientThread,
+		/// Callbacks are called in the client thread given by method Hub::run
+		/// \remark
+		/// Client has to call Hub::run to pull messages (represent as callbacks),
+		/// otherwise messages are blocking in an inner queue without been handled.
+		Polling,
 	};
 
+	/// \brief Defines possible return values of methods
+	///
 	enum class GF_RET_CODE : GF_UINT32{
+		/// Method returns successfully.
 		GF_SUCCESS = 0,
+		/// Method returns with a generic error.
 		GF_ERROR,
+		/// Given parameters are not match required.
 		GF_ERROR_BAD_PARAM,
+		/// Method call is not allowed by the inner state.
 		GF_ERROR_BAD_STATE,
+		/// Method is not supported at this time.
 		GF_ERROR_NOT_SUPPORT,
+		/// Hub is busying on device scan and cannot fulfill the call.
 		GF_ERR_SCAN_BUSY,
+		/// Insufficient resource to perform the call.
 		GF_ERR_NO_RESOURCE,
+		/// A preset timer is expired.
 		GF_ERROR_TIMEOUT,
 	};
 
-
-	typedef enum {
-		GF_EVT_EVENTBASE,
-		GF_EVT_DEVICE_RECENTER = GF_EVT_EVENTBASE,
-		GF_EVT_DATA_GESTURE,
-		GF_EVT_DATA_QUATERNION,
-	} GF_EVENT_TYPE;
-	
+	/// \brief Gesture types predefined in the gForce device
+	///
 	enum class Gesture : GF_UINT8 {
 		Relax = 0x00,
 		Gist = 0x01,
@@ -120,16 +157,21 @@ namespace gf {
 		WaveBackwardPalm = 0x04,
 		TuckFingers = 0x05,
 		Shoot = 0x06,
-		Unknown = 0xFF
+		Undefined = 0xFF
 	};
 
+	/// \brief Possible Hub states
+	///
 	enum class HubState{
 		Idle,
 		Scanning,
 		Connecting,
+		Disconnected,
 		Unknown
 	};
 
+	/// \brief Possible gForce device connection status
+	///
 	enum class DeviceConnectionStatus {
 		Disconnected,
 		Disconnecting,
@@ -137,6 +179,9 @@ namespace gf {
 		Connected
 	};
 
+	/// \brief Define where the gForce device is weared.
+	///
+	/// \remark Not implmented yet.
 	enum class DevicePosition {
 		NotAssigned,
 		RightArm,
@@ -146,7 +191,4 @@ namespace gf {
 		Virtual
 	};
 
-	enum class AttributeHandle : GF_UINT16 {
-		Max,
-	};
 } // namespace gf

@@ -26,19 +26,34 @@
  * DAMAGE.
  *
  */
+/*!
+ * \file Quaternion.h
+ * \brief Quaternion data type
+ *
+ * \version 0.1
+ * \date 2017.4.3
+ */
 #pragma once
 
 #include <sstream>
 
-/// \namespace gf
 namespace gf
 {
 
+	/// \class Quaternion
+	/// \brief
+	///             Data type of quaternion
+	///
 	template <class _Ty>
 	class Quaternion
 	{
 	public:
+		/// \brief Default constructor
+		///
 		Quaternion() {}
+
+		/// \brief Constructor with 4 elements
+		///
 		Quaternion(_Ty w, _Ty x, _Ty y, _Ty z)
 			: mW(w)
 			, mX(x)
@@ -46,11 +61,30 @@ namespace gf
 			, mZ(z)
 		{
 		}
+
+		/// \brief Get W
+		///
+		/// \return The W value
 		_Ty w() const { return mW; }
+
+		/// \brief Get X
+		///
+		/// \return The X value
 		_Ty x() const { return mX; }
+
+		/// \brief Get Y
+		///
+		/// \return The Y value
 		_Ty y() const { return mY; }
+
+		/// \brief Get Z
+		///
+		/// \return The Z value
 		_Ty z() const { return mZ; }
 
+		/// \brief Get a human-readable value
+		///
+		/// \return Value in text for human read convenience
 		std::string toString() const
 		{
 			std::ostringstream stm;

@@ -112,7 +112,7 @@ GF_RET_CODE BLEHub::deinit()
 	GF_LOGD(__FUNCTION__);
 
 	// get dongle status and stop scan
-	if (HubState::Scanning == getStatus())
+	if (HubState::Scanning == getState())
 	{
 		stopScan();
 	}
@@ -156,7 +156,7 @@ GF_RET_CODE BLEHub::deinit()
 	return ret;
 }
 
-HubState BLEHub::getStatus()
+HubState BLEHub::getState()
 {
 	HubState ret = HubState::Unknown;
 	if (nullptr == mAM) {
@@ -180,7 +180,7 @@ HubState BLEHub::getStatus()
 		ret = HubState::Connecting;
 		break;
 	default:
-		ret = HubState::Unknown;
+		ret = HubState::Disconnected;
 	}
 
 	return ret;
@@ -281,6 +281,11 @@ GF_RET_CODE BLEHub::stopScan()
 void BLEHub::enumDevices(FunEnumDevice funEnum, bool bConnectedOnly)
 {
 	GF_LOGD(__FUNCTION__);
+	if (nullptr == funEnum)
+	{
+		GF_LOGD("%s: Bad ptr.", __FUNCTION__);
+		return;
+	}
 
 	lock_guard<mutex> lock(mTaskMutex);
 	for (auto& itor : mConnectedDevices)
@@ -317,9 +322,8 @@ WPDEVICE BLEHub::findDevice(GF_UINT8 addrType, tstring address)
 	return ret;
 }
 
-GF_RET_CODE BLEHub::createVirtualDevice(int numDevices, vector<WPDEVICE> realDevices, WPDEVICE& newDevice)
+GF_RET_CODE BLEHub::createVirtualDevice(vector<WPDEVICE> realDevices, WPDEVICE& newDevice)
 {
-	numDevices;
 	realDevices;
 	newDevice;
 	GF_LOGD(__FUNCTION__);
@@ -535,7 +539,7 @@ void BLEHub::onComDestory()
 	// TODO: do something after com destoryed
 
 	lock_guard<mutex> lock(mTaskMutex);
-	mNotifHelper.onStateChanged(HubState::Unknown);
+	mNotifHelper.onStateChanged(HubState::Disconnected);
 }
 
 
@@ -679,7 +683,7 @@ GF_RET_CODE BLEHub::readCharacteristic(BLEDevice& dev, AttributeHandle attribute
 		return GF_RET_CODE::GF_ERROR;
 }
 
-void BLEHub::notifyOrientationData(BLEDevice& dev, const Quaternion<float>& rotation)
+void BLEHub::notifyOrientationData(BLEDevice& dev, const Quaternion<GF_FLOAT>& rotation)
 {
 	for (auto& itor : mConnectedDevices)
 	{
@@ -736,7 +740,7 @@ gfsPtr<BLEDevice> BLEHub::createDeviceBeforeConnect(const GF_BLEDevice& bleDev)
 
 void BLEHub::NotifyHelper::onScanfinished()
 {
-	if (WorkMode::ClientThread == mHub.mWorkMode)
+	if (WorkMode::Polling == mHub.mWorkMode)
 	{
 		for (auto& itor : mHub.mListeners)
 		{
@@ -762,7 +766,7 @@ void BLEHub::NotifyHelper::onScanfinished()
 
 void BLEHub::NotifyHelper::onStateChanged(HubState state)
 {
-	if (WorkMode::ClientThread == mHub.mWorkMode)
+	if (WorkMode::Polling == mHub.mWorkMode)
 	{
 		for (auto& itor : mHub.mListeners)
 		{
@@ -788,7 +792,7 @@ void BLEHub::NotifyHelper::onStateChanged(HubState state)
 
 void BLEHub::NotifyHelper::onDeviceFound(WPDEVICE device)
 {
-	if (WorkMode::ClientThread == mHub.mWorkMode)
+	if (WorkMode::Polling == mHub.mWorkMode)
 	{
 		for (auto& itor : mHub.mListeners)
 		{
@@ -814,7 +818,7 @@ void BLEHub::NotifyHelper::onDeviceFound(WPDEVICE device)
 
 void BLEHub::NotifyHelper::onDeviceDiscard(WPDEVICE device)
 {
-	if (WorkMode::ClientThread == mHub.mWorkMode)
+	if (WorkMode::Polling == mHub.mWorkMode)
 	{
 		for (auto& itor : mHub.mListeners)
 		{
@@ -840,7 +844,7 @@ void BLEHub::NotifyHelper::onDeviceDiscard(WPDEVICE device)
 
 void BLEHub::NotifyHelper::onDeviceConnected(WPDEVICE device)
 {
-	if (WorkMode::ClientThread == mHub.mWorkMode)
+	if (WorkMode::Polling == mHub.mWorkMode)
 	{
 		for (auto& itor : mHub.mListeners)
 		{
@@ -866,7 +870,7 @@ void BLEHub::NotifyHelper::onDeviceConnected(WPDEVICE device)
 
 void BLEHub::NotifyHelper::onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason)
 {
-	if (WorkMode::ClientThread == mHub.mWorkMode)
+	if (WorkMode::Polling == mHub.mWorkMode)
 	{
 		for (auto& itor : mHub.mListeners)
 		{
@@ -890,9 +894,9 @@ void BLEHub::NotifyHelper::onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason
 	}
 }
 
-void BLEHub::NotifyHelper::onOrientationData(WPDEVICE device, const Quaternion<float>& rotation)
+void BLEHub::NotifyHelper::onOrientationData(WPDEVICE device, const Quaternion<GF_FLOAT>& rotation)
 {
-	if (WorkMode::ClientThread == mHub.mWorkMode)
+	if (WorkMode::Polling == mHub.mWorkMode)
 	{
 		for (auto& itor : mHub.mListeners)
 		{
@@ -918,7 +922,7 @@ void BLEHub::NotifyHelper::onOrientationData(WPDEVICE device, const Quaternion<f
 
 void BLEHub::NotifyHelper::onGestureData(WPDEVICE device, Gesture gest)
 {
-	if (WorkMode::ClientThread == mHub.mWorkMode)
+	if (WorkMode::Polling == mHub.mWorkMode)
 	{
 		for (auto& itor : mHub.mListeners)
 		{
@@ -944,7 +948,7 @@ void BLEHub::NotifyHelper::onGestureData(WPDEVICE device, Gesture gest)
 
 void BLEHub::NotifyHelper::onReCenter(WPDEVICE device)
 {
-	if (WorkMode::ClientThread == mHub.mWorkMode)
+	if (WorkMode::Polling == mHub.mWorkMode)
 	{
 		for (auto& itor : mHub.mListeners)
 		{
@@ -974,7 +978,7 @@ GF_RET_CODE BLEHub::run(GF_UINT32 ms, bool once)
 	unique_lock<mutex> lock(mPollMutex, try_to_lock);
 	if (!lock.owns_lock())
 		return ret;
-	if (mWorkMode == WorkMode::Freerun)
+	if (mWorkMode != WorkMode::Polling)
 		return ret;
 	if (mPolling)
 		return ret;
@@ -989,18 +993,17 @@ GF_RET_CODE BLEHub::run(GF_UINT32 ms, bool once)
 	GF_UINT32 time_last = ms;
 	do {
 		gfsPtr<PollingMsg> msg;
-		if (0 != ms)
+		if (!mPollMsgQ.pop_until(msg, until))
 		{
-			if (!mPollMsgQ.pop_until(msg, until))
-			{
-				// timer out
-				ret = GF_RET_CODE::GF_ERROR_TIMEOUT;
-				break;
-			}
+			// timer out
+			ret = GF_RET_CODE::GF_ERROR_TIMEOUT;
+			break;
 		}
-		else
+		if (nullptr == msg)
 		{
-			msg = mPollMsgQ.pop();
+			GF_LOGE("Error: polling message is null.");
+			ret = GF_RET_CODE::GF_ERROR_BAD_STATE;
+			break;
 		}
 		msg->fun();
 	} while (loop);

@@ -26,11 +26,17 @@
  * DAMAGE.
  *
  */
+/*!
+ * \file Device.h
+ * \brief The abstract of a gForce device
+ *
+ * \version 0.1
+ * \date 2017.4.3
+ */
 #pragma once
 
 #include "gfTypes.h"
 
-/// \namespace gf
 namespace gf
 {
 	class DeviceListener;
@@ -38,82 +44,82 @@ namespace gf
 	/// \class Device
 	/// \brief
 	///             The abstract of a gForce device.
+	///
 	///             All devices are created and maintained by the Hub instance
 	///
 	class Device
 	{
 	public:
-		/// This method provides the device address type
+		/// \brief Get the device address type
 		///
-		/// \param state
-		///             An enumerate of HubState which indicates the state of the hub.
+		/// \return The device address type is defined in BLE.
 		virtual GF_UINT8 getAddrType() const = 0;
 
-		/// This callback is called when the Hub finishes scanning devices.
+		/// \brief Get the string type of device address
 		///
-		/// \remark
-		///             This callback may be called after a series of onDeviceFound()
-		///     are called.
+		///             The address is represented like DD:DD:DD:DD:DD:DD
+		/// \return The human-readable tstring type of device address
 		virtual tstring getAddress() const = 0;
 
-		/// This callback is called when the Hub finishes scanning devices.
+		/// \brief Get the device name
 		///
-		/// \remark
-		///             This callback may be called after a series of onDeviceFound()
-		///     are called.
+		/// \return The tstring type of device name
 		virtual tstring getName() const = 0;
 
-		/// This callback is called when the Hub finishes scanning devices.
+		/// \brief Identify a physical device using vibration or light, if the device support
 		///
 		/// \remark
-		///             This callback may be called after a series of onDeviceFound()
-		///     are called.
-		// identify a device by vibration or light, if the device support
+		///             This method is not implemented yet and can be changed in the future.
+		///
+		/// \return A GF_RET_CODE type of return value to indicate if the identify command is sent or not.
 		virtual GF_RET_CODE identify(int msec = 1000) = 0;
 
-		/// This callback is called when the Hub finishes scanning devices.
+		/// \brief Retrieves the connection status of the device
 		///
-		/// \remark
-		///             This callback may be called after a series of onDeviceFound()
-		///     are called.
+		/// \return DeviceConnectionStatus type of device status
 		virtual DeviceConnectionStatus getConnectionStatus() const = 0;
 
-		/// This callback is called when the Hub finishes scanning devices.
+		/// \brief Set the wear position of the device
 		///
 		/// \remark
-		///             This callback may be called after a series of onDeviceFound()
-		///     are called.
+		///             This method is not implemented yet and can be changed in the future.
 		virtual GF_RET_CODE setPostion(DevicePosition pos) = 0;
 
-		/// This callback is called when the Hub finishes scanning devices.
+		/// \brief Get the wear position of the device set before
 		///
 		/// \remark
-		///             This callback may be called after a series of onDeviceFound()
-		///     are called.
+		///             This method is not implemented yet and can be changed in the future.
 		virtual DevicePosition getPosition() const = 0;
 
-		/// This callback is called when the Hub finishes scanning devices.
+		/// \brief Connect to the device
 		///
-		/// \remark
-		///             This callback may be called after a series of onDeviceFound()
-		///     are called.
+		/// \param directConn - bool
+		///
+		/// \return GF_RET_CODE type to indicate if the command sent to device or not
+		/// \remark The return value is not represent the connection state.\n
+		///         The method may not work during Hub scanning.\n
+		///         See HubListener::onDeviceConnected and HubListener::onDeviceDisconnected also.
 		virtual GF_RET_CODE connect(bool directConn = true) = 0;
 
-		/// This callback is called when the Hub finishes scanning devices.
+		/// \brief Disconnect from the device
 		///
-		/// \remark
-		///             This callback may be called after a series of onDeviceFound()
-		///     are called.
+		/// \return GF_RET_CODE type to indicate if the command sent to device or not
+		/// \remark The return value is not represent the connection state.\n
+		///         The method may not work during Hub scanning.\n
+		///         See HubListener::onDeviceConnected and HubListener::onDeviceDisconnected also.
 		virtual GF_RET_CODE disconnect() = 0;
 
-		/// This callback is called when the Hub finishes scanning devices.
+		/// \brief Cancel connecting action to the device
 		///
-		/// \remark
-		///             This callback may be called after a series of onDeviceFound()
-		///     are called.
+		/// \return GF_RET_CODE type to indicate if the command sent to device or not
+		/// \remark The return value is not represent the connection state,
+		///         The method may not work during Hub scanning.\n
+		///         See HubListener::onDeviceConnected and HubListener::onDeviceDisconnected also.
 		virtual GF_RET_CODE cancelConnect() = 0;
 
 	protected:
+		/// \brief Virtual deconstructor
+		///
 		virtual ~Device() {}
 	};
 

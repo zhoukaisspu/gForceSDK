@@ -146,7 +146,7 @@ class HubListenerImp : public HubListener
 		GF_LOGD("ThreadId: %s: %s: device: %s, reason: %u", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()), reason);
 	}
-	virtual void onOrientationData(WPDEVICE device, const Quaternion<float>& rotation)
+	virtual void onOrientationData(WPDEVICE device, const Quaternion<GF_FLOAT>& rotation)
 	{
 	}
 	virtual void onGestureData(WPDEVICE device, Gesture gest)
@@ -176,7 +176,7 @@ class HubListenerImp : public HubListener
 		case Gesture::Shoot:
 			gesture = "Shoot";
 			break;
-		case Gesture::Unknown:
+		case Gesture::Undefined:
 		default:
 		{
 			gesture = "Unknown: ";
@@ -223,7 +223,7 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 	switch (cmd[0])
 	{
 	case 'g':
-		GF_LOGI("hub status is: %u", static_cast<GF_UINT>(pHub->getStatus()));
+		GF_LOGI("hub status is: %u", static_cast<GF_UINT>(pHub->getState()));
 		break;
 	case 's':
 		listDev.clear();
@@ -279,7 +279,7 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 	case 'p':
 	{
 		// entering polling mode
-		pHub->setWorkMode(WorkMode::ClientThread);
+		pHub->setWorkMode(WorkMode::Polling);
 		GF_LOGI("Hub work mode is %d now.", static_cast<GF_INT>(pHub->getWorkMode()));
 		GF_LOGI("Main thread id is %s.\n", utils::threadIdToString(this_thread::get_id()).c_str());
 
@@ -322,7 +322,7 @@ int _tmain()
 		GF_LOGE("failed to init hub.");
 		return 0;
 	}
-	GF_LOGI("hub status is: %u", static_cast<GF_UINT>(pHub->getStatus()));
+	GF_LOGI("hub state is: %u", static_cast<GF_UINT>(pHub->getState()));
 	GF_LOGI("hub string is: %s", utils::tostring(pHub->getDescString()).c_str());
 
 

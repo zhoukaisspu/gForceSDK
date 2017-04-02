@@ -38,6 +38,9 @@ namespace gf
 	class BLEDevice;
 	class HubListener;
 
+	enum class AttributeHandle : GF_UINT16 {
+		Max,
+	};
 	class IHub
 	{
 	public:
@@ -52,7 +55,7 @@ namespace gf
 			AttributeHandle attribute_handle, GF_UINT8 data_length, GF_PUINT8 data) = 0;
 		virtual GF_RET_CODE readCharacteristic(BLEDevice& dev, AttributeHandle attribute_handle) = 0;
 
-		virtual void notifyOrientationData(BLEDevice& dev, const Quaternion<float>& rotation) = 0;
+		virtual void notifyOrientationData(BLEDevice& dev, const Quaternion<GF_FLOAT>& rotation) = 0;
 		virtual void notifyGestureData(BLEDevice& dev, Gesture gest) = 0;
 		virtual void notifyReCenter(BLEDevice& dev) = 0;
 	};

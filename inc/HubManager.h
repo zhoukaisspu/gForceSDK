@@ -26,20 +26,37 @@
  * DAMAGE.
  *
  */
+/*!
+ * \file HubManager.h
+ * \brief The Hub factory
+ *
+ * \version 0.1
+ * \date 2017.4.3
+ */
 #pragma once
 
 #include "gforce.h"
 #include "gfTypes.h"
 #include "Hub.h"
 
-/// \namespace gf
 namespace gf
 {
 
+	/// \class HubManager
+	/// \brief
+	///             The factory of the Hub
+	///
+	///             HubManater mantains a singleton Hub instance
+	///
 	class GFORCESDK_API HubManager
 	{
 	public:
-		// Note that client don't care of maintaining the Hub pointer
+		/// \brief Get the Hub instance
+		///
+		/// \param sIdentifier a tstring to tell who wants to use the Hub instance
+		/// \return The Hub instance
+		/// \remark
+		///             The life cycle of the Hub instance starts in the first call to this method and until the app exits
 		static gfsPtr<Hub> getHubInstance(const tstring& sIdentifier);
 	};
 

@@ -128,12 +128,12 @@ void GForceDevice::onQuaternion(GF_UINT8 length, GF_PUINT8 data)
 		GF_LOGD("%s, length: %u, data insufficient.", __FUNCTION__, length);
 		return;
 	}
-	float w, x, y, z;
-	w = *(float*)&data[0];
-	x = *(float*)&data[4];
-	y = *(float*)&data[8];
-	z = *(float*)&data[12];
-	Quaternion<float> q(w, x, y, z);
+	GF_FLOAT w, x, y, z;
+	w = *(GF_FLOAT*)&data[0];
+	x = *(GF_FLOAT*)&data[4];
+	y = *(GF_FLOAT*)&data[8];
+	z = *(GF_FLOAT*)&data[12];
+	Quaternion<GF_FLOAT> q(w, x, y, z);
 	//GF_LOGD("Device: %s, Quaternion: %s", utils::tostring(getName()).c_str(), q.toString().c_str());
 
 	mHub->notifyOrientationData(*this, q);
@@ -168,9 +168,9 @@ void GForceDevice::onGesture(GF_UINT8 length, GF_PUINT8 data)
 		case static_cast<GF_UINT8>(Gesture::Shoot) :
 			gesture = Gesture::Shoot;
 			break;
-		case static_cast<GF_UINT8>(Gesture::Unknown) :
+		case static_cast<GF_UINT8>(Gesture::Undefined) :
 		default:
-			gesture = Gesture::Unknown;
+			gesture = Gesture::Undefined;
 		}
 		mHub->notifyGestureData(*this, gesture);
 	}
