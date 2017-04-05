@@ -43,7 +43,7 @@ namespace gf
 
 	/// \class HubListener
 	/// \brief
-	///             The callback interface for processing messages from the Hub.
+	///     The callback interface for processing messages from the Hub.
 	///
 	///     The application needs to implement this class and pass its instance
 	///     to Hub::registerListener()
@@ -54,59 +54,79 @@ namespace gf
 		/// \brief This callback is called when the Hub finishes scanning devices.
 		///
 		/// \remark
-		///             This callback may be called after a series of onDeviceFound()
+		///     This callback may be called after a series of onDeviceFound()
 		///     are called.
 		virtual void onScanfinished() {}
 
 		/// \brief This callback is called when the state of the hub changed
 		/// \param state
-		///             An enumerate of HubState which indicates the state of the hub.
+		///     An enumerated value of HubState which indicates the state of the
+        ///     hub.
 		virtual void onStateChanged(HubState state) {}
 
-		/// \brief This callback is called when the hub finds a device during scanning.
+		/// \brief
+        ///     This callback is called when the hub finds a device during
+        ///     scanning.
 		///
-		/// \param device Pointer to the Device that was found.
+		/// \param device The pointer to a Device object that was found.
 		virtual void onDeviceFound(WPDEVICE device) {}
 
-		/// \brief This callback is called when a previous found but not connected device has been dropped by the Hub
+		/// \brief
+        ///     This callback is called when a previously found but not
+        ///     connected device has been dropped by the Hub.
 		///
-		/// \param device Pointer to the Device that was previously found and
-		///                               passed to the application.
-		///
+		/// \param device
+        ///     The pointer to the Device object that was previously found and
+		///     passed to the application.
 		virtual void onDeviceDiscard(WPDEVICE device) {}
 
-		/// \brief This callback is called when a device has been connected successfully
+		/// \brief
+        ///     This callback is called when a device has been connected to
+        ///     the hub successfully.
 		///
-		/// \param device Pointer to the Device that was connected
-		///
+		/// \param device
+        ///     The pointer to the Device object that the hub has connected to.
 		virtual void onDeviceConnected(WPDEVICE device) {}
 
-		/// \brief This callback is called when a device has been disconnected from
-		///                                 connection state or failed to connect to
+		/// \brief
+        ///     This callback is called when a device has been disconnected from
+		///     connection state or failed to connect to
 		///
-		/// \param device Pointer to the Device that was disconnected
-		/// \param reason The reason of why device disconnected
-		///
+		/// \param device
+        ///     The pointer to the Device object that was disconnected.
+		/// \param reason The reason of why device disconnected.
 		virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason) {}
 
-		/// \brief This callback is called when the quaternion data is received
+		/// \brief
+        ///     This callback is called when the orientation of the device has
+        ///     changed.
 		///
-		/// \param device Pointer to the Device sending data
-		///
-		/// \param rotation The Quaternion type of quaternion data received
-		virtual void onOrientationData(WPDEVICE device, const Quaternion<GF_FLOAT>& rotation) {}
+		/// \param device
+        ///     The pointer to the Device.
+		/// \param orientation
+        ///     The Quaternion object that indicates the updated orientation of
+        ///     the device.
+		virtual void onOrientationData(WPDEVICE device, const Quaternion<GF_FLOAT>& orientation) {}
 
 		/// \brief This callback is called when the gesture data is recevied
 		///
-		/// \param device Pointer to the Device sending data
+		/// \param device The Pointer to the Device.
 		///
-		/// \param gest The Gesture type of data received
+		/// \param gest The Gesture object.
 		virtual void onGestureData(WPDEVICE device, Gesture gest) {}
 
-		/// \brief This callback is called when the button on gForce is pressed by user
+		/// \brief
+        ///     This callback is called when the user has just re-centered the
+        ///     device.
 		///
 		/// \param device Pointer to the Device sending data
 		///
+        /// \remark
+        ///     This callback is to notifiy the application of that the user has
+        ///     re-centered the device, by pressing the button on the gForce
+        ///     device, to use his/her current orientation as the origin of
+        ///     his/her coordinate system (i.e. [w=1, x=0, y=0, z=0] in
+        ///     quaternion). Please also see <a href="https://support.google.com/daydream/answer/7184599?hl=en">Google Daydram - Re-center your view & cursor</a>
 		virtual void onReCenter(WPDEVICE device) {}
 
 		virtual ~HubListener() {}
