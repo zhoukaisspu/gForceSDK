@@ -52,7 +52,6 @@ namespace gf
 	{
 	public:
 		/// \brief This callback is called when the Hub finishes scanning devices.
-		///
 		/// \remark
 		///     This callback may be called after a series of onDeviceFound()
 		///     are called.
@@ -67,14 +66,12 @@ namespace gf
 		/// \brief
         ///     This callback is called when the hub finds a device during
         ///     scanning.
-		///
 		/// \param device The pointer to a Device object that was found.
 		virtual void onDeviceFound(WPDEVICE device) {}
 
 		/// \brief
         ///     This callback is called when a previously found but not
         ///     connected device has been dropped by the Hub.
-		///
 		/// \param device
         ///     The pointer to the Device object that was previously found and
 		///     passed to the application.
@@ -83,7 +80,6 @@ namespace gf
 		/// \brief
         ///     This callback is called when a device has been connected to
         ///     the hub successfully.
-		///
 		/// \param device
         ///     The pointer to the Device object that the hub has connected to.
 		virtual void onDeviceConnected(WPDEVICE device) {}
@@ -91,7 +87,6 @@ namespace gf
 		/// \brief
         ///     This callback is called when a device has been disconnected from
 		///     connection state or failed to connect to
-		///
 		/// \param device
         ///     The pointer to the Device object that was disconnected.
 		/// \param reason The reason of why device disconnected.
@@ -100,7 +95,6 @@ namespace gf
 		/// \brief
         ///     This callback is called when the orientation of the device has
         ///     changed.
-		///
 		/// \param device
         ///     The pointer to the Device.
 		/// \param orientation
@@ -109,18 +103,14 @@ namespace gf
 		virtual void onOrientationData(WPDEVICE device, const Quaternion<GF_FLOAT>& orientation) {}
 
 		/// \brief This callback is called when the gesture data is recevied
-		///
 		/// \param device The Pointer to the Device.
-		///
 		/// \param gest The Gesture object.
 		virtual void onGestureData(WPDEVICE device, Gesture gest) {}
 
 		/// \brief
         ///     This callback is called when the user has just re-centered the
         ///     device.
-		///
 		/// \param device Pointer to the Device sending data
-		///
         /// \remark
         ///     This callback is to notifiy the application of that the user has
         ///     re-centered the device, by pressing the button on the gForce

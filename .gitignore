@@ -8,6 +8,7 @@ cscope.out
 *.suo
 *.user
 *.sln.docstates
+*.gch
 
 # Build results
 [Dd]ebug/

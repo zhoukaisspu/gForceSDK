@@ -43,78 +43,101 @@ namespace gf
 
 	/// \class Device
 	/// \brief
-	///             The abstract of a gForce device.
-	///
-	///             All devices are created and maintained by the Hub instance
+	///    The abstract class of a gForce device.
+	/// \remark
+    ///     All Device objects are created and maintained by the Hub instance
 	///
 	class Device
 	{
 	public:
-		/// \brief Get the device address type
-		///
+		/// \brief Gets the device address type.
 		/// \return The device address type is defined in BLE.
 		virtual GF_UINT8 getAddrType() const = 0;
 
-		/// \brief Get the string type of device address
-		///
-		///             The address is represented like DD:DD:DD:DD:DD:DD
-		/// \return The human-readable tstring type of device address
+		/// \brief Gets the string type of device address.
+		/// \return
+        ///     The human-readable tstring type of device address, e.g.
+        ///     `DD:DD:DD:DD:DD:DD`
 		virtual tstring getAddress() const = 0;
 
-		/// \brief Get the device name
+		/// \brief Gets the device name.
 		///
 		/// \return The tstring type of device name
 		virtual tstring getName() const = 0;
 
-		/// \brief Identify a physical device using vibration or light, if the device support
-		///
+		/// \brief
+        ///     Identifies a physical device using vibration or light, if the
+        ///     device supports.
 		/// \remark
-		///             This method is not implemented yet and can be changed in the future.
-		///
-		/// \return A GF_RET_CODE type of return value to indicate if the identify command is sent or not.
+		///     This method is not implemented yet and can be changed in the
+        ///     future.
+		/// \return
+        ///     A GF_RET_CODE type of return value to indicate if the identify
+        ///     command is sent or not.
 		virtual GF_RET_CODE identify(int msec = 1000) = 0;
 
-		/// \brief Retrieves the connection status of the device
-		///
-		/// \return DeviceConnectionStatus type of device status
+		/// \brief Retrieves the connection status of the device.
+		/// \return DeviceConnectionStatus type of device status.
 		virtual DeviceConnectionStatus getConnectionStatus() const = 0;
 
-		/// \brief Set the wear position of the device
-		///
+		/// \brief Sets the wear position of the device
 		/// \remark
-		///             This method is not implemented yet and can be changed in the future.
+		///     This method is not implemented yet and can be changed in the
+        ///     future.
+        /// \sa
+        ///  Device::getPostion()
 		virtual GF_RET_CODE setPostion(DevicePosition pos) = 0;
 
 		/// \brief Get the wear position of the device set before
 		///
 		/// \remark
-		///             This method is not implemented yet and can be changed in the future.
+		///     This method is not implemented yet and can be changed in the
+        ///     future.
+        /// \sa
+        ///  Device::setPostion()
 		virtual DevicePosition getPosition() const = 0;
 
-		/// \brief Connect to the device
-		///
+		/// \brief Connects to the device
 		/// \param directConn - bool
-		///
-		/// \return GF_RET_CODE type to indicate if the command sent to device or not
-		/// \remark The return value is not represent the connection state.\n
-		///         The method may not work during Hub scanning.\n
-		///         See HubListener::onDeviceConnected and HubListener::onDeviceDisconnected also.
+		/// \return
+        ///     GF_RET_CODE type to indicate if the command has been sent to
+        ///     device or not.
+		/// \remark
+        ///     The return value is not represent the connection state.
+		///     The method may not work during Hub scanning.
+		/// \sa
+        ///     Device::disconnect()
+        ///     Device::cancelConnect()
+        ///     HubListener::onDeviceConnected()
+        ///     HubListener::onDeviceDisconnected()
 		virtual GF_RET_CODE connect(bool directConn = true) = 0;
 
-		/// \brief Disconnect from the device
-		///
-		/// \return GF_RET_CODE type to indicate if the command sent to device or not
-		/// \remark The return value is not represent the connection state.\n
-		///         The method may not work during Hub scanning.\n
-		///         See HubListener::onDeviceConnected and HubListener::onDeviceDisconnected also.
+		/// \brief Disconnects from the device
+        /// \return
+        ///     GF_RET_CODE type to indicate if the command has been sent to
+        ///     device or not.
+		/// \remark
+        ///     The return value is not represent the connection state.
+		///     The method may not work during Hub scanning.
+		/// \sa
+        ///     Device::connect()
+        ///     Device::cancelConnect()
+        ///     HubListener::onDeviceConnected()
+        ///     HubListener::onDeviceDisconnected()
 		virtual GF_RET_CODE disconnect() = 0;
 
-		/// \brief Cancel connecting action to the device
-		///
-		/// \return GF_RET_CODE type to indicate if the command sent to device or not
-		/// \remark The return value is not represent the connection state,
-		///         The method may not work during Hub scanning.\n
-		///         See HubListener::onDeviceConnected and HubListener::onDeviceDisconnected also.
+		/// \brief Cancels connecting to the device
+        /// \return
+        ///     GF_RET_CODE type to indicate if the command has been sent to
+        ///     device or not.
+		/// \remark
+        ///     The return value is not represent the connection state.
+		///     The method may not work during Hub scanning.
+		/// \sa
+        ///     Device::connect()
+        ///     Device::disconnect()
+        ///     HubListener::onDeviceConnected()
+        ///     HubListener::onDeviceDisconnected()
 		virtual GF_RET_CODE cancelConnect() = 0;
 
 	protected:
