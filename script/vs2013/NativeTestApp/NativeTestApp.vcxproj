@@ -75,7 +75,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)..\..\lib\windows\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y $(SolutionDir)..\..\lib\windows\gforce32d.dll $(SolutionDir)$(Configuration)\</Command>
+      <Command>copy /Y $(SolutionDir)..\..\bin\windows\gforce32d.dll $(SolutionDir)$(Configuration)\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -98,7 +98,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)..\..\lib\windows\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y $(SolutionDir)..\..\lib\windows\gforce32.dll $(SolutionDir)$(Configuration)\</Command>
+      <Command>copy /Y $(SolutionDir)..\..\bin\windows\gforce32.dll $(SolutionDir)$(Configuration)\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
