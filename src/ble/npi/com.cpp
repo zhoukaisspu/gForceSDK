@@ -248,11 +248,10 @@ BOOL Com::EnumSerialPort()
 	DWORD dwSizeValueName = 100;
 	DWORD dwSizeofPortName = 100;
 	DWORD Type;
-	dwSizeValueName = NAME_LEN;
-	dwSizeofPortName = NAME_LEN;
-
 	do
 	{
+		dwSizeValueName = NAME_LEN;
+		dwSizeofPortName = NAME_LEN;
 		status = RegEnumValue(hKey, dwIndex++, (LPWSTR)szValueName, &dwSizeValueName, NULL, &Type,
 			szPortName, &dwSizeofPortName);
 
@@ -330,9 +329,6 @@ BOOL Com::EnumSerialPort()
 			}
 
 		}
-
-		dwSizeValueName = NAME_LEN;
-		dwSizeofPortName = NAME_LEN;
 	} while ((status != ERROR_NO_MORE_ITEMS));
 
 	RegCloseKey(hKey);
