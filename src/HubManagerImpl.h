@@ -40,7 +40,7 @@ namespace gf
 
 	class HubManagerImpl
 	{
-	private:
+	public:
 		// Note that client don't care of maintaining the Hub pointer
 		static gfsPtr<Hub> getHubInstanceImpl(const tstring& sIdentifier);
 
@@ -53,8 +53,6 @@ namespace gf
 		~HubManagerImpl();
 
 		static std::mutex mMutex;
-
-		friend class HubManager;
 	};
 
 } // namespace gf

@@ -35,6 +35,7 @@
  */
 #pragma once
 
+#include <cmath>
 #include <sstream>
 
 namespace gf
@@ -174,12 +175,12 @@ namespace gf
 
 			/* Y component of the Ybody axis in World frame */
 			t2 = q22 + q00 - (1L << 30);
-			yaw = -atan2((float)t1, (float)t2) * 180.f / (float)PI;
+			yaw = -std::atan2((float)t1, (float)t2) * 180.f / (float)PI;
 
 			/* Z component of the Ybody axis in World frame */
 			t3 = q23 + q01;
-			pitch = atan2((float)t3,
-				sqrt((float)t1 * t1 + (float)t2 * t2)) * 180.f / PI;
+			pitch = std::atan2((float)t3,
+				std::sqrt((float)t1 * t1 + (float)t2 * t2)) * 180.f / PI;
 			/* Z component of the Zbody axis in World frame */
 			t2 = q33 + q00 - (1L << 30);
 			if (t2 < 0) {
@@ -198,7 +199,7 @@ namespace gf
 			/* Z component of the Xbody axis in World frame */
 			t3 = q13 - q02;
 
-			roll = atan2(((float)(q33 + q00 - (1L << 30))),
+			roll = std::atan2(((float)(q33 + q00 - (1L << 30))),
 				(float)(q13 - q02) * 180.f / (PI - 90));
 			if (roll >= 90) {
 				roll = 180 - roll;

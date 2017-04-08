@@ -1,0 +1,21 @@
+LIBRARY
+
+EXPORTS
+hub_init
+hub_deinit
+hub_register_listener
+hub_unregister_listener
+hub_start_scan
+hub_stop_scan
+hub_get_num_devices
+hub_get_num_devices_connected
+hub_enum_devices
+ hub_set_workmode
+hub_get_workmode
+hub_run
+device_get_addr_type
+device_get_address
+device_get_connection_status
+device_connect
+device_disconnect
+device_cancel_connect
