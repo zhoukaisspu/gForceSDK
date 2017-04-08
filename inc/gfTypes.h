@@ -40,6 +40,10 @@
 #include <string>
 #include <memory>
 
+#if defined(WIN32)
+#include "tchar.h"
+#endif
+
 namespace gf {
 
 	/// type definition

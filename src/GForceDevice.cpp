@@ -133,7 +133,7 @@ void GForceDevice::onQuaternion(GF_UINT8 length, GF_PUINT8 data)
 	x = *(GF_FLOAT*)&data[4];
 	y = *(GF_FLOAT*)&data[8];
 	z = *(GF_FLOAT*)&data[12];
-	Quaternion<GF_FLOAT> q(w, x, y, z);
+	Quaternion q(w, x, y, z);
 	//GF_LOGD("Device: %s, Quaternion: %s", utils::tostring(getName()).c_str(), q.toString().c_str());
 
 	mHub->notifyOrientationData(*this, q);

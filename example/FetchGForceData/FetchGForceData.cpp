@@ -145,7 +145,7 @@ public:
 	}
 
 	/// This callback is called when the quaternion data is received
-	virtual void onOrientationData(WPDEVICE device, const Quaternion<GF_FLOAT>& rotation)
+	virtual void onOrientationData(WPDEVICE device, const Quaternion& rotation)
 	{
 		// print the quaternion data
 		cout << __FUNCTION__ << " has been called. " << rotation.toString() << endl;

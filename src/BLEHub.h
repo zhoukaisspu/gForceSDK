@@ -161,7 +161,7 @@ namespace gf
 		virtual GF_RET_CODE writeCharacteristic(BLEDevice& dev,
 			AttributeHandle attribute_handle, GF_UINT8 data_length, GF_PUINT8 data);
 		virtual GF_RET_CODE readCharacteristic(BLEDevice& dev, AttributeHandle attribute_handle);
-		virtual void notifyOrientationData(BLEDevice& dev, const Quaternion<GF_FLOAT>& rotation);
+		virtual void notifyOrientationData(BLEDevice& dev, const Quaternion& rotation);
 		virtual void notifyGestureData(BLEDevice& dev, Gesture gest);
 		virtual void notifyReCenter(BLEDevice& dev);
 
@@ -211,7 +211,7 @@ namespace gf
 			virtual void onDeviceConnected(WPDEVICE device);
 			virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason);
 
-			virtual void onOrientationData(WPDEVICE device, const Quaternion<GF_FLOAT>& rotation);
+			virtual void onOrientationData(WPDEVICE device, const Quaternion& rotation);
 			virtual void onGestureData(WPDEVICE device, Gesture gest);
 			virtual void onReCenter(WPDEVICE device);
 

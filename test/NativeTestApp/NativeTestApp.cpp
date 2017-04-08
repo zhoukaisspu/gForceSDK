@@ -146,8 +146,19 @@ class HubListenerImp : public HubListener
 		GF_LOGD("ThreadId: %s: %s: device: %s, reason: %u", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()), reason);
 	}
-	virtual void onOrientationData(WPDEVICE device, const Quaternion<GF_FLOAT>& rotation)
+	virtual void onOrientationData(WPDEVICE device, const Quaternion& rotation)
 	{
+		auto now = chrono::steady_clock::now();
+		chrono::duration<GF_UINT32, milli> duration(500);
+		if (mLastPrinted + duration > now)
+			return;
+
+		mLastPrinted = now;
+		auto ptr = device.lock();
+		GF_LOGD("ThreadId: %s: %s, Quaternion: %s, Eulerian angle: %s",
+			utils::threadIdToString(this_thread::get_id()).c_str(),
+			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()),
+			rotation.toString().c_str(), rotation.toEuler().toString().c_str());
 	}
 	virtual void onGestureData(WPDEVICE device, Gesture gest)
 	{
@@ -195,6 +206,9 @@ class HubListenerImp : public HubListener
 		GF_LOGD("ThreadId: %s: %s: Gesture position re-centered. device = %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
 	}
+
+private:
+	chrono::steady_clock::time_point mLastPrinted = chrono::steady_clock::now();
 };
 
 void enumDevice(WPDEVICE dev)

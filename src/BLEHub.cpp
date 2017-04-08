@@ -683,7 +683,7 @@ GF_RET_CODE BLEHub::readCharacteristic(BLEDevice& dev, AttributeHandle attribute
 		return GF_RET_CODE::GF_ERROR;
 }
 
-void BLEHub::notifyOrientationData(BLEDevice& dev, const Quaternion<GF_FLOAT>& rotation)
+void BLEHub::notifyOrientationData(BLEDevice& dev, const Quaternion& rotation)
 {
 	for (auto& itor : mConnectedDevices)
 	{
@@ -894,7 +894,7 @@ void BLEHub::NotifyHelper::onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason
 	}
 }
 
-void BLEHub::NotifyHelper::onOrientationData(WPDEVICE device, const Quaternion<GF_FLOAT>& rotation)
+void BLEHub::NotifyHelper::onOrientationData(WPDEVICE device, const Quaternion& rotation)
 {
 	if (WorkMode::Polling == mHub.mWorkMode)
 	{
