@@ -34,5 +34,15 @@ following steps to build and run the example code:
     between the gForce armband and the gForceDongle will be established
     automatically.
 
-6. Run the executable file of previously built `FetchGForceData`, you will see
-    the gesture and quaternion data in the console.
+6. Run the executable file of previously built `FetchGForceData`, you will be
+    able to see the gesture and quaternion data printed in the console.
+
+## API documentation
+Please see `doc/html/index.html`.
+
+## Known issues
+1. After the application exits abnormally, the connection between the gForce
+    armband and the gForceDongle may remain. This will cause the next
+    connection to fail when you restart the application. To work around this
+    issue, you need to unplug the gForceDongle or turn-on-and-off gForce
+    armband again to disconnect them.
