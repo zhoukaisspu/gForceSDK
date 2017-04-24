@@ -22,8 +22,8 @@ date         | optional, date along with preview and release candidate
 > Preview release is only for early access by selected leading customers.
 > Whereas, RC release is available for the public access. Generally, after the
 > first RC release, API and functionality are fixed and there will only be bug
-> fixes in the subsequent RC releases and the final releases. Whereas, A
-> Preview release can change everything in the subsequent preview releases.
+> fixes in the subsequent RC releases and the final releases. Whereas, for a
+> Preview release, everything is subject to change in the subsequent release.
 
 ## v1.0-RC2-20170412
 * First release for preview
