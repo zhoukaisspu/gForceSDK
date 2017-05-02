@@ -211,7 +211,7 @@ private:
 	chrono::steady_clock::time_point mLastPrinted = chrono::steady_clock::now();
 };
 
-void enumDevice(WPDEVICE dev)
+bool enumDevice(WPDEVICE dev)
 {
 	auto sp = dev.lock();
 	ASSERT_VALID_PTR(sp);
@@ -226,6 +226,9 @@ void enumDevice(WPDEVICE dev)
 			static_cast<GF_UINT>(sp->getConnectionStatus()), static_cast<GF_UINT>(sp->getPosition()));
 		listDev.push_back(sp);
 	}
+
+	// don't want to break enumerate, so always return true
+	return true;
 }
 
 void handleCmd(gfsPtr<Hub>& pHub, string cmd)
@@ -249,9 +252,10 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 	case 'e':
 	{
 		GF_LOGI("Total %u devices found, %u of them are connected.",
-			pHub->getNumOfDevices(), pHub->getNumOfConnectedDevices());
+			pHub->getNumOfDevices(false), pHub->getNumOfDevices(true));
 		listDev.clear();
-		pHub->enumDevices(enumDevice, false);
+		function<bool(WPDEVICE)> enumFn(enumDevice);
+		pHub->enumDevices(enumFn, false);
 		break;
 	}
 	case 'c':

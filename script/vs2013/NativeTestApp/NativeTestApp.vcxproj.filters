@@ -29,5 +29,8 @@
     <ClCompile Include="..\..\..\test\NativeTestApp\stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\common\src\LogUtil_Win.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

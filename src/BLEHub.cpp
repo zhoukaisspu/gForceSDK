@@ -51,7 +51,18 @@ BLEHub::~BLEHub()
 GF_UINT32 BLEHub::executeCommand(gfsPtr<HubMsg>& msg)
 {
 	msg->executed = false;
-	unique_lock<mutex> lock(mTaskMutex);
+	unique_lock<mutex> lock;
+	try {
+		lock = unique_lock<mutex>(mTaskMutex);
+	}
+	catch (const system_error& e) {
+		// duplicate lock in the same thread.
+		// try polling mode instead.
+		GF_LOGD("%s: system_error with code %d, meaning %s",
+			__FUNCTION__, e.code().value(), e.what());
+		throw e;
+		return 0;
+	}
 	mMsgQ.push(msg);
 	msg->syncCallCond.wait(lock, [&msg]()->bool{ return msg->executed; });
 	return msg->ret;
@@ -118,15 +129,10 @@ GF_RET_CODE BLEHub::deinit()
 	}
 
 	unique_lock<mutex> lock(mTaskMutex);
-	auto disconDevices = mDisconnDevices;
-	auto connedDevices = mConnectedDevices;
+	auto devices = mDisconnDevices;
+	devices.insert(mConnectedDevices.begin(), mConnectedDevices.end());
 	lock.unlock();
-	for (auto& itor : disconDevices)
-	{
-		if (DeviceConnectionStatus::Disconnected != itor->getConnectionStatus())
-			itor->disconnect();
-	}
-	for (auto& itor : connedDevices)
+	for (auto& itor : devices)
 	{
 		if (DeviceConnectionStatus::Disconnected != itor->getConnectionStatus())
 			itor->disconnect();
@@ -143,6 +149,11 @@ GF_RET_CODE BLEHub::deinit()
 	mMsgQ.clear();
 	mDisconnDevices.clear();
 	mConnectedDevices.clear();
+	for (auto& itor : devices)
+	{
+		mNotifHelper.onDeviceDiscard(itor);
+	}
+	devices.clear();
 
 	if (nullptr == mAM) {
 		return ret;
@@ -225,7 +236,7 @@ GF_RET_CODE BLEHub::startScan(GF_UINT8 rssiThreshold)
 	auto am = mAM;
 	decltype(mNotifHelper)& notif = mNotifHelper;
 	decltype(mDisconnDevices)& dd = mDisconnDevices;
-	GF_UINT32 ret = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, &notif, &dd, rssiThreshold]()
+	GF_UINT32 ret = executeCommand(make_shared<HubMsg>([&am, &notif, &dd, rssiThreshold]()
 	{
 		GF_UINT32 ret = static_cast<GF_UINT32>(am->StartScan(rssiThreshold));
 		if (GF_OK == ret)
@@ -247,7 +258,7 @@ GF_RET_CODE BLEHub::startScan(GF_UINT8 rssiThreshold)
 			}
 		}
 		return ret;
-	})));
+	}));
 	if (GF_OK == ret)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
@@ -262,7 +273,7 @@ GF_RET_CODE BLEHub::stopScan()
 
 	auto am = mAM;
 	decltype(mNotifHelper)& notif = mNotifHelper;
-	GF_UINT32 ret = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, &notif]()
+	GF_UINT32 ret = executeCommand(make_shared<HubMsg>([&am, &notif]()
 	{
 		GF_UINT32 ret = static_cast<GF_UINT32>(am->StopScan());
 		if (GF_OK == ret)
@@ -271,14 +282,14 @@ GF_RET_CODE BLEHub::stopScan()
 			notif.onScanfinished();
 		}
 		return ret;
-	})));
+	}));
 	if (GF_OK == ret)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
 		return GF_RET_CODE::GF_ERROR;
 }
 
-void BLEHub::enumDevices(FunEnumDevice funEnum, bool bConnectedOnly)
+void BLEHub::enumDevices(std::function<bool(WPDEVICE)>& funEnum, bool bConnectedOnly)
 {
 	GF_LOGD(__FUNCTION__);
 	if (nullptr == funEnum)
@@ -290,14 +301,16 @@ void BLEHub::enumDevices(FunEnumDevice funEnum, bool bConnectedOnly)
 	lock_guard<mutex> lock(mTaskMutex);
 	for (auto& itor : mConnectedDevices)
 	{
-		funEnum(static_pointer_cast<Device>(itor));
+		if (!funEnum(static_pointer_cast<Device>(itor)))
+			return; // if client wants to stop, it will return false in funEnum
 	}
 	if (bConnectedOnly)
 		return;
 
 	for (auto& itor : mDisconnDevices)
 	{
-		funEnum(static_pointer_cast<Device>(itor));
+		if (!funEnum(static_pointer_cast<Device>(itor)))
+			return; // if client wants to stop, it will return false in funEnum
 	}
 }
 
@@ -554,11 +567,11 @@ GF_RET_CODE BLEHub::connect(BLEDevice& dev, bool directConn)
 		return ret;
 	GF_UINT8 type = dev.getAddrType();
 	auto am = mAM;
-	GF_UINT32 status = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, &addr, type, directConn]()
+	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, &addr, type, directConn]()
 	{
 		GF_STATUS status = am->Connect(addr, type, directConn ? GF_TRUE : GF_FALSE);
 		return static_cast<GF_UINT32>(status);
-	})));
+	}));
 	if (GF_OK == status)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
@@ -576,11 +589,11 @@ GF_RET_CODE BLEHub::cancelConnect(BLEDevice& dev)
 		return ret;
 	auto type = dev.getAddrType();
 	auto am = mAM;
-	GF_UINT32 status = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, &addr, type]()
+	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, &addr, type]()
 	{
 		GF_STATUS status = am->CancelConnect(addr, type);
 		return static_cast<GF_UINT32>(status);
-	})));
+	}));
 	if (GF_OK == status)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
@@ -594,11 +607,11 @@ GF_RET_CODE BLEHub::disconnect(BLEDevice& dev)
 
 	auto handle = dev.getHandle();
 	auto am = mAM;
-	GF_UINT32 status = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, handle]()
+	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, handle]()
 	{
 		GF_STATUS status = am->Disconnect(handle);
 		return static_cast<GF_UINT32>(status);
-	})));
+	}));
 	if (GF_OK == status)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
@@ -612,11 +625,11 @@ GF_RET_CODE BLEHub::configMtuSize(BLEDevice& dev, GF_UINT16 mtuSize)
 
 	auto handle = dev.getHandle();
 	auto am = mAM;
-	GF_UINT32 status = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, handle, mtuSize]()
+	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, handle, mtuSize]()
 	{
 		GF_STATUS status = am->ConfigMtuSize(handle, mtuSize);
 		return static_cast<GF_UINT32>(status);
-	})));
+	}));
 	if (GF_OK == status)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
@@ -631,13 +644,13 @@ GF_RET_CODE BLEHub::connectionParameterUpdate(BLEDevice& dev, GF_UINT16 conn_int
 
 	auto handle = dev.getHandle();
 	auto am = mAM;
-	GF_UINT32 status = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, handle,
+	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, handle,
 		conn_interval_min, conn_interval_max, slave_latence, supervision_timeout]()
 	{
 		GF_STATUS status = am->ConnectionParameterUpdate(handle, conn_interval_min,
 			conn_interval_max, slave_latence, supervision_timeout);
 		return static_cast<GF_UINT32>(status);
-	})));
+	}));
 	if (GF_OK == status)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
@@ -652,13 +665,13 @@ GF_RET_CODE BLEHub::writeCharacteristic(BLEDevice& dev,
 
 	auto handle = dev.getHandle();
 	auto am = mAM;
-	GF_UINT32 status = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, handle,
+	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, handle,
 		attribute_handle, data_length, data]()
 	{
 		GF_STATUS status = am->WriteCharacteristic(handle, static_cast<GF_UINT16>(attribute_handle),
 			data_length, data);
 		return static_cast<GF_UINT32>(status);
-	})));
+	}));
 	if (GF_OK == status)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
@@ -672,11 +685,11 @@ GF_RET_CODE BLEHub::readCharacteristic(BLEDevice& dev, AttributeHandle attribute
 
 	auto handle = dev.getHandle();
 	auto am = mAM;
-	GF_UINT32 status = static_cast<GF_UINT32>(executeCommand(make_shared<HubMsg>([&am, handle, attribute_handle]()
+	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, handle, attribute_handle]()
 	{
 		GF_STATUS status = am->ReadCharacteristic(handle, static_cast<GF_UINT16>(attribute_handle));
 		return static_cast<GF_UINT32>(status);
-	})));
+	}));
 	if (GF_OK == status)
 		return GF_RET_CODE::GF_SUCCESS;
 	else

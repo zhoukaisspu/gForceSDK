@@ -101,6 +101,9 @@ namespace gf
 			return mWorkMode;
 		}
 		virtual void setWorkMode(WorkMode newMode) {
+			GF_LOGI("setWorkMode. %d", static_cast<int>(newMode));
+			if (WorkMode::Polling == newMode)
+				GF_LOGI("Please call method run(ms) to pull message.");
 			mWorkMode = newMode;
 		}
 		// get status, version, etc.
@@ -114,15 +117,14 @@ namespace gf
 		virtual GF_RET_CODE startScan(GF_UINT8 rssiThreshold);
 		virtual GF_RET_CODE stopScan();
 
-		virtual GF_SIZE getNumOfDevices() const {
+		virtual GF_SIZE getNumOfDevices(bool bConnectedOnly = true) const {
 			lock_guard<mutex> lock(const_cast<mutex&>(mTaskMutex));
-			return mDisconnDevices.size() + mConnectedDevices.size();
+			if (bConnectedOnly)
+				return mConnectedDevices.size();
+			else
+				return mDisconnDevices.size() + mConnectedDevices.size();
 		}
-		virtual GF_SIZE getNumOfConnectedDevices() const {
-			lock_guard<mutex> lock(const_cast<mutex&>(mTaskMutex));
-			return mConnectedDevices.size();
-		}
-		virtual void enumDevices(FunEnumDevice funEnum, bool bConnectedOnly = true);
+		virtual void enumDevices(std::function<bool(WPDEVICE)>& funEnum, bool bConnectedOnly = true);
 		virtual WPDEVICE findDevice(GF_UINT8 addrType, tstring address);
 		// set up virtual device, client can combine two or more gdevices positioning in
 		//   defferent location into one virtual device. client still can receive gesture

@@ -26,6 +26,9 @@
     <ClCompile Include="..\..\..\src\HubManagerImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\common\src\LogUtil_Win.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\GForceDevice.h">
@@ -92,6 +95,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\inc\gforce.h">
+      <Filter>Exposed Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\utils\logredirect.h">
+      <Filter>Exposed Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\utils\export.h">
       <Filter>Exposed Header Files</Filter>
     </ClInclude>
   </ItemGroup>

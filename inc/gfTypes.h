@@ -77,6 +77,7 @@ namespace gf {
 	/// type definition
 	typedef GF_INT				GF_STATUS;
 
+	typedef void*				GF_HANDLE;
 
 #if defined(UNICODE) || defined(_UNICODE)
 
@@ -112,8 +113,8 @@ namespace gf {
 	class Device;
 	/// the weak pointer to Device
 	typedef gfwPtr<Device> WPDEVICE;
-	/// The devices enumerate callback
-	typedef void(*FunEnumDevice)(WPDEVICE);
+	/// the strong pointer to Device
+	typedef gfsPtr<Device> SPDEVICE;
 
 	/// \brief Defines how callbacks are called in threads
 	///
