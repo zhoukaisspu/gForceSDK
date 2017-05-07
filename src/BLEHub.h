@@ -46,45 +46,6 @@
 
 namespace gf
 {
-	// define Characteristic read/write handle
-	// will be deleted
-#if 0
-	enum class AttributeHandle : GF_UINT16 {
-		GATTPrimServiceDeclaration1 = 0x0001,
-		GATTCharacteristicDeclaration1,
-		DeviceName,
-		GATTCharacteristicDeclaration2,
-		Appearance,
-		GATTCharacteristicDeclaration3,
-		PreferredConnectParamters,
-		GATTPrimServiceDeclaration2,
-		GATTPrimServiceDeclaration3,
-		GATTCharacteristicDeclaration4,
-		SystemID,
-		GATTCharacteristicDeclaration5,
-		ModelNumberStr,
-		GATTCharacteristicDeclaration6,
-		SerialNumberStr,
-		GATTCharacteristicDeclaration7,
-		FirmwareRevStr,
-		GATTCharacteristicDeclaration8,
-		HardwareRevStr,
-		GATTCharacteristicDeclaration9,
-		SoftwareRevStr,
-		GATTCharacteristicDeclaration10,
-		ManufactureNameStr,
-		GATTCharacteristicDeclaration11,
-		IEEE11073_20601,
-		GATTCharacteristicDeclaration12,
-		PnPID,
-		GATTPrimServiceDeclaration4,
-		GATTCharacteristicDeclaration13,
-		Max
-	};
-	static const char charTypes[] =
-		"BBSBBBBBBBBBSBSBSBSBSBSBBBBBBN";
-#endif
-
 	class BLEHub :
 		public Hub, public GF_CClientCallback, public IHub
 	{

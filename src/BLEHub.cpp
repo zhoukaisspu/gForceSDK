@@ -164,6 +164,8 @@ GF_RET_CODE BLEHub::deinit()
 	mAM->UnregisterClientCallback();
 	mAM = nullptr;
 
+	mListeners.clear();
+
 	return ret;
 }
 

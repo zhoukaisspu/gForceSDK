@@ -28,7 +28,7 @@ namespace gf
         GF_ERROR_TIMEOUT,
     };
 
-    public sealed class Hub
+    public sealed class Hub : IDisposable
     {
         public enum WorkMode
         {
@@ -83,11 +83,7 @@ namespace gf
         public RetCode init(uint comport)
         {
             RetCode ret = libgforce.hub_init(comport);
-            if (ret == RetCode.GF_SUCCESS)
-            {
-                // register listener
-            }
-            return RetCode.GF_SUCCESS;
+            return ret;
         }
 
         public RetCode deinit()
@@ -128,28 +124,12 @@ namespace gf
                     mListenerDele.onGestureDataFn = new libgforce.onGestureData(Hub.onGestureDataImpl);
                     mListenerDele.onReCenterFn = new libgforce.onReCenter(Hub.onReCenterImpl);
 
-                    //int i = 0;
-                    //mListenerDeleUnmanaged[i++] = GCHandle.Alloc(mListenerDele, GCHandleType.Pinned);
-                    //mListenerDeleUnmanaged[i++] = GCHandle.Alloc(mListenerDele.onScanfinishedFn, GCHandleType.Pinned);
-                    //mListenerDeleUnmanaged[i++] = GCHandle.Alloc(mListenerDele.onStateChangedFn, GCHandleType.Pinned);
-                    //mListenerDeleUnmanaged[i++] = GCHandle.Alloc(mListenerDele.onDeviceFoundFn, GCHandleType.Pinned);
-                    //mListenerDeleUnmanaged[i++] = GCHandle.Alloc(mListenerDele.onDeviceDiscardFn, GCHandleType.Pinned);
-                    //mListenerDeleUnmanaged[i++] = GCHandle.Alloc(mListenerDele.onDeviceConnectedFn, GCHandleType.Pinned);
-                    //mListenerDeleUnmanaged[i++] = GCHandle.Alloc(mListenerDele.onDeviceDisconnectedFn, GCHandleType.Pinned);
-                    //mListenerDeleUnmanaged[i++] = GCHandle.Alloc(mListenerDele.onOrientationDataFn, GCHandleType.Pinned);
-                    //mListenerDeleUnmanaged[i++] = GCHandle.Alloc(mListenerDele.onGestureDataFn, GCHandleType.Pinned);
-                    //mListenerDeleUnmanaged[i++] = GCHandle.Alloc(mListenerDele.onReCenterFn, GCHandleType.Pinned);
-
                     ret = libgforce.hub_register_listener(ref mListenerDele);
                 }
             }
             else
             {
                 // if already added, do nothing but return GF_SUCCESS
-
-
-                // debug
-                ret = libgforce.hub_register_listener(ref mListenerDele);
             }
             return ret;
         }
@@ -162,12 +142,6 @@ namespace gf
                 if (mListeners.Count() == 0)
                 {
                     ret = libgforce.hub_unregister_listener(ref mListenerDele);
-                    //if (null != mListenerDeleUnmanaged)
-                    //{
-                    //    foreach (var gch in mListenerDeleUnmanaged)
-                    //        if (gch.IsAllocated)
-                    //            gch.Free();
-                    //}
                 }
             }
             else
@@ -199,7 +173,9 @@ namespace gf
                 return RetCode.GF_ERROR_BAD_PARAM;
             mClientEnumFn = enumFn;
             libgforce.gfDeviceEnumFn gfEnumFn = new libgforce.gfDeviceEnumFn(onDeviceEnum);
-            return libgforce.hub_enum_devices(gfEnumFn, bConnectedOnly);
+            RetCode ret = libgforce.hub_enum_devices(gfEnumFn, bConnectedOnly);
+            mClientEnumFn = null;
+            return ret;
         }
 
         public RetCode run(uint ms)
@@ -218,6 +194,39 @@ namespace gf
         {
             libgforce.hub_instance(identifier);
         }
+
+        // Deterministic destructor
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // free IDisposable managed objects
+                }
+                mListeners.Clear();
+                mDevices.Clear();
+                mListenerDele = new libgforce.ListenerDelegate();
+                // free unmanaged objects
+                deinit();
+
+                _disposed = true;
+            }
+        }
+
+        // Finalizer (non-deterministic)
+        ~Hub()
+        {
+            Dispose(false);
+        }
+
+        private bool _disposed = false;
 
         private static bool onDeviceEnum(IntPtr hDevice)
         {
@@ -244,8 +253,6 @@ namespace gf
 
         private libgforce.ListenerDelegate mListenerDele;
 
-        // 10 is the function numbers + the structure itself
-        //GCHandle[] mListenerDeleUnmanaged = new GCHandle[10];
         private static void onScanfinishedImpl()
         {
             foreach (HubListener l in Instance.mListeners)
