@@ -38,14 +38,19 @@ public class gForce : MonoBehaviour
     void stop()
     {
         Debug.Log("Stop");
-        mHub.deinit();
-        mHub.unregisterListener(mLsn);
-        mHub.setClientLogMethod(null);
+        if (null != mDevice)
+        {
+            mDevice.disconnect();
+            mDevice = null;
+        }
         bRunThreadRun = false;
         if (runThread != null)
         {
             runThread.Join();
         }
+        mHub.unregisterListener(mLsn);
+        mHub.setClientLogMethod(null);
+        mHub.deinit();
     }
 
     private Thread runThread;
@@ -83,6 +88,15 @@ public class gForce : MonoBehaviour
         if (GUI.Button(new Rect(601, 1, 200, 100), info3))
         {
             stop();
+        }
+    }
+
+    void OnApplicationQuit()
+    {
+        if (mHub != null)
+        {
+            stop();
+            mHub.Dispose();
         }
     }
 

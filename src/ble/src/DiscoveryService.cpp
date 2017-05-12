@@ -73,8 +73,8 @@ GF_STATUS GF_CDiscoveryService::Deinit()
 		mInterface->UnRegisterCallback(this);
 	}
 
-	mInterface = NULL;
-	mCallback = NULL;
+	//mInterface = NULL;
+	//mCallback = NULL;
 
 	return GF_OK;
 }

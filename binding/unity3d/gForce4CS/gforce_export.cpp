@@ -242,8 +242,8 @@ GFORCE4CS_API GF_UINT hub_deinit()
 	GF_RET_CODE ret = GF_RET_CODE::GF_ERROR_BAD_STATE;
 	if (nullptr != _ref.hub)
 		ret = _ref.hub->deinit();
-	_ref.hub = nullptr;
-	_ref.lt = nullptr;
+	// renew lt object
+	_ref.lt = make_shared<ListenerTranslate>();
 	return RETURN_UINT_VALUE_FROM_RET_CODE;
 }
 
