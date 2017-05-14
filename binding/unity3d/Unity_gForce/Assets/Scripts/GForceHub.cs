@@ -1,12 +1,12 @@
 ﻿using UnityEngine;
-using gf;
 using System.Threading;
+using System.Collections.Generic;
+using gf;
 
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
-using System.Collections.Generic;
 
 
 public class GForceHub : MonoBehaviour
@@ -20,13 +20,14 @@ public class GForceHub : MonoBehaviour
     {
         if (mHub != null)
         {
-            mHub.Dispose();
-            mHub = null;
-
             foreach (GForceDevice dev in mDeviceComps)
             {
+                dev.device.disconnect();
                 dev.device = null;
             }
+
+            mHub.Dispose();
+            mHub = null;
         }
 #if UNITY_ANDROID && !UNITY_EDITOR
         AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
@@ -45,12 +46,12 @@ public class GForceHub : MonoBehaviour
 
     void Awake()
     {
-        // Ensure that there is only one ThalmicHub.
+        // Ensure that there is only one Hub.
         if (mInstance != null)
         {
 #if UNITY_EDITOR
-            EditorUtility.DisplayDialog("Can only have one ThalmicHub",
-                                        "Your scene contains more than one ThalmicHub. Remove all but one ThalmicHub.",
+            EditorUtility.DisplayDialog("Can only have one Hub",
+                                        "Your scene contains more than one Hub. Remove all but one Hub.",
                                         "OK");
 #endif
             Destroy(this.gameObject);
@@ -78,7 +79,7 @@ public class GForceHub : MonoBehaviour
 
         if (mDeviceComps.Count < 1)
         {
-            string errorMessage = "The HubComponent GameObject must have at least one child with a DeviceComonent.";
+            string errorMessage = "The GForceHub GameObject must have at least one child with a DeviceComonent.";
 #if UNITY_EDITOR
             EditorUtility.DisplayDialog("No DeviceComponent child.", errorMessage, "OK");
 #else
@@ -293,14 +294,14 @@ public class GForceHub : MonoBehaviour
 
     private void terminal()
     {
-        mHub.deinit();
-        mHub.unregisterListener(mLsn);
-        mHub.setClientLogMethod(null);
         bRunThreadRun = false;
         if (runThread != null)
         {
             runThread.Join();
         }
+        mHub.unregisterListener(mLsn);
+        mHub.setClientLogMethod(null);
+        mHub.deinit();
     }
     private Thread runThread;
     private void runThreadFn()

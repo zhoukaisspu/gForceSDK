@@ -14,7 +14,7 @@ public class SampleGUI : MonoBehaviour
 
         GForceHub hub = GForceHub.instance;
 
-        // Access the ThalmicMyo script attached to the Myo object.
+        // Access the attached object.
         GForceDevice device = gforce.GetComponent<GForceDevice>();
 
         if (null != device)
@@ -34,17 +34,10 @@ public class SampleGUI : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        // get gforce ready here
     }
 
     // Update is called once per frame
     void Update()
     {
-        GForceHub hub = GForceHub.instance;
-
-        if (Input.GetKeyDown("q"))
-        {
-            hub.Reset();
-        }
     }
 }

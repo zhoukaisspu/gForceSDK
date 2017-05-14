@@ -1,8 +1,4 @@
 ﻿using UnityEngine;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 using gf;
 
@@ -20,6 +16,11 @@ public class GForceDevice : MonoBehaviour
 
     void Update()
     {
+        lock (mLock)
+        {
+            transform.rotation = quater;
+            gesture = internalGest;
+        }
     }
 
     public Device device
@@ -35,19 +36,32 @@ public class GForceDevice : MonoBehaviour
 
     public void onOrientationData(float w, float x, float y, float z)
     {
-        quater.w = w;
-        quater.x = x;
-        quater.y = y;
-        quater.z = z;
+        lock (mLock)
+        {
+            quater.w = w;
+            quater.x = z;
+            quater.y = -x;
+            quater.z = -y;
+        }
     }
     public void onGestureData(Device.Gesture gest)
     {
         Debug.LogFormat("onGestureData: {0} - {1}", mDevice, gest);
-        gesture = gest;
+
+        lock (mLock)
+        {
+            internalGest = gest;
+        }
     }
     public void onReCenter()
     {
         Debug.LogFormat("onReCenter: {0}", mDevice);
-        recentered = true;
+        lock (mLock)
+        {
+            recentered = true;
+        }
     }
+
+    private Object mLock = new Object();
+    private Gesture internalGest = Gesture.Undefined;
 }

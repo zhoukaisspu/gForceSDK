@@ -22,18 +22,10 @@ public class JointOrientation : MonoBehaviour
     {
         GForceDevice gforceDevice = gforce.GetComponent<GForceDevice>();
 
-        // Update references when user press the button on gForce
-        bool updateReference = gforceDevice.recentered;
-        if (updateReference)
-        {
-            // reset the value
-            gforceDevice.recentered = false;
-
-            // TODO: recenter
-        }
-
         lastGesture = gforceDevice.gesture;
         quater = gforceDevice.quater;
+
         transform.rotation = quater;
     }
+
 }

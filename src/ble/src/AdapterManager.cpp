@@ -97,7 +97,7 @@ GF_STATUS GF_CAdapterManager::Init(GF_UINT8 com_num, GF_UINT8 log_type)
 	}
 	else
 	{
-		mInterface = NULL;
+		//mInterface = NULL;
 		return result;
 	}
 	
