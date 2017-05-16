@@ -71,7 +71,7 @@ public:
 	GF_STATUS ReadCharacteristicValue(GF_UINT16 conn_handle, GF_UINT16 att_handle);
 	GF_STATUS ReadCharacteristicLongValue(GF_UINT16 conn_handle, GF_UINT16 att_handle, UINT16 offset);
 	GF_STATUS FindCharacteristicDescriptor(GF_UINT16 conn_handle, GF_UINT16 start_handle, GF_UINT16 end_handle);
-	GF_STATUS WriteCharacVlaue(GF_UINT16 conn_handle, GF_UINT16 att_handle, GF_PUINT8 data, GF_UINT8 len);
+	GF_STATUS WriteCharacValue(GF_UINT16 conn_handle, GF_UINT16 att_handle, GF_PUINT8 data, GF_UINT8 len);
 
 	//call this function to register callback function to process event.
 	GF_STATUS RegisterCallback(GF_CCallBack *callback);
@@ -82,7 +82,9 @@ private:
 	//LISTCALLBACK mCallback;
 	GF_CCallBack * mCallback[CALLBACK_MAX_INDEX];
 	CThread *mEvtThread;
-
+	GF_BOOL mThreadRun;
+	HANDLE mThreadEvent;
+	GF_BOOL mThreadTerminated;
 	/*event queue.
 	* NPI will push event to this queue,
 	* NIF will pop event from this queue to process.

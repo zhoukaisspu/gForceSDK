@@ -250,6 +250,7 @@ GF_STATUS GF_CAdapterManager::GetConnectedDeviceByIndex(GF_UINT8 index, GF_Conne
 
 GF_STATUS GF_CAdapterManager::Connect(GF_PUINT8 addr, UINT8 addr_type, GF_BOOL is_direct_conn)
 {
+	LOGDEBUG(mTag, "start to Connect... \n");
 	GF_STATUS result = GF_FAIL;
 	if (is_direct_conn == GF_TRUE && mIsConnecting == GF_TRUE)
 	{
@@ -532,6 +533,10 @@ GF_STATUS GF_CAdapterManager::OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16
 				{
 					mClientCallback->onNotificationReceived(handle, length-3, data + 3);
 				}
+			}
+			else
+			{
+				LOGDEBUG(mTag, "--------->device not found!!!! \n");
 			}
 			break;
 		}

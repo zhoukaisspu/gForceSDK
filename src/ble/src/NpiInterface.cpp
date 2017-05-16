@@ -182,51 +182,64 @@ void GF_CNpiInterface::Run()
 {
 	GF_UINT8 length;
 
-	while (mEventQueue != NULL)
-	{
-		sEvt* pEvt = mEventQueue->Pop();
-		UINT16 opCode;
-		if (pEvt->type == HCI_EXIT_PACKET)
-		{
-			LOGDEBUG(mTag, "GF_NIF event thread exit!! \n");
-			printf("GF_NIF event thread exit!! \n");
-			CloseHandle(mEvtThread->GetEvent());
-			delete pEvt;
-			return;
-		}
-		
-		if (pEvt->type == HCI_PORT_CLOSE_PACKET)
-		{
-			if (mCallback[ADAPTER_MANAGER_CALLBACK_INDEX] != NULL)
-			{
-				mCallback[ADAPTER_MANAGER_CALLBACK_INDEX]->OnEvent(EVENT_SERIAL_PORT_NOT_AVAILABLE, NULL, 0);
-			}
-			
-			delete pEvt;
+	while (1) {
+		if (WaitForSingleObject(mThreadEvent, 0) == WAIT_OBJECT_0){
+			LOGDEBUG(mTag, "NPI thread exit !!!\n");
+			CloseHandle(mThreadEvent);
+			mThreadTerminated = GF_TRUE;
 			return;
 		}
 
-		if (pEvt->evtCode == HCI_LE_EVENT_CODE)
+		while (mThreadRun == GF_TRUE && mEventQueue != NULL)
 		{
-			sHciEvt* pHciEvt = (sHciEvt*)pEvt;
-			opCode = BUILD_UINT16(pHciEvt->op_lo, pHciEvt->op_hi);
-			length = pHciEvt->len - 3;
-			GF_Process_Event(opCode, &(pHciEvt->status), length);
+			sEvt* pEvt = mEventQueue->Pop();
+			LOGDEBUG(mTag, "pEvt->type = %x\n", pEvt->type);
+			UINT16 opCode;
+
+			if (pEvt->type == HCI_EXIT_PACKET)
+			{
+				LOGDEBUG(mTag, "GF_NIF event thread exit!! \n");
+				//printf("GF_NIF event thread exit!! \n");
+				//CloseHandle(mEvtThread->GetEvent());
+				//delete pEvt;
+				//return;
+			}
+
+			if (pEvt->type == HCI_PORT_CLOSE_PACKET)
+			{
+				if (mCallback[ADAPTER_MANAGER_CALLBACK_INDEX] != NULL)
+				{
+					mCallback[ADAPTER_MANAGER_CALLBACK_INDEX]->OnEvent(EVENT_SERIAL_PORT_NOT_AVAILABLE, NULL, 0);
+				}
+
+				delete pEvt;
+				return;
+			}
+
+			if (pEvt->evtCode == HCI_LE_EVENT_CODE)
+			{
+				sHciEvt* pHciEvt = (sHciEvt*)pEvt;
+				opCode = BUILD_UINT16(pHciEvt->op_lo, pHciEvt->op_hi);
+				length = pHciEvt->len - 3;
+				GF_Process_Event(opCode, &(pHciEvt->status), length);
+			}
+			else
+			{
+				sNpiEvt* pNpiEvt = (sNpiEvt*)pEvt;
+				UINT16 opCode = (pNpiEvt->event_lo + (pNpiEvt->event_hi << 8));
+				length = pNpiEvt->len - 2;
+				GF_Process_Event(opCode, &(pNpiEvt->status), length);
+			}
+
+			delete pEvt;
 		}
-		else 
-		{
-			sNpiEvt* pNpiEvt = (sNpiEvt*)pEvt;
-			UINT16 opCode = (pNpiEvt->event_lo + (pNpiEvt->event_hi << 8));
-			length = pNpiEvt->len - 2;
-			GF_Process_Event(opCode, &(pNpiEvt->status), length);
-		}
-		
-		delete pEvt;
 	}
 }
 
 GF_CNpiInterface::GF_CNpiInterface()
 {
+	mEvtThread = NULL;
+	mThreadTerminated = GF_TRUE;
 	mTag = MODUAL_TAG;
 	for (GF_UINT8 i = 0; i < CALLBACK_MAX_INDEX; i++)
 	{
@@ -236,6 +249,10 @@ GF_CNpiInterface::GF_CNpiInterface()
 
 GF_CNpiInterface::~GF_CNpiInterface()
 {
+	if (mEvtThread != NULL)
+	{
+		delete mEvtThread;
+	}
 }
 
 GF_STATUS GF_CNpiInterface::Init(GF_UINT8 com_num, GF_UINT8 log_type)
@@ -258,10 +275,23 @@ GF_STATUS GF_CNpiInterface::Init(GF_UINT8 com_num, GF_UINT8 log_type)
 		return GF_FAIL;
 	}
 
+	mThreadRun = GF_TRUE;
+
 	/*create the event thread to receive message from NPI dongle.*/
-	mEvtThread = new CThread(this);
-	mEvtThread->Start();
-	mEvtThread->Join(100);
+	if (mEvtThread == NULL)
+	{
+		mEvtThread = new CThread("NPI Interface", this);
+	}
+
+	if (mThreadTerminated)
+	{
+		mEvtThread->Start();
+		mEvtThread->Join(100);
+	}
+
+	LOGDEBUG(mTag, "mEvtThread ID = %x, mThreadTerminated = %d!! \n", mEvtThread->GetThreadID(), mThreadTerminated);
+	mThreadEvent = mEvtThread->GetEvent();
+	mThreadTerminated = GF_FALSE;
 
 	return GF_OK;
 }
@@ -269,7 +299,10 @@ GF_STATUS GF_CNpiInterface::Init(GF_UINT8 com_num, GF_UINT8 log_type)
 GF_STATUS GF_CNpiInterface::Deinit()
 {
 	LOGDEBUG(mTag, "Deinit!! \n");
-	//no need to close com port??
+
+	mThreadRun = GF_FALSE;
+	mEvtThread->Terminate(0);
+
 	if (mCommand != NULL)
 	{
 		mCommand->DisConnect();
@@ -473,7 +506,7 @@ GF_STATUS GF_CNpiInterface::FindCharacteristicDescriptor(GF_UINT16 conn_handle, 
 	return (status == GF_TRUE) ? GF_OK : GF_FAIL;
 }
 
-GF_STATUS GF_CNpiInterface::WriteCharacVlaue(GF_UINT16 conn_handle, GF_UINT16 att_handle, GF_PUINT8 data, GF_UINT8 len)
+GF_STATUS GF_CNpiInterface::WriteCharacValue(GF_UINT16 conn_handle, GF_UINT16 att_handle, GF_PUINT8 data, GF_UINT8 len)
 {
 	GF_BOOL status = GF_FAIL;
 	status = mCommand->GATT_WriteCharValue(conn_handle, att_handle, data, len);

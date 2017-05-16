@@ -62,6 +62,7 @@ GF_VOID GF_CRemoteDevice::Run()
 		}
 #else
 		if (WaitForSingleObject(mThreadEvent, 0) == WAIT_OBJECT_0){
+			LOGDEBUG(mTag, "mThreadEvent received message. \n");
 			CloseHandle(mThreadEvent);
 			::SetEvent(mThreadStopEvent);
 			return;
@@ -154,11 +155,23 @@ GF_CRemoteDevice::GF_CRemoteDevice(GF_CNpiInterface* minterface, GF_UINT8 addr_t
 	mDatabase = new GF_CDatabase(mAddr, BT_ADDRESS_SIZE);
 	mHandle = INVALID_HANDLE;
 	mState = GF_DEVICE_STATE_IDLE;
+
+	/*create the thread to process message.*/
+	mThread = new CThread(this);
 }
 
 GF_CRemoteDevice::~GF_CRemoteDevice()
 {
-	delete mDatabase;
+	LOGDEBUG(mTag, "~~~GF_CRemoteDevice \n");
+	if (mDatabase)
+	{
+		delete mDatabase;
+	}
+
+	if (mThread)
+	{
+		delete mThread;
+	}
 }
 
 GF_VOID GF_CRemoteDevice::Init()
@@ -167,12 +180,17 @@ GF_VOID GF_CRemoteDevice::Init()
 	InitializeCriticalSection(&mMutex);
 	mThreadRunning = GF_TRUE;
 	/*create the thread to process message.*/
-	mThread = new CThread(this);
-	mThread->Start();
-	mThread->Join(100);
-	mThreadEvent = mThread->GetEvent();
+	//mThread = new CThread(this);
+	if (mThread)
+	{
+		mThread->Start();
+		mThread->Join(100);
+		mThreadEvent = mThread->GetEvent();
+	}
+
 	mThreadRunning = GF_TRUE;
 	mThreadStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+
 	mNeedSaveLTK = GF_TRUE;
 	mNeedSaveService = GF_TRUE;
 	mHandle = INVALID_HANDLE;
@@ -1290,7 +1308,7 @@ GF_STATUS GF_CRemoteDevice::NextCharacterateristic()
 
 GF_STATUS GF_CRemoteDevice::DiscoveryDescriptor()
 {
-	LOGERROR(mTag, "start to DiscoveryDescriptor!!!\n");
+	LOGDEBUG(mTag, "start to DiscoveryDescriptor!!!\n");
 	GF_CPrimaryService* service = mService.FindPriSvcbyIndex(mService.mCurrentPriService);
 	assert(service);
 	
@@ -1445,7 +1463,7 @@ GF_STATUS GF_CRemoteDevice::ProcessCharacteristicConfiguration(GF_UINT8 currentp
 					LOGDEBUG(mTag, "found!! handle is 0x%04x \n", descriptor->mHandle);
 					if (descriptor->mUUID.value.uuid16 == 0x2902)
 					{
-						mInterface->WriteCharacVlaue(mHandle, descriptor->mHandle, data, 2);
+						mInterface->WriteCharacValue(mHandle, descriptor->mHandle, data, 2);
 					}
 					else
 					{
@@ -1498,7 +1516,7 @@ GF_STATUS GF_CRemoteDevice::WriteCharacteristicValue(GF_UINT16 attribute_handle,
 {
 	if (mInterface != NULL && mState == GF_DEVICE_STATE_CONNECTED)
 	{
-		return mInterface->WriteCharacVlaue(mHandle, attribute_handle, data, data_length);
+		return mInterface->WriteCharacValue(mHandle, attribute_handle, data, data_length);
 	}
 	else
 	{
