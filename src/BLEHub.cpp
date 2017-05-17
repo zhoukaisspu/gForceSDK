@@ -122,11 +122,17 @@ GF_RET_CODE BLEHub::deinit()
 	GF_RET_CODE ret = GF_RET_CODE::GF_SUCCESS;
 	GF_LOGD(__FUNCTION__);
 
+	if (nullptr == mAM)
+		return ret;
+
 	// get dongle status and stop scan
 	if (HubState::Scanning == getState())
 	{
 		stopScan();
 	}
+
+	// TODO: mAM is not thread-safe
+	mAM->UnregisterClientCallback();
 
 	unique_lock<mutex> lock(mTaskMutex);
 	auto devices = mDisconnDevices;
@@ -155,13 +161,9 @@ GF_RET_CODE BLEHub::deinit()
 	}
 	devices.clear();
 
-	if (nullptr == mAM) {
-		return ret;
-	}
 	if (GF_OK != mAM->Deinit()) {
 		GF_LOGE("Hub deinit failed.");
 	}
-	mAM->UnregisterClientCallback();
 	mAM = nullptr;
 
 	mListeners.clear();

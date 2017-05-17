@@ -110,6 +110,7 @@ public class GForceHub : MonoBehaviour
             mHub.Dispose();
             mHub = null;
         }
+        Debug.Log("GForceHub.OnApplicationQuit");
     }
 
     void Update()

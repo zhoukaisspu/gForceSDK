@@ -88,6 +88,8 @@ BOOL ctrlhandler(DWORD fdwctrltype)
 void printHelp()
 {
 	GF_LOGI("\tPress Ctrl+C to exit.\n");
+	GF_LOGI("i:\tInit hub.");
+	GF_LOGI("u:\tDeinit hub.");
 	GF_LOGI("g:\tGet hub status.");
 	GF_LOGI("s:\tStart to scan.");
 	GF_LOGI("S:\tStop to scan.");
@@ -96,9 +98,11 @@ void printHelp()
 	GF_LOGI("C:\tCancel connecting to device.");
 	GF_LOGI("d:\tDisconnect device.");
 	GF_LOGI("p:\tPolling mode.\n\n");
+	GF_LOGI("q:\tExit.\n\n");
 }
 
 list<gfsPtr<Device>> listDev;
+gfsPtr<HubListener> listener;
 
 class HubListenerImp : public HubListener
 {
@@ -239,6 +243,28 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 	GF_LOGI("Command %s received.", cmd.c_str());
 	switch (cmd[0])
 	{
+	case 'i':
+		if (GF_RET_CODE::GF_SUCCESS != pHub->init())
+		{
+			GF_LOGE("failed to init hub.");
+		}
+		else
+		{
+			pHub->registerListener(listener);
+			GF_LOGD("done init hub.");
+		}
+		break;
+	case 'u':
+		listDev.clear();
+		if (GF_RET_CODE::GF_SUCCESS != pHub->deinit())
+		{
+			GF_LOGE("failed to deinit hub.");
+		}
+		else
+		{
+			GF_LOGD("done deinit hub.");
+		}
+		break;
 	case 'g':
 		GF_LOGI("hub status is: %u", static_cast<GF_UINT>(pHub->getState()));
 		break;
@@ -309,6 +335,10 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 		pHub->setWorkMode(WorkMode::Freerun);
 		break;
 	}
+	case 'q':
+	case 'Q':
+		bExiting = true;
+		break;
 	default:;
 		GF_LOGW("Invalid command %s.", cmd.c_str());
 	}
@@ -330,7 +360,7 @@ int _tmain()
 	GF_LOGI("Hub work mode is %d now.", static_cast<GF_INT>(pHub->getWorkMode()));
 	GF_LOGI("Main thread id is %s.\n", utils::threadIdToString(this_thread::get_id()).c_str());
 
-	gfsPtr<HubListener> listener = static_pointer_cast<HubListener>(make_shared<HubListenerImp>());
+	listener = static_pointer_cast<HubListener>(make_shared<HubListenerImp>());
 	pHub->registerListener(listener);
 	pHub->registerListener(static_pointer_cast<HubListener>(make_shared<HubListenerImp>()));
 	//listener = nullptr;
@@ -360,6 +390,7 @@ int _tmain()
 	listDev.clear();
 	pHub->unRegisterListener(listener);
 	pHub->deinit();
+	GF_LOGD("deinit done here.");
 
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrlhandler, FALSE);
 	return 0;
