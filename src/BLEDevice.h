@@ -47,7 +47,7 @@ namespace gf
 	class BLEDevice : public Device
 	{
 	public:
-		BLEDevice(IHub* hub, const GF_BLEDevice& bleDev);
+		BLEDevice(IHub& hub, const GF_BLEDevice& bleDev);
 		virtual ~BLEDevice();
 
 		virtual GF_UINT8 getAddrType() const { return mAddrType; }
@@ -101,7 +101,7 @@ namespace gf
 		virtual bool takeover(BLEDevice& from);
 
 	protected:
-		IHub* mHub;
+		IHub& mHub;
 
 	protected:
 		DeviceConnectionStatus mCnntStatus = DeviceConnectionStatus::Disconnected;

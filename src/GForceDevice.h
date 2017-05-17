@@ -58,7 +58,7 @@ namespace gf
 	class GForceDevice : public BLEDevice
 	{
 	public:
-		GForceDevice(IHub* hub, const GF_BLEDevice& bleDev) : BLEDevice(hub, bleDev) {}
+		GForceDevice(IHub& hub, const GF_BLEDevice& bleDev) : BLEDevice(hub, bleDev) {}
 		virtual ~GForceDevice() {}
 
 	protected:

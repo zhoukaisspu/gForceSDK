@@ -35,12 +35,11 @@
 using namespace gf;
 
 
-BLEDevice::BLEDevice(IHub* hub, const GF_BLEDevice& bleDev)
+BLEDevice::BLEDevice(IHub& hub, const GF_BLEDevice& bleDev)
 	: mHub(hub)
 	, mAddrType(bleDev.addr_type)
 	, mRssi(bleDev.rssi)
 {
-	ASSERT_VALID_PTR(mHub);
 	memcpy(mAddress, bleDev.addr, sizeof(mAddress));
 
 	GF_CHAR name[BLE_DEVICE_NAME_LENGTH + 1] = "";
@@ -143,7 +142,7 @@ GF_RET_CODE BLEDevice::connect(bool directConn)
 		break;
 	case DeviceConnectionStatus::Disconnected:
 	case DeviceConnectionStatus::Connecting:
-		ret = mHub->connect(*this, directConn);
+		ret = mHub.connect(*this, directConn);
 		break;
 	default:;
 	}
@@ -159,7 +158,7 @@ GF_RET_CODE BLEDevice::disconnect()
 	switch (mCnntStatus)
 	{
 	case DeviceConnectionStatus::Connected:
-		ret = mHub->disconnect(*this);
+		ret = mHub.disconnect(*this);
 		break;
 	case DeviceConnectionStatus::Disconnected:
 	case DeviceConnectionStatus::Disconnecting:
@@ -184,7 +183,7 @@ GF_RET_CODE BLEDevice::cancelConnect()
 	case DeviceConnectionStatus::Disconnecting:
 		break;
 	case DeviceConnectionStatus::Connecting:
-		ret = mHub->cancelConnect(*this);
+		ret = mHub.cancelConnect(*this);
 		break;
 	default:;
 	}
@@ -228,7 +227,7 @@ void BLEDevice::onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDe
 #if 0 // don't change status in onXxxx methods
 	if (DeviceConnectionStatus::Disconnecting == mCnntStatus)
 	{
-		if (GF_RET_CODE::GF_SUCCESS == mHub->disconnect(*this))
+		if (GF_RET_CODE::GF_SUCCESS == mHub.disconnect(*this))
 		{
 			// if user selected to cancel connection, make it and no notifiction
 			mCnntStatus = DeviceConnectionStatus::Disconnecting;
@@ -259,7 +258,7 @@ GF_RET_CODE BLEDevice::configMtuSize(GF_UINT16 mtuSize)
 	GF_RET_CODE ret = GF_RET_CODE::GF_ERROR_BAD_STATE;
 	if (mHandle != INVALID_HANDLE)
 	{
-		ret = mHub->configMtuSize(*this, mtuSize);
+		ret = mHub.configMtuSize(*this, mtuSize);
 	}
 	return ret;
 }
@@ -271,7 +270,7 @@ GF_RET_CODE BLEDevice::connectionParameterUpdate(GF_UINT16 conn_interval_min, GF
 	GF_RET_CODE ret = GF_RET_CODE::GF_ERROR_BAD_STATE;
 	if (mHandle != INVALID_HANDLE)
 	{
-		ret = mHub->connectionParameterUpdate(*this, conn_interval_min, conn_interval_max,
+		ret = mHub.connectionParameterUpdate(*this, conn_interval_min, conn_interval_max,
 			slave_latence, supervision_timeout);
 	}
 	return ret;
@@ -283,7 +282,7 @@ GF_RET_CODE BLEDevice::writeCharacteristic(AttributeHandle attribute_handle, GF_
 	GF_RET_CODE ret = GF_RET_CODE::GF_ERROR_BAD_STATE;
 	if (mHandle != INVALID_HANDLE)
 	{
-		ret = mHub->writeCharacteristic(*this, attribute_handle, dataLen, data);
+		ret = mHub.writeCharacteristic(*this, attribute_handle, dataLen, data);
 	}
 	return ret;
 }
@@ -294,7 +293,7 @@ GF_RET_CODE BLEDevice::readCharacteristic(AttributeHandle attribute_handle)
 	GF_RET_CODE ret = GF_RET_CODE::GF_ERROR_BAD_STATE;
 	if (mHandle != INVALID_HANDLE)
 	{
-		ret = mHub->readCharacteristic(*this, attribute_handle);
+		ret = mHub.readCharacteristic(*this, attribute_handle);
 	}
 	return ret;
 }
@@ -305,7 +304,7 @@ void BLEDevice::onMTUSizeChanged(GF_STATUS status, GF_UINT16 mtu_size)
 	lock_guard<mutex> lock(mMutex);
 	mMTUsize = mtu_size;
 
-	//mHub->notifyDeviceEvent(*this, [status, mtu_size](HubListener& listener, WPDEVICE& self){
+	//mHub.notifyDeviceEvent(*this, [status, mtu_size](HubListener& listener, WPDEVICE& self){
 	//	listener; self;
 	//	//listener.onMTUSizeChanged(self, status, mtu_size);
 	//});
@@ -324,7 +323,7 @@ void BLEDevice::onConnectionParmeterUpdated(GF_STATUS status, GF_UINT16 conn_int
 	mSlavelatency = slavelatency;
 
 	// notify client.
-	//mHub->notifyDeviceEvent(*this, [status, conn_int, superTO, slavelatency](HubListener& listener, WPDEVICE& self){
+	//mHub.notifyDeviceEvent(*this, [status, conn_int, superTO, slavelatency](HubListener& listener, WPDEVICE& self){
 	//	listener; self;
 	//	//listener.onConnectionParmeterUpdated(this, status, conn_int, superTO, slavelatency);
 	//});

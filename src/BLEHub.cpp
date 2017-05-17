@@ -740,7 +740,7 @@ gfsPtr<BLEDevice> BLEHub::createDeviceBeforeConnect(const GF_BLEDevice& bleDev)
 {
 	if (nullptr != strstr(bleDev.dev_name, gForcePrefix))
 	{
-		return static_pointer_cast<BLEDevice>(make_shared<GForceDevice>(this, bleDev));
+		return static_pointer_cast<BLEDevice>(make_shared<GForceDevice>(*this, bleDev));
 	}
 	else
 	{
@@ -748,7 +748,7 @@ gfsPtr<BLEDevice> BLEHub::createDeviceBeforeConnect(const GF_BLEDevice& bleDev)
 		GF_LOGI("Device unmatch. %s", bleDev.dev_name);
 		return nullptr;
 #else
-		return make_shared<BLEDevice>(this, bleDev);
+		return make_shared<BLEDevice>(*this, bleDev);
 #endif
 	}
 }
