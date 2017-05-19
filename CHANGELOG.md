@@ -3,7 +3,7 @@
 Version follows the rule below:
 
 ```
-Version = <major>.<minor>[-Preview|RC]-<build>-<date>
+Version = <major>.<minor>[-Preview|RC]-<hash>-<date>
 ```
 
 Token        | Description
@@ -12,7 +12,7 @@ major        | API change
 minor        | bug fixes, enhancements
 Preview\|RC  | optional, incremental preview or release candidate number, incrementally increases
 date         | date when this version is made
-build        | build number, incrementally increases
+hash         | git commit hash number
 
 **Note**:
 
@@ -25,8 +25,6 @@ build        | build number, incrementally increases
 > first RC release, API and functionality are fixed and there will only be bug
 > fixes in the subsequent RC releases and final releases. Whereas, for a
 > Preview release, everything is subject to change in the subsequent release.
->
-> Build number increases independently of all other fields.
 
 ## v1.0-RC2-20170412
 * First release for preview
