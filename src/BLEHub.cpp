@@ -122,7 +122,8 @@ GF_RET_CODE BLEHub::deinit()
 	GF_RET_CODE ret = GF_RET_CODE::GF_SUCCESS;
 	GF_LOGD(__FUNCTION__);
 
-	if (nullptr == mAM)
+	auto am = mAM;
+	if (nullptr == am)
 		return ret;
 
 	// get dongle status and stop scan
@@ -131,10 +132,11 @@ GF_RET_CODE BLEHub::deinit()
 		stopScan();
 	}
 
-	// TODO: mAM is not thread-safe
-	mAM->UnregisterClientCallback();
+	// stop receiving notif from AM
+	am->UnregisterClientCallback();
 
 	unique_lock<mutex> lock(mTaskMutex);
+	// use a new set to handle all devices state change
 	auto devices = mDisconnDevices;
 	devices.insert(mConnectedDevices.begin(), mConnectedDevices.end());
 	lock.unlock();
@@ -161,7 +163,7 @@ GF_RET_CODE BLEHub::deinit()
 	}
 	devices.clear();
 
-	if (GF_OK != mAM->Deinit()) {
+	if (GF_OK != am->Deinit()) {
 		GF_LOGE("Hub deinit failed.");
 	}
 	mAM = nullptr;
@@ -174,10 +176,10 @@ GF_RET_CODE BLEHub::deinit()
 HubState BLEHub::getState()
 {
 	HubState ret = HubState::Unknown;
-	if (nullptr == mAM) {
+	auto am = mAM;
+	if (nullptr == am) {
 		return ret;
 	}
-	auto am = mAM;
 	GF_HubState state = static_cast<GF_HubState>(executeCommand(make_shared<HubMsg>([&am]()
 	{
 		return static_cast<GF_UINT32>(am->GetHubState());
@@ -234,10 +236,10 @@ GF_RET_CODE BLEHub::unRegisterListener(const gfwPtr<HubListener>& listener)
 GF_RET_CODE BLEHub::startScan(GF_UINT8 rssiThreshold)
 {
 	GF_LOGD(__FUNCTION__);
-	if (nullptr == mAM)
+	auto am = mAM;
+	if (nullptr == am)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
-	auto am = mAM;
 	decltype(mNotifHelper)& notif = mNotifHelper;
 	decltype(mDisconnDevices)& dd = mDisconnDevices;
 	GF_UINT32 ret = executeCommand(make_shared<HubMsg>([&am, &notif, &dd, rssiThreshold]()
@@ -272,10 +274,10 @@ GF_RET_CODE BLEHub::startScan(GF_UINT8 rssiThreshold)
 GF_RET_CODE BLEHub::stopScan()
 {
 	GF_LOGD(__FUNCTION__);
-	if (nullptr == mAM)
+	auto am = mAM;
+	if (nullptr == am)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
-	auto am = mAM;
 	decltype(mNotifHelper)& notif = mNotifHelper;
 	GF_UINT32 ret = executeCommand(make_shared<HubMsg>([&am, &notif]()
 	{
@@ -562,7 +564,8 @@ void BLEHub::onComDestory()
 
 GF_RET_CODE BLEHub::connect(BLEDevice& dev, bool directConn)
 {
-	if (nullptr == mAM)
+	auto am = mAM;
+	if (nullptr == am)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
 	GF_UINT8 addr[BT_ADDRESS_SIZE];
@@ -570,7 +573,6 @@ GF_RET_CODE BLEHub::connect(BLEDevice& dev, bool directConn)
 	if (GF_RET_CODE::GF_SUCCESS != ret)
 		return ret;
 	GF_UINT8 type = dev.getAddrType();
-	auto am = mAM;
 	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, &addr, type, directConn]()
 	{
 		GF_STATUS status = am->Connect(addr, type, directConn ? GF_TRUE : GF_FALSE);
@@ -585,14 +587,14 @@ GF_RET_CODE BLEHub::connect(BLEDevice& dev, bool directConn)
 GF_RET_CODE BLEHub::cancelConnect(BLEDevice& dev)
 {
 	GF_RET_CODE ret = GF_RET_CODE::GF_SUCCESS;
-	if (nullptr == mAM)
+	auto am = mAM;
+	if (nullptr == am)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 	GF_UINT8 addr[BT_ADDRESS_SIZE];
 	ret = dev.getAddress(addr, sizeof(addr));
 	if (GF_RET_CODE::GF_SUCCESS != ret)
 		return ret;
 	auto type = dev.getAddrType();
-	auto am = mAM;
 	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, &addr, type]()
 	{
 		GF_STATUS status = am->CancelConnect(addr, type);
@@ -606,11 +608,11 @@ GF_RET_CODE BLEHub::cancelConnect(BLEDevice& dev)
 
 GF_RET_CODE BLEHub::disconnect(BLEDevice& dev)
 {
-	if (nullptr == mAM || INVALID_HANDLE == dev.getHandle())
+	auto am = mAM;
+	auto handle = dev.getHandle();
+	if (nullptr == am || INVALID_HANDLE == handle)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
-	auto handle = dev.getHandle();
-	auto am = mAM;
 	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, handle]()
 	{
 		GF_STATUS status = am->Disconnect(handle);
@@ -624,11 +626,11 @@ GF_RET_CODE BLEHub::disconnect(BLEDevice& dev)
 
 GF_RET_CODE BLEHub::configMtuSize(BLEDevice& dev, GF_UINT16 mtuSize)
 {
-	if (nullptr == mAM || INVALID_HANDLE == dev.getHandle())
+	auto am = mAM;
+	auto handle = dev.getHandle();
+	if (nullptr == am || INVALID_HANDLE == handle)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
-	auto handle = dev.getHandle();
-	auto am = mAM;
 	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, handle, mtuSize]()
 	{
 		GF_STATUS status = am->ConfigMtuSize(handle, mtuSize);
@@ -643,11 +645,11 @@ GF_RET_CODE BLEHub::configMtuSize(BLEDevice& dev, GF_UINT16 mtuSize)
 GF_RET_CODE BLEHub::connectionParameterUpdate(BLEDevice& dev, GF_UINT16 conn_interval_min,
 	GF_UINT16 conn_interval_max, GF_UINT16 slave_latence, GF_UINT16 supervision_timeout)
 {
-	if (nullptr == mAM || INVALID_HANDLE == dev.getHandle())
+	auto am = mAM;
+	auto handle = dev.getHandle();
+	if (nullptr == am || INVALID_HANDLE == handle)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
-	auto handle = dev.getHandle();
-	auto am = mAM;
 	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, handle,
 		conn_interval_min, conn_interval_max, slave_latence, supervision_timeout]()
 	{
@@ -664,11 +666,11 @@ GF_RET_CODE BLEHub::connectionParameterUpdate(BLEDevice& dev, GF_UINT16 conn_int
 GF_RET_CODE BLEHub::writeCharacteristic(BLEDevice& dev,
 	AttributeHandle attribute_handle, GF_UINT8 data_length, GF_PUINT8 data)
 {
-	if (nullptr == mAM || INVALID_HANDLE == dev.getHandle())
+	auto am = mAM;
+	auto handle = dev.getHandle();
+	if (nullptr == am || INVALID_HANDLE == handle)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
-	auto handle = dev.getHandle();
-	auto am = mAM;
 	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, handle,
 		attribute_handle, data_length, data]()
 	{
@@ -684,11 +686,11 @@ GF_RET_CODE BLEHub::writeCharacteristic(BLEDevice& dev,
 
 GF_RET_CODE BLEHub::readCharacteristic(BLEDevice& dev, AttributeHandle attribute_handle)
 {
-	if (nullptr == mAM || INVALID_HANDLE == dev.getHandle())
+	auto am = mAM;
+	auto handle = dev.getHandle();
+	if (nullptr == am || INVALID_HANDLE == handle)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
-	auto handle = dev.getHandle();
-	auto am = mAM;
 	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, handle, attribute_handle]()
 	{
 		GF_STATUS status = am->ReadCharacteristic(handle, static_cast<GF_UINT16>(attribute_handle));
