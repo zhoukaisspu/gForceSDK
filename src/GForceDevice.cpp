@@ -133,10 +133,10 @@ void GForceDevice::onQuaternion(GF_UINT8 length, GF_PUINT8 data)
 	x = *(GF_FLOAT*)&data[4];
 	y = *(GF_FLOAT*)&data[8];
 	z = *(GF_FLOAT*)&data[12];
-	Quaternion<GF_FLOAT> q(w, x, y, z);
+	Quaternion q(w, x, y, z);
 	//GF_LOGD("Device: %s, Quaternion: %s", utils::tostring(getName()).c_str(), q.toString().c_str());
 
-	mHub->notifyOrientationData(*this, q);
+	mHub.notifyOrientationData(*this, q);
 }
 
 void GForceDevice::onGesture(GF_UINT8 length, GF_PUINT8 data)
@@ -172,7 +172,7 @@ void GForceDevice::onGesture(GF_UINT8 length, GF_PUINT8 data)
 		default:
 			gesture = Gesture::Undefined;
 		}
-		mHub->notifyGestureData(*this, gesture);
+		mHub.notifyGestureData(*this, gesture);
 	}
 }
 
@@ -184,7 +184,7 @@ void GForceDevice::onStatus(GF_UINT8 length, GF_PUINT8 data)
 		GF_UINT8 status = data[0] & EVENT_RECENTER_MASK;
 		if (1 == status)
 		{
-			mHub->notifyReCenter(*this);
+			mHub.notifyReCenter(*this);
 		}
 	}
 }

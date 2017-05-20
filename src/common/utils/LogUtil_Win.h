@@ -28,36 +28,19 @@
  */
 #pragma once
 
-
 #include <iostream>
 #include <stdarg.h>
+#include "utils/logredirect.h"
+
 using namespace std;
 
-#define GF_LOG_BUF_SIZE 1024
+namespace gf {
 
-const char LevelPrompt[GF_LOG_MAX] = { 'V', 'D', 'I', 'W', 'E', 'F' };
 
-struct win_log_print {
-	static int print(GF_LOG_LEVEL level, const char* tag, const char* fmt, ...)
-	{
-		va_list ap;
-		char buf[GF_LOG_BUF_SIZE];
-		buf[0] = '\0';
-
-		if (CURRENT_LOG_LEVEL > level)
-			return 0;
-
-		int offset = sprintf_s(buf, "[%c/%s]: ", LevelPrompt[level], tag);
-		if (offset < 0)
-			offset = 0;
-		va_start(ap, fmt);
-		vsnprintf_s(buf + offset, size_t(GF_LOG_BUF_SIZE - offset), _TRUNCATE, fmt, ap);
-		va_end(ap);
-
-		cout << buf << endl;
-		return 0;//strlen(buf)
-	}
-};
+	struct win_log_print {
+		static int print(GF_LOG_LEVEL level, const char* tag, const char* fmt, ...);
+		static LogMethod _logfn;
+	};
 
 #if defined(LOG_TO_CONSOLE)
 
@@ -95,3 +78,5 @@ struct win_log_print {
 #define GF_LOGW(fmt, ...) gf_log_print_warn(fmt, ##__VA_ARGS__)
 #define GF_LOGE(fmt, ...) gf_log_print_error(fmt, ##__VA_ARGS__)
 #define GF_LOGF(fmt, ...) gf_log_print_fatal(fmt, ##__VA_ARGS__)
+
+}

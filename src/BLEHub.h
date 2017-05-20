@@ -46,45 +46,6 @@
 
 namespace gf
 {
-	// define Characteristic read/write handle
-	// will be deleted
-#if 0
-	enum class AttributeHandle : GF_UINT16 {
-		GATTPrimServiceDeclaration1 = 0x0001,
-		GATTCharacteristicDeclaration1,
-		DeviceName,
-		GATTCharacteristicDeclaration2,
-		Appearance,
-		GATTCharacteristicDeclaration3,
-		PreferredConnectParamters,
-		GATTPrimServiceDeclaration2,
-		GATTPrimServiceDeclaration3,
-		GATTCharacteristicDeclaration4,
-		SystemID,
-		GATTCharacteristicDeclaration5,
-		ModelNumberStr,
-		GATTCharacteristicDeclaration6,
-		SerialNumberStr,
-		GATTCharacteristicDeclaration7,
-		FirmwareRevStr,
-		GATTCharacteristicDeclaration8,
-		HardwareRevStr,
-		GATTCharacteristicDeclaration9,
-		SoftwareRevStr,
-		GATTCharacteristicDeclaration10,
-		ManufactureNameStr,
-		GATTCharacteristicDeclaration11,
-		IEEE11073_20601,
-		GATTCharacteristicDeclaration12,
-		PnPID,
-		GATTPrimServiceDeclaration4,
-		GATTCharacteristicDeclaration13,
-		Max
-	};
-	static const char charTypes[] =
-		"BBSBBBBBBBBBSBSBSBSBSBSBBBBBBN";
-#endif
-
 	class BLEHub :
 		public Hub, public GF_CClientCallback, public IHub
 	{
@@ -101,6 +62,9 @@ namespace gf
 			return mWorkMode;
 		}
 		virtual void setWorkMode(WorkMode newMode) {
+			GF_LOGI("setWorkMode. %d", static_cast<int>(newMode));
+			if (WorkMode::Polling == newMode)
+				GF_LOGI("Please call method run(ms) to pull message.");
 			mWorkMode = newMode;
 		}
 		// get status, version, etc.
@@ -114,15 +78,14 @@ namespace gf
 		virtual GF_RET_CODE startScan(GF_UINT8 rssiThreshold);
 		virtual GF_RET_CODE stopScan();
 
-		virtual GF_SIZE getNumOfDevices() const {
+		virtual GF_SIZE getNumOfDevices(bool bConnectedOnly = true) const {
 			lock_guard<mutex> lock(const_cast<mutex&>(mTaskMutex));
-			return mDisconnDevices.size() + mConnectedDevices.size();
+			if (bConnectedOnly)
+				return mConnectedDevices.size();
+			else
+				return mDisconnDevices.size() + mConnectedDevices.size();
 		}
-		virtual GF_SIZE getNumOfConnectedDevices() const {
-			lock_guard<mutex> lock(const_cast<mutex&>(mTaskMutex));
-			return mConnectedDevices.size();
-		}
-		virtual void enumDevices(FunEnumDevice funEnum, bool bConnectedOnly = true);
+		virtual void enumDevices(std::function<bool(WPDEVICE)>& funEnum, bool bConnectedOnly = true);
 		virtual WPDEVICE findDevice(GF_UINT8 addrType, tstring address);
 		// set up virtual device, client can combine two or more gdevices positioning in
 		//   defferent location into one virtual device. client still can receive gesture
@@ -161,7 +124,7 @@ namespace gf
 		virtual GF_RET_CODE writeCharacteristic(BLEDevice& dev,
 			AttributeHandle attribute_handle, GF_UINT8 data_length, GF_PUINT8 data);
 		virtual GF_RET_CODE readCharacteristic(BLEDevice& dev, AttributeHandle attribute_handle);
-		virtual void notifyOrientationData(BLEDevice& dev, const Quaternion<GF_FLOAT>& rotation);
+		virtual void notifyOrientationData(BLEDevice& dev, const Quaternion& rotation);
 		virtual void notifyGestureData(BLEDevice& dev, Gesture gest);
 		virtual void notifyReCenter(BLEDevice& dev);
 
@@ -211,7 +174,7 @@ namespace gf
 			virtual void onDeviceConnected(WPDEVICE device);
 			virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason);
 
-			virtual void onOrientationData(WPDEVICE device, const Quaternion<GF_FLOAT>& rotation);
+			virtual void onOrientationData(WPDEVICE device, const Quaternion& rotation);
 			virtual void onGestureData(WPDEVICE device, Gesture gest);
 			virtual void onReCenter(WPDEVICE device);
 

@@ -28,7 +28,6 @@
  */
 #include "LogUtils.h"
 #include "BLEHub.h"
-#include "HubManager.h"
 #include "HubManagerImpl.h"
 
 using namespace std;

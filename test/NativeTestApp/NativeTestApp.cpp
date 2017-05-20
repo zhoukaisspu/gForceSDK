@@ -88,6 +88,8 @@ BOOL ctrlhandler(DWORD fdwctrltype)
 void printHelp()
 {
 	GF_LOGI("\tPress Ctrl+C to exit.\n");
+	GF_LOGI("i:\tInit hub.");
+	GF_LOGI("u:\tDeinit hub.");
 	GF_LOGI("g:\tGet hub status.");
 	GF_LOGI("s:\tStart to scan.");
 	GF_LOGI("S:\tStop to scan.");
@@ -96,9 +98,11 @@ void printHelp()
 	GF_LOGI("C:\tCancel connecting to device.");
 	GF_LOGI("d:\tDisconnect device.");
 	GF_LOGI("p:\tPolling mode.\n\n");
+	GF_LOGI("q:\tExit.\n\n");
 }
 
 list<gfsPtr<Device>> listDev;
+gfsPtr<HubListener> listener;
 
 class HubListenerImp : public HubListener
 {
@@ -146,8 +150,19 @@ class HubListenerImp : public HubListener
 		GF_LOGD("ThreadId: %s: %s: device: %s, reason: %u", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()), reason);
 	}
-	virtual void onOrientationData(WPDEVICE device, const Quaternion<GF_FLOAT>& rotation)
+	virtual void onOrientationData(WPDEVICE device, const Quaternion& rotation)
 	{
+		auto now = chrono::steady_clock::now();
+		chrono::duration<GF_UINT32, milli> duration(500);
+		if (mLastPrinted + duration > now)
+			return;
+
+		mLastPrinted = now;
+		auto ptr = device.lock();
+		GF_LOGD("ThreadId: %s: %s, Quaternion: %s, Eulerian angle: %s",
+			utils::threadIdToString(this_thread::get_id()).c_str(),
+			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()),
+			rotation.toString().c_str(), rotation.toEuler().toString().c_str());
 	}
 	virtual void onGestureData(WPDEVICE device, Gesture gest)
 	{
@@ -195,9 +210,12 @@ class HubListenerImp : public HubListener
 		GF_LOGD("ThreadId: %s: %s: Gesture position re-centered. device = %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
 	}
+
+private:
+	chrono::steady_clock::time_point mLastPrinted = chrono::steady_clock::now();
 };
 
-void enumDevice(WPDEVICE dev)
+bool enumDevice(WPDEVICE dev)
 {
 	auto sp = dev.lock();
 	ASSERT_VALID_PTR(sp);
@@ -212,6 +230,9 @@ void enumDevice(WPDEVICE dev)
 			static_cast<GF_UINT>(sp->getConnectionStatus()), static_cast<GF_UINT>(sp->getPosition()));
 		listDev.push_back(sp);
 	}
+
+	// don't want to break enumerate, so always return true
+	return true;
 }
 
 void handleCmd(gfsPtr<Hub>& pHub, string cmd)
@@ -222,6 +243,28 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 	GF_LOGI("Command %s received.", cmd.c_str());
 	switch (cmd[0])
 	{
+	case 'i':
+		if (GF_RET_CODE::GF_SUCCESS != pHub->init())
+		{
+			GF_LOGE("failed to init hub.");
+		}
+		else
+		{
+			pHub->registerListener(listener);
+			GF_LOGD("done init hub.");
+		}
+		break;
+	case 'u':
+		listDev.clear();
+		if (GF_RET_CODE::GF_SUCCESS != pHub->deinit())
+		{
+			GF_LOGE("failed to deinit hub.");
+		}
+		else
+		{
+			GF_LOGD("done deinit hub.");
+		}
+		break;
 	case 'g':
 		GF_LOGI("hub status is: %u", static_cast<GF_UINT>(pHub->getState()));
 		break;
@@ -235,9 +278,10 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 	case 'e':
 	{
 		GF_LOGI("Total %u devices found, %u of them are connected.",
-			pHub->getNumOfDevices(), pHub->getNumOfConnectedDevices());
+			pHub->getNumOfDevices(false), pHub->getNumOfDevices(true));
 		listDev.clear();
-		pHub->enumDevices(enumDevice, false);
+		function<bool(WPDEVICE)> enumFn(enumDevice);
+		pHub->enumDevices(enumFn, false);
 		break;
 	}
 	case 'c':
@@ -291,6 +335,10 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 		pHub->setWorkMode(WorkMode::Freerun);
 		break;
 	}
+	case 'q':
+	case 'Q':
+		bExiting = true;
+		break;
 	default:;
 		GF_LOGW("Invalid command %s.", cmd.c_str());
 	}
@@ -312,7 +360,7 @@ int _tmain()
 	GF_LOGI("Hub work mode is %d now.", static_cast<GF_INT>(pHub->getWorkMode()));
 	GF_LOGI("Main thread id is %s.\n", utils::threadIdToString(this_thread::get_id()).c_str());
 
-	gfsPtr<HubListener> listener = static_pointer_cast<HubListener>(make_shared<HubListenerImp>());
+	listener = static_pointer_cast<HubListener>(make_shared<HubListenerImp>());
 	pHub->registerListener(listener);
 	pHub->registerListener(static_pointer_cast<HubListener>(make_shared<HubListenerImp>()));
 	//listener = nullptr;
@@ -342,6 +390,7 @@ int _tmain()
 	listDev.clear();
 	pHub->unRegisterListener(listener);
 	pHub->deinit();
+	GF_LOGD("deinit done here.");
 
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrlhandler, FALSE);
 	return 0;

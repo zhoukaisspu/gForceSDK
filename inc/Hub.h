@@ -37,6 +37,7 @@
 
 #include "gfTypes.h"
 #include <vector>
+#include <functional>
 
 namespace gf
 {
@@ -52,6 +53,8 @@ namespace gf
 	class Hub
 	{
 	public:
+		/// The devices enumerate callback
+		typedef void(*FunEnumDevice)(WPDEVICE);
 
 		/// \brief Initialize the Hub instance
 		///
@@ -118,20 +121,19 @@ namespace gf
 
 		/// \brief Get the number of all devices found
 		///
+		/// \param bConnectedOnly true if only want to get number of connected devices,\n
+		/// false if want to get all devices.
 		/// \return The Number of all devices
-		virtual GF_SIZE getNumOfDevices() const = 0;
-
-		/// \brief Get the number of connected devices
-		///
-		/// \return The Number of connected devices
-		virtual GF_SIZE getNumOfConnectedDevices() const = 0;
+		virtual GF_SIZE getNumOfDevices(bool bConnectedOnly = true) const = 0;
 
 		/// \brief Enumurate devices
 		///
-		/// \param funEnum Function pointer to the enumurate function
+		/// \param funEnum The enumurate function
 		/// \param bConnectedOnly true if only want to get connected devices,\n
 		/// false if want to get all devices.
-		virtual void enumDevices(FunEnumDevice funEnum, bool bConnectedOnly = true) = 0;
+		/// \remark The return value of funEnum tells gForce if client wants to continue next enumerate
+		/// true to continue enumerate, otherwise stop it.
+		virtual void enumDevices(std::function<bool(WPDEVICE)>& funEnum, bool bConnectedOnly = true) = 0;
 
 		/// \brief Find a gForce device
 		///

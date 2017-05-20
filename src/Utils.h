@@ -63,7 +63,7 @@ namespace gf {
 		__GF_INLINE__ wstring towstring(const string& str)
 		{
 			size_t convertedChars = 0;
-			unsigned len = str.size() * 2 + 1;
+			GF_SIZE len = str.size() * 2 + 1;
 			//string curLocale = setlocale(LC_CTYPE, "");
 			unique_ptr<wchar_t[]> up(new wchar_t[len]);
 			wchar_t* p = up.get();
@@ -82,7 +82,7 @@ namespace gf {
 		__GF_INLINE__ string tostring(const wstring& wstr)
 		{
 			size_t convertedChars = 0;
-			unsigned len = wstr.size() * 4;
+			GF_SIZE len = wstr.size() * 4;
 			//string curLocale = setlocale(LC_CTYPE, "");
 			unique_ptr<char[]> up(new char[len + 1]);
 			char* p = up.get();

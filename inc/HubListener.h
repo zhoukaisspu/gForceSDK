@@ -100,7 +100,7 @@ namespace gf
 		/// \param orientation
         ///     The Quaternion object that indicates the updated orientation of
         ///     the device.
-		virtual void onOrientationData(WPDEVICE device, const Quaternion<GF_FLOAT>& orientation) {}
+		virtual void onOrientationData(WPDEVICE device, const Quaternion& orientation) {}
 
 		/// \brief This callback is called when the gesture data is recevied
 		/// \param device The Pointer to the Device.
