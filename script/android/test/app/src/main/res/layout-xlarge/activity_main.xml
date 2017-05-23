@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.oym.test.MainActivity">
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start_Scan"
+        android:visibility="visible"
+        tools:layout_editor_absoluteY="6dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"/>
+
+    <TextView
+        android:id="@+id/sample_text"
+        android:layout_width="776dp"
+        android:layout_height="778dp"
+        android:text="Welcom to test me!"
+        app:layout_constraintTop_toBottomOf="@id/listview"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginTop="7dp"
+        android:scrollbars="vertical"
+        android:scrollHorizontally="true"
+        android:layout_marginLeft="9dp"
+        app:layout_constraintVertical_bias="0.0"
+        tools:layout_editor_absoluteY="426dp" />
+
+    <ListView
+        android:id="@+id/listview"
+        android:layout_width="808dp"
+        android:layout_height="295dp"
+        android:layout_marginTop="0dp"
+        android:background="@android:color/darker_gray"
+        android:scrollbars="horizontal|vertical"
+        app:layout_constraintTop_toBottomOf="@id/button"
+        tools:layout_editor_absoluteX="-4dp" />
+
+</android.support.constraint.ConstraintLayout>
