@@ -33,13 +33,14 @@ public class GForceHub : MonoBehaviour
         AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
         var unityActivity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
 
-        // The Hub needs to be initialized on the Android UI thread.
         unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
             mHub = Hub.Instance;
+            prepare();
         }));
-        return true; // Return true assuming the hub constructor will succeed. Debug.Log if it fails.
+        return true;
 #else
         mHub = Hub.Instance;
+        prepare();
         return true;
 #endif
     }
@@ -90,16 +91,15 @@ public class GForceHub : MonoBehaviour
 #if UNITY_ANDROID && !UNITY_EDITOR
         AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
         var unityActivity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
-        var applicationContext = unityActivity.Call<AndroidJavaObject>("getApplicationContext");
 
-        // The Hub needs to be initialized on the Android UI thread.
         unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
             mHub = Hub.Instance;
+            prepare();
         }));
 #else
         mHub = Hub.Instance;
-#endif
         prepare();
+#endif
     }
 
     void OnApplicationQuit()

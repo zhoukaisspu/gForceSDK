@@ -68,23 +68,27 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\..\bin\unity3d\$(Configuration)\x86\</OutDir>
-    <TargetName>gforce</TargetName>
+    <OutDir>$(ProjectDir)..\..\..\bin\unity3d\$(Configuration)\</OutDir>
+    <TargetName>gforce32</TargetName>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <TargetName>gforce</TargetName>
+    <TargetName>gforce64</TargetName>
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\..\bin\unity3d\$(Configuration)\x86_64\</OutDir>
+    <OutDir>$(ProjectDir)..\..\..\bin\unity3d\$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\..\bin\unity3d\$(Configuration)\x86\</OutDir>
-    <TargetName>gforce</TargetName>
+    <OutDir>$(ProjectDir)..\..\..\bin\unity3d\$(Configuration)\</OutDir>
+    <TargetName>gforce32</TargetName>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <TargetName>gforce</TargetName>
+    <TargetName>gforce64</TargetName>
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\..\bin\unity3d\$(Configuration)\x86_64\</OutDir>
+    <OutDir>$(ProjectDir)..\..\..\bin\unity3d\$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
