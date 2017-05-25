@@ -43,6 +43,7 @@ public:
 	DWORD txThreadID;
 	DWORD rxThreadID;
 	DWORD evtThreadID;
+	DWORD spDetectThreadID;
 	HANDLE com_file;
 	HANDLE m_evt;
 	HANDLE m_tx;
@@ -67,6 +68,10 @@ public:
 	BOOL SetupSerialPort();
 	BOOL ReadEventFromSerialPort();
 	BOOL OpenSerialPort();
+	void TerminateDetectingThread();
+	void TerminateNPIRxThread();
+	void TerminateNPITxLogThread();
+	void TerminateEvtThread();
 private:
 	OVERLAPPED osWait;
 	DCB dcb;

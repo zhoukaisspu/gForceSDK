@@ -186,6 +186,7 @@ GF_VOID GF_CRemoteDevice::Init()
 		mThread->Start();
 		mThread->Join(100);
 		mThreadEvent = mThread->GetEvent();
+		LOGDEBUG(mTag, "mThread id = %x \n", mThread->GetThreadID());
 	}
 
 	mThreadRunning = GF_TRUE;

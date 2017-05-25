@@ -78,6 +78,7 @@ GF_CAdapterManagerInterface* GF_CAdapterManagerInterface::GetInstance()
 
 GF_STATUS GF_CAdapterManager::Init(GF_UINT8 com_num, GF_UINT8 log_type)
 {
+	LOGDEBUG(mTag, "Init... \n");
 	GF_STATUS result = GF_FAIL;
 
 	if (mInterface != NULL)
@@ -97,7 +98,6 @@ GF_STATUS GF_CAdapterManager::Init(GF_UINT8 com_num, GF_UINT8 log_type)
 	}
 	else
 	{
-		mInterface = NULL;
 		return result;
 	}
 	
@@ -339,7 +339,13 @@ GF_STATUS GF_CAdapterManager::OnConnectEvent(GF_PUINT8 data, GF_UINT16 length)
 		LOGDEBUG(mTag, "OnConnectEvent with error status = %d \n", status);
 		LOGDEBUG(mTag, "mConnectingDevice.size() = %d \n", mConnectingDevice.size());
 		mIsConnecting = GF_FALSE;
-		mClientCallback->onDeviceConnected(status, NULL);
+		GF_ConnectedDevice connecteddevice;
+		memset(&connecteddevice, 0, sizeof(connecteddevice));
+		connecteddevice.address_type = mCancelConnectingDevice->mAddrType;
+		memcpy(connecteddevice.address, mCancelConnectingDevice->mAddr, BT_ADDRESS_SIZE);
+		connecteddevice.handle = INVALID_HANDLE;
+		/*status != GF_OK means connect to remote device canceled by the caller.*/
+		mClientCallback->onDeviceConnected(status, &connecteddevice);
 
 		if (mCancelConnectingDevice != NULL)
 		{
@@ -518,7 +524,7 @@ GF_STATUS GF_CAdapterManager::OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16
 
 		case EVENT_MASK_ATT_NOTI_MSG:
 		{
-			LOGDEBUG(mTag, "--------->notification received! \n");
+			//LOGDEBUG(mTag, "--------->notification received! \n");
 			for (GF_UINT16 i = 0; i < length; i++)
 			{
 				//LOGDEBUG(mTag, "the notificationdata of [%d]th bytes is 0x%02x \n", i, data[i]);
@@ -597,7 +603,7 @@ GF_STATUS GF_CAdapterManager::OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16
 		LOGDEBUG(mTag, "OnEvent with length = %d \n", length);
 		for (GF_UINT16 i = 0; i < length; i++)
 		{
-			LOGDEBUG(mTag, "the data of [%d]th bytes is 0x%02x \n", i, data[i]);
+			//LOGDEBUG(mTag, "the data of [%d]th bytes is 0x%02x \n", i, data[i]);
 		}
 
 		GF_UINT16 handle = data[handle_offset] + (data[handle_offset + 1] << 8);

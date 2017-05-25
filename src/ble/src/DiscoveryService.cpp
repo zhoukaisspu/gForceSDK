@@ -108,15 +108,17 @@ GF_STATUS GF_CDiscoveryService::StartScan(GF_UINT8 RSSI_Threshold)
 GF_STATUS GF_CDiscoveryService::StopScan()
 {
 	GF_STATUS result = GF_OK;
+	LOGDEBUG(mTag, "StopScan... \n");
+
 	if (mInterface == NULL)
 	{
-		LOGERROR(mTag, "StartScan failed, interface not available... \n");
+		LOGERROR(mTag, "StopScan failed, interface not available... \n");
 		return GF_ERR_CODE_NO_RESOURCE;
 	}
 
 	if (mIsScanning == GF_FALSE)
 	{
-		LOGWARNING(mTag, "StartScan failed, scan is not ongoing... \n");
+		LOGWARNING(mTag, "StopScan failed, scan is not ongoing... \n");
 		return GF_ERR_CODE_SCAN_BUSY;
 	}
 
@@ -132,6 +134,8 @@ GF_STATUS GF_CDiscoveryService::StopScan()
 GF_STATUS GF_CDiscoveryService::ProcessScanFinished()
 {
 	LOGDEBUG(mTag, "Scan finished... \n");
+	mAvalbalDevice.clear();
+
 	if (mIsScanning == GF_TRUE)
 	{
 		//LOGDEBUG(mTag, "restart scan... \n");
@@ -140,7 +144,6 @@ GF_STATUS GF_CDiscoveryService::ProcessScanFinished()
 		{
 			mCallback->OnEvent(EVENT_MASK_INTERNAL_SCAN_FINISHED, NULL, 0);
 		}
-		mAvalbalDevice.clear();
 	}
 
 	return GF_OK;

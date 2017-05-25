@@ -60,6 +60,8 @@ Log::~Log()
 	}
 }
 
+extern HANDLE g_semhdl_NPI_TXLog;
+
 void Log::Run()
 {
 	MSG     msg;
@@ -69,7 +71,6 @@ void Log::Run()
 	HANDLE hEvent = ((Com *)comHdl)->logThread->GetEvent();
 	HANDLE hndEvts[] = { hEvent };
 	while (1) {
-
 		if (GetMessage(&msg, 0, 0, 0)){//, PM_REMOVE)) { //get msg from message queue
 			if ((msg.message >= LOG_MSG) && (msg.message <= LOG_MSG + 0xFF)) {
 				buf = (PUINT8)msg.wParam;
@@ -83,7 +84,7 @@ void Log::Run()
 					break;
 				case HCI_EXIT_PACKET:
 					CloseHandle(hEvent);
-					::ReleaseSemaphore(g_semhdl, 1, NULL);
+					::ReleaseSemaphore(g_semhdl_NPI_TXLog, 1, NULL);
 					delete buf;
 					return;
 					break;
