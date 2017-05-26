@@ -389,6 +389,14 @@ void BLEHub::onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device)
 	if (nullptr == device)
 		return;
 
+	// if status is not GF_OK, it means connecting to remote device canceled by the caller.
+	if (GF_OK != status)
+	{
+		GF_LOGW("onDeviceConnected: status is %u, turn to onDeviceDisconnected.", status);
+		onDeviceDisconnected(status, device, 0);
+		return;
+	}
+
 	lock_guard<mutex> lock(mTaskMutex);
 	gfsPtr<BLEDevice> dev;
 	for (auto& itor : mDisconnDevices)
