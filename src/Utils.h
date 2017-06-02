@@ -68,7 +68,11 @@ namespace gf {
 			unique_ptr<wchar_t[]> up(new wchar_t[len]);
 			wchar_t* p = up.get();
 			p[len - 1] = L'\0';
+#ifdef WIN32
 			mbstowcs_s(&convertedChars, p, len, str.c_str(), _TRUNCATE);
+#else // WIN32
+            mbstowcs(p, str.c_str(), str.length()*2);
+#endif
 			wstring wstr(p);
 			//setlocale(LC_CTYPE, curLocale.c_str());
 			return wstr;
@@ -87,7 +91,11 @@ namespace gf {
 			unique_ptr<char[]> up(new char[len + 1]);
 			char* p = up.get();
 			p[len] = '\0';
+#ifdef WIN32
 			wcstombs_s(&convertedChars, p, len, wstr.c_str(), _TRUNCATE);
+#else // WIN32
+            wcstombs(p, wstr.c_str(), len);
+#endif
 			string str(p);
 			//setlocale(LC_CTYPE, curLocale.c_str());
 			return str;
@@ -176,7 +184,7 @@ namespace gf {
 		BQueue() {}
 		~BQueue() {}
 
-		void push(_Type& i)
+		void push(_Type i)
 		{
 			{
 				lock_guard<mutex> lock(mMutex);

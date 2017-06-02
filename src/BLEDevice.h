@@ -50,10 +50,10 @@ namespace gf
 		BLEDevice(IHub& hub, const GF_BLEDevice& bleDev);
 		virtual ~BLEDevice();
 
-		virtual GF_UINT8 getAddrType() const { return mAddrType; }
+		virtual GF_UINT8 getAddrType() const override { return mAddrType; }
 		virtual GF_RET_CODE getAddress(GF_UINT8* addr, GF_SIZE bufLen) const;
-		virtual tstring getAddress() const;
-		virtual tstring getName() const { return mName; }
+		virtual tstring getAddress() const override;
+		virtual tstring getName() const override { return mName; }
 		virtual GF_UINT8 getRssi() const { return mRssi; }
 		virtual GF_UINT16 getHandle() const { return mHandle; }
 		virtual GF_UINT16 getConnInt() const { return mConnInt; }
@@ -61,15 +61,15 @@ namespace gf
 		virtual GF_UINT16 getSlavelatency() const { return mSlavelatency; }
 		virtual GF_UINT16 getMTUsize() const { return mMTUsize; }
 
-		virtual GF_RET_CODE identify(int msec = 1000);
+		virtual GF_RET_CODE identify(int msec = 1000) override;
 
-		virtual DeviceConnectionStatus getConnectionStatus() const { return mCnntStatus; }
-		virtual GF_RET_CODE setPostion(DevicePosition pos);
-		virtual DevicePosition getPosition() const { return mPosition; }
+		virtual DeviceConnectionStatus getConnectionStatus() const override { return mCnntStatus; }
+		virtual GF_RET_CODE setPostion(DevicePosition pos) override;
+		virtual DevicePosition getPosition() const override { return mPosition; }
 
-		virtual GF_RET_CODE connect(bool directConn = true);
-		virtual GF_RET_CODE disconnect();
-		virtual GF_RET_CODE cancelConnect();
+		virtual GF_RET_CODE connect(bool directConn = true) override;
+		virtual GF_RET_CODE disconnect() override;
+		virtual GF_RET_CODE cancelConnect() override;
 
 		virtual GF_RET_CODE configMtuSize(GF_UINT16 mtuSize);
 		virtual GF_RET_CODE connectionParameterUpdate(GF_UINT16 conn_interval_min, GF_UINT16 conn_interval_max,

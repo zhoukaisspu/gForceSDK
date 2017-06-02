@@ -37,6 +37,7 @@ using namespace gf;
 
 BLEHub::BLEHub(const tstring& sIdentifier)
 	: mNotifHelper(*this)
+	, mWorkMode(WorkMode::Freerun)
 {
 	GF_LOGD("BLEHub++: identfiler: %s", utils::tostring(sIdentifier).c_str());
 }
@@ -48,7 +49,7 @@ BLEHub::~BLEHub()
 	GF_LOGD("BLEHub--");
 }
 
-GF_UINT32 BLEHub::executeCommand(gfsPtr<HubMsg>& msg)
+GF_UINT32 BLEHub::executeCommand(gfsPtr<HubMsg> msg)
 {
 	msg->executed = false;
 	unique_lock<mutex> lock;
@@ -285,10 +286,13 @@ GF_RET_CODE BLEHub::stopScan()
 		if (GF_OK == ret)
 		{
 			GF_LOGD("Scan stopped.");
-			notif.onScanfinished();
+#ifdef WIN32 // TODO: different behavior between win and android
+			notif.onScanFinished();
+#endif
 		}
 		return ret;
 	}));
+	GF_LOGD("end of stopScan. %u", ret);
 	if (GF_OK == ret)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
@@ -375,7 +379,7 @@ void BLEHub::onScanFinished()
 {
 	GF_LOGD(__FUNCTION__);
 	lock_guard<mutex> lock(mTaskMutex);
-	mNotifHelper.onScanfinished();
+	mNotifHelper.onScanFinished();
 }
 
 void BLEHub::onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device)
@@ -535,7 +539,7 @@ void BLEHub::onNotificationReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8
 	GF_UINT16 attrib_handle = data[1] | ((GF_UINT16)data[2] << 8);
 	if (ATTRIB_HANDLE_GEVENT != attrib_handle)
 	{
-		GF_LOGD("%s: not a event type. attrib_handle is %u", attrib_handle);
+		GF_LOGD("%s: not supported event type. attrib_handle is 0x%8.8X", __FUNCTION__, attrib_handle);
 		return;
 	}
 	lock_guard<mutex> lock(mTaskMutex);
@@ -757,7 +761,7 @@ gfsPtr<BLEDevice> BLEHub::createDeviceBeforeConnect(const GF_BLEDevice& bleDev)
 	}
 }
 
-void BLEHub::NotifyHelper::onScanfinished()
+void BLEHub::NotifyHelper::onScanFinished()
 {
 	if (WorkMode::Polling == mHub.mWorkMode)
 	{
@@ -766,8 +770,9 @@ void BLEHub::NotifyHelper::onScanfinished()
 			mHub.mPollMsgQ.push(make_shared<PollingMsg>(
 				[itor](){
 				auto sp = itor.lock();
+				GF_LOGD("%s: callback fn here. %p", __FUNCTION__, sp.get());
 				if (nullptr != sp)
-					sp->onScanfinished();
+					sp->onScanFinished();
 			}
 			));
 		}
@@ -778,7 +783,7 @@ void BLEHub::NotifyHelper::onScanfinished()
 		{
 			auto sp = itor.lock();
 			if (nullptr != sp)
-				sp->onScanfinished();
+				sp->onScanFinished();
 		}
 	}
 }

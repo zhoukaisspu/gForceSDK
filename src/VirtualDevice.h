@@ -39,8 +39,8 @@ namespace gf
 	{
 	public:
 		VirtualDevice() {}
-		virtual GF_RET_CODE setPostion(DevicePosition pos) { return GF_ERROR_NOT_SUPPORT; }
-		virtual DevicePosition getPosition() const {
+		virtual GF_RET_CODE setPostion(DevicePosition pos) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual DevicePosition getPosition() const override {
 			return DevicePosition::Virtual;
 		}
 

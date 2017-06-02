@@ -30,7 +30,9 @@
 #define __GF_TYPES_H__
 #pragma once
 
+#ifdef WIN32
 #include <Windows.h>
+#endif
 
 #include "gfTypes.h"
 using namespace gf;

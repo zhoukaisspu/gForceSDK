@@ -56,77 +56,77 @@ namespace gf
 		//////////////////////////////////////////////////////////////
 		// Derived from class Hub
 		// module management
-		virtual GF_RET_CODE init(GF_UINT8 comPort);
-		virtual GF_RET_CODE deinit();
-		virtual WorkMode getWorkMode() const {
+		virtual GF_RET_CODE init(GF_UINT8 comPort) override;
+		virtual GF_RET_CODE deinit() override;
+		virtual WorkMode getWorkMode() const override {
 			return mWorkMode;
 		}
-		virtual void setWorkMode(WorkMode newMode) {
+		virtual void setWorkMode(WorkMode newMode) override {
 			GF_LOGI("setWorkMode. %d", static_cast<int>(newMode));
 			if (WorkMode::Polling == newMode)
 				GF_LOGI("Please call method run(ms) to pull message.");
 			mWorkMode = newMode;
 		}
 		// get status, version, etc.
-		virtual HubState getState();
-		virtual tstring getDescString() const;
+		virtual HubState getState() override;
+		virtual tstring getDescString() const override;
 
 		// setup listener
-		virtual GF_RET_CODE registerListener(const gfwPtr<HubListener>& listener);
-		virtual GF_RET_CODE unRegisterListener(const gfwPtr<HubListener>& listener);
+		virtual GF_RET_CODE registerListener(const gfwPtr<HubListener>& listener) override;
+		virtual GF_RET_CODE unRegisterListener(const gfwPtr<HubListener>& listener) override;
 
-		virtual GF_RET_CODE startScan(GF_UINT8 rssiThreshold);
-		virtual GF_RET_CODE stopScan();
+		virtual GF_RET_CODE startScan(GF_UINT8 rssiThreshold) override;
+		virtual GF_RET_CODE stopScan() override;
 
-		virtual GF_SIZE getNumOfDevices(bool bConnectedOnly = true) const {
+		virtual GF_SIZE getNumOfDevices(bool bConnectedOnly = true) const override {
 			lock_guard<mutex> lock(const_cast<mutex&>(mTaskMutex));
 			if (bConnectedOnly)
 				return mConnectedDevices.size();
 			else
 				return mDisconnDevices.size() + mConnectedDevices.size();
 		}
-		virtual void enumDevices(std::function<bool(WPDEVICE)>& funEnum, bool bConnectedOnly = true);
-		virtual WPDEVICE findDevice(GF_UINT8 addrType, tstring address);
+		virtual void enumDevices(std::function<bool(WPDEVICE)>& funEnum, bool bConnectedOnly = true) override;
+		virtual WPDEVICE findDevice(GF_UINT8 addrType, tstring address) override;
 		// set up virtual device, client can combine two or more gdevices positioning in
 		//   defferent location into one virtual device. client still can receive gesture
 		//   data of these devices seperately, and can get one combined gesture
 		//   data if it happens
-		virtual GF_RET_CODE createVirtualDevice(vector<WPDEVICE> realDevices, WPDEVICE& newDevice);
+		virtual GF_RET_CODE createVirtualDevice(vector<WPDEVICE> realDevices, WPDEVICE& newDevice) override;
 
 	protected:
 		//////////////////////////////////////////////////////////////
 		// Derived from class IClientCallback to receive BLE event
-		virtual void onScanResult(GF_BLEDevice* device);
-		virtual void onScanFinished();
-		virtual void onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device);
-		virtual void onDeviceDisconnected(GF_STATUS status, GF_ConnectedDevice *device, GF_UINT8 reason);
+		virtual void onScanResult(GF_BLEDevice* device) override;
+		virtual void onScanFinished() override;
+		virtual void onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device) override;
+		virtual void onDeviceDisconnected(GF_STATUS status, GF_ConnectedDevice *device, GF_UINT8 reason) override;
 
-		virtual void onMTUSizeChanged(GF_STATUS status, GF_UINT16 handle, GF_UINT16 mtu_size);
+		virtual void onMTUSizeChanged(GF_STATUS status, GF_UINT16 handle, GF_UINT16 mtu_size) override;
 		virtual void onConnectionParmeterUpdated(GF_STATUS status, GF_UINT16 handle,
-			GF_UINT16 conn_int, GF_UINT16 superTO, GF_UINT16 slavelatency);
-		virtual void onCharacteristicValueRead(GF_STATUS status, GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data);
+			GF_UINT16 conn_int, GF_UINT16 superTO, GF_UINT16 slavelatency) override;
+		virtual void onCharacteristicValueRead(GF_STATUS status, GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data) override;
 
 		/*Notification format: data length(1 byte N) + data(N Bytes)*/
-		virtual void onNotificationReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data);
+		virtual void onNotificationReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data) override;
 
-		virtual void onComDestory();
+		virtual void onComDestory() override;
 
 	protected:
 		//////////////////////////////////////////////////////////////
 		// IHub for device usage
-		virtual GF_RET_CODE connect(BLEDevice& dev, bool directConn = true);
-		virtual GF_RET_CODE cancelConnect(BLEDevice& dev);
-		virtual GF_RET_CODE disconnect(BLEDevice& dev);
-		virtual GF_RET_CODE configMtuSize(BLEDevice& dev, GF_UINT16 mtuSize);
+		virtual GF_RET_CODE connect(BLEDevice& dev, bool directConn = true) override;
+		virtual GF_RET_CODE cancelConnect(BLEDevice& dev) override;
+		virtual GF_RET_CODE disconnect(BLEDevice& dev) override;
+		virtual GF_RET_CODE configMtuSize(BLEDevice& dev, GF_UINT16 mtuSize) override;
 		virtual GF_RET_CODE connectionParameterUpdate(BLEDevice& dev,
 			GF_UINT16 conn_interval_min, GF_UINT16 conn_interval_max,
-			GF_UINT16 slave_latence, GF_UINT16 supervision_timeout);
+			GF_UINT16 slave_latence, GF_UINT16 supervision_timeout) override;
 		virtual GF_RET_CODE writeCharacteristic(BLEDevice& dev,
-			AttributeHandle attribute_handle, GF_UINT8 data_length, GF_PUINT8 data);
-		virtual GF_RET_CODE readCharacteristic(BLEDevice& dev, AttributeHandle attribute_handle);
-		virtual void notifyOrientationData(BLEDevice& dev, const Quaternion& rotation);
-		virtual void notifyGestureData(BLEDevice& dev, Gesture gest);
-		virtual void notifyReCenter(BLEDevice& dev);
+			AttributeHandle attribute_handle, GF_UINT8 data_length, GF_PUINT8 data) override;
+		virtual GF_RET_CODE readCharacteristic(BLEDevice& dev, AttributeHandle attribute_handle) override;
+		virtual void notifyOrientationData(BLEDevice& dev, const Quaternion& rotation) override;
+		virtual void notifyGestureData(BLEDevice& dev, Gesture gest) override;
+		virtual void notifyReCenter(BLEDevice& dev) override;
 
 	protected:
 		//////////////////////////////////////////////////////////////
@@ -147,11 +147,15 @@ namespace gf
 		{
 			function<GF_UINT32()> fun;
 			GF_UINT32 ret = 0;
-			atomic<bool> executed = false;
+			atomic<bool> executed; // don't initialize here, put into constructor for compatible in Android
 			condition_variable syncCallCond;
-			HubMsg(decltype(fun) foo) : fun(foo) {}
+			HubMsg(decltype(fun) foo)
+			 : fun(foo)
+			 , executed(false)
+			 {
+			 }
 		};
-		GF_UINT32 executeCommand(gfsPtr<HubMsg>& msg);
+		GF_UINT32 executeCommand(gfsPtr<HubMsg> msg);
 		void commandTask();
 		mutex mTaskMutex;
 		thread mCommandThread;
@@ -160,13 +164,13 @@ namespace gf
 	public:
 		//////////////////////////////////////////////////////////////
 		// Inner working thread to process Polling mode
-		virtual GF_RET_CODE run(GF_UINT32 ms, bool once = false);
+		virtual GF_RET_CODE run(GF_UINT32 ms, bool once = false) override;
 	protected:
 		class NotifyHelper
 		{
 		public:
 			NotifyHelper(BLEHub& theHub) : mHub(theHub) {}
-			virtual void onScanfinished();
+			virtual void onScanFinished();
 			virtual void onStateChanged(HubState state);
 			virtual void onDeviceFound(WPDEVICE device);
 			virtual void onDeviceDiscard(WPDEVICE device);
@@ -189,7 +193,7 @@ namespace gf
 			PollingMsg(decltype(fun) foo) : fun(foo) {}
 		};
 		BQueue<gfsPtr<PollingMsg>> mPollMsgQ;
-		atomic<WorkMode> mWorkMode = WorkMode::Freerun;
+		atomic<WorkMode> mWorkMode; // don't initialize here, put into constructor for compatible in Android
 		mutex mPollMutex;
 		bool mPolling = false;
 		condition_variable mPollCond;

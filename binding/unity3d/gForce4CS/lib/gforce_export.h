@@ -1,9 +1,21 @@
 #pragma once
 
+#ifdef WIN32
+
 #ifdef GFORCE4CS_EXPORTS
 #define GFORCE4CS_API __declspec(dllexport)
 #else
 #define GFORCE4CS_API __declspec(dllimport)
+#endif
+
+#else // #ifdef WIN32
+
+#ifdef GFORCE4CS_EXPORTS
+#define GFORCE4CS_API extern "C" __attribute__ ((visibility ("default")))
+#else
+#define GFORCE4CS_API __attribute__ ((visibility ("hidden")))
+#endif
+
 #endif
 
 
@@ -15,7 +27,7 @@ typedef void(*FunClientLog)(gf::GF_UINT, const gf::GF_PCHAR);
 #pragma pack(push,1)
 struct ListenerCalls
 {
-	void(*onScanfinished)() = nullptr;
+	void(*onScanFinished)() = nullptr;
 	void(*onStateChanged)(gf::GF_UINT state) = nullptr;
 	void(*onDeviceFound)(gf::GF_HANDLE device) = nullptr;
 	void(*onDeviceDiscard)(gf::GF_HANDLE device) = nullptr;
@@ -52,5 +64,3 @@ GFORCE4CS_API gf::GF_UINT device_get_connection_status(gf::GF_HANDLE device);
 GFORCE4CS_API gf::GF_UINT device_connect(gf::GF_HANDLE device);
 GFORCE4CS_API gf::GF_UINT device_disconnect(gf::GF_HANDLE device);
 
-// quaternion
-// w,x,y,z

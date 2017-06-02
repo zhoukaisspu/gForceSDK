@@ -41,7 +41,7 @@ public:
 	virtual GF_STATUS Deinit() = 0;
 	virtual GF_STATUS StartScan(GF_UINT8 RSSI_Threshold) = 0;
 	virtual GF_STATUS StopScan() = 0;
-	virtual GF_STATUS Connect(GF_PUINT8 addr, UINT8 addr_type, GF_BOOL is_direct_conn) = 0;
+	virtual GF_STATUS Connect(GF_PUINT8 addr, GF_UINT8 addr_type, GF_BOOL is_direct_conn) = 0;
 	virtual GF_STATUS CancelConnect(GF_PUINT8 addr, GF_UINT8 addr_type) = 0;
 	virtual GF_STATUS Disconnect(GF_UINT16 handle) = 0;
 	virtual GF_STATUS RegisterClientCallback(GF_CClientCallback* callback) = 0;

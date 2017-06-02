@@ -40,8 +40,17 @@
 /// that uses this DLL. This way any other project whose source files include this file see 
 /// GFORCESDK_API functions as being imported from a DLL, whereas this DLL sees symbols
 /// defined with this macro as being exported.
+
+#ifdef WIN32
+
 #ifdef GFORCESDK_EXPORTS
 #define GFORCESDK_API __declspec(dllexport)
 #else
 #define GFORCESDK_API __declspec(dllimport)
+#endif
+
+#else // #ifdef WIN32
+
+#define GFORCESDK_API
+
 #endif

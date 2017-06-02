@@ -55,7 +55,7 @@ namespace gf
 		/// \remark
 		///     This callback may be called after a series of onDeviceFound()
 		///     are called.
-		virtual void onScanfinished() {}
+		virtual void onScanFinished() {}
 
 		/// \brief This callback is called when the state of the hub changed
 		/// \param state

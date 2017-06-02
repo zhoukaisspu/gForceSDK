@@ -92,6 +92,12 @@ public class GForceHub : MonoBehaviour
         AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
         var unityActivity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
 
+        var applicationContext = unityActivity.Call<AndroidJavaObject>("getApplicationContext");
+
+        // Need to pass the Android Application Context to the jni plugin before initializing the Hub.
+        AndroidJavaClass nativeEventsClass = new AndroidJavaClass("com.oymotion.libble.GlobalContext");
+        nativeEventsClass.CallStatic("setApplicationContext", applicationContext);
+
         unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
             mHub = Hub.Instance;
             prepare();
@@ -120,8 +126,10 @@ public class GForceHub : MonoBehaviour
 
     private static GForceHub mInstance = null;
     private Hub mHub = null;
-    private List<GForceDevice> mDeviceComps = new List<GForceDevice>();
+	private List<GForceDevice> mDeviceComps = new List<GForceDevice>();
+#if !UNITY_ANDROID
     private Hub.logFn logfun = new Hub.logFn(GForceHub.DebugLog);
+#endif
 
     private class Listener : HubListener
     {
@@ -268,8 +276,11 @@ public class GForceHub : MonoBehaviour
 
     Listener mLsn = null;
     private volatile bool bRunThreadRun = false;
+
+	public string lastlog;
     private static void DebugLog(Hub.LogLevel level, string value)
     {
+		mInstance.lastlog = value;
         if (level >= Hub.LogLevel.GF_LOG_ERROR)
             Debug.LogError(value);
         else
@@ -278,7 +289,9 @@ public class GForceHub : MonoBehaviour
     private void prepare()
     {
         mLsn = new Listener(this);
+#if !UNITY_ANDROID
         mHub.setClientLogMethod(logfun);
+#endif
         RetCode ret = mHub.registerListener(mLsn);
         Debug.LogFormat("registerListener = {0}", ret);
         ret = mHub.init(0);
@@ -291,6 +304,11 @@ public class GForceHub : MonoBehaviour
         runThread.Start();
         ret = mHub.startScan();
         Debug.LogFormat("startScan = {0}", ret);
+		if (RetCode.GF_SUCCESS == ret) {
+			lastlog = "BLE scan starting succeeded.";
+		} else {
+			lastlog = "BLE scan starting failed.";
+		}
     }
 
     private void terminal()
@@ -300,16 +318,24 @@ public class GForceHub : MonoBehaviour
         {
             runThread.Join();
         }
-        mHub.unregisterListener(mLsn);
+		mHub.unregisterListener(mLsn);
+#if !UNITY_ANDROID
         mHub.setClientLogMethod(null);
+#endif
         mHub.deinit();
     }
     private Thread runThread;
     private void runThreadFn()
     {
+		int loop = 0;
         while (bRunThreadRun)
         {
+			loop++;
             mHub.run(50);
+#if DEBUG
+			if (loop % 200 == 0)
+				Debug.LogFormat("runThreadFn: {0} seconds elapsed.", loop/20);
+#endif
         }
         Debug.Log("Leave thread");
     }

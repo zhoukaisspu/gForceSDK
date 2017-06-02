@@ -10,7 +10,7 @@ namespace gf
 #if UNITY_STANDALONE || UNITY_EDITOR
         private const string GFORCE_DLL = "gforce64";
 #elif UNITY_ANDROID
-        private const string GFORCE_DLL = "gforce-android";
+        private const string GFORCE_DLL = "gforce";
 #elif WIN64
         private const string GFORCE_DLL = "gforce64";
 #elif WIN32

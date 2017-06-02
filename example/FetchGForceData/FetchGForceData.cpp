@@ -76,7 +76,7 @@ public:
 	{
 	}
 	/// This callback is called when the Hub finishes scanning devices.
-	virtual void onScanfinished()
+	virtual void onScanFinished() override
 	{
 		cout << __FUNCTION__ << " has been called." << endl;
 		if (nullptr == mDevice)
@@ -98,7 +98,7 @@ public:
 	}
 
 	/// This callback is called when the state of the hub changed
-	virtual void onStateChanged(HubState state)
+	virtual void onStateChanged(HubState state) override
 	{
 		cout << __FUNCTION__ << " has been called. New state is " << static_cast<GF_UINT32>(state) << endl;
 		// if the hub is disconnected (such as unplugged), then set the flag of exiting the app.
@@ -109,7 +109,7 @@ public:
 	}
 
 	/// This callback is called when the hub finds a device.
-	virtual void onDeviceFound(WPDEVICE device)
+	virtual void onDeviceFound(WPDEVICE device) override
 	{
 		// In the sample app, we only connect to one device, so once we got one, we stop scanning.
 		cout << __FUNCTION__ << " has been called." << endl;
@@ -126,14 +126,14 @@ public:
 	}
 
 	/// This callback is called a device has been connected successfully
-	virtual void onDeviceConnected(WPDEVICE device)
+	virtual void onDeviceConnected(WPDEVICE device) override
 	{
 		cout << __FUNCTION__ << " has been called." << endl;
 	}
 
 	/// This callback is called when a device has been disconnected from
 	///                                 connection state or failed to connect to
-	virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason)
+	virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason) override
 	{
 		// if connection lost, we will try to reconnect again.
 		cout << __FUNCTION__ << " has been called. reason: " << static_cast<GF_UINT32>(reason) << endl;
@@ -145,14 +145,14 @@ public:
 	}
 
 	/// This callback is called when the quaternion data is received
-	virtual void onOrientationData(WPDEVICE device, const Quaternion& rotation)
+	virtual void onOrientationData(WPDEVICE device, const Quaternion& rotation) override
 	{
 		// print the quaternion data
 		cout << __FUNCTION__ << " has been called. " << rotation.toString() << endl;
 	}
 
 	/// This callback is called when the gesture data is recevied
-	virtual void onGestureData(WPDEVICE device, Gesture gest)
+	virtual void onGestureData(WPDEVICE device, Gesture gest) override
 	{
 		// a gesture event coming.
 		auto sp = device.lock();
@@ -194,7 +194,7 @@ public:
 	}
 
 	/// This callback is called when the button on gForce is pressed by user
-	virtual void onReCenter(WPDEVICE device)
+	virtual void onReCenter(WPDEVICE device) override
 	{
 		cout << __FUNCTION__ << " has been called." << endl;
 	}

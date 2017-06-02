@@ -62,7 +62,7 @@ namespace gf
 		virtual ~GForceDevice() {}
 
 	protected:
-		virtual void onData(GF_UINT8 length, GF_PUINT8 data);
+		virtual void onData(GF_UINT8 length, GF_PUINT8 data) override;
 
 	private:
 		void onQuaternion(GF_UINT8 length, GF_PUINT8 data);

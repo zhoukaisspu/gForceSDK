@@ -1,4 +1,9 @@
-#include "stdafx.h"
+#ifdef WIN32
+#include "../windows/targetver.h"
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include "eh.h"
+#endif
 
 #define TAG "gForce4CS"
 
@@ -21,6 +26,7 @@ using namespace std;
 #define RETURN_UINT_VALUE_FROM_HUBSTATE static_cast<GF_UINT>(ret)
 #define RETURN_UINT_VALUE_FROM_CONNSTAT static_cast<GF_UINT>(ret)
 
+#ifdef WIN32
 class gForceException
 {
 public:
@@ -35,114 +41,176 @@ void throw_exception(unsigned int code, EXCEPTION_POINTERS* ptr)
 {
 	throw gForceException(code, ptr); // throw exception 
 }
+#endif
 
-HANDLE getAddrAsHandle(WPDEVICE device);
-SPDEVICE getDeviceFromHandle(HANDLE h);
+GF_HANDLE getAddrAsHandle(WPDEVICE device);
+SPDEVICE getDeviceFromHandle(GF_HANDLE h);
 
 class ListenerTranslate : public HubListener
 {
 public:
 	ListenerTranslate() {}
 
-	virtual void onScanfinished() {
+	virtual void onScanFinished() override {
 		try {
+			GF_LOGD("%s: callback fn here. %d", __FUNCTION__, __LINE__);
 			for (auto& i : mlc)
-				if (nullptr != i->onScanfinished)
-					i->onScanfinished();
+			{
+				GF_LOGD("%s: callback fn here. i = %p", __FUNCTION__, i.get());
+				if (nullptr != i->onScanFinished)
+				{
+					GF_LOGD("%s: callback fn here. i.fn = %p", __FUNCTION__, i->onScanFinished);
+					i->onScanFinished();
+				}
+			}
 		}
+#ifdef WIN32
 		catch (gForceException e) {
 			GF_LOGE("%s: callback fn failed. code = %u, ExceptionCode = %u",
 				__FUNCTION__, e.code, e.ptrException->ExceptionRecord->ExceptionCode);
 		}
+#else
+		catch (...) {
+			GF_LOGE("%s: callback fn failed.", __FUNCTION__);
 	}
-	virtual void onStateChanged(HubState state) {
+#endif
+	}
+	virtual void onStateChanged(HubState state) override {
 		try {
 			for (auto& i : mlc)
 				if (nullptr != i->onStateChanged)
 					i->onStateChanged(static_cast<GF_UINT>(state));
 		}
+#ifdef WIN32
 		catch (gForceException e) {
 			GF_LOGE("%s: callback fn failed. code = %u, ExceptionCode = %u",
 				__FUNCTION__, e.code, e.ptrException->ExceptionRecord->ExceptionCode);
 		}
+#else
+		catch (...) {
+			GF_LOGE("%s: callback fn failed.", __FUNCTION__);
+		}
+#endif
 	}
-	virtual void onDeviceFound(WPDEVICE device) {
+	virtual void onDeviceFound(WPDEVICE device) override {
 		try {
 			for (auto& i : mlc)
 				if (nullptr != i->onDeviceFound)
 					i->onDeviceFound(getAddrAsHandle(device));
 		}
+#ifdef WIN32
 		catch (gForceException e) {
 			GF_LOGE("%s: callback fn failed. code = %u, ExceptionCode = %u",
 				__FUNCTION__, e.code, e.ptrException->ExceptionRecord->ExceptionCode);
 		}
+#else
+		catch (...) {
+			GF_LOGE("%s: callback fn failed.", __FUNCTION__);
+		}
+#endif
 	}
-	virtual void onDeviceDiscard(WPDEVICE device) {
+	virtual void onDeviceDiscard(WPDEVICE device) override {
 		try {
 			for (auto& i : mlc)
 				if (nullptr != i->onDeviceDiscard)
 					i->onDeviceDiscard(getAddrAsHandle(device));
 		}
+#ifdef WIN32
 		catch (gForceException e) {
 			GF_LOGE("%s: callback fn failed. code = %u, ExceptionCode = %u",
 				__FUNCTION__, e.code, e.ptrException->ExceptionRecord->ExceptionCode);
 		}
+#else
+		catch (...) {
+			GF_LOGE("%s: callback fn failed.", __FUNCTION__);
+		}
+#endif
 	}
-	virtual void onDeviceConnected(WPDEVICE device) {
+	virtual void onDeviceConnected(WPDEVICE device) override {
 		try {
 			for (auto& i : mlc)
 				if (nullptr != i->onDeviceConnected)
 					i->onDeviceConnected(getAddrAsHandle(device));
 		}
+#ifdef WIN32
 		catch (gForceException e) {
 			GF_LOGE("%s: callback fn failed. code = %u, ExceptionCode = %u",
 				__FUNCTION__, e.code, e.ptrException->ExceptionRecord->ExceptionCode);
 		}
+#else
+		catch (...) {
+			GF_LOGE("%s: callback fn failed.", __FUNCTION__);
+		}
+#endif
 	}
-	virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason) {
+	virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason) override {
 		try {
 			for (auto& i : mlc)
 				if (nullptr != i->onDeviceDisconnected)
 					i->onDeviceDisconnected(getAddrAsHandle(device), reason);
 		}
+#ifdef WIN32
 		catch (gForceException e) {
 			GF_LOGE("%s: callback fn failed. code = %u, ExceptionCode = %u",
 				__FUNCTION__, e.code, e.ptrException->ExceptionRecord->ExceptionCode);
 		}
+#else
+		catch (...) {
+			GF_LOGE("%s: callback fn failed.", __FUNCTION__);
+		}
+#endif
 	}
-	virtual void onOrientationData(WPDEVICE device, const Quaternion& orientation) {
+	virtual void onOrientationData(WPDEVICE device, const Quaternion& orientation) override {
 		try {
 			for (auto& i : mlc)
 				if (nullptr != i->onOrientationData)
 					i->onOrientationData(getAddrAsHandle(device),
 					orientation.w(), orientation.x(), orientation.y(), orientation.z());
 		}
+#ifdef WIN32
 		catch (gForceException e) {
 			GF_LOGE("%s: callback fn failed. code = %u, ExceptionCode = %u",
 				__FUNCTION__, e.code, e.ptrException->ExceptionRecord->ExceptionCode);
 		}
+#else
+		catch (...) {
+			GF_LOGE("%s: callback fn failed.", __FUNCTION__);
+		}
+#endif
 	}
-	virtual void onGestureData(WPDEVICE device, Gesture gest) {
+	virtual void onGestureData(WPDEVICE device, Gesture gest) override {
 		try {
 			for (auto& i : mlc)
 				if (nullptr != i->onGestureData)
 					i->onGestureData(getAddrAsHandle(device), static_cast<GF_UINT>(gest));
 		}
+#ifdef WIN32
 		catch (gForceException e) {
 			GF_LOGE("%s: callback fn failed. code = %u, ExceptionCode = %u",
 				__FUNCTION__, e.code, e.ptrException->ExceptionRecord->ExceptionCode);
 		}
+#else
+		catch (...) {
+			GF_LOGE("%s: callback fn failed.", __FUNCTION__);
+		}
+#endif
 	}
-	virtual void onReCenter(WPDEVICE device) {
+	virtual void onReCenter(WPDEVICE device) override {
 		try {
 			for (auto& i : mlc)
 				if (nullptr != i->onReCenter)
 					i->onReCenter(getAddrAsHandle(device));
 		}
+#ifdef WIN32
 		catch (gForceException e) {
 			GF_LOGE("%s: callback fn failed. code = %u, ExceptionCode = %u",
 				__FUNCTION__, e.code, e.ptrException->ExceptionRecord->ExceptionCode);
 		}
+#else
+		catch (...) {
+			GF_LOGE("%s: callback fn failed.", __FUNCTION__);
+		}
+#endif
 	}
 
 	bool addCallbacks(gfsPtr<ListenerCalls> lc)
@@ -164,7 +232,7 @@ private:
 	// see comment in hub_register_listener
 	template <class _T> struct ListenerComp {
 		bool operator ()(const gfsPtr<_T>& left, const gfsPtr<_T>& right) const {
-			return (left->onScanfinished < right->onScanfinished);
+			return (left->onScanFinished < right->onScanFinished);
 		}
 	};
 	set<gfsPtr<ListenerCalls>, ListenerComp<ListenerCalls>> mlc;
@@ -179,14 +247,16 @@ public:
 
 	RefHelper()
 	{
+#ifdef WIN32
 		_set_se_translator(throw_exception);
+#endif
 	}
 };
 
 static RefHelper _ref;
 
 
-HANDLE getAddrAsHandle(WPDEVICE device)
+GF_HANDLE getAddrAsHandle(WPDEVICE device)
 {
 	auto sp = device.lock();
 	if (nullptr != sp)
@@ -196,7 +266,7 @@ HANDLE getAddrAsHandle(WPDEVICE device)
 	return nullptr;
 }
 
-SPDEVICE getDeviceFromHandle(HANDLE h)
+SPDEVICE getDeviceFromHandle(GF_HANDLE h)
 {
 	// enum devices to find the given
 	SPDEVICE ret;
@@ -204,7 +274,7 @@ SPDEVICE getDeviceFromHandle(HANDLE h)
 	{
 		function<bool(WPDEVICE)> func = [&ret, h](WPDEVICE device){
 			auto sp = device.lock();
-			if (nullptr != sp && h == (HANDLE)sp.get())
+			if (nullptr != sp && h == (GF_HANDLE)sp.get())
 			{
 				ret = sp;
 				return false;

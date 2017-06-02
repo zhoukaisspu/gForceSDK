@@ -106,23 +106,23 @@ gfsPtr<HubListener> listener;
 
 class HubListenerImp : public HubListener
 {
-	virtual void onScanfinished()
+	virtual void onScanFinished() override
 	{
 
 		GF_LOGD("ThreadId: %s: %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__);
 	}
-	virtual void onStateChanged(HubState state)
+	virtual void onStateChanged(HubState state) override
 	{
 		GF_LOGI("ThreadId: %s: %s: HubState: %u", utils::threadIdToString(this_thread::get_id()).c_str(),
 			__FUNCTION__, static_cast<GF_UINT>(state));
 	}
-	virtual void onDeviceFound(WPDEVICE device)
+	virtual void onDeviceFound(WPDEVICE device) override
 	{
 		auto ptr = device.lock();
 		GF_LOGI("ThreadId: %s: %s: Name: %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
 	}
-	virtual void onDeviceDiscard(WPDEVICE device)
+	virtual void onDeviceDiscard(WPDEVICE device) override
 	{
 		auto ptr = device.lock();
 		GF_LOGD("ThreadId: %s: %s: device: %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
@@ -138,19 +138,19 @@ class HubListenerImp : public HubListener
 				++itor;
 		}
 	}
-	virtual void onDeviceConnected(WPDEVICE device)
+	virtual void onDeviceConnected(WPDEVICE device) override
 	{
 		auto ptr = device.lock();
 		GF_LOGD("ThreadId: %s: %s: device: %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
 	}
-	virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason)
+	virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason) override
 	{
 		auto ptr = device.lock();
 		GF_LOGD("ThreadId: %s: %s: device: %s, reason: %u", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()), reason);
 	}
-	virtual void onOrientationData(WPDEVICE device, const Quaternion& rotation)
+	virtual void onOrientationData(WPDEVICE device, const Quaternion& rotation) override
 	{
 		auto now = chrono::steady_clock::now();
 		chrono::duration<GF_UINT32, milli> duration(500);
@@ -164,7 +164,7 @@ class HubListenerImp : public HubListener
 			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()),
 			rotation.toString().c_str(), rotation.toEuler().toString().c_str());
 	}
-	virtual void onGestureData(WPDEVICE device, Gesture gest)
+	virtual void onGestureData(WPDEVICE device, Gesture gest) override
 	{
 		auto ptr = device.lock();
 		string gesture;
@@ -204,7 +204,7 @@ class HubListenerImp : public HubListener
 		GF_LOGD("ThreadId: %s: %s: Device: %s, Gesture data received: %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()), gesture.c_str());
 	}
-	virtual void onReCenter(WPDEVICE device)
+	virtual void onReCenter(WPDEVICE device) override
 	{
 		auto ptr = device.lock();
 		GF_LOGD("ThreadId: %s: %s: Gesture position re-centered. device = %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,

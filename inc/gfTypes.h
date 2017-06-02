@@ -98,7 +98,7 @@ namespace gf {
 	typedef char tchar;
 #if ! defined(WIN32) || ! defined(_T)
 	/// ANSI/UNICODE convenience
-#define __T(x) x
+#define _T(x) x
 #endif
 
 #endif // UNICODE

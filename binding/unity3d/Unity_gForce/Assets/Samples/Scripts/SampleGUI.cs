@@ -6,6 +6,7 @@ public class SampleGUI : MonoBehaviour
 {
 
     public GameObject gforce = null;
+	string log = "Demo text";
 
     // Draw some basic instructions.
     void OnGUI()
@@ -19,9 +20,9 @@ public class SampleGUI : MonoBehaviour
 
         if (null != device)
         {
-            GUI.Label(new Rect(12, 8, Screen.width, Screen.height),
-                "Demo text."
-            );
+			if (!string.IsNullOrEmpty(hub.lastlog))
+				log = hub.lastlog;
+            GUI.Label(new Rect(12, 8, Screen.width, Screen.height), log);
         }
         else
         {
