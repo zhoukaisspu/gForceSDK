@@ -242,9 +242,14 @@ public class RemoteDevice {
             byte[] data = characteristic.getValue();
             String Notify = String.format("%02X:%02X:%02X:%02X:%02X:%02X",
                     data[0], data[1], data[2], data[3], data[4], data[5]);
+            /*format:length(1 byte) + attribute handle(2 bytes) + data, compatible with window + dongle*/
+            byte[] predata = {0x15, 0x27, 0x00};
 
+            byte[] notification = new byte[predata.length + data.length];
+            System.arraycopy(predata, 0, notification, 0, predata.length);
+            System.arraycopy(data, 0, notification, predata.length, data.length);
             Log.d(TAG, "onNotification received:" + Notify);
-			mBleService.onNotificationReceived(mAddress, data);
+			mBleService.onNotificationReceived(mAddress, notification);
         }
 
 		@Override
