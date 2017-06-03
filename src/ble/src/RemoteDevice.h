@@ -205,7 +205,6 @@ private:
 	CThread* mThread;
 	GF_BOOL mThreadRunning;
 	HANDLE mThreadEvent;
-	HANDLE mThreadStopEvent;
 
 	list<MESSAGE*> mMessage;
 	CRITICAL_SECTION mMutex;

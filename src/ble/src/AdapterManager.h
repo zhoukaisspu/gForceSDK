@@ -31,6 +31,7 @@
 #include "GFBLETypes.h"
 #include "AdapterManagerInterface.h"
 #include <list>
+#include <mutex>
 using namespace std;
 
 class GF_CDiscoveryService;
@@ -85,7 +86,8 @@ private:
 	GF_STATUS ConnectComplete(GF_UINT16 handle);
 	GF_STATUS ScanFinished();
 	GF_STATUS OnConnectEvent(GF_PUINT8 data, GF_UINT16 length);
-	GF_CRemoteDevice* GetDeviceByHandle(GF_UINT16 handle);
+	GF_CRemoteDevice* GetConnectedDeviceByHandle(GF_UINT16 handle);
+	GF_CRemoteDevice* GetDisconnectingDeviceByHandle(GF_UINT16 handle);
 	GF_STATUS mIsConnecting;
 	GF_STATUS mIsScanning;
 	GF_CNpiInterface* mInterface;
@@ -93,8 +95,15 @@ private:
 	GF_CDiscoveryService* mDS;
 
 	list<GF_CRemoteDevice*> mAvailabeDevice;
+
+	std::mutex m_ConnectingDeviceMutex;
 	list<GF_CRemoteDevice*> mConnectingDevice;
+
+	std::mutex mConnectedDeviceMutex;
 	list<GF_CRemoteDevice*> mConnectedDevice;
+
+	std::mutex mDisconnectingDeviceMutex;
+	list<GF_CRemoteDevice*> mDisconnectingDevice;
 	GF_CRemoteDevice* mCancelConnectingDevice;
 	GF_CClientCallback* mClientCallback;
 };

@@ -106,12 +106,47 @@ GF_STATUS GF_CAdapterManager::Init(GF_UINT8 com_num, GF_UINT8 log_type)
 		result = mDS->Init();
 	}
 
+	do{
+		std::lock_guard<std::mutex> lg(m_ConnectingDeviceMutex);
+		mConnectingDevice.clear();
+	}while(0);
+
+	do{
+		std::lock_guard<std::mutex> lg(mConnectedDeviceMutex);
+		mConnectedDevice.clear();
+	}while(0);
+
+	do
+	{
+		std::lock_guard<std::mutex> lg(mDisconnectingDeviceMutex);
+		mDisconnectingDevice.clear();
+	}while(0);
+
 	return result;
 }
 
 GF_STATUS GF_CAdapterManager::Deinit()
 {
+	LOGDEBUG(mTag, "Deinit... \n");
+	/*timeout is 50 * 100 = 5s*/
+	UINT8 delay = 50;
 	GF_STATUS result = GF_FAIL;
+	LOGDEBUG(mTag, "before mConnectedDevice.size() = %d \n", GetConnectedDeviceNum());
+	LOGDEBUG(mTag, "before mDisconnectingDevice.size() = %d \n", mDisconnectingDevice.size());
+	/*wait for device disconnected if we have initial disconnect process avoid meory leak.*/
+	while (delay > 0 && mDisconnectingDevice.size())
+	{
+		LOGDEBUG(mTag, "delay = %d \n", delay);
+		if(mDisconnectingDevice.size() != 0)
+		{
+			Sleep(100);
+		}
+		else
+		{
+			break;
+		}
+		delay--;
+	}
 
 	if (mDS != NULL)
 	{
@@ -210,25 +245,33 @@ GF_HubState GF_CAdapterManager::GetHubState()
 
 GF_UINT8 GF_CAdapterManager::GetConnectedDeviceNum()
 {
-	return mConnectedDevice.size();
+	GF_UINT8 num;
+	std::lock_guard<std::mutex> lg(mConnectedDeviceMutex);
+	num = mConnectedDevice.size();
+
+	return num;
 }
 
 GF_STATUS GF_CAdapterManager::GetConnectedDeviceByIndex(GF_UINT8 index, GF_ConnectedDevice* connected_device)
 {
 	GF_CRemoteDevice* device = NULL;
 	list<GF_CRemoteDevice*>::iterator ii;
-	if(index >= mConnectedDevice.size())
+	if(index >= GetConnectedDeviceNum())
 	{
 		return GF_FAIL;
 	}
 
-	ii = mConnectedDevice.begin();
-	while(index > 0)
+	do
 	{
-		ii++;
-		index--;
-	}
-	device = (*ii);
+		std::lock_guard<std::mutex> lg(mConnectedDeviceMutex);
+		ii = mConnectedDevice.begin();
+		while(index > 0)
+		{
+			ii++;
+			index--;
+		}
+		device = (*ii);
+	}while(0);
 
 	if (device != NULL && connected_device != NULL)
 	{
@@ -269,6 +312,7 @@ GF_STATUS GF_CAdapterManager::Connect(GF_PUINT8 addr, UINT8 addr_type, GF_BOOL i
 	{
 		if (is_direct_conn == GF_TRUE)
 		{
+			std::lock_guard<std::mutex> lg(m_ConnectingDeviceMutex);
 			result = mInterface->Connect(addr, addr_type, GF_FALSE);
 			mConnectingDevice.push_front(device);
 			mIsConnecting = GF_TRUE;
@@ -289,7 +333,11 @@ GF_STATUS GF_CAdapterManager::CancelConnect(GF_PUINT8 addr, GF_UINT8 addr_type)
 		if (((*ii)->mAddrType == addr_type) && memcmp((*ii)->mAddr, addr, BT_ADDRESS_SIZE) == 0)
 		{
 			mCancelConnectingDevice = (*ii);
-			ii = mConnectingDevice.erase(ii);
+			do
+			{
+				std::lock_guard<std::mutex> lg(m_ConnectingDeviceMutex);
+				ii = mConnectingDevice.erase(ii);
+			} while (0);
 			break;
 		}
 		else
@@ -312,12 +360,38 @@ GF_STATUS GF_CAdapterManager::CancelConnect(GF_PUINT8 addr, GF_UINT8 addr_type)
 GF_STATUS GF_CAdapterManager::Disconnect(GF_UINT16 handle)
 {
 	GF_STATUS result = GF_FAIL;
+	list<GF_CRemoteDevice*>::iterator ii;
 	LOGDEBUG(mTag, "start to disconnect device... \n");
-	GF_CRemoteDevice* device = GetDeviceByHandle(handle);
+	GF_CRemoteDevice* device = GetConnectedDeviceByHandle(handle);
 	if (device == NULL)
 	{
 		return result;
 	}
+	LOGDEBUG(mTag, "before mConnectedDevice.size() = %d \n", GetConnectedDeviceNum());
+	LOGDEBUG(mTag, "before mDisconnectingDevice.size() = %d \n", mDisconnectingDevice.size());
+	/*remote device thread exit when try to disconnect connection.*/
+	for (ii = mConnectedDevice.begin(); ii != mConnectedDevice.end(); )
+	{
+		if ((*ii)->GetHandle() == handle)
+		{
+			(*ii)->DeInit();
+			do{
+				std::lock_guard<std::mutex> lg(mDisconnectingDeviceMutex);
+				mDisconnectingDevice.push_front(*ii);
+			}while(0);
+
+			do{
+				std::lock_guard<std::mutex> lg(mConnectedDeviceMutex);
+				mConnectedDevice.erase(ii++);
+			}while(0);
+		}
+		else
+		{
+			++ii;
+		}
+	}
+	LOGDEBUG(mTag, "after mConnectedDevice.size() = %d \n", GetConnectedDeviceNum());
+	LOGDEBUG(mTag, "after mDisconnectingDevice.size() = %d \n", mDisconnectingDevice.size());
 
 	if (mInterface != NULL)
 	{
@@ -364,14 +438,22 @@ GF_STATUS GF_CAdapterManager::OnConnectEvent(GF_PUINT8 data, GF_UINT16 length)
 	
 	for (ii = mConnectingDevice.begin(); ii != mConnectingDevice.end();)
 	{
-		LOGDEBUG(mTag, "mConnectingDevice.size() = %d \n", mConnectingDevice.size());
+		LOGDEBUG(mTag, "mConnectedDevice.size() = %d \n", mConnectedDevice.size());
 		if (((*ii)->mAddrType == addr_type) && memcmp((*ii)->mAddr, data + 2, BT_ADDRESS_SIZE) == 0)
 		{
 			(*ii)->Init();
-			mConnectedDevice.push_front(*ii);
+
+			do{
+				std::lock_guard<std::mutex> lg(mConnectedDeviceMutex);
+				mConnectedDevice.push_front(*ii);
+			}while(0);
+
 			(*ii)->ProcessMessage(GF_DEVICE_EVENT_DEVICE_CONNECTED, data, length);
 
-			ii = mConnectingDevice.erase(ii);
+			do{
+				std::lock_guard<std::mutex> lg(m_ConnectingDeviceMutex);
+				ii = mConnectingDevice.erase(ii);
+			} while (0);
 			mIsConnecting = GF_FALSE;
 		}
 		else
@@ -383,9 +465,10 @@ GF_STATUS GF_CAdapterManager::OnConnectEvent(GF_PUINT8 data, GF_UINT16 length)
 	return result;
 }
 
-GF_CRemoteDevice* GF_CAdapterManager::GetDeviceByHandle(GF_UINT16 handle)
+GF_CRemoteDevice* GF_CAdapterManager::GetConnectedDeviceByHandle(GF_UINT16 handle)
 {
 	list<GF_CRemoteDevice*>::iterator ii;
+	std::lock_guard<std::mutex> lg(mConnectedDeviceMutex);
 	for (ii = mConnectedDevice.begin(); ii != mConnectedDevice.end(); ii++)
 	{
 		if (((*ii)->GetHandle()) == handle)
@@ -397,9 +480,25 @@ GF_CRemoteDevice* GF_CAdapterManager::GetDeviceByHandle(GF_UINT16 handle)
 	return NULL;
 }
 
+GF_CRemoteDevice* GF_CAdapterManager::GetDisconnectingDeviceByHandle(GF_UINT16 handle)
+{
+	list<GF_CRemoteDevice*>::iterator ii;
+	std::lock_guard<std::mutex> lg(mDisconnectingDeviceMutex);
+	for (ii = mDisconnectingDevice.begin(); ii != mDisconnectingDevice.end(); ii++)
+	{
+		if (((*ii)->GetHandle()) == handle)
+		{
+			return (*ii);
+		}
+	}
+
+	return NULL;
+}
+
+
 GF_STATUS  GF_CAdapterManager::ConfigMtuSize(GF_UINT16 conn_handle, GF_UINT16 MTU_Size)
 {
-	GF_CRemoteDevice* device = GetDeviceByHandle(conn_handle);
+	GF_CRemoteDevice* device = GetConnectedDeviceByHandle(conn_handle);
 	if (device != NULL)
 	{
 		return device->ExchangeMTUSize(MTU_Size);
@@ -412,7 +511,7 @@ GF_STATUS  GF_CAdapterManager::ConfigMtuSize(GF_UINT16 conn_handle, GF_UINT16 MT
 
 GF_STATUS GF_CAdapterManager::ConnectionParameterUpdate(GF_UINT16 conn_handle, GF_UINT16 conn_interval_min, GF_UINT16 conn_interval_max, GF_UINT16 slave_latence, GF_UINT16 supervision_timeout)
 {
-	GF_CRemoteDevice* device = GetDeviceByHandle(conn_handle);
+	GF_CRemoteDevice* device = GetConnectedDeviceByHandle(conn_handle);
 	if (device != NULL)
 	{
 		return device->ConnectionParameterUpdateRequest(conn_interval_min, conn_interval_max, slave_latence, supervision_timeout);
@@ -426,7 +525,7 @@ GF_STATUS GF_CAdapterManager::ConnectionParameterUpdate(GF_UINT16 conn_handle, G
 
 GF_STATUS GF_CAdapterManager::WriteCharacteristic(GF_UINT16 conn_handle, GF_UINT16 attribute_handle, GF_UINT8 data_length, GF_PUINT8 data)
 {
-	GF_CRemoteDevice* device = GetDeviceByHandle(conn_handle);
+	GF_CRemoteDevice* device = GetConnectedDeviceByHandle(conn_handle);
 	if (device != NULL)
 	{
 		return device->WriteCharacteristicValue(attribute_handle, data_length, data);
@@ -439,7 +538,7 @@ GF_STATUS GF_CAdapterManager::WriteCharacteristic(GF_UINT16 conn_handle, GF_UINT
 
 GF_STATUS GF_CAdapterManager::ReadCharacteristic(GF_UINT16 conn_handle, GF_UINT16 attribute_handle)
 {
-	GF_CRemoteDevice* device = GetDeviceByHandle(conn_handle);
+	GF_CRemoteDevice* device = GetConnectedDeviceByHandle(conn_handle);
 	if (device != NULL)
 	{
 		return device->ReadCharacteristicValue(attribute_handle);
@@ -524,14 +623,16 @@ GF_STATUS GF_CAdapterManager::OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16
 
 		case EVENT_MASK_ATT_NOTI_MSG:
 		{
-			//LOGDEBUG(mTag, "--------->notification received! \n");
+#if 0
+			LOGDEBUG(mTag, "--------->notification received! \n");
 			for (GF_UINT16 i = 0; i < length; i++)
 			{
-				//LOGDEBUG(mTag, "the notificationdata of [%d]th bytes is 0x%02x \n", i, data[i]);
+				LOGDEBUG(mTag, "the notificationdata of [%d]th bytes is 0x%02x \n", i, data[i]);
 			}
+#endif
 			handle_offset = 1;
 			GF_UINT16 handle = data[handle_offset] + (data[handle_offset + 1] << 8);
-			GF_CRemoteDevice* device = GetDeviceByHandle(handle);
+			GF_CRemoteDevice* device = GetConnectedDeviceByHandle(handle);
 			if (device != NULL)
 			{
 				GF_DEVICE_STATE state = device->GetState();
@@ -581,16 +682,85 @@ GF_STATUS GF_CAdapterManager::OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16
 			return GF_OK;
 		}
 
-		case EVENT_MASK_GAP_LINK_TERMINATED_MSG:
-		{
-			message = GF_DEVICE_EVENT_EVICE_DISCONNECTED;
-			handle_offset = 1;
-			break;
-		}
-
 		case EVENT_MASK_INTERNAL_SCAN_FINISHED:
 		{
 			ScanFinished();
+			break;
+		}
+
+		case EVENT_MASK_GAP_LINK_TERMINATED_MSG:
+		{
+			handle_offset = 1;
+			GF_UINT16 handle = data[handle_offset] + (data[handle_offset + 1] << 8);
+			GF_UINT8 reason = data[3];
+			LOGDEBUG(mTag, "EVENT_MASK_GAP_LINK_TERMINATED_MSG handle = %d\n", handle);
+			GF_CRemoteDevice* device = GetConnectedDeviceByHandle(handle);
+			/*connected state -> disconnected state*/
+			if (device != NULL)
+			{
+				/*remove device from connected list.*/
+				for (ii = mConnectedDevice.begin(); ii != mConnectedDevice.end(); )
+				{
+					if ((*ii)->GetHandle() == handle)
+					{
+						(*ii)->DeInit();
+						do
+						{
+							std::lock_guard<std::mutex> lg(mConnectedDeviceMutex);
+							mConnectedDevice.erase(ii++);
+						}while(0);
+					}
+					else
+					{
+						++ii;
+					}
+				}
+			}
+			/*disconnecting state -> disconnected state*/
+			else
+			{
+				device = GetDisconnectingDeviceByHandle(handle);
+				if (device != NULL)
+				{
+					/*remove device from disconnecting list.*/
+					LOGDEBUG(mTag, "EVENT_MASK_GAP_LINK_TERMINATED_MSG found in disconnecting device list\n");
+					for (ii = mDisconnectingDevice.begin(); ii != mDisconnectingDevice.end(); )
+					{
+						if ((*ii)->GetHandle() == handle)
+						{
+							do{
+								std::lock_guard<std::mutex> lg(mDisconnectingDeviceMutex);
+								mDisconnectingDevice.erase(ii++);
+							}while(0);
+						}
+						else
+						{
+							++ii;
+						}
+					}
+
+				}
+				else
+				{
+					LOGERROR(mTag, "handle = %d mapped to none device! \n", handle);
+				}
+			}
+
+			if (device != NULL)
+			{
+				/*send message to upper level*/
+				LOGDEBUG(mTag, "EVENT_MASK_GAP_LINK_TERMINATED_MSG delete device \n");
+				GF_ConnectedDevice disconnecteddevice;
+				memset(&disconnecteddevice, 0, sizeof(disconnecteddevice));
+				disconnecteddevice.address_type = device->mAddrType;
+				memcpy(disconnecteddevice.address, device->mAddr, BT_ADDRESS_SIZE);
+				disconnecteddevice.handle = device->GetHandle();
+				if (mClientCallback != NULL)
+				{
+					mClientCallback->onDeviceDisconnected(GF_OK, &disconnecteddevice, reason);
+				}
+				delete device;
+			}
 			break;
 		}
 
@@ -607,70 +777,34 @@ GF_STATUS GF_CAdapterManager::OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16
 		}
 
 		GF_UINT16 handle = data[handle_offset] + (data[handle_offset + 1] << 8);
-		GF_CRemoteDevice* device = GetDeviceByHandle(handle);
+		GF_CRemoteDevice* device = GetConnectedDeviceByHandle(handle);
 		if (device != NULL)
 		{
-			GF_ConnectedDevice disconnecteddevice;
-			memset(&disconnecteddevice, 0, sizeof(disconnecteddevice));
-			disconnecteddevice.address_type = device->mAddrType;
-			memcpy(disconnecteddevice.address, device->mAddr, BT_ADDRESS_SIZE);
-			disconnecteddevice.handle = device->GetHandle();
-			if (event == EVENT_MASK_GAP_LINK_TERMINATED_MSG)
+			LOGDEBUG(mTag, "call ProcessMessage \n");
+			device->ProcessMessage(message, data, length);
+
+			if (event == EVENT_MASK_ATT_EXCHANGE_MTU_MSG)
 			{
-				GF_UINT8 reason = data[3];
-				
-				for (ii = mConnectedDevice.begin(); ii != mConnectedDevice.end(); )
+				GF_DEVICE_STATE state = device->GetState();
+				if (state == GF_DEVICE_STATE_CONNECTED && mClientCallback != NULL)
 				{
-					LOGDEBUG(mTag, "before mConnectedDevice.size() = %d \n", mConnectedDevice.size());
-					if ((*ii)->GetHandle() == handle)
-					{
-						(*ii)->DeInit();
-						mConnectedDevice.erase(ii++);
-					}
-					else
-					{
-						++ii;
-					}
-				}
-
-				if (mClientCallback != NULL)
-				{
-					mClientCallback->onDeviceDisconnected(GF_OK, &disconnecteddevice, reason);
-				}
-
-				if (device != NULL)
-				{
-					delete device;
+					mClientCallback->onMTUSizeChanged(data[0], handle, device->GetMTUSize());
 				}
 			}
-			else
+			else if (event == EVENT_MASK_LINK_PARA_UPDATE_MSG)
 			{
-				LOGDEBUG(mTag, "call ProcessMessage \n");
-				device->ProcessMessage(message, data, length);
-
-				if(event == EVENT_MASK_ATT_EXCHANGE_MTU_MSG)
+				GF_DEVICE_STATE state = device->GetState();
+				if (state == GF_DEVICE_STATE_CONNECTED && mClientCallback != NULL)
 				{
-					GF_DEVICE_STATE state = device->GetState();
-					if (state == GF_DEVICE_STATE_CONNECTED && mClientCallback != NULL)
-					{
-						mClientCallback->onMTUSizeChanged(data[0], handle, device->GetMTUSize());
-					}
+					mClientCallback->onConnectionParmeterUpdated(data[0], handle, device->GetConnectInterval(), device->GetSupervisionTimeout(), device->GetSlaveLatency());
 				}
-				else if(event == EVENT_MASK_LINK_PARA_UPDATE_MSG)
+			}
+			else if (event == EVENT_MASK_ATT_READ_RESP_MSG)
+			{
+				GF_DEVICE_STATE state = device->GetState();
+				if (state == GF_DEVICE_STATE_CONNECTED && mClientCallback != NULL)
 				{
-					GF_DEVICE_STATE state = device->GetState();
-					if (state == GF_DEVICE_STATE_CONNECTED && mClientCallback != NULL)
-					{
-						mClientCallback->onConnectionParmeterUpdated(data[0], handle, device->GetConnectInterval(), device->GetSupervisionTimeout(), device->GetSlaveLatency());
-					}
-				}
-				else if (event == EVENT_MASK_ATT_READ_RESP_MSG)
-				{
-					GF_DEVICE_STATE state = device->GetState();
-					if (state == GF_DEVICE_STATE_CONNECTED && mClientCallback != NULL)
-					{
-						mClientCallback->onCharacteristicValueRead(data[0], handle, data[GF_ATT_READ_VALUE_RESP_LEN_OFFSET], data + GF_ATT_READ_VALUE_RESP_DATA_OFFSET);
-					}
+					mClientCallback->onCharacteristicValueRead(data[0], handle, data[GF_ATT_READ_VALUE_RESP_LEN_OFFSET], data + GF_ATT_READ_VALUE_RESP_DATA_OFFSET);
 				}
 			}
 		}
@@ -689,7 +823,7 @@ GF_STATUS GF_CAdapterManager::OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16
 		else if (event == EVENT_MASK_DEVICE_CONNECTED)
 		{
 			GF_UINT16 handle = data[0] + (data[1] << 8);
-			GF_CRemoteDevice* device = GetDeviceByHandle(handle);
+			GF_CRemoteDevice* device = GetConnectedDeviceByHandle(handle);
 			if (mClientCallback != NULL && device != NULL)
 			{
 				GF_ConnectedDevice connecteddevice;

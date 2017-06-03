@@ -205,15 +205,10 @@ void GF_CNpiInterface::Run()
 
 			if (pEvt->type == HCI_EXIT_PACKET)
 			{
-#if 0
 				LOGDEBUG(mTag, "GF_NIF event thread exit!! \n");
-				printf("GF_NIF event thread exit!! \n");
 				CloseHandle(mEvtThread->GetEvent());
 				delete pEvt;
-				mThreadTerminated = GF_TRUE;
-				::ReleaseSemaphore(g_semhdl_NPI_Evt, 1, NULL);
 				return;
-#endif
 			}
 
 			if (pEvt->type == HCI_PORT_CLOSE_PACKET)
@@ -257,6 +252,7 @@ GF_CNpiInterface::GF_CNpiInterface()
 		mCallback[i] = NULL;
 	}
 
+#if 0
 	/*create the event thread to receive message from NPI dongle.*/
 	if (mEvtThread == NULL)
 	{
@@ -268,14 +264,17 @@ GF_CNpiInterface::GF_CNpiInterface()
 		mEvtThread->Start();
 		mEvtThread->Join(100);
 	}
+#endif
 }
 
 GF_CNpiInterface::~GF_CNpiInterface()
 {
+#if 0
 	if (mEvtThread != NULL)
 	{
 		delete mEvtThread;
 	}
+#endif
 }
 
 GF_STATUS GF_CNpiInterface::Init(GF_UINT8 com_num, GF_UINT8 log_type)
@@ -300,7 +299,6 @@ GF_STATUS GF_CNpiInterface::Init(GF_UINT8 com_num, GF_UINT8 log_type)
 	}
 
 	mThreadRun = GF_TRUE;
-#if 0
 
 	/*create the event thread to receive message from NPI dongle.*/
 	if (mEvtThread == NULL)
@@ -313,7 +311,7 @@ GF_STATUS GF_CNpiInterface::Init(GF_UINT8 com_num, GF_UINT8 log_type)
 		mEvtThread->Start();
 		mEvtThread->Join(100);
 	}
-#endif
+
 	LOGDEBUG(mTag, "mEvtThread ID = %x!! \n", mEvtThread->GetThreadID());
 	mThreadEvent = mEvtThread->GetEvent();
 
@@ -324,14 +322,19 @@ GF_STATUS GF_CNpiInterface::Deinit()
 {
 	LOGDEBUG(mTag, "Deinit!! \n");
 
-	mThreadRun = GF_FALSE;
-
 	if (mCommand != NULL)
 	{
 		mCommand->DisConnect();
 		delete mCommand;
 		mCommand = NULL;
 		mEventQueue = NULL;
+
+		if (mEvtThread != NULL)
+		{
+			mEvtThread->Join(0);
+			delete mEvtThread;
+			mEvtThread = NULL;
+		}
 	}
 
 	return GF_OK;

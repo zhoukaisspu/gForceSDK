@@ -64,7 +64,6 @@ GF_VOID GF_CRemoteDevice::Run()
 		if (WaitForSingleObject(mThreadEvent, 0) == WAIT_OBJECT_0){
 			LOGDEBUG(mTag, "mThreadEvent received message. \n");
 			CloseHandle(mThreadEvent);
-			::SetEvent(mThreadStopEvent);
 			return;
 		}
 #endif
@@ -75,7 +74,6 @@ GF_VOID GF_CRemoteDevice::Run()
 			msg = mMessage.front();
 			if(msg != NULL)
 			{
-				LOGDEBUG(mTag, "shimeng pop msg = 0x%x \n", msg);
 				buf = (GF_PUINT8)msg->data;
 				size = (GF_UINT16)msg->length;
 
@@ -186,11 +184,10 @@ GF_VOID GF_CRemoteDevice::Init()
 		mThread->Start();
 		mThread->Join(100);
 		mThreadEvent = mThread->GetEvent();
-		LOGDEBUG(mTag, "mThread id = %x \n", mThread->GetThreadID());
+		LOGDEBUG(mTag, "RemoteDevice Thread id = %x \n", mThread->GetThreadID());
 	}
 
 	mThreadRunning = GF_TRUE;
-	mThreadStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
 	mNeedSaveLTK = GF_TRUE;
 	mNeedSaveService = GF_TRUE;
@@ -205,13 +202,11 @@ GF_VOID GF_CRemoteDevice::DeInit()
 	{
 		mThread->Terminate(0);
 		LOGDEBUG(mTag, "start to stop thread ... \n");
-		WaitForSingleObject(mThreadStopEvent, INFINITE);
-		CloseHandle(mThreadStopEvent);
+		mThread->Join(0);
 		LOGDEBUG(mTag, "thread stoped... \n");
 	}
 	
 	mState = GF_DEVICE_STATE_IDLE;
-	mHandle = INVALID_HANDLE;
 	mMessage.clear();
 }
 
@@ -1242,7 +1237,6 @@ GF_STATUS GF_CRemoteDevice::ProcessMessage(GF_DEVICE_EVENT event, GF_PUINT8 data
 		message->event = event;
 		message->length = length;
 		memcpy((void*)(message->data), data, length);
-		LOGDEBUG(mTag, "shimeng push msg = 0x%x \n", message);
 		EnterCriticalSection(&mMutex);
 		mMessage.push_back(message);
 		LeaveCriticalSection(&mMutex);

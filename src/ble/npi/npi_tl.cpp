@@ -4,9 +4,7 @@
 
 extern HANDLE hSerialPortEvent;
 extern CString mComName;
-extern HANDLE g_semhdl_detecting;
 extern HANDLE g_semhdl_NPI_RX;
-extern HANDLE g_semhdl_NPI_TXLog;
 
 /*---------*/
 /*Serial Port Detect THREAD
@@ -67,7 +65,6 @@ void NPI_SerialPortDetect::Run(void)
 	{
 		if (WaitForSingleObject(hEvent, 0) == WAIT_OBJECT_0){
 			CloseHandle(hEvent);
-			::ReleaseSemaphore(g_semhdl_detecting, 1, NULL);
 			return;
 		}
 
@@ -124,7 +121,6 @@ void NPI_TX::Run(void)
 		}
 		if (pCmd->type == HCI_EXIT_PACKET){
 			CloseHandle(hEvent);
-			::ReleaseSemaphore(g_semhdl_NPI_TXLog, 1, NULL);
 			/*when using _beginthread and _endthread, do not explicitly close the thread handle by calling the Win32 CloseHandle API.*/
 			//CloseHandle(hThread);
 			delete pCmd;
@@ -191,7 +187,6 @@ void NPI_RX::Run(void)
 	while (1) {
 		if (WaitForSingleObject(hEvent, 0) == WAIT_OBJECT_0){
 			CloseHandle(hEvent);
-			::ReleaseSemaphore(g_semhdl_NPI_RX, 1, NULL);
 			return;
 		}
 

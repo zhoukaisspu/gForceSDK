@@ -70,8 +70,10 @@ public:
 	BOOL OpenSerialPort();
 	void TerminateDetectingThread();
 	void TerminateNPIRxThread();
-	void TerminateNPITxLogThread();
+	void TerminateLogThread();
+	void TerminateNPITxThread();
 	void TerminateEvtThread();
+
 private:
 	OVERLAPPED osWait;
 	DCB dcb;

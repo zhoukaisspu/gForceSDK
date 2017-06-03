@@ -32,9 +32,6 @@
 #include"com.h"
 #include"log.h"
 
-HANDLE g_semhdl_detecting;
-HANDLE g_semhdl_NPI_RX;
-HANDLE g_semhdl_NPI_TXLog;
 HANDLE g_semhdl_NPI_Evt;
 UINT_PTR mTimerID;
 CString mComName;
@@ -533,73 +530,52 @@ int Com::Connect(GF_LogType logType)
 void Com::TerminateDetectingThread()
 {
 	//printf(("start to terminate detecting thread... \n"));
-	g_semhdl_detecting = CreateSemaphore(NULL, 0, 1, NULL);
 
 	if (com_file) {
 		if (spDetectThread){
 			spDetectThread->Terminate(0);
-			WaitForSingleObject(g_semhdl_detecting, INFINITE);
+			spDetectThread->Join(0);
 		}
 	}
 
-	CloseHandle(g_semhdl_detecting);
 	printf(("1. SerialPort Detecting Thread Exit \n"));
 }
 
 void Com::TerminateNPIRxThread()
 {
 	//printf(("start to terminate NPI rx thread... \n"));
-	g_semhdl_NPI_RX = CreateSemaphore(NULL, 0, 1, NULL);
-
 	if (com_file) {
 		if (rxThread){
 			rxThread->Terminate(0);
-			WaitForSingleObject(g_semhdl_NPI_RX, INFINITE);
+			rxThread->Join(0);
 		}
 	}
 
-	CloseHandle(g_semhdl_NPI_RX);
 	printf(("2. NPI Rx Thread Exit \n"));
 
 }
 
-void Com::TerminateEvtThread()
+void Com::TerminateLogThread()
 {
-	//printf(("start to terminate Evt thread... \n"));
-	g_semhdl_NPI_Evt = CreateSemaphore(NULL, 0, 1, NULL);
-
-	/*Send exit code to exit event thread.*/
-	sEvt* pEvt = (sEvt*)new UINT8[EVT_HEADER_LEN];
-	pEvt->type = HCI_EXIT_PACKET;
-	pEvt->len = 0;
-	((NPI_RX*)m_rx)->Get_Queue()->Push(pEvt);
-
-	if (com_file) {
-		if (evtThread){
-			evtThread->Terminate(0);
-			WaitForSingleObject(g_semhdl_NPI_Evt, INFINITE);
-		}
-	}
-
-	CloseHandle(g_semhdl_NPI_Evt);
-	printf(("3. Evt Thread Exit \n"));
-}
-
-void Com::TerminateNPITxLogThread()
-{
-	UINT8 ThreadCounter = 0;
 	//printf(("start to exit NPI tx thread... \n"));
-	g_semhdl_NPI_TXLog = CreateSemaphore(NULL, 0, 2, NULL);
 
-	if (txThread){
-		txThread->Terminate(0);
-		ThreadCounter++;
-	}
+	/*Send exit code to exit tx thread.*/
+	sCMD* pcmd = (sCMD*)new UINT8[CMD_HEAD_LEN];
+	pcmd->type = HCI_LOG_THREAD_EXIT_PACKET;
+	pcmd->len = 0;
+	((NPI_TX*)m_tx)->Get_Queue()->Push(pcmd);
 
 	if (logThread){
 		logThread->Terminate(0);
-		ThreadCounter++;
+		logThread->Join(0);
 	}
+
+	printf(("3. Log Thread Exit \n"));
+}
+
+void Com::TerminateNPITxThread()
+{
+	//printf(("start to exit NPI tx thread... \n"));
 
 	/*Send exit code to exit tx thread.*/
 	sCMD* pcmd = (sCMD*)new UINT8[CMD_HEAD_LEN];
@@ -607,15 +583,36 @@ void Com::TerminateNPITxLogThread()
 	pcmd->len = 0;
 	((NPI_TX*)m_tx)->Get_Queue()->Push(pcmd);
 
-	while (ThreadCounter > 0)
-	{
-		WaitForSingleObject(g_semhdl_NPI_TXLog, INFINITE);
-		ThreadCounter--;
+	if (txThread){
+		txThread->Terminate(0);
+		txThread->Join(0);
 	}
 
-	CloseHandle(g_semhdl_NPI_TXLog);
 	printf(("4. NPI Tx Thread \n"));
-	printf(("5. Log Thread Exit \n"));
+}
+
+void Com::TerminateEvtThread()
+{
+	//printf(("start to terminate Evt thread... \n"));
+
+	if (com_file) {
+		if (evtThread){
+			g_semhdl_NPI_Evt = CreateSemaphore(NULL, 0, 1, NULL);
+			evtThread->Terminate(0);
+			WaitForSingleObject(g_semhdl_NPI_Evt, INFINITE);
+			CloseHandle(g_semhdl_NPI_Evt);
+		}
+		else
+		{
+			/*Send exit code to exit event thread.*/
+			sEvt* pEvt = (sEvt*)new UINT8[EVT_HEADER_LEN];
+			pEvt->type = HCI_EXIT_PACKET;
+			pEvt->len = 0;
+			((NPI_RX*)m_rx)->Get_Queue()->Push(pEvt);
+		}
+	}
+
+	printf(("5. NPI Interface event Thread Exit \n"));
 }
 
 int Com::DisConnect()
@@ -629,10 +626,15 @@ int Com::DisConnect()
 		TerminateDetectingThread();
 		/*2. NPI RX thread exit.*/
 		TerminateNPIRxThread();
-		/*3. Event thread exit*/
+
+		/*3. Log thread exit.*/
+		TerminateLogThread();
+
+		/*4. NPI Tx thread exit*/
+		TerminateNPITxThread();
+
+		/*5. Event thread exit*/
 		TerminateEvtThread();
-		/*NPI Tx and Log thread exit.*/
-		TerminateNPITxLogThread();
 
 		CloseHandle(com_file);
 		com_file = NULL;

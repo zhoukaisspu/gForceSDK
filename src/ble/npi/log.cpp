@@ -60,8 +60,6 @@ Log::~Log()
 	}
 }
 
-extern HANDLE g_semhdl_NPI_TXLog;
-
 void Log::Run()
 {
 	MSG     msg;
@@ -82,9 +80,8 @@ void Log::Run()
 				case HCI_EVENT_PACKET:
 					Analyze_RX(buf, size);
 					break;
-				case HCI_EXIT_PACKET:
+				case HCI_LOG_THREAD_EXIT_PACKET:
 					CloseHandle(hEvent);
-					::ReleaseSemaphore(g_semhdl_NPI_TXLog, 1, NULL);
 					delete buf;
 					return;
 					break;
