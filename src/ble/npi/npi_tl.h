@@ -40,6 +40,7 @@
 
 #define	HCI_EXIT_PACKET                0xFF
 #define	HCI_PORT_CLOSE_PACKET          0xFE
+#define	HCI_LOG_THREAD_EXIT_PACKET     0xFD
 /*
 ** HCI Command Opcodes
 */

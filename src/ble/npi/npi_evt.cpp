@@ -12,6 +12,8 @@ NPI_EVT::~NPI_EVT()
 	comHdl = NULL;
 }
 
+extern HANDLE g_semhdl_NPI_Evt;
+
 void NPI_EVT::Run()
 {
 	UINT16 msg_type = 0;
@@ -22,7 +24,7 @@ void NPI_EVT::Run()
 		sEvt* pEvt = ((NPI_RX*)((Com*)comHdl)->m_rx)->Get_Queue()->Pop();
 		if (pEvt->type == HCI_EXIT_PACKET){
 			CloseHandle(hEvent);
-			::ReleaseSemaphore(g_semhdl, 1, NULL);
+			::ReleaseSemaphore(g_semhdl_NPI_Evt, 1, NULL);
 			delete pEvt;
 			return;
 		}

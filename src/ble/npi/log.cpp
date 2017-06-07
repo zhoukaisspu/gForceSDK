@@ -69,7 +69,6 @@ void Log::Run()
 	HANDLE hEvent = ((Com *)comHdl)->logThread->GetEvent();
 	HANDLE hndEvts[] = { hEvent };
 	while (1) {
-
 		if (GetMessage(&msg, 0, 0, 0)){//, PM_REMOVE)) { //get msg from message queue
 			if ((msg.message >= LOG_MSG) && (msg.message <= LOG_MSG + 0xFF)) {
 				buf = (PUINT8)msg.wParam;
@@ -81,9 +80,8 @@ void Log::Run()
 				case HCI_EVENT_PACKET:
 					Analyze_RX(buf, size);
 					break;
-				case HCI_EXIT_PACKET:
+				case HCI_LOG_THREAD_EXIT_PACKET:
 					CloseHandle(hEvent);
-					::ReleaseSemaphore(g_semhdl, 1, NULL);
 					delete buf;
 					return;
 					break;

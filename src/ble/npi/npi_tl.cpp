@@ -4,6 +4,8 @@
 
 extern HANDLE hSerialPortEvent;
 extern CString mComName;
+extern HANDLE g_semhdl_NPI_RX;
+
 /*---------*/
 /*Serial Port Detect THREAD
 /*---------*/
@@ -63,7 +65,6 @@ void NPI_SerialPortDetect::Run(void)
 	{
 		if (WaitForSingleObject(hEvent, 0) == WAIT_OBJECT_0){
 			CloseHandle(hEvent);
-			::ReleaseSemaphore(g_semhdl, 1, NULL);
 			return;
 		}
 
@@ -104,6 +105,7 @@ void NPI_TX::Run(void)
 	osWrite.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	while (1) {
 		pCmd = m_cmdQue.Pop();
+
 		totalLen = pCmd->len + CMD_HEAD_LEN;
 		/*send to log thread*/
 		PUINT8 pLog = new UINT8[totalLen];
@@ -111,11 +113,14 @@ void NPI_TX::Run(void)
 		while (!PostThreadMessage(((Com*)comHdl)->logThreadID, GetLogMsg(),
 			(WPARAM)pLog, totalLen)) {
 			LogE(L"TX:Post LOG_MSG Err:%d\n", GetLastError());
-			Sleep(500);
+			if (ERROR_INVALID_THREAD_ID == GetLastError())
+			{
+				break;
+			}
+			Sleep(0);
 		}
 		if (pCmd->type == HCI_EXIT_PACKET){
 			CloseHandle(hEvent);
-			::ReleaseSemaphore(g_semhdl, 1, NULL);
 			/*when using _beginthread and _endthread, do not explicitly close the thread handle by calling the Win32 CloseHandle API.*/
 			//CloseHandle(hThread);
 			delete pCmd;
@@ -182,7 +187,6 @@ void NPI_RX::Run(void)
 	while (1) {
 		if (WaitForSingleObject(hEvent, 0) == WAIT_OBJECT_0){
 			CloseHandle(hEvent);
-			::ReleaseSemaphore(g_semhdl, 1, NULL);
 			return;
 		}
 
@@ -272,7 +276,11 @@ void NPI_RX::Run(void)
 			                          (WPARAM)pBuf,
 			                          dataLen + EVT_HEADER_LEN)) {
 				LogW(L"RX:Post LOG_MSG Err:%d\n", GetLastError());
-				Sleep(500);
+				if (ERROR_INVALID_THREAD_ID == GetLastError())
+				{
+					break;
+				}
+				Sleep(0);
 			}
 			m_evtQue.Push(pEvt);
 			state = READ_TYPE_STATE;
@@ -281,6 +289,7 @@ void NPI_RX::Run(void)
 			::LogE(L"Read File Err!\n");
 			break;
 		}
+
 	}
 }
 
