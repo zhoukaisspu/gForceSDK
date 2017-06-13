@@ -200,7 +200,7 @@ namespace gf
 			t3 = q13 - q02;
 
 			roll = std::atan2(((float)(q33 + q00 - (1L << 30))),
-				(float)(q13 - q02) * 180.f / (PI - 90));
+				(float)(q13 - q02)) * 180.f / PI - 90;
 			if (roll >= 90) {
 				roll = 180 - roll;
 			}
