@@ -1,6 +1,3 @@
-//
-// Created by yy220 on 2017/4/24.
-//
 #include <string>
 #include <mutex>
 #include <android/log.h>
@@ -10,7 +7,7 @@
 #include "../inc/GFBLETypes.h"
 #include "AdapterManager.h"
 
-#define TAG "com_oym_blelibrary_bleservice"
+#define TAG "com_oym_libble_bleservice"
 #define LOGE(...) __android_log_print( ANDROID_LOG_ERROR, TAG, __VA_ARGS__ )
 #define LOGW(...) __android_log_print( ANDROID_LOG_WARN, TAG, __VA_ARGS__ )
 #define LOGI(...) __android_log_print( ANDROID_LOG_INFO,  TAG, __VA_ARGS__ )
@@ -27,6 +24,7 @@ static jmethodID method_Connect;
 static jmethodID method_CancelConnect;
 static jmethodID method_Disconnect;
 static jmethodID method_ConfigMTUSize;
+static jmethodID method_WriteCharacteristic;
 static jmethodID method_UpdateParameter;
 static jmethodID method_GetConnectedDeviceNumber;
 static jmethodID method_GetHubState;
@@ -98,7 +96,7 @@ GF_STATUS GF_CAdapterManager::Init(GF_UINT8 com_num, GF_UINT8 log_type)
         return GF_FAIL;
     }
 
-    jclass cls = env->FindClass("com/oym/blelibrary/BLEService");
+    jclass cls = env->FindClass("com/oym/libble/BLEService");
     if (cls != NULL) {
         LOGD("%s: global class is available!", __FUNCTION__);
     }
@@ -111,7 +109,7 @@ GF_STATUS GF_CAdapterManager::Init(GF_UINT8 com_num, GF_UINT8 log_type)
     }
 
     GlobalClass = (jclass) env->NewGlobalRef(cls);
-    jmethodID GetInstance = env->GetStaticMethodID(cls,"GetInstance","()Lcom/oym/blelibrary/BLEService;");
+    jmethodID GetInstance = env->GetStaticMethodID(cls,"GetInstance","()Lcom/oym/libble/BLEService;");
     jobject obj = env->CallStaticObjectMethod(cls, GetInstance);
     GlobalObject = env->NewGlobalRef(obj);
 
@@ -121,6 +119,7 @@ GF_STATUS GF_CAdapterManager::Init(GF_UINT8 com_num, GF_UINT8 log_type)
     method_CancelConnect = env->GetMethodID(cls,"cancelConnect","([B)Z");
     method_Disconnect = env->GetMethodID(cls,"disconnect","(I)Z");
     method_ConfigMTUSize = env->GetMethodID(cls,"configMTUSize","(II)Z");
+    method_WriteCharacteristic = env->GetMethodID(cls,"WriteCharacteristic","(II[B)Z");
 	method_GetConnectedDeviceNumber = env->GetMethodID(cls,"getConnectedDeviceNumber","()B");
 	method_GetHubState = env->GetMethodID(cls,"getHubState","()B");
 	method_GetHandleByIndex = env->GetMethodID(cls,"getHandleByIndex","(B)I");
@@ -186,7 +185,7 @@ GF_STATUS GF_CAdapterManager::StartScan(GF_UINT8 RSSI_Threshold)
     }
 
     if (env != NULL) {
-        if (env->CallBooleanMethod(GlobalObject, method_StartScan)) {
+        if (!env->CallBooleanMethod(GlobalObject, method_StartScan)) {
 			result = GF_FAIL;
 		} else {
 			result = GF_OK;
@@ -217,7 +216,7 @@ GF_STATUS GF_CAdapterManager::StopScan()
     }
 
     if (env != NULL) {
-        if (env->CallBooleanMethod(GlobalObject, method_StopScan)) {
+        if (!env->CallBooleanMethod(GlobalObject, method_StopScan)) {
         	mIsScanning = GF_FALSE;
 			result = GF_OK;
 		} else {
@@ -350,8 +349,34 @@ GF_STATUS GF_CAdapterManager::ConnectionParameterUpdate(GF_UINT16 conn_handle, G
 
 GF_STATUS GF_CAdapterManager::WriteCharacteristic(GF_UINT16 conn_handle, GF_UINT16 attribute_handle, GF_UINT8 data_length, GF_PUINT8 data)
 {
-    /*not supported on Android platform for now*/
-    return GF_FAIL;
+    JNIEnv *env = NULL;
+	GF_STATUS result = GF_OK;
+	jbyteArray characteristicData = NULL;
+    bool bAttached = false;
+    if (false == attachEnv(&env, &bAttached)) {
+        return GF_FAIL;
+    }
+
+    if (env != NULL) {
+        characteristicData = env->NewByteArray(data_length);
+        if (characteristicData) {
+            env->SetByteArrayRegion(characteristicData, 0, data_length, (jbyte *)data);
+            if (env->CallBooleanMethod(GlobalObject, method_WriteCharacteristic, (conn_handle & 0x0000FFFF), data_length, characteristicData)) {
+                result = GF_OK;
+            } else {
+                result = GF_FAIL;
+            }
+            env->DeleteLocalRef(characteristicData);
+		} else {
+		    result = GF_FAIL;
+		}
+    }
+
+    if(bAttached && globalJavaVM != NULL) {
+        globalJavaVM->DetachCurrentThread();
+    }
+
+    return result;
 }
 
 GF_STATUS GF_CAdapterManager::ReadCharacteristic(GF_UINT16 conn_handle, GF_UINT16 attribute_handle)
@@ -370,7 +395,7 @@ GF_HubState GF_CAdapterManager::GetHubState()
     }
 
     if (env != NULL) {
-        result = env->CallBooleanMethod(GlobalObject, method_GetHubState);
+        result = env->CallByteMethod(GlobalObject, method_GetHubState);
     }
 
     if(bAttached && globalJavaVM != NULL) {
@@ -390,7 +415,7 @@ GF_UINT8 GF_CAdapterManager::GetConnectedDeviceNum()
     }
 
     if (env != NULL) {
-        result = env->CallBooleanMethod(GlobalObject, method_GetConnectedDeviceNumber);
+        result = env->CallByteMethod(GlobalObject, method_GetConnectedDeviceNumber);
     }
 
     if(bAttached && globalJavaVM != NULL) {
@@ -547,7 +572,7 @@ jint JNI_OnLoad(JavaVM *jvm, void *reserved)
         return JNI_ERR;
     }
 
-    cls = env->FindClass("com/oym/blelibrary/BLEService");
+    cls = env->FindClass("com/oym/libble/BLEService");
     if (cls == NULL)
     {
         return JNI_ERR;

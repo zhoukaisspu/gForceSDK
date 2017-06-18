@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Iterator;
 
+import com.oym.libble.GlobalContext;
 
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = "Test App";
@@ -84,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
         textview = (TextView) findViewById(R.id.sample_text);
         textview.setMovementMethod(ScrollingMovementMethod.getInstance());
 
+		GlobalContext.setApplicationContext(this);
         initNative();
         IsScaning = false;
 
@@ -404,11 +406,14 @@ public class MainActivity extends AppCompatActivity {
      */
     public native String stringFromJNI();
     public native boolean initNative();
-    public native void cleanupNative();
+    public native boolean cleanupNative();
     public native boolean startScanNative();
     public native boolean stopScanNative();
     public native static void classInitNative();
     public native boolean connectNative(byte[] address);
     public native boolean cancelConnectNative(byte[] address);
     public native boolean disconnectNative(int handle);
+	public native byte getHubStateNative();
+	public native byte getConnectedDevNumNative();
+    public native boolean writeCharecteristicNative(byte len, byte[] data);
 }

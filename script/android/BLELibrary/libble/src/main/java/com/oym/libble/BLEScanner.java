@@ -1,4 +1,4 @@
-package com.oym.blelibrary;
+package com.oym.libble;
 
 import android.content.Context;
 import android.bluetooth.BluetoothAdapter;
@@ -37,7 +37,7 @@ public class BLEScanner {
     public BLEScanner(BLEService service) {
         mBleService = service;
         mScanningState = SANNING_IDLE;
-        mContext = GlobalContext.getglobalContext();
+        mContext = GlobalContext.getApplicationContext();
         mHandler = new Handler();
         mBluetoothManager = (BluetoothManager) mContext.getSystemService(Context.BLUETOOTH_SERVICE);
         if (mBluetoothManager == null) {
@@ -122,7 +122,11 @@ public class BLEScanner {
         mScanningState = SANNING_IDLE;
 
         if (mBleService != null ) {
-            mBleService.onScanFinished();
+            mHandler.postDelayed(new Runnable(){
+                public void run() {
+                    mBleService.onScanFinished();
+                }
+            }, 1);
         }
 
         return true;
