@@ -19,7 +19,7 @@ LIBGFORCE_PATH := C:\Enjoy\cross_work\oymotion\SDK_BLE-dev\src
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE    := gforce
+LOCAL_MODULE    := gforcecsharp
 LOCAL_C_INCLUDES := $(GFORCE4CS_PATH)/lib \
 					$(GFORCE4CS_PATH)/android \
 					$(LIBGFORCE_PATH)/../inc \

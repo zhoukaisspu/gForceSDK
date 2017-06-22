@@ -27,54 +27,54 @@
     <ClInclude Include="..\..\..\src\ble\inc\LogPrint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\src\AdapterManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\src\DataBase.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\src\DiscoveryService.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\src\GattClient.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\src\NpiInterface.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\src\RemoteDevice.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\src\tinyxml2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\ble\inc\GFBLETypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\DiscoveryService.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\GattClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\NpiInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\RemoteDevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\tinyxml2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\AdapterManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\DataBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\ble\src\AdapterManager.cpp">
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\RemoteDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\src\Database.cpp">
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\tinyxml2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\src\DiscoveryService.cpp">
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\AdapterManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\src\GattClient.cpp">
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\Database.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\src\LogPrint.cpp">
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\DiscoveryService.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\src\NpiInterface.cpp">
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\GattClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\src\RemoteDevice.cpp">
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\LogPrint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\src\tinyxml2.cpp">
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\NpiInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

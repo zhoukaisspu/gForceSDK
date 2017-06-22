@@ -15,58 +15,55 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\Thread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\com.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npi_cmd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npi_evt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npi_tl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\src\ble\npi\com.h">
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\CommonDef.h">
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npi_cmd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\gap.h">
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npi_evt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\gatt.h">
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npi_queue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\log.h">
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npi_tl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npi_cmd.h">
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\Thread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npi_evt.h">
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\com.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npi_queue.h">
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\CommonDef.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npi_tl.h">
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\gap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\Thread.h">
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\gatt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\src\ble\npi\com.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\npi\log.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\npi\npi_cmd.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\npi\npi_evt.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\npi\npi_tl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\npi\Thread.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

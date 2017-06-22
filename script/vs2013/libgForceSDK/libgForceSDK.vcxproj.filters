@@ -46,9 +46,6 @@
     <ClInclude Include="..\..\..\src\common\LogUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\common\utils\LogUtil_Android.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\common\utils\LogUtil_Win.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -91,9 +88,6 @@
     <ClInclude Include="..\..\..\src\HubManagerImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\inc\oym_types.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\inc\gforce.h">
       <Filter>Exposed Header Files</Filter>
     </ClInclude>
@@ -102,6 +96,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\inc\utils\export.h">
       <Filter>Exposed Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\utils\LogUtil_Android.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

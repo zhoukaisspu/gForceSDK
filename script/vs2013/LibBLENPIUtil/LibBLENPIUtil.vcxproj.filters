@@ -1,115 +1,37 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\ButtGattView.cpp">
-      <Filter>sc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdTab1_Dlg.cpp">
-      <Filter>sc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdTab2_Dlg.cpp">
-      <Filter>sc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdTab3_Dlg.cpp">
-      <Filter>sc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdTab4_Dlg.cpp">
-      <Filter>sc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdView.cpp">
-      <Filter>sc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\GuiEvtHdl.cpp">
-      <Filter>sc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\LogView.cpp">
-      <Filter>sc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\MainFrm.cpp">
-      <Filter>sc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\NewDeviceDlg.cpp">
-      <Filter>sc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\SDK_BLE_GUI.cpp">
-      <Filter>sc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\TopFrame.cpp">
-      <Filter>sc</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdTab3_Dlg.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdTab4_Dlg.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdView.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\GuiEvtHdl.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\LogView.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\MainFrm.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\NewDeviceDlg.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\SDK_BLE_GUI.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\TopFrame.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\ButtGattView.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdTab1_Dlg.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdTab2_Dlg.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\ble\npi\Thread.h" />
     <ClInclude Include="Resource.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\ButtGattView.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdTab1_Dlg.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdTab2_Dlg.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdTab3_Dlg.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdTab4_Dlg.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdView.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\GuiEvtHdl.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\LogView.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\MainFrm.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\NewDeviceDlg.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\SDK_BLE_GUI.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\TopFrame.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\com.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\CommonDef.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\gap.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\gatt.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\log.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npi_cmd.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npi_evt.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npi_queue.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\npi_tl.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\ble\npi\Thread.h">
-      <Filter>header</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\Thread.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdTab3_Dlg.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdTab4_Dlg.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdView.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\GuiEvtHdl.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\LogView.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\MainFrm.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\NewDeviceDlg.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\SDK_BLE_GUI.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\TopFrame.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\ButtGattView.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdTab1_Dlg.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdTab2_Dlg.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />

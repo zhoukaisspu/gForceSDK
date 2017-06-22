@@ -68,15 +68,21 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <TargetName>$(ProjectName)</TargetName>
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>$(ProjectName)</TargetName>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -85,7 +91,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\src\ble\inc;$(ProjectDir)..\..\..\src\ble\src;$(ProjectDir)..\..\..\src\ble\npi;$(ProjectDir)..\..\..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\src\ble\inc;$(ProjectDir)..\..\..\src\platform\ble\windows\dongle;$(ProjectDir)..\..\..\src\platform\ble\windows\dongle\npi;$(ProjectDir)..\..\..\inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -104,7 +110,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\src\ble\inc;$(ProjectDir)..\..\..\src\ble\src;$(ProjectDir)..\..\..\src\ble\npi;$(ProjectDir)..\..\..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\src\ble\inc;$(ProjectDir)..\..\..\src\platform\ble\windows\dongle;$(ProjectDir)..\..\..\src\platform\ble\windows\dongle\npi;$(ProjectDir)..\..\..\inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -125,7 +131,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\src\ble\inc;$(ProjectDir)..\..\..\src\ble\src;$(ProjectDir)..\..\..\src\ble\npi;$(ProjectDir)..\..\..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\src\ble\inc;$(ProjectDir)..\..\..\src\platform\ble\windows\dongle;$(ProjectDir)..\..\..\src\platform\ble\windows\dongle\npi;$(ProjectDir)..\..\..\inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -148,7 +154,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\src\ble\inc;$(ProjectDir)..\..\..\src\ble\src;$(ProjectDir)..\..\..\src\ble\npi;$(ProjectDir)..\..\..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\src\ble\inc;$(ProjectDir)..\..\..\src\platform\ble\windows\dongle;$(ProjectDir)..\..\..\src\platform\ble\windows\dongle\npi;$(ProjectDir)..\..\..\inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -170,23 +176,23 @@
     <ClInclude Include="..\..\..\src\ble\inc\ClientCallbackInterface.h" />
     <ClInclude Include="..\..\..\src\ble\inc\GFBLETypes.h" />
     <ClInclude Include="..\..\..\src\ble\inc\LogPrint.h" />
-    <ClInclude Include="..\..\..\src\ble\src\AdapterManager.h" />
-    <ClInclude Include="..\..\..\src\ble\src\DataBase.h" />
-    <ClInclude Include="..\..\..\src\ble\src\DiscoveryService.h" />
-    <ClInclude Include="..\..\..\src\ble\src\GattClient.h" />
-    <ClInclude Include="..\..\..\src\ble\src\NpiInterface.h" />
-    <ClInclude Include="..\..\..\src\ble\src\RemoteDevice.h" />
-    <ClInclude Include="..\..\..\src\ble\src\tinyxml2.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\AdapterManager.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\DataBase.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\DiscoveryService.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\GattClient.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\NpiInterface.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\RemoteDevice.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\tinyxml2.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\ble\src\AdapterManager.cpp" />
-    <ClCompile Include="..\..\..\src\ble\src\Database.cpp" />
-    <ClCompile Include="..\..\..\src\ble\src\DiscoveryService.cpp" />
-    <ClCompile Include="..\..\..\src\ble\src\GattClient.cpp" />
-    <ClCompile Include="..\..\..\src\ble\src\LogPrint.cpp" />
-    <ClCompile Include="..\..\..\src\ble\src\NpiInterface.cpp" />
-    <ClCompile Include="..\..\..\src\ble\src\RemoteDevice.cpp" />
-    <ClCompile Include="..\..\..\src\ble\src\tinyxml2.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\AdapterManager.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\Database.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\DiscoveryService.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\GattClient.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\LogPrint.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\NpiInterface.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\RemoteDevice.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\tinyxml2.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

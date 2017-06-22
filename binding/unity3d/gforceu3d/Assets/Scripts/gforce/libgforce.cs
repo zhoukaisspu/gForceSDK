@@ -8,13 +8,13 @@ namespace gf
     internal static class libgforce
     {
 #if UNITY_STANDALONE || UNITY_EDITOR
-        private const string GFORCE_DLL = "gforce64";
+        private const string GFORCE_DLL = "gforcecsharp64";
 #elif UNITY_ANDROID
-        private const string GFORCE_DLL = "gforce";
+        private const string GFORCE_DLL = "gforcecsharp";
 #elif WIN64
-        private const string GFORCE_DLL = "gforce64";
+        private const string GFORCE_DLL = "gforcecsharp64";
 #elif WIN32
-        private const string GFORCE_DLL = "gforce32";
+        private const string GFORCE_DLL = "gforcecsharp32";
 #endif
         // listener callbacks
         public delegate void onScanfinished();

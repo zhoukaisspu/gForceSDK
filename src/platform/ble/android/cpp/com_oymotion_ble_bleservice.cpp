@@ -10,7 +10,7 @@
 #include "GFBLETypes.h"
 #include "AdapterManager.h"
 
-#define TAG "com_oymotion_libble_bleservice"
+#define TAG "com_oymotion_ble_bleservice"
 #define LOGE(...) __android_log_print( ANDROID_LOG_ERROR, TAG, __VA_ARGS__ )
 #define LOGW(...) __android_log_print( ANDROID_LOG_WARN, TAG, __VA_ARGS__ )
 #define LOGI(...) __android_log_print( ANDROID_LOG_INFO,  TAG, __VA_ARGS__ )
@@ -98,7 +98,7 @@ GF_STATUS GF_CAdapterManager::Init(GF_UINT8 com_num, GF_UINT8 log_type)
         return GF_FAIL;
     }
 
-    jclass cls = env->FindClass("com/oymotion/libble/BLEService");
+    jclass cls = env->FindClass("com/oymotion/ble/BLEService");
     if (cls != NULL) {
         LOGD("%s: global class is available!", __FUNCTION__);
     }
@@ -111,7 +111,7 @@ GF_STATUS GF_CAdapterManager::Init(GF_UINT8 com_num, GF_UINT8 log_type)
     }
 
     GlobalClass = (jclass) env->NewGlobalRef(cls);
-    jmethodID GetInstance = env->GetStaticMethodID(cls,"GetInstance","()Lcom/oymotion/libble/BLEService;");
+    jmethodID GetInstance = env->GetStaticMethodID(cls,"GetInstance","()Lcom/oymotion/ble/BLEService;");
     jobject obj = env->CallStaticObjectMethod(cls, GetInstance);
     GlobalObject = env->NewGlobalRef(obj);
 
@@ -547,7 +547,7 @@ jint JNI_OnLoad(JavaVM *jvm, void *reserved)
         return JNI_ERR;
     }
 
-    cls = env->FindClass("com/oymotion/libble/BLEService");
+    cls = env->FindClass("com/oymotion/ble/BLEService");
     if (cls == NULL)
     {
         return JNI_ERR;

@@ -73,19 +73,23 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -96,7 +100,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\src\ble\npi;$(ProjectDir)..\..\..\src\ble\npi\npiutil;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\src\platform\ble\windows\dongle\npi;$(ProjectDir)..\..\..\src\platform\ble\windows\dongle\npi\npiutil;$(ProjectDir)</AdditionalIncludeDirectories>
       <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <Link>
@@ -128,7 +132,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\src\ble\npi;$(ProjectDir)..\..\..\src\ble\npi\npiutil;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\src\platform\ble\windows\dongle\npi;$(ProjectDir)..\..\..\src\platform\ble\windows\dongle\npi\npiutil;$(ProjectDir)</AdditionalIncludeDirectories>
       <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <Link>
@@ -159,7 +163,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\src\ble\npi;$(ProjectDir)..\..\..\src\ble\npi\npiutil;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\src\platform\ble\windows\dongle\npi;$(ProjectDir)..\..\..\src\platform\ble\windows\dongle\npi\npiutil;$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -189,7 +193,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\src\ble\npi;$(ProjectDir)..\..\..\src\ble\npi\npiutil;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\src\platform\ble\windows\dongle\npi;$(ProjectDir)..\..\..\src\platform\ble\windows\dongle\npi\npiutil;$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -213,46 +217,96 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\src\ble\npi\com.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\CommonDef.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\gap.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\gatt.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\log.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\ButtGattView.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdTab1_Dlg.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdTab2_Dlg.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdTab3_Dlg.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdTab4_Dlg.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\CmdView.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\GuiEvtHdl.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\LogView.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\MainFrm.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\NewDeviceDlg.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\SDK_BLE_GUI.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\npiutil\TopFrame.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\npi_cmd.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\npi_evt.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\npi_queue.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\npi_tl.h" />
-    <ClInclude Include="..\..\..\src\ble\npi\Thread.h" />
-    <ClInclude Include="..\src\ble\npi\Thread.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\ButtGattView.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdTab1_Dlg.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdTab2_Dlg.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdTab3_Dlg.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdTab4_Dlg.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdView.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\GuiEvtHdl.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\LogView.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\MainFrm.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\NewDeviceDlg.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\SDK_BLE_GUI.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\TopFrame.h" />
+    <ClInclude Include="..\..\..\src\platform\ble\windows\dongle\npi\Thread.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\ButtGattView.cpp" />
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdTab1_Dlg.cpp" />
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdTab2_Dlg.cpp" />
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdTab3_Dlg.cpp" />
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdTab4_Dlg.cpp" />
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\CmdView.cpp" />
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\GuiEvtHdl.cpp" />
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\LogView.cpp" />
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\MainFrm.cpp" />
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\NewDeviceDlg.cpp" />
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\SDK_BLE_GUI.cpp" />
-    <ClCompile Include="..\..\..\src\ble\npi\npiutil\TopFrame.cpp" />
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\ButtGattView.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdTab1_Dlg.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdTab2_Dlg.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdTab3_Dlg.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdTab4_Dlg.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\CmdView.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\GuiEvtHdl.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\LogView.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\MainFrm.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\NewDeviceDlg.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\SDK_BLE_GUI.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\platform\ble\windows\dongle\npi\npiutil\TopFrame.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
