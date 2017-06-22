@@ -1,4 +1,4 @@
-package com.oym.blelibrary;
+package com.oym.libble;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -29,11 +29,16 @@ public class RemoteDevice {
     private BluetoothDevice mDevice;
     private BluetoothGatt mBluetoothGatt;
     private List<BluetoothGattService> mGattservices = new ArrayList<BluetoothGattService>();
+    private BluetoothGattCharacteristic mCommandCharacteristic = null;
     private BLEService mBleService;
 
     private String mAddress;
     private int mHandle = 0;
     private final static int INVALID_HANDLE = 0xFFFF;
+
+    /*UUID TBD*/
+    private final String gForce_Data_Service_UUID = "0000FFE0-0000-1000-8000-00805f9b34fb";
+    private final String gForce_Command_Characteristic_UUID = "0000FFE1-0000-1000-8000-00805f9b34fb";
 
     private int mConnectionState = BluetoothProfile.STATE_DISCONNECTED;
 
@@ -41,7 +46,7 @@ public class RemoteDevice {
         mBleService = service;
         mAddress = address;
         mConnectionState = BluetoothProfile.STATE_DISCONNECTED;
-        mContext = GlobalContext.getglobalContext();
+        mContext = GlobalContext.getApplicationContext();
         mBluetoothManager = (BluetoothManager) mContext.getSystemService(Context.BLUETOOTH_SERVICE);
         if (mBluetoothManager == null) {
             Log.e(TAG, "Unable to initialize BluetoothManager.");
@@ -159,6 +164,24 @@ public class RemoteDevice {
 		return true;
 	}
 
+	public boolean WriteCharacteristic(byte[] data) {
+        boolean result = false;
+        String datatowrite = BLEScanner.getAddressStringFromByte(data);
+        Log.w(TAG, "WriteCharacteristic with data:" + datatowrite);
+        if (mBluetoothGatt != null && (mConnectionState == BluetoothProfile.STATE_CONNECTED)) {
+            if (mCommandCharacteristic == null) {
+                return false;
+            }
+            mCommandCharacteristic.setValue(data);
+            result = mBluetoothGatt.writeCharacteristic(mCommandCharacteristic);
+        } else {
+            Log.w(TAG, "Remote device is in error state.");
+            return false;
+        }
+
+        return result;
+    }
+
     /* connection state change and services discovery callback.*/
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
@@ -272,7 +295,7 @@ public class RemoteDevice {
 
     private void printGattServices() {
         int i = 0;
-        for (BluetoothGattService service:mGattservices){
+        for (BluetoothGattService service:mGattservices) {
             Log.i(TAG, i + " th service:");
             Log.i(TAG, "    the uuid is :" + service.getUuid().toString());
             if (service.getType() == 0){
@@ -309,6 +332,10 @@ public class RemoteDevice {
                     }
                 }
                 j++;
+
+                if (service.equals(gForce_Data_Service_UUID) && gattCharacteristic.equals(gForce_Command_Characteristic_UUID)) {
+                    mCommandCharacteristic = gattCharacteristic;
+                }
             }
 
             List<BluetoothGattService> includedservices = service.getIncludedServices();

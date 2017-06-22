@@ -27,6 +27,7 @@ static jmethodID method_Connect;
 static jmethodID method_CancelConnect;
 static jmethodID method_Disconnect;
 static jmethodID method_ConfigMTUSize;
+static jmethodID method_WriteCharacteristic;
 static jmethodID method_UpdateParameter;
 static jmethodID method_GetConnectedDeviceNumber;
 static jmethodID method_GetHubState;
@@ -121,6 +122,7 @@ GF_STATUS GF_CAdapterManager::Init(GF_UINT8 com_num, GF_UINT8 log_type)
     method_CancelConnect = env->GetMethodID(cls,"cancelConnect","([B)Z");
     method_Disconnect = env->GetMethodID(cls,"disconnect","(I)Z");
     method_ConfigMTUSize = env->GetMethodID(cls,"configMTUSize","(II)Z");
+    method_WriteCharacteristic = env->GetMethodID(cls,"WriteCharacteristic","(II[B)Z");
 	method_GetConnectedDeviceNumber = env->GetMethodID(cls,"getConnectedDeviceNumber","()B");
 	method_GetHubState = env->GetMethodID(cls,"getHubState","()B");
 	method_GetHandleByIndex = env->GetMethodID(cls,"getHandleByIndex","(B)I");
@@ -350,8 +352,34 @@ GF_STATUS GF_CAdapterManager::ConnectionParameterUpdate(GF_UINT16 conn_handle, G
 
 GF_STATUS GF_CAdapterManager::WriteCharacteristic(GF_UINT16 conn_handle, GF_UINT16 attribute_handle, GF_UINT8 data_length, GF_PUINT8 data)
 {
-    /*not supported on Android platform for now*/
-    return GF_FAIL;
+    JNIEnv *env = NULL;
+	GF_STATUS result = GF_OK;
+	jbyteArray characteristicData = NULL;
+    bool bAttached = false;
+    if (false == attachEnv(&env, &bAttached)) {
+        return GF_FAIL;
+    }
+
+    if (env != NULL) {
+        characteristicData = env->NewByteArray(data_length);
+        if (characteristicData) {
+            env->SetByteArrayRegion(characteristicData, 0, data_length, (jbyte *)data);
+            if (env->CallBooleanMethod(GlobalObject, method_WriteCharacteristic, (conn_handle & 0x0000FFFF), data_length, characteristicData)) {
+                result = GF_OK;
+            } else {
+                result = GF_FAIL;
+            }
+            env->DeleteLocalRef(characteristicData);
+		} else {
+		    result = GF_FAIL;
+		}
+    }
+
+    if(bAttached && globalJavaVM != NULL) {
+        globalJavaVM->DetachCurrentThread();
+    }
+
+    return result;
 }
 
 GF_STATUS GF_CAdapterManager::ReadCharacteristic(GF_UINT16 conn_handle, GF_UINT16 attribute_handle)

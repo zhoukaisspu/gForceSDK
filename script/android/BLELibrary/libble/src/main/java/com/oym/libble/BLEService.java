@@ -1,4 +1,4 @@
-package com.oym.blelibrary;
+package com.oym.libble;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -47,7 +47,7 @@ public class BLEService {
 
     private BLEService() {
         Log.d(TAG, "BLEService constructor...");
-        mContext = GlobalContext.getglobalContext();
+        mContext = GlobalContext.getApplicationContext();
 		if (mContext == null) {
 			Log.e(TAG, "GlobalContext is not available!");
 			return;
@@ -255,6 +255,18 @@ public class BLEService {
         RemoteDevice remoteDevice = findRemoteDeviceByHandle(handle);
         if (remoteDevice != null && BluetoothAdapter.STATE_CONNECTED == remoteDevice.getDeviceState()) {
             return remoteDevice.exchangeMtuSize(mtu_size);
+        }
+        else {
+            Log.d(TAG, "connection with handle =  " + handle + " not in connected state!");
+            return false;
+        }
+    }
+
+    public boolean WriteCharacteristic(final int handle, int length, byte[] data) {
+        Log.d(TAG, "WriteCharacteristic");
+        RemoteDevice remoteDevice = findRemoteDeviceByHandle(handle);
+        if (remoteDevice != null && BluetoothAdapter.STATE_CONNECTED == remoteDevice.getDeviceState()) {
+            return remoteDevice.WriteCharacteristic(data);
         }
         else {
             Log.d(TAG, "connection with handle =  " + handle + " not in connected state!");

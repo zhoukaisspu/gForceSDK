@@ -1,4 +1,4 @@
-package com.oymotion.libble;
+package com.oym.libble;
 
 import android.util.Log;
 

@@ -296,6 +296,10 @@ static bool initNative(JNIEnv* env, jobject object) {
 
 static bool cleanupNative(JNIEnv* env, jobject obj) {
     LOGD("%s:", __FUNCTION__);
+    if (amInterface != NULL) {
+        amInterface->UnregisterClientCallback();
+        amInterface->Deinit();
+    }
     env->DeleteGlobalRef(GlobalObject);
     GlobalObject = NULL;
     return JNI_TRUE;
@@ -356,10 +360,41 @@ static bool disconnectNative( JNIEnv* env, jobject obj, jint handle) {
     return JNI_TRUE;
 }
 
+static jbyte getHubStateNative( JNIEnv* env, jobject obj) {
+    LOGD("%s:", __FUNCTION__);
+    if (amInterface != NULL) {
+        return amInterface->GetHubState();
+    } else {
+        return 0;
+    }
+}
+
+static jbyte getConnectedDevNumNative( JNIEnv* env, jobject obj) {
+    LOGD("%s:", __FUNCTION__);
+    if (amInterface != NULL) {
+        return amInterface->GetConnectedDeviceNum();
+    } else {
+        return 0;
+    }
+}
+
 static jstring stringFromJNINative( JNIEnv* env, jobject obj) {
     LOGD("%s:", __FUNCTION__);
     std::string hello = "Hello from C++";
     return env->NewStringUTF("111 Hello from C++ 22...");
+}
+
+static bool writeCharecteristicNative(JNIEnv* env, jobject object, jbyte len, jbyteArray data) {
+    LOGD("%s:", __FUNCTION__);
+    if (amInterface != NULL) {
+        jbyte* dataArray = env->GetByteArrayElements(data, 0);
+        amInterface->WriteCharacteristic(0, 0, len, (GF_PUINT8)dataArray);
+        env->ReleaseByteArrayElements(data, dataArray, JNI_ABORT);
+    } else {
+        return JNI_FALSE;
+    }
+
+    return JNI_TRUE;
 }
 
 static JNINativeMethod sMethods[] = {
@@ -368,13 +403,15 @@ static JNINativeMethod sMethods[] = {
     {"initNative", "()Z", (void *) initNative},
     {"startScanNative", "()Z", (void *) startScanNative},
     {"stopScanNative", "()Z", (void *) stopScanNative},
-    {"cleanupNative", "()V", (void*) cleanupNative},
+    {"cleanupNative", "()Z", (void*) cleanupNative},
     {"stringFromJNI", "()Ljava/lang/String;", (void*)stringFromJNINative},
     {"connectNative", "([B)Z", (void*) connectNative},
     {"cancelConnectNative", "([B)Z", (void*) cancelConnectNative},
     {"disconnectNative", "(I)Z", (void*) disconnectNative},
+    {"getHubStateNative", "()B", (void*) getHubStateNative},
+    {"getConnectedDevNumNative", "()B", (void*) getConnectedDevNumNative},
+    {"writeCharecteristicNative", "(B[B)Z", (void*) writeCharecteristicNative},
 };
-
 
 /*
  * JNI Initialization

@@ -261,6 +261,18 @@ public class BLEService {
             return false;
         }
     }
+
+    public boolean WriteCharacteristic(final int handle, int length, byte[] data) {
+        Log.d(TAG, "WriteCharacteristic");
+        RemoteDevice remoteDevice = findRemoteDeviceByHandle(handle);
+        if (remoteDevice != null && BluetoothAdapter.STATE_CONNECTED == remoteDevice.getDeviceState()) {
+            return remoteDevice.WriteCharacteristic(data);
+        }
+        else {
+            Log.d(TAG, "connection with handle =  " + handle + " not in connected state!");
+            return false;
+        }
+    }
 	
     public byte getConnectedDeviceNumber() {
 		byte result = 0;

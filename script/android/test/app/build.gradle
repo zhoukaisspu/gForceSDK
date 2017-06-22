@@ -14,7 +14,7 @@ android {
             ndkBuild {
                 cppFlags ""
                 cFlags  "-std=c++11"
-                abiFilters "x86"
+                abiFilters "armeabi"
             }
         }
     }
@@ -54,7 +54,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.2.0'
     compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha7'
     compile 'pub.devrel:easypermissions:0.1.9'
-    compile(name: 'blelibrary-debug', ext: 'aar')
+    compile(name: 'libble-debug', ext: 'aar')
     testCompile 'junit:junit:4.12'
 }
 

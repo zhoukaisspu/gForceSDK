@@ -16,8 +16,8 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := ble-lib
-LOCAL_SRC_FILES := $(LOCAL_PATH)/../jniLibs/x86/libble-lib.so
-#LOCAL_SRC_FILES := $(LOCAL_PATH)/../jniLibs/armeabi/libble-lib.so
+#LOCAL_SRC_FILES := $(LOCAL_PATH)/../jniLibs/x86/libble-lib.so
+LOCAL_SRC_FILES := $(LOCAL_PATH)/../jniLibs/armeabi/libble-lib.so
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
