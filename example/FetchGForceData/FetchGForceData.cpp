@@ -162,8 +162,8 @@ public:
 		case Gesture::Relax:
 			gesture = "Relax";
 			break;
-		case Gesture::Gist:
-			gesture = "Gist";
+		case Gesture::Fist:
+			gesture = "Fist";
 			break;
 		case Gesture::SpreadFingers:
 			gesture = "SpreadFingers";

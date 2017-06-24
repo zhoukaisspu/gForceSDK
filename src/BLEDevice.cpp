@@ -106,20 +106,6 @@ bool BLEDevice::takeover(BLEDevice& from)
 			(GF_UINT)from.mAddrType, utils::tostring(from.getAddress()).c_str());
 		return false;
 	}
-	/* copy needed
-	ConnectionStatus	mCnntStatus;
-	DevicePosition		mPosition;
-	GF_UINT8	mAddrType;
-	GF_UINT8	mAddress[BT_ADDRESS_SIZE];
-	tstring		mName;
-	GF_UINT8	mRssi;
-
-	GF_UINT16	mHandle;
-	GF_UINT16	mConnInt;
-	GF_UINT16	mSuperTO;
-	GF_UINT16	mSlavelatency;
-	GF_UINT16	mMTUsize;
-	*/
 	return true;
 }
 

@@ -1,6 +1,3 @@
-//
-// Created by yy220 on 2017/4/24.
-//
 #include <string>
 #include <mutex>
 #include <android/log.h>

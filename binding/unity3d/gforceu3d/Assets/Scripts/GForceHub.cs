@@ -95,7 +95,7 @@ public class GForceHub : MonoBehaviour
         var applicationContext = unityActivity.Call<AndroidJavaObject>("getApplicationContext");
 
         // Need to pass the Android Application Context to the jni plugin before initializing the Hub.
-        AndroidJavaClass nativeEventsClass = new AndroidJavaClass("com.oymotion.libble.GlobalContext");
+        AndroidJavaClass nativeEventsClass = new AndroidJavaClass("com.oymotion.ble.GlobalContext");
         nativeEventsClass.CallStatic("setApplicationContext", applicationContext);
 
         unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {

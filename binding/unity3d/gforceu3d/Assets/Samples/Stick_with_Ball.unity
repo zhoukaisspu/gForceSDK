@@ -147,7 +147,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 40753329}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e8bf25af6a556d041b99e3a9796483f7, type: 3}
+  m_Script: {fileID: 11500000, guid: e64384b2d7f201d4ea171b16cd2f1ee8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   gesture: 255
@@ -243,9 +243,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 562530978}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dd13a8b8571fe9c48a8276ac28cb6a82, type: 3}
+  m_Script: {fileID: 11500000, guid: fc54f405116060248a73a391a6ad1ba4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  lastlog: 
 --- !u!4 &562530980
 Transform:
   m_ObjectHideFlags: 0
@@ -374,7 +375,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1331329209}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a5c9f6daa57997d47a13f792d8fde63d, type: 3}
+  m_Script: {fileID: 11500000, guid: 91176ffd10ce86d4ab22148a32532f50, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   gforce: {fileID: 40753329}
@@ -421,7 +422,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
-  - {fileID: 2100000, guid: cd626cdd3a30aff4e908fef79ff7ce9c, type: 2}
+  - {fileID: 2100000, guid: 0eff1365c304be0459a1825bd4e50d47, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -478,7 +479,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 1
   m_IsActive: 1
 --- !u!4 &1585788286
 Transform:
@@ -501,16 +502,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 1585788285}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ea434066ef2c0bd428417f3f10a98a23, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cdf3bb0a07844446984ca30e2f7030a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   gforce: {fileID: 40753329}
   quater: {x: 0, y: 0, z: 0, w: 0}
   lastGesture: 255
-  relaxMaterial: {fileID: 2100000, guid: 31d3f9b4f0b2a4f448bf21cfe82e5c6d, type: 2}
-  shootMaterial: {fileID: 2100000, guid: c57dc6f191f3d2948b535889299d708f, type: 2}
-  otherMaterial: {fileID: 2100000, guid: 1a7e48b40b292fe4a9a3010926034840, type: 2}
-  undefinedMaterial: {fileID: 2100000, guid: b973a372d64d7494683fdcd2eaf0d265, type: 2}
+  relaxMaterial: {fileID: 2100000, guid: 185eedf944fec624da923995c6f1071a, type: 2}
+  shootMaterial: {fileID: 2100000, guid: 040729b8b744536488561aeb57e042d2, type: 2}
+  otherMaterial: {fileID: 2100000, guid: 910e5659cffe31343bcb74e0d9b4fb70, type: 2}
+  undefinedMaterial: {fileID: 2100000, guid: a06c2dc5a1df37b4e8facb24cba8dd71, type: 2}
 --- !u!23 &1585788288
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -524,7 +525,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
-  - {fileID: 2100000, guid: cd626cdd3a30aff4e908fef79ff7ce9c, type: 2}
+  - {fileID: 2100000, guid: 185eedf944fec624da923995c6f1071a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -586,7 +587,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1973538035}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6d7e6245fac67794aa6e8941e8111206, type: 3}
+  m_Script: {fileID: 11500000, guid: 4183ab5b7dca4a549af71251a367e262, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   gforce: {fileID: 40753329}

@@ -5,6 +5,6 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
-    path: Assets/Samples/Stick_with_Ball.unity
+  - enabled: 0
+    path: 
     guid: 30c24c45b481e544188b9887e96632dd

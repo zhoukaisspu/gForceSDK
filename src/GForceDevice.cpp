@@ -27,7 +27,7 @@
  *
  */
 #include "GForceDevice.h"
-#include "utils.h"
+#include "Utils.h"
 #include "LogUtils.h"
 #include "Quaternion.h"
 
@@ -128,13 +128,11 @@ void GForceDevice::onQuaternion(GF_UINT8 length, GF_PUINT8 data)
 		GF_LOGD("%s, length: %u, data insufficient.", __FUNCTION__, length);
 		return;
 	}
-	GF_FLOAT w, x, y, z;
-	w = *(GF_FLOAT*)&data[0];
-	x = *(GF_FLOAT*)&data[4];
-	y = *(GF_FLOAT*)&data[8];
-	z = *(GF_FLOAT*)&data[12];
-	Quaternion q(w, x, y, z);
-	//GF_LOGD("Device: %s, Quaternion: %s", utils::tostring(getName()).c_str(), q.toString().c_str());
+	GF_FLOAT f[4];
+	// prevent align issue
+	memcpy(f, data,  sizeof(f));
+	Quaternion q(f[0], f[1], f[2], f[3]);
+	// GF_LOGD("Device: %s, Quaternion: %s", utils::tostring(getName()).c_str(), q.toString().c_str());
 
 	mHub.notifyOrientationData(*this, q);
 }
@@ -150,8 +148,8 @@ void GForceDevice::onGesture(GF_UINT8 length, GF_PUINT8 data)
 		case static_cast<GF_UINT8>(Gesture::Relax) :
 			gesture = Gesture::Relax;
 			break;
-		case static_cast<GF_UINT8>(Gesture::Gist) :
-			gesture = Gesture::Gist;
+		case static_cast<GF_UINT8>(Gesture::Fist) :
+			gesture = Gesture::Fist;
 			break;
 		case static_cast<GF_UINT8>(Gesture::SpreadFingers) :
 			gesture = Gesture::SpreadFingers;

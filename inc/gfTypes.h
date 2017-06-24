@@ -112,9 +112,9 @@ namespace gf {
 
 	class Device;
 	/// the weak pointer to Device
-	typedef gfwPtr<Device> WPDEVICE;
+	using WPDEVICE = gfwPtr<Device>;
 	/// the strong pointer to Device
-	typedef gfsPtr<Device> SPDEVICE;
+	using SPDEVICE = gfsPtr<Device>;
 
 	/// \brief Defines how callbacks are called in threads
 	///
@@ -156,7 +156,7 @@ namespace gf {
 	///
 	enum class Gesture : GF_UINT8 {
 		Relax = 0x00,
-		Gist = 0x01,
+		Fist = 0x01,
 		SpreadFingers = 0x02,
 		WaveTowardPalm = 0x03,
 		WaveBackwardPalm = 0x04,
