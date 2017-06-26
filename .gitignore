@@ -10,6 +10,10 @@ cscope.out
 *.sln.docstates
 *.gch
 
+bin/
+doc/
+lib/
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
