@@ -53,9 +53,6 @@ namespace gf
 	class Hub
 	{
 	public:
-		/// The devices enumerate callback
-		typedef void(*FunEnumDevice)(WPDEVICE);
-
 		/// \brief Initialize the Hub instance
 		///
 		/// \param comPort Specify the COM port the physical Hub is connecting with.
