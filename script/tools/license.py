@@ -127,6 +127,7 @@ def add_license_cpp(file, license_text, start_pos = -1):
 	file.seek(0)
 	s = ''.join(lines)
 	file.write(s)
+	file.truncate()
 	file.flush()
 
 def remove_license_cpp(file, license_text, lines_range):
@@ -162,6 +163,7 @@ def add_license_script(file, license_text, start_pos = -1):
 	file.seek(0)
 	s = ''.join(lines)
 	file.write(s)
+	file.truncate()
 	file.flush()
 	
 def remove_license_script(file, license_text, lines_range):
@@ -176,6 +178,7 @@ def remove_license_script(file, license_text, lines_range):
 	file.seek(0)
 	s = ''.join(lines)
 	file.write(s)
+	file.truncate()
 	file.flush()
 	
 ###############################################

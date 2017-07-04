@@ -1,17 +1,19 @@
 /*
  * Copyright 2017, OYMotion Inc.
  * All rights reserved.
- *
- * IMPORTANT: Your use of this Software is limited to those specific rights
- * granted under the terms of a software license agreement between you and
- * OYMotion.  You may not use this Software unless you agree to abide by the
- * terms of the License. The License limits your use, and you acknowledge,
- * that the Software may not be modified, copied or distributed unless used
- * solely and exclusively in conjunction with an OYMotion product.  Other
- * than for the foregoing purpose, you may not use, reproduce, copy, prepare
- * derivative works of, modify, distribute, perform, display or sell this
- * Software and/or its documentation for any purpose.
- *
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
