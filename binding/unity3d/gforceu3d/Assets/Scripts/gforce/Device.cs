@@ -41,7 +41,7 @@ namespace gf
         public enum Gesture
         {
             Relax = 0x00,
-            Gist = 0x01,
+            Fist = 0x01,
             SpreadFingers = 0x02,
             WaveTowardPalm = 0x03,
             WaveBackwardPalm = 0x04,
