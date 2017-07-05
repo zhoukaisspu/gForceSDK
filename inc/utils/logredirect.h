@@ -39,5 +39,18 @@
 
 #include "gfTypes.h"
 
+/// \brief The function pointer type for log re-direction
+///
+/// \param handle A device handle indicates the enumeration result
+/// \param level Log output level.
+/// \param logmsg The log content
+/// \remark In Windows, level represents enum GF_LOG_LEVEL.\n
+///			In Android, level represents enum android_LogPriority.
 typedef void(*LogMethod)(gf::GF_UINT level, const gf::GF_PCHAR logmsg);
+/// \brief Re-direct log output
+///
+/// \param logmethod the client log out method
+/// \remark
+///             The default log out is the stdio, this method allows client to redirect it
+///             Set the param to nullptr to reset log method
 void log_set_output_function(LogMethod logmethod);

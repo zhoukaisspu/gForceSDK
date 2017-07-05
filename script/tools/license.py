@@ -214,7 +214,7 @@ def check_license_exist(file, license_text):
 			line_end = linecount
 			break
 			
-	print(file, line_start, line_end)
+	#print(file, line_start, line_end)
 	if line_start != -1 and line_end != -1:
 		return (line_start-1, line_end-1)
 	else:

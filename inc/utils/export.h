@@ -29,7 +29,7 @@
 *
 */
 /*!
-* \file utils/expose.h
+* \file utils/export.h
 * \brief 
 *
 * \version 0.1

@@ -78,7 +78,7 @@ namespace gf {
 	typedef size_t				GF_SIZE;
 	/// type definition
 	typedef GF_INT				GF_STATUS;
-
+	/// type definition
 	typedef void*				GF_HANDLE;
 
 #if defined(UNICODE) || defined(_UNICODE)
