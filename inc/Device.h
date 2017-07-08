@@ -67,6 +67,13 @@ namespace gf
 		/// \return The tstring type of device name
 		virtual tstring getName() const = 0;
 
+		/// \brief Gets the device RSSI value.
+		///
+		/// \return The tstring type of device name
+		/// \remark Currently the return value is the RSSI while device
+		///			is found during scan
+		virtual GF_UINT getRssi() const = 0;
+
 		/// \brief
         ///     Identifies a physical device using vibration or light, if the
         ///     device supports.

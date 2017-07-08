@@ -18,6 +18,7 @@ hub_run
 device_get_addr_type
 device_get_address
 device_get_name
+device_get_rssi
 device_get_connection_status
 device_connect
 device_disconnect

@@ -82,6 +82,13 @@ namespace gf
             return ret;
         }
 
+        public string getAddress()
+        {
+            string address;
+            getAddress(out address);
+            return address;
+        }
+
         public RetCode getName(out string name)
         {
             StringBuilder str = new StringBuilder(MAX_DEVICE_STR_LEN);
@@ -92,9 +99,21 @@ namespace gf
             }
             else
             {
-                name = "";
+                name = "E" + ret;
             }
             return ret;
+        }
+
+        public string getName()
+        {
+            string name;
+            getName(out name);
+            return name;
+        }
+
+        public uint getRssi()
+        {
+            return libgforce.device_get_rssi(hD);
         }
 
         public ConnectionStatus getConnectionStatus()

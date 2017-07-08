@@ -32,6 +32,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine; // for debug
 
 
 namespace gf
@@ -294,7 +295,10 @@ namespace gf
         private static void onDeviceFoundImpl(IntPtr hDevice)
         {
             if (IntPtr.Zero == hDevice)
+            {
+                Debug.Log("onDeviceFoundImpl: Null hDevice");
                 return;
+            }
             // try to add new device
             Device d = new Device(hDevice);
             try
@@ -312,6 +316,11 @@ namespace gf
         private static void onDeviceDiscardImpl(IntPtr hDevice)
         {
             Device d = null;
+            if (IntPtr.Zero == hDevice)
+            {
+                Debug.Log("onDeviceDiscardImpl: Null hDevice");
+                return;
+            }
             try
             {
                 d = (Device)instance.mDevices[hDevice];
@@ -330,6 +339,11 @@ namespace gf
         private static void onDeviceConnectedImpl(IntPtr hDevice)
         {
             Device d = null;
+            if (IntPtr.Zero == hDevice)
+            {
+                Debug.Log("onDeviceConnectedImpl: Null hDevice");
+                return;
+            }
             try
             {
                 d = (Device)instance.mDevices[hDevice];
@@ -345,6 +359,11 @@ namespace gf
         private static void onDeviceDisconnectedImpl(IntPtr hDevice, int reason)
         {
             Device d = null;
+            if (IntPtr.Zero == hDevice)
+            {
+                Debug.Log("onDeviceDisconnectedImpl: Null hDevice");
+                return;
+            }
             try
             {
                 d = (Device)instance.mDevices[hDevice];
@@ -360,6 +379,11 @@ namespace gf
         private static void onOrientationDataImpl(IntPtr hDevice, float w, float x, float y, float z)
         {
             Device d = null;
+            if (IntPtr.Zero == hDevice)
+            {
+                Debug.Log("onOrientationDataImpl: Null hDevice");
+                return;
+            }
             try
             {
                 d = (Device)instance.mDevices[hDevice];
@@ -375,6 +399,11 @@ namespace gf
         private static void onGestureDataImpl(IntPtr hDevice, Device.Gesture gest)
         {
             Device d = null;
+            if (IntPtr.Zero == hDevice)
+            {
+                Debug.Log("onGestureDataImpl: Null hDevice");
+                return;
+            }
             try
             {
                 d = (Device)instance.mDevices[hDevice];
@@ -390,6 +419,11 @@ namespace gf
         private static void onReCenterImpl(IntPtr hDevice)
         {
             Device d = null;
+            if (IntPtr.Zero == hDevice)
+            {
+                Debug.Log("onReCenterImpl: Null hDevice");
+                return;
+            }
             try
             {
                 d = (Device)instance.mDevices[hDevice];

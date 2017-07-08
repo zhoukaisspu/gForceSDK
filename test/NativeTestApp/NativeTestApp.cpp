@@ -121,8 +121,9 @@ class HubListenerImp : public HubListener
 	virtual void onDeviceFound(WPDEVICE device) override
 	{
 		auto ptr = device.lock();
-		GF_LOGI("ThreadId: %s: %s: Name: %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
-			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
+		GF_LOGI("ThreadId: %s: %s: Name: %s, RSSI: %u", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
+			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()),
+			(nullptr == ptr ? 0 : ptr->getRssi()));
 	}
 	virtual void onDeviceDiscard(WPDEVICE device) override
 	{
@@ -228,7 +229,7 @@ bool enumDevice(WPDEVICE dev)
 	else
 	{
 		GF_LOGI("Dev: addrtype: %u, address: %s, name: %s, connstatus: %u, position:%u",
-			(GF_UINT)sp->getAddrType(), utils::tostring(sp->getAddress()).c_str(), utils::tostring(sp->getName()).c_str(),
+			sp->getAddrType(), utils::tostring(sp->getAddress()).c_str(), utils::tostring(sp->getName()).c_str(),
 			static_cast<GF_UINT>(sp->getConnectionStatus()), static_cast<GF_UINT>(sp->getPosition()));
 		listDev.push_back(sp);
 	}

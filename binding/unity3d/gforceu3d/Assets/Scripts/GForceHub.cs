@@ -52,6 +52,8 @@ public class GForceHub : MonoBehaviour
         {
             foreach (GForceDevice dev in mDeviceComps)
             {
+                if (null == dev.device)
+                    continue;
                 dev.device.disconnect();
                 dev.device = null;
             }
@@ -110,7 +112,7 @@ public class GForceHub : MonoBehaviour
 
         if (mDeviceComps.Count < 1)
         {
-            string errorMessage = "The GForceHub GameObject must have at least one child with a DeviceComonent.";
+            string errorMessage = "The GForceHub GameObject must have at least one child with a DeviceComonent. Check prefab";
 #if UNITY_EDITOR
             EditorUtility.DisplayDialog("No DeviceComponent child.", errorMessage, "OK");
 #else
@@ -151,123 +153,181 @@ public class GForceHub : MonoBehaviour
 
     void Update()
     {
+        if (mNeedDeviceScan)
+        {
+            // if no available device, scan
+            Debug.Log("Scan again until all preset devices are found.");
+            mNeedDeviceScan = false;
+            mHub.startScan();
+        }
     }
 
 
     private static GForceHub mInstance = null;
     private Hub mHub = null;
-	private List<GForceDevice> mDeviceComps = new List<GForceDevice>();
+    private List<GForceDevice> mDeviceComps = new List<GForceDevice>();
+    private List<Device> mFoundDevices = new List<Device>();
+    private bool mNeedDeviceScan = false;
 #if !UNITY_ANDROID
     private Hub.logFn logfun = new Hub.logFn(GForceHub.DebugLog);
 #endif
 
     private class Listener : HubListener
     {
-        public override void onScanFinished()
+        class DeviceComparer : IComparer<Device>
         {
-            Debug.Log("OnScanFinished");
-
-            int found = 0;
-            foreach (GForceDevice dev in hubcomp.mDeviceComps)
+            public int Compare(Device x, Device y)
             {
-                if (null == dev.device)
+                if (x == null)
                 {
-                    // if not all preset devices found, do scan again
-                    Debug.LogFormat("{0} devices found, not enough, re-scan again.", found);
-                    hubcomp.mHub.startScan();
-                    return;
+                    if (y == null)
+                        return 0;
+                    else
+                        return 1;
                 }
                 else
                 {
-                    found++;
+                    if (y == null)
+                        return -1;
+                    uint xrssi = x.getRssi();
+                    uint yrssi = y.getRssi();
+                    if (xrssi > yrssi)
+                        return -1;
+                    else if (xrssi < yrssi)
+                        return 1;
+                    else
+                        return 0;
                 }
             }
-
-            Debug.Log("Now try to connect to gForce one by one.");
+        }
+        private void tryConnecting()
+        {
+            // 1. check if mDeviceComps has available room
+            int availableRooms = 0;
             foreach (GForceDevice dev in hubcomp.mDeviceComps)
             {
-                Device.ConnectionStatus status = dev.device.getConnectionStatus();
-                if (Device.ConnectionStatus.Connected != status &&
-                    Device.ConnectionStatus.Connecting != status)
+                if (null == dev.device)
                 {
-                    dev.device.connect();
-                    // one time connect to one device only
-                    return;
+                    availableRooms++;
                 }
             }
+            Debug.LogFormat("{0} devices ready, {1} available rooms, found {2} devices.",
+                hubcomp.mDeviceComps.Count - availableRooms,
+                availableRooms, hubcomp.mFoundDevices.Count);
+
+            if (availableRooms == 0)
+            {
+                // all needed devices are connected
+                // empty mFoundDevices so next time we re-scan for device
+                hubcomp.mFoundDevices.Clear();
+                return;
+            }
+            if (0 == hubcomp.mFoundDevices.Count)
+            {
+                // scan for more device
+                hubcomp.mNeedDeviceScan = true;
+                return;
+            }
+
+            Debug.Log("Now try to connect to gForce with largest rssi");
+            // 2. sort devices using rssi by descending
+            hubcomp.mFoundDevices.Sort(new DeviceComparer());
+            do
+            {
+                // try the one with best signal strength
+                RetCode ret = hubcomp.mFoundDevices[0].connect();
+                // if failed to send connect command, try next
+                if (ret != RetCode.GF_SUCCESS)
+                {
+                    Debug.LogFormat("Connecting failed: {0}, try next.", ret);
+                    hubcomp.mFoundDevices.RemoveAt(0);
+                }
+                else
+                {
+                    // direct quit here if connecting started
+                    return;
+                }
+            } while (hubcomp.mFoundDevices.Count > 0);
+
+            // seems connection failed, try scan again
+            Debug.Log("Scan again due to connecting errors.");
+            hubcomp.mNeedDeviceScan = true;
+        }
+        public override void onScanFinished()
+        {
+            Debug.Log("OnScanFinished");
+            tryConnecting();
         }
         public override void onStateChanged(Hub.HubState state)
         {
-            Debug.Log("onStateChanged");
+            Debug.LogFormat("onStateChanged: {0}", state);
         }
         public override void onDeviceFound(Device device)
         {
-            Debug.Log("onDeviceFound");
-            int i = 0;
-            foreach (GForceDevice dev in hubcomp.mDeviceComps)
-            {
-                ++i;
-                if (null == dev.device)
-                {
-                    // assign the new device to an empty DeviceComponent
-                    dev.device = device;
-                    break;
-                }
-            }
-            if (i >= hubcomp.mDeviceComps.Count)
-            {
-                // all DeviceComponent objects got a Device object
-                hubcomp.mHub.stopScan();
-            }
+            Debug.LogFormat("onDeviceFound, name = \'{0}\', rssi = {1}",
+                device.getName(), device.getRssi());
+            hubcomp.mFoundDevices.Add(device);
         }
         public override void onDeviceDiscard(Device device)
         {
-            Debug.Log("onDeviceDiscard");
+            Debug.LogFormat("onDeviceDiscard, handle = name is \'{0}\'", device.getName());
             foreach (GForceDevice dev in hubcomp.mDeviceComps)
             {
+                if (null == dev.device)
+                    continue;
                 if (device == dev.device)
                 {
                     dev.device = null;
                     break;
                 }
             }
+            bool ret = hubcomp.mFoundDevices.Remove(device);
+            Debug.LogFormat("hubcomp.mFoundDevices.Remove: {0} -> {1}", device.getName(), ret);
         }
         public override void onDeviceConnected(Device device)
         {
-            Debug.Log("onDeviceConnected");
+            Debug.LogFormat("onDeviceConnected, name is \'{0}\'", device.getName());
             foreach (GForceDevice dev in hubcomp.mDeviceComps)
             {
-                // since we connect to device one by one,
-                // we need to connect the next while the previous one ready
-                Device.ConnectionStatus status = dev.device.getConnectionStatus();
-                if (Device.ConnectionStatus.Connected != status &&
-                    Device.ConnectionStatus.Connecting != status)
+                if (dev.device == null)
                 {
-                    dev.device.connect();
-                    // one time connect to one device only
-                    return;
+                    dev.device = device;
+                    break;
                 }
             }
+            tryConnecting();
         }
         public override void onDeviceDisconnected(Device device, int reason)
         {
-            Debug.LogFormat("onDeviceDisconnected, reason is {0}", reason);
-            foreach (GForceDevice dev in hubcomp.mDeviceComps)
-            {
-                Device.ConnectionStatus status = dev.device.getConnectionStatus();
-                if (Device.ConnectionStatus.Connecting == status)
-                {
-                    // a device is in connecting state, we will do something after it connected
-                    return;
-                }
-            }
+            Debug.LogFormat("onDeviceDisconnected, name is \'{0}\', reason is {1}",
+                device.getName(), reason);
+            bool needReconnect = false;
             foreach (GForceDevice dev in hubcomp.mDeviceComps)
             {
                 if (device == dev.device)
                 {
-                    // no other devices are connecting, try it
-                    device.connect();
+                    Debug.Log("Need rescan");
+                    dev.device = null;
+                    needReconnect = true;
+                    break;
                 }
+            }
+            if (needReconnect)
+            {
+                foreach (GForceDevice dev in hubcomp.mDeviceComps)
+                {
+                    if (null == dev.device)
+                        continue;
+                    Device.ConnectionStatus status = dev.device.getConnectionStatus();
+                    if (Device.ConnectionStatus.Connecting == status)
+                    {
+                        // a device is in connecting state, we will do nothing until
+                        // connection finished (succeeded or failed)
+                        Debug.Log("A device is in connecting, wait after it done");
+                        return;
+                    }
+                }
+                tryConnecting();
             }
         }
         public override void onOrientationData(Device device,
@@ -307,10 +367,10 @@ public class GForceHub : MonoBehaviour
     Listener mLsn = null;
     private volatile bool bRunThreadRun = false;
 
-	public string lastlog;
+    public string lastlog;
     private static void DebugLog(Hub.LogLevel level, string value)
     {
-		mInstance.lastlog = value;
+        mInstance.lastlog = value;
         if (level >= Hub.LogLevel.GF_LOG_ERROR)
             Debug.LogError(value);
         else
@@ -318,6 +378,7 @@ public class GForceHub : MonoBehaviour
     }
     private void prepare()
     {
+        mFoundDevices.Clear();
         mLsn = new Listener(this);
 #if !UNITY_ANDROID
         mHub.setClientLogMethod(logfun);
@@ -334,11 +395,14 @@ public class GForceHub : MonoBehaviour
         runThread.Start();
         ret = mHub.startScan();
         Debug.LogFormat("startScan = {0}", ret);
-		if (RetCode.GF_SUCCESS == ret) {
-			lastlog = "BLE scan starting succeeded.";
-		} else {
-			lastlog = "BLE scan starting failed.";
-		}
+        if (RetCode.GF_SUCCESS == ret)
+        {
+            lastlog = "BLE scan starting succeeded.";
+        }
+        else
+        {
+            lastlog = "BLE scan starting failed.";
+        }
     }
 
     private void terminal()
@@ -348,23 +412,30 @@ public class GForceHub : MonoBehaviour
         {
             runThread.Join();
         }
-		mHub.unregisterListener(mLsn);
+        mHub.unregisterListener(mLsn);
 #if !UNITY_ANDROID
         mHub.setClientLogMethod(null);
 #endif
         mHub.deinit();
+
+        mFoundDevices.Clear();
     }
     private Thread runThread;
     private void runThreadFn()
     {
-		int loop = 0;
+        int loop = 0;
         while (bRunThreadRun)
         {
-			loop++;
-            mHub.run(50);
+            RetCode ret = mHub.run(50);
+            if (RetCode.GF_SUCCESS != ret && RetCode.GF_ERROR_TIMEOUT != ret)
+            {
+                System.Threading.Thread.Sleep(5);
+                continue;
+            }
+            loop++;
 #if DEBUG
-			if (loop % 200 == 0)
-				Debug.LogFormat("runThreadFn: {0} seconds elapsed.", loop/20);
+            if (loop % 200 == 0)
+                Debug.LogFormat("runThreadFn: {0} seconds elapsed.", loop / 20);
 #endif
         }
         Debug.Log("Leave thread");

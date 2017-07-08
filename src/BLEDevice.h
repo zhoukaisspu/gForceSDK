@@ -56,7 +56,7 @@ namespace gf
 		virtual GF_RET_CODE getAddress(GF_UINT8* addr, GF_SIZE bufLen) const;
 		virtual tstring getAddress() const override;
 		virtual tstring getName() const override { return mName; }
-		virtual GF_UINT8 getRssi() const { return mRssi; }
+		virtual GF_UINT getRssi() const override { return mRssi; }
 		virtual GF_UINT16 getHandle() const { return mHandle; }
 		virtual GF_UINT16 getConnInt() const { return mConnInt; }
 		virtual GF_UINT16 getSuperTO() const { return mSuperTO; }

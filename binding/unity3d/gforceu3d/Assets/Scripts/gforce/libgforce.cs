@@ -117,6 +117,8 @@ namespace gf
         public static extern RetCode device_get_address(IntPtr hDevice, [Out, MarshalAs(UnmanagedType.LPStr)]StringBuilder addr, uint buflen);
         [DllImport(GFORCE_DLL, EntryPoint = "device_get_name")]
         public static extern RetCode device_get_name(IntPtr hDevice, [Out, MarshalAs(UnmanagedType.LPStr)]StringBuilder name, uint buflen);
+        [DllImport(GFORCE_DLL, EntryPoint = "device_get_rssi")]
+        public static extern uint device_get_rssi(IntPtr hDevice);
         [DllImport(GFORCE_DLL, EntryPoint = "device_get_connection_status")]
         public static extern Device.ConnectionStatus device_get_connection_status(IntPtr hDevice);
         [DllImport(GFORCE_DLL, EntryPoint = "device_connect")]

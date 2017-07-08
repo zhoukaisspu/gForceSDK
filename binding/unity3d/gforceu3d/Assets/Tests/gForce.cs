@@ -165,11 +165,8 @@ public class gForce : MonoBehaviour
             if (null == gfrce.mDevice)
             {
                 gfrce.mDevice = device;
-                string addr, name;
-                device.getAddress(out addr);
-                device.getName(out name);
                 Debug.LogFormat("Device address type is {0}, address is {1}, name is {2}",
-                    device.getAddrType(), addr, name);
+                    device.getAddrType(), device.getAddress(), device.getName());
                 gfrce.mHub.stopScan();
             }
         }

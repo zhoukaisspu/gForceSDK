@@ -257,6 +257,12 @@ GFORCE4CS_API gf::GF_UINT device_get_address(gf::GF_HANDLE device, gf::GF_PCHAR 
 /// \param buflen length of name in bytes
 /// \return GF_RET_CODE type to indicate if the command succeeded or not
 GFORCE4CS_API gf::GF_UINT device_get_name(gf::GF_HANDLE device, gf::GF_PCHAR name, gf::GF_SIZE buflen);
+/// \brief Gets the device RSSI.
+///
+/// \param device the device handle
+/// \return the RSSI value
+/// \remark Currently the return value indicates the RSSI while device is found during scan
+GFORCE4CS_API gf::GF_UINT device_get_rssi(gf::GF_HANDLE device);
 /// \brief Retrieves the connection status of the device.
 ///
 /// \param device the device handle

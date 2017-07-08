@@ -83,13 +83,13 @@ public:
 
 	virtual void onScanFinished() override {
 		try {
-			GF_LOGD("%s: callback fn here. %d", __FUNCTION__, __LINE__);
+			//GF_LOGD("%s: callback fn here. %d", __FUNCTION__, __LINE__);
 			for (auto& i : mlc)
 			{
-				GF_LOGD("%s: callback fn here. i = %p", __FUNCTION__, i.get());
+				//GF_LOGD("%s: callback fn here. i = %p", __FUNCTION__, i.get());
 				if (nullptr != i->onScanFinished)
 				{
-					GF_LOGD("%s: callback fn here. i.fn = %p", __FUNCTION__, i->onScanFinished);
+					//GF_LOGD("%s: callback fn here. i.fn = %p", __FUNCTION__, i->onScanFinished);
 					i->onScanFinished();
 				}
 			}
@@ -542,6 +542,15 @@ GFORCE4CS_API GF_UINT device_get_name(GF_HANDLE device, GF_PCHAR name, GF_SIZE b
 		ret = GF_RET_CODE::GF_SUCCESS;
 	}
 	return RETURN_UINT_VALUE_FROM_RET_CODE;
+}
+
+GFORCE4CS_API gf::GF_UINT device_get_rssi(gf::GF_HANDLE device)
+{
+	GF_UINT ret = (GF_UINT)-1;
+	SPDEVICE sp = getDeviceFromHandle(device);
+	if (nullptr != sp)
+		ret = sp->getRssi();
+	return ret;
 }
 
 GFORCE4CS_API GF_UINT device_get_connection_status(GF_HANDLE device)
