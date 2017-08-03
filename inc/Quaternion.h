@@ -153,64 +153,17 @@ namespace gf
 		{
 			static const float PI = 3.14159265f;
 			float pitch = 0, roll = 0, yaw = 0;
-
-			long t1, t2, t3;
-			long q00, q01, q02, q03, q11, q12, q13, q22, q23, q33;
-			long quat0, quat1, quat2, quat3;
-			quat0 = valueToLong(mW);
-			quat1 = valueToLong(mX);
-			quat2 = valueToLong(mY);
-			quat3 = valueToLong(mZ);
-			q00 = multiplyShift29(quat0, quat0);
-			q01 = multiplyShift29(quat0, quat1);
-			q02 = multiplyShift29(quat0, quat2);
-			q03 = multiplyShift29(quat0, quat3);
-			q11 = multiplyShift29(quat1, quat1);
-			q12 = multiplyShift29(quat1, quat2);
-			q13 = multiplyShift29(quat1, quat3);
-			q22 = multiplyShift29(quat2, quat2);
-			q23 = multiplyShift29(quat2, quat3);
-			q33 = multiplyShift29(quat3, quat3);
-
-			/* X component of the Ybody axis in World frame */
-			t1 = q12 - q03;
-
-			/* Y component of the Ybody axis in World frame */
-			t2 = q22 + q00 - (1L << 30);
-			yaw = -std::atan2((float)t1, (float)t2) * 180.f / (float)PI;
-
-			/* Z component of the Ybody axis in World frame */
-			t3 = q23 + q01;
-			pitch = std::atan2((float)t3,
-				std::sqrt((float)t1 * t1 + (float)t2 * t2)) * 180.f / PI;
-			/* Z component of the Zbody axis in World frame */
-			t2 = q33 + q00 - (1L << 30);
-			if (t2 < 0) {
-				if (pitch >= 0) {
-					pitch = 180.f - (pitch);
-				}
-				else {
-					pitch = -180.f - (pitch);
-				}
+			double test = mY*mZ + mX*mW;
+			if (std::abs(test) > 0.4999f){
+				int symbol = (test > 0.4999f) ? 1 : -1;
+				yaw = symbol * 2 * std::atan2f(mY, mW) * 180 / PI;
+				pitch = symbol * 90.f;
+				roll = 0.f;
+				return Euler(pitch, roll, yaw);
 			}
-
-			/* X component of the Xbody axis in World frame */
-			t1 = q11 + q00 - (1L << 30);
-			/* Y component of the Xbody axis in World frame */
-			t2 = q12 + q03;
-			/* Z component of the Xbody axis in World frame */
-			t3 = q13 - q02;
-
-			roll = std::atan2(((float)(q33 + q00 - (1L << 30))),
-				(float)(q13 - q02)) * 180.f / PI - 90;
-			if (roll >= 90) {
-				roll = 180 - roll;
-			}
-
-			if (roll < -90) {
-				roll = -180 - roll;
-			}
-
+			yaw = std::atan2f((2 * mZ*mW - 2 * mX*mY), (1 - 2 * mX*mX - 2 * mZ*mZ)) * 180 / PI;
+			pitch = (float)std::asin(2 * test) * 180 / PI;
+			roll = std::atan2f((2 * mY*mW - 2 * mX*mZ), (1 - 2 * mX*mX - 2 * mY*mY)) * 180 / PI;
 			return Euler(pitch, roll, yaw);
 		}
 
@@ -219,17 +172,6 @@ namespace gf
 		float mX = 0;
 		float mY = 0;
 		float mZ = 0;
-
-	private:
-		long valueToLong(float q) const
-		{
-			return (long)(q * (1L << 30));
-		}
-
-		long multiplyShift29(long a, long b) const
-		{
-			return (long)((float)a * b / (1L << 29));
-		}
 	};
 
 } // namespace gf
