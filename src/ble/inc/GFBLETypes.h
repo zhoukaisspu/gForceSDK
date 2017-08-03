@@ -119,7 +119,7 @@ struct GF_ConnectedDevice
 typedef enum {
 	ProtocolType_SimpleProfile = 0,
 	ProtocolType_DataProtocol = 1,
-	ProtocolType_OADService = 1,
+	ProtocolType_OADService = 2,
 	ProtocolType_Invalid = 0xff,
 }GF_DeviceProtocolType;
 
