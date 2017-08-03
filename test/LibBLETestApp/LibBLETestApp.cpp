@@ -100,10 +100,19 @@ public:
 	void onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device)
 	{
 		printf("\n onDeviceConnected withs status = %d\n", status);
-		if (status == GF_OK)
+		if (GF_OK == status)
 		{
-			Sleep(4000);
-			mAMInterface->Disconnect(device->handle);
+			printf("\n protocol of device is = %d\n", mAMInterface->GetDeviceProtocolSupported(device->handle));
+			GF_UINT8 parameter[1] = { 0x00 };
+			Sleep(1000);
+			if (ProtocolType_DataProtocol == mAMInterface->GetDeviceProtocolSupported(device->handle))
+			{
+				printf("\n SendControlCommand cmd type: %d!\n", 0x00);
+				if (GF_OK == mAMInterface->SendControlCommand(device->handle, 0x01, parameter))
+				{
+					printf("\n SendControlCommand sucessful!\n");
+				}
+			}
 		}
 		
 	}
@@ -113,8 +122,8 @@ public:
 		printf("\n onDeviceDisconnected with status = %d\n", status);
 		Sleep(5000);
 		mAMInterface->Connect(device->address, device->address_type, GF_TRUE);
-		Sleep(5000);
-		mAMInterface->CancelConnect(device->address, device->address_type);
+		//Sleep(5000);
+		//mAMInterface->CancelConnect(device->address, device->address_type);
 	}
 
 	void onMTUSizeChanged(GF_STATUS status, GF_UINT16 handle, GF_UINT16 mtu_size)
@@ -142,6 +151,230 @@ public:
 		printf("\n onNotificationReceived \n");
 	}
 
+	void onControlResponseReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
+	{
+		GF_UINT8 i = 0;
+		printf("\n onControlRespenseReceived with length = %d\n", length);
+		for (i = 0; i < length; i++)
+		{
+			printf("data[%d] = %d\n", i, data[i]);
+		}
+
+		GF_UINT8 status = data[0];
+		GF_UINT8 cmd_type = data[1];
+
+		switch (cmd_type)
+		{
+			case GET_PROTOCOL_VERSION:
+			{
+				if (status == CONTROL_COMMAND_RESPONSE_OK)
+				{
+					printf("Protocol version: %d.%d\n", data[2], data[3]);
+					//Sleep(1000);
+					printf("\n SendControlCommand cmd type: %d!\n", GET_FEATURE_MAP);
+					GF_UINT8 parameter[1] = { GET_FEATURE_MAP };
+					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
+					{
+						printf("\n SendControlCommand sucessful!\n");
+					}
+				}
+				else
+				{
+					printf("Protocol version with error, error code = %d\n", status);
+				}
+				break;
+			}
+			case GET_FEATURE_MAP:
+			{
+				if (status == CONTROL_COMMAND_RESPONSE_OK)
+				{
+					printf("Feature Map: %x:%x:%x:%x\n", data[2], data[3], data[4], data[5]);
+					//Sleep(1000);
+					printf("\n SendControlCommand cmd type: %d!\n", GET_DEVICE_NAME);
+					GF_UINT8 parameter[1] = { GET_DEVICE_NAME };
+					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
+					{
+						printf("\n SendControlCommand sucessful!\n");
+					}
+				}
+				else
+				{
+					printf("Get Feature Map with error, error code = %d\n", status);
+				}
+				break;
+			}
+			case GET_DEVICE_NAME:
+			{
+				if (status == CONTROL_COMMAND_RESPONSE_OK)
+				{
+					GF_UINT8 dev_name[50];
+					memcpy(dev_name, data + 2, length - 2);
+					dev_name[length - 2] = '\0';
+					printf("Device Name: %s\n", dev_name);
+					//Sleep(1000);
+					printf("\n SendControlCommand cmd type: %d!\n", GET_MODEL_NUMBER);
+					GF_UINT8 parameter[1] = { GET_MODEL_NUMBER };
+					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
+					{
+						printf("\n SendControlCommand sucessful!\n");
+					}
+				}
+				else
+				{
+					printf("Get Device Name with error, error code = %d\n", status);
+				}
+				break;
+			}
+			case GET_MODEL_NUMBER:
+			{
+				if (status == CONTROL_COMMAND_RESPONSE_OK)
+				{
+					GF_UINT8 model_num[50];
+					memcpy(model_num, data + 2, length - 2);
+					model_num[length - 2] = '\0';
+					printf("Model Number: %s\n", model_num);
+					//Sleep(1000);
+					printf("\n SendControlCommand cmd type: %d!\n", GET_SERIAL_NUMBER);
+					GF_UINT8 parameter[1] = { GET_SERIAL_NUMBER };
+					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
+					{
+						printf("\n SendControlCommand sucessful!\n");
+					}
+				}
+				else
+				{
+					printf("Get Model Number with error, error code = %d\n", status);
+				}
+				break;
+			}
+			case GET_SERIAL_NUMBER:
+			{
+				if (status == CONTROL_COMMAND_RESPONSE_OK)
+				{
+					GF_UINT8 serial_num[50];
+					memcpy(serial_num, data + 2, length - 2);
+					serial_num[length - 2] = '\0';
+					printf("Serial Number: %s\n", serial_num);
+					//Sleep(1000);
+					printf("\n SendControlCommand cmd type: %d!\n", GET_HARDWARE_REVISION);
+					GF_UINT8 parameter[1] = { GET_HARDWARE_REVISION };
+					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
+					{
+						printf("\n SendControlCommand sucessful!\n");
+					}
+				}
+				else
+				{
+					printf("Get Serial Number with error, error code = %d\n", status);
+				}
+				break;
+			}
+
+			case GET_HARDWARE_REVISION:
+			{
+				if (status == CONTROL_COMMAND_RESPONSE_OK)
+				{
+					printf("Hardware Revision R%d\n", data[2]);
+					//Sleep(1000);
+					printf("\n SendControlCommand cmd type: %d!\n", GET_FIRMWARE_REVISION);
+					GF_UINT8 parameter[1] = { GET_FIRMWARE_REVISION };
+					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
+					{
+						printf("\n SendControlCommand sucessful!\n");
+					}
+				}
+				else
+				{
+					printf("Get Hardware Revision with error, error code = %d\n", status);
+				}
+				break;
+			}
+
+			case GET_FIRMWARE_REVISION:
+			{
+				if (status == CONTROL_COMMAND_RESPONSE_OK)
+				{
+					printf("Firmware Revision R%d.%d-%d\n", data[2], data[3], data[4]);
+					//Sleep(1000);
+					printf("\n SendControlCommand cmd type: %d!\n", GET_MANUFACTURER_NAME);
+					GF_UINT8 parameter[1] = { GET_MANUFACTURER_NAME };
+					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
+					{
+						printf("\n SendControlCommand sucessful!\n");
+					}
+				}
+				else
+				{
+					printf("Get Firmwar Revision with error, error code = %d\n", status);
+				}
+				break;
+			}
+			case GET_MANUFACTURER_NAME:
+			{
+				if (status == CONTROL_COMMAND_RESPONSE_OK)
+				{
+					GF_UINT8 manu_name[50];
+					memcpy(manu_name, data + 2, length - 2);
+					manu_name[length - 2] = '\0';
+					printf("Manufacturer Name: %s\n", manu_name);
+					printf("\n SendControlCommand cmd type: %d!\n", GET_BATTERY_LEVEL);
+					GF_UINT8 parameter[1] = { GET_BATTERY_LEVEL };
+					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
+					{
+						printf("\n SendControlCommand sucessful!\n");
+					}
+				}
+				else
+				{
+					printf("Get Manufacturer Name with error, error code = %d\n", status);
+				}
+				break;
+			}
+			case GET_BATTERY_LEVEL:
+			{
+				if (status == CONTROL_COMMAND_RESPONSE_OK)
+				{
+					printf("Battery Level: %d%\n", data[2]);
+					printf("\n SendControlCommand cmd type: %d!\n", GET_TEMPERATURE_LEVEL);
+					GF_UINT8 parameter[1] = { GET_TEMPERATURE_LEVEL };
+					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
+					{
+						printf("\n SendControlCommand sucessful!\n");
+					}
+				}
+				else
+				{
+					printf("Get Battery Level with error, error code = %d\n", status);
+				}
+				break;
+			}
+			case GET_TEMPERATURE_LEVEL:
+			{
+				if (status == CONTROL_COMMAND_RESPONSE_OK)
+				{
+					printf("Temperature Level: %d degree\n", (data[2] - 40));
+					Sleep(1000);
+					/*
+					printf("\n SendControlCommand cmd type: %d!\n", POWER_OFF_REQUEST);
+					GF_UINT8 parameter[1] = { POWER_OFF_REQUEST };
+					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
+					{
+						printf("\n SendControlCommand sucessful!\n");
+					}*/
+
+					mAMInterface->Disconnect(handle);
+				}
+				else
+				{
+					printf("Get Temperature Level with error, error code = %d\n", status);
+				}
+				break;
+			}
+			default:
+				printf("unknown command type = %d\n", cmd_type);
+		}
+	}
+
 private:
 	GF_CAdapterManagerInterface* mAMInterface;
 	list<GF_CDevice*> mAvailabeDevice;
@@ -155,6 +388,7 @@ int _tmain(int charc, char* argv[]) {
 	GattClient gattclient(amInterface);
 	if (amInterface != NULL && amInterface->Init(0, LOGTYPE_FILE) == GF_OK)
 	{
+		printf("\n Start to scan... \n");
 		amInterface->RegisterClientCallback(&gattclient);
 		status = amInterface->StartScan(100);
 	}
@@ -169,7 +403,7 @@ int _tmain(int charc, char* argv[]) {
 	{
 		while (1)
 		{
-			Sleep(2000);
+			Sleep(5000);
 			loop++;
 			printf("loop = %d \n", loop);
 		}

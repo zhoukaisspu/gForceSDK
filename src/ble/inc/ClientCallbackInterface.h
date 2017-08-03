@@ -47,6 +47,10 @@ public:
 	/*Notification format: data length(1 byte N) + data(N Bytes)*/
 	virtual void onNotificationReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data) = 0;
 
+	/*Control command response from device that support gForce data protocol.
+	 *Notification format: Response status(1 byte) + cmd type(1 byte) + Response parameter(depends on cmd type)*/
+	virtual void onControlResponseReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data) = 0;
+
 	virtual void onComDestory() = 0;
 };
 #endif

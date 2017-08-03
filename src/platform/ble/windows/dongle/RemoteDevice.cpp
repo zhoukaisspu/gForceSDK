@@ -158,6 +158,9 @@ GF_CRemoteDevice::GF_CRemoteDevice(GF_CNpiInterface* minterface, GF_UINT8 addr_t
 
 	/*create the thread to process message.*/
 	mThread = new CThread(this);
+
+	mDeviceProtocolType = ProtocolType_Invalid;
+	mControlCommandHandle = INVALID_HANDLE;
 }
 
 GF_CRemoteDevice::~GF_CRemoteDevice()
@@ -386,9 +389,29 @@ GF_STATUS GF_CRemoteDevice::AuthenticationComplete(GF_PUINT8 data, GF_UINT16 len
 
 	if (data[EVENT_AUTH_COMPLETE_STATUS_OFFSET] != GF_OK)
 	{
-		LOGDEBUG(mTag, "GF_DEVICE_EVENT_AUTH_COMPLETE with error!! \n");
-		assert(GF_FALSE);
-		return GF_FAIL;
+		/*if authentication is not supported, start to exchange MTU size.*/
+		if (data[EVENT_AUTH_COMPLETE_STATUS_OFFSET] == 0x05)
+		{
+			LOGDEBUG(mTag, "authentication is not supported \n");
+			/*start to exchange MTU size*/
+			status = mInterface->ExchangeMTUSize(mHandle, LOCAL_GATT_CLIENT_MTU_SIZE);
+			if (GF_OK == status)
+			{
+				LOGDEBUG(mTag, "Gatt start to exchange MTU size! \n");
+				mState = GF_DEVICE_STATE_GATT_PRI_SVC;
+				return GF_OK;
+			}
+			else
+			{
+				assert(GF_FALSE);
+			}
+		}
+		else
+		{
+			LOGDEBUG(mTag, "GF_DEVICE_EVENT_AUTH_COMPLETE with error!! \n");
+			assert(GF_FALSE);
+			return GF_FAIL;
+		}
 	}
 
 	if (0x01 == data[EVENT_AUTH_COMPLETE_ENC_ENABLE_OFFSET])
@@ -487,7 +510,7 @@ GF_STATUS GF_CRemoteDevice::ConnectionParameterUpdated(GF_PUINT8 data, GF_UINT16
 	status = data[EVENT_BOND_COMPLETE_STATUS_OFFSET];
 	if (status == GF_OK)
 	{
-		mConnInternal = data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] << 8);
+		mConnInternal = data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_INTERVEL_OFFSET+1] << 8);
 		mSlaveLatency = data[EVENT_LINK_PARA_UPDATE_LATENCY_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_LATENCY_OFFSET+1] << 8);
 		mConnTimeout = data[EVENT_LINK_PARA_UPDATE_TIMEOUT_OFFSET] + (data[EVENT_LINK_PARA_UPDATE_TIMEOUT_OFFSET+1] << 8);
 		LOGDEBUG(mTag, "mConnInternal = 0x%02x \n", mConnInternal);
@@ -1150,6 +1173,12 @@ GF_STATUS GF_CRemoteDevice::W4GattReadCharcDesValueStateProcessMessage(GF_DEVICE
 			mCurrentCharactericticDescriptorIndex += 1;
 			if (GF_OK == ProcessCharacteristicConfiguration(mCurrentPrimaryServiceIndex, mCurrentCharactericticIndex, mCurrentCharactericticDescriptorIndex))
 			{
+				LOGDEBUG(mTag, "Service Discovery is done!\n");
+
+				CheckProtocolType();
+				LOGDEBUG(mTag, "mDeviceProtocolType = %d\n", mDeviceProtocolType);
+				LOGDEBUG(mTag, "mControlCommandHandle = %d\n", mControlCommandHandle);
+
 				if (mNeedSaveService == GF_TRUE)
 				{
 					mDatabase->SaveService(&mService);
@@ -1171,6 +1200,12 @@ GF_STATUS GF_CRemoteDevice::W4GattReadCharcDesValueStateProcessMessage(GF_DEVICE
 			mCurrentCharactericticDescriptorIndex += 1;
 			if (GF_OK == ProcessCharacteristicConfiguration(mCurrentPrimaryServiceIndex, mCurrentCharactericticIndex, mCurrentCharactericticDescriptorIndex))
 			{
+				LOGDEBUG(mTag, "Service Discovery is done! \n");
+				/*determine the protocol type supported.*/
+				CheckProtocolType();
+				LOGDEBUG(mTag, "mDeviceProtocolType = %d\n", mDeviceProtocolType);
+				LOGDEBUG(mTag, "mControlCommandHandle = %d\n", mControlCommandHandle);
+
 				if (mNeedSaveService == GF_TRUE)
 				{
 					mDatabase->SaveService(&mService);
@@ -1497,6 +1532,18 @@ GF_STATUS GF_CRemoteDevice::ExchangeMTUSize(GF_UINT16 mtu_size)
 	}
 }
 
+GF_STATUS GF_CRemoteDevice::SendControlCommand(GF_UINT8 data_length, GF_PUINT8 data)
+{
+	if (mInterface != NULL && mState == GF_DEVICE_STATE_CONNECTED && mControlCommandHandle != INVALID_HANDLE)
+	{
+		return mInterface->WriteCharacValue(mHandle, mControlCommandHandle, data, data_length);
+	}
+	else
+	{
+		return GF_FAIL;
+	}
+}
+
 GF_STATUS GF_CRemoteDevice::ConnectionParameterUpdateRequest(GF_UINT16 conn_interval_min, GF_UINT16 conn_interval_max, GF_UINT16 slave_latence, GF_UINT16 supervision_timeout)
 {
 	if (mInterface != NULL && mState == GF_DEVICE_STATE_CONNECTED)
@@ -1530,5 +1577,64 @@ GF_STATUS GF_CRemoteDevice::ReadCharacteristicValue(GF_UINT16 attribute_handle)
 	else
 	{
 		return GF_FAIL;
+	}
+}
+
+GF_VOID GF_CRemoteDevice::CheckProtocolType()
+{
+	LOGDEBUG(mTag, "CheckProtocolType\n");
+	mDeviceProtocolType = ProtocolType_Invalid;
+	GF_CPrimaryService* service;
+	GF_CCharacteristic* control_command_characteristic;
+	GF_CCharacteristic* data_notiry_characteristic;
+	GF_UUID control_command_uuid;
+	control_command_uuid.type = GF_UUID_128;
+	memcpy(control_command_uuid.value.uuid128, GFORCE_DATA_PROTOCOL_CHRAC_CONTROL_COMMAND_UUID ,UUID_128_LENGTH);
+
+	GF_UUID data_notiry_uuid;
+	data_notiry_uuid.type = GF_UUID_128;
+	memcpy(data_notiry_uuid.value.uuid128, GFORCE_DATA_PROTOCOL_CHRAC_DATA_NOTIFY_UUID, UUID_128_LENGTH);
+
+	GF_UINT8 currentprisvc = 0;
+	while (currentprisvc < mService.mNumOfPrivateService)
+	{
+		service = mService.FindPriSvcbyIndex(currentprisvc);
+		assert(service);
+
+		if ((service->mUUID.type == GF_UUID_128) && (0 == memcmp(GFORCE_DATA_PROTOCOL_SERVICE_UUID, service->mUUID.value.uuid128 ,UUID_128_LENGTH)))
+		{
+			LOGDEBUG(mTag, "GFORCE_DATA_PROTOCOL_SERVICE_UUID found with character num %d\n", service->mNumOfCharacteristic);
+			control_command_characteristic = service->FindCharacteristicbyUUID(control_command_uuid);
+			if (control_command_characteristic == NULL)
+			{
+				LOGDEBUG(mTag, "control_command_characteristic is NULL\n");
+			}
+			data_notiry_characteristic = service->FindCharacteristicbyUUID(data_notiry_uuid);
+			if (data_notiry_characteristic == NULL)
+			{
+				LOGDEBUG(mTag, "data_notiry_characteristic is NULL\n");
+			}
+
+			if ((NULL != control_command_characteristic) &&
+				(NULL != data_notiry_characteristic))
+			{
+				LOGDEBUG(mTag, "mDeviceProtocolType found\n");
+				mDeviceProtocolType = ProtocolType_DataProtocol;
+				mControlCommandHandle = control_command_characteristic->mValueHandle;
+				return;
+			}
+		}
+		else if ((service->mUUID.type == GF_UUID_128) && (0 == memcmp(GFORCE_OAD_SERVICE_UUID, service->mUUID.value.uuid128, UUID_128_LENGTH)))
+		{
+			mDeviceProtocolType = ProtocolType_OADService;
+			return;
+		}
+		else if ((service->mUUID.type == GF_UUID_16) && (service->mUUID.value.uuid16 == GFORCE_SIMPLE_PROTOCOL_SERVICE_UUID))
+		{
+			mDeviceProtocolType = ProtocolType_SimpleProfile;
+			return;
+		}
+
+		currentprisvc++;
 	}
 }

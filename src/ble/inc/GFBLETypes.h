@@ -115,4 +115,40 @@ struct GF_ConnectedDevice
 	GF_UINT16 slavelatency;
 	GF_UINT16 MTUsize;
 };
+
+typedef enum {
+	ProtocolType_SimpleProfile = 0,
+	ProtocolType_DataProtocol = 1,
+	ProtocolType_OADService = 1,
+	ProtocolType_Invalid = 0xff,
+}GF_DeviceProtocolType;
+
+/*Define Control Response Status for gForce Data Protocol*/
+#define CONTROL_COMMAND_RESPONSE_OK 0X00
+
+/*Define Control Command Type for gForce Data Protocol*/
+#define GET_PROTOCOL_VERSION 	0x00
+#define GET_FEATURE_MAP 		0x01
+#define GET_DEVICE_NAME 		0x02
+#define GET_MODEL_NUMBER 		0x03
+#define GET_SERIAL_NUMBER 		0x04
+#define GET_HARDWARE_REVISION   0x05
+#define GET_FIRMWARE_REVISION   0x06
+#define GET_MANUFACTURER_NAME   0X07
+#define GET_BATTERY_LEVEL 		0X08
+#define GET_TEMPERATURE_LEVEL   0X09
+
+#define POWER_OFF_REQUEST 		0X1D
+
+#define GFORCE_COMMAND_RESPONSE_LENGTH_OFFSET 3
+#define GFORCE_COMMAND_RESPONSE_HANDLE_OFFSET 4
+
+/*Define UUID for Service of gForce Data Protocol*/
+#define UUID_128_LENGTH 16
+const GF_UINT16 GFORCE_SIMPLE_PROTOCOL_SERVICE_UUID = 0xFFF0;
+const GF_UINT8 GFORCE_DATA_PROTOCOL_SERVICE_UUID[UUID_128_LENGTH] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x00, 0x40, 0x51, 0x04, 0xD0, 0xFF, 0x00, 0xF0 };
+const GF_UINT8 GFORCE_OAD_SERVICE_UUID[UUID_128_LENGTH] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x00, 0x40, 0x51, 0x04, 0xC0, 0xFF, 0x00, 0xF0 };
+const GF_UINT8 GFORCE_DATA_PROTOCOL_CHRAC_CONTROL_COMMAND_UUID[UUID_128_LENGTH] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x00, 0x40, 0x51, 0x04, 0xE1, 0xFF, 0x00, 0xF0 };
+const GF_UINT8 GFORCE_DATA_PROTOCOL_CHRAC_DATA_NOTIFY_UUID[UUID_128_LENGTH] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x00, 0x40, 0x51, 0x04, 0xE2, 0xFF, 0x00, 0xF0 };
+
 #endif

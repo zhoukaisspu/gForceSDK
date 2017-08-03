@@ -39,7 +39,7 @@
 
 #define MODUAL_TAG_AM "AdaperManager"
 
-#define ADAPTER_MANAGER_ATT_EVENT  (EVENT_MASK_DEVICE_CONNECTED | EVENT_MASK_INTERNAL_SCAN_FINISHED | EVENT_MASK_ATT_WRITE_MSG | EVENT_MASK_ATT_EXCHANGE_MTU_MSG | EVENT_MASK_ATT_READ_BLOB_RESP_MSG | EVENT_MASK_ATT_NOTI_MSG | EVENT_MASK_ATT_READ_RESP_MSG | EVENT_MASK_ATT_ERROR_MSG | EVENT_MASK_ATT_READ_BY_GRP_TYPE_MSG | EVENT_MASK_ATT_READ_BY_TYPE_MSG | EVENT_MASK_ATT_READ_BY_INFO_MSG)
+#define ADAPTER_MANAGER_ATT_EVENT  (EVENT_MASK_LINK_PARA_UPDATE_MSG | EVENT_MASK_DEVICE_CONNECTED | EVENT_MASK_INTERNAL_SCAN_FINISHED | EVENT_MASK_ATT_WRITE_MSG | EVENT_MASK_ATT_EXCHANGE_MTU_MSG | EVENT_MASK_ATT_READ_BLOB_RESP_MSG | EVENT_MASK_ATT_NOTI_MSG | EVENT_MASK_ATT_READ_RESP_MSG | EVENT_MASK_ATT_ERROR_MSG | EVENT_MASK_ATT_READ_BY_GRP_TYPE_MSG | EVENT_MASK_ATT_READ_BY_TYPE_MSG | EVENT_MASK_ATT_READ_BY_INFO_MSG)
 #define ADAPTER_MANAGER_EVENT (0x0100FD | ADAPTER_MANAGER_ATT_EVENT)
 static GF_CAdapterManager* SingleInstance = NULL;
 std::mutex SingleInstanceMutex;
@@ -402,6 +402,32 @@ GF_STATUS GF_CAdapterManager::Disconnect(GF_UINT16 handle)
 	return result;
 }
 
+GF_DeviceProtocolType GF_CAdapterManager::GetDeviceProtocolSupported(GF_UINT16 conn_handle)
+{
+	GF_DeviceProtocolType ProtocolType = ProtocolType_Invalid;
+	LOGDEBUG(mTag, "GetDeviceProtocolSupported \n");
+	GF_CRemoteDevice* device = GetConnectedDeviceByHandle(conn_handle);
+	if (device != NULL)
+	{
+		ProtocolType = device->GetProtocolType();
+	}
+
+	return ProtocolType;
+}
+
+GF_STATUS GF_CAdapterManager::SendControlCommand(GF_UINT16 conn_handle, GF_UINT8 data_length, GF_PUINT8 data)
+{
+	GF_STATUS result = GF_FAIL;
+	LOGDEBUG(mTag, "SendControlCommand \n");
+	GF_CRemoteDevice* device = GetConnectedDeviceByHandle(conn_handle);
+	if (device != NULL)
+	{
+		result = device->SendControlCommand(data_length, data);
+	}
+
+	return result;
+}
+
 GF_STATUS GF_CAdapterManager::OnConnectEvent(GF_PUINT8 data, GF_UINT16 length)
 {
 	GF_STATUS result = GF_FAIL;
@@ -635,17 +661,34 @@ GF_STATUS GF_CAdapterManager::OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16
 			handle_offset = 1;
 			GF_UINT16 handle = data[handle_offset] + (data[handle_offset + 1] << 8);
 			GF_CRemoteDevice* device = GetConnectedDeviceByHandle(handle);
+			GF_UINT16 atttibute_handle;
+
 			if (device != NULL)
 			{
 				GF_DEVICE_STATE state = device->GetState();
 				if (state == GF_DEVICE_STATE_CONNECTED && mClientCallback != NULL)
 				{
-					mClientCallback->onNotificationReceived(handle, length-3, data + 3);
+					/*for notification from device that support data protocol*/
+					if (ProtocolType_DataProtocol == device->GetProtocolType())
+					{
+						atttibute_handle = data[GFORCE_COMMAND_RESPONSE_HANDLE_OFFSET] + (data[GFORCE_COMMAND_RESPONSE_HANDLE_OFFSET + 1] << 8);
+						GF_UINT8 length = data[GFORCE_COMMAND_RESPONSE_LENGTH_OFFSET];
+						LOGDEBUG(mTag, "--------->notification atttibute_handle = %x! \n", atttibute_handle);
+						/*for control command response*/
+						if ( atttibute_handle == device->GetControlCommandHandle())
+						{
+							mClientCallback->onControlResponseReceived(handle, length - 2, data + GFORCE_COMMAND_RESPONSE_LENGTH_OFFSET + 3);
+						}
+						else
+						{
+							mClientCallback->onNotificationReceived(handle, length-3, data + 3);
+						}
+					}
+					else
+					{
+						mClientCallback->onNotificationReceived(handle, length-3, data + 3);
+					}
 				}
-			}
-			else
-			{
-				LOGDEBUG(mTag, "--------->device not found!!!! \n");
 			}
 			break;
 		}

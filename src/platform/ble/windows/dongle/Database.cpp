@@ -443,7 +443,8 @@ GF_STATUS GF_CDatabase::SaveService(GF_CService* service)
 	status = mDoc->LoadFile((const char*)mFilename);
 	if (status != GF_OK)
 	{
-		return GF_FAIL;
+		LOGDEBUG(mTag, "LoadFile fail..\n");
+		//return GF_FAIL;
 	}
 
 	XMLElement * GattSvc = mDoc->NewElement(GATTSERVICE);

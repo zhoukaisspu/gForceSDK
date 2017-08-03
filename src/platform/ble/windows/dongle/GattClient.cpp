@@ -93,7 +93,7 @@ GF_CCharacteristicDescriptor* GF_CCharacteristic::FindDescriptorByUUID(GF_UUID u
 				if (0 == memcpy(uuid.value.uuid128, (*ii)->mUUID.value.uuid128, 16))
 				{
 					return (*ii);
-				};
+				}
 			}
 		}
 	}
@@ -254,6 +254,30 @@ GF_CCharacteristic* GF_CPrimaryService::FindCharacteristicbyIndex(GF_UINT8 index
 		if ((*ii)->mIndex == index)
 		{
 			return (*ii);
+		}
+	}
+
+	return NULL;
+}
+
+GF_CCharacteristic* GF_CPrimaryService::FindCharacteristicbyUUID(GF_UUID uuid)
+{
+	list<GF_CCharacteristic*>::iterator ii;
+	for (ii = mCharacteristic.begin(); ii != mCharacteristic.end(); ii++)
+	{
+		if (uuid.type == GF_UUID_16 && ((*ii)->mUUID.type == GF_UUID_16))
+		{
+			if ((*ii)->mUUID.value.uuid16 == uuid.value.uuid16)
+			{
+				return (*ii);
+			}
+		}
+		else if (uuid.type == GF_UUID_128 && ((*ii)->mUUID.type == GF_UUID_128))
+		{
+			if (0 == memcmp(uuid.value.uuid128, (*ii)->mUUID.value.uuid128, 16))
+			{
+				return (*ii);
+			}
 		}
 	}
 

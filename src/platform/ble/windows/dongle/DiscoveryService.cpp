@@ -170,6 +170,12 @@ GF_STATUS GF_CDiscoveryService::CheckAdvData(GF_PUINT8 data, GF_UINT16 length)
 	while (remaining > 0)
 	{
 		len = p[offset];
+		/*if length of adv structure is more then remaining length, means some error happend, return avoid overflow.*/
+		if (len > remaining)
+		{
+			break;
+		}
+
 		offset += 1; //skip len
 		remaining--;
 		adv_type = p[offset];
@@ -213,6 +219,12 @@ GF_BOOL GF_CDiscoveryService::GetDeviceName(GF_PCHAR out, GF_PUINT8 data, GF_UIN
 	while (remaining > 0)
 	{
 		len = p[offset];
+		/*if length of adv structure is more then remaining length, means some error happend, return avoid overflow.*/
+		if (len > remaining)
+		{
+			break;
+		}
+
 		offset += 1; //skip len
 		remaining--;
 		adv_type = p[offset];
@@ -231,6 +243,8 @@ GF_BOOL GF_CDiscoveryService::GetDeviceName(GF_PCHAR out, GF_PUINT8 data, GF_UIN
 				result = GF_FALSE;
 			}
 			
+			/*return here if we have found the device name.*/
+			return result;
 		}
 
 		offset += len;

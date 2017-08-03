@@ -154,6 +154,16 @@ public:
 		return mState;
 	}
 
+	GF_DeviceProtocolType GetProtocolType()
+	{
+		return mDeviceProtocolType;
+	}
+
+	GF_UINT16 GetControlCommandHandle()
+	{
+		return mControlCommandHandle;
+	}
+
 	GF_VOID Init();
 	GF_VOID DeInit();
 
@@ -181,6 +191,7 @@ public:
 	GF_STATUS ConnectionParameterUpdateRequest(GF_UINT16 conn_interval_min, GF_UINT16 conn_interval_max, GF_UINT16 slave_latence, GF_UINT16 supervision_timeout);
 	GF_STATUS WriteCharacteristicValue(GF_UINT16 attribute_handle, GF_UINT8 data_length, GF_PUINT8 data);
 	GF_STATUS ReadCharacteristicValue(GF_UINT16 attribute_handle);
+	GF_STATUS SendControlCommand(GF_UINT8 data_length, GF_PUINT8 data);
 
 	GF_STATUS ExchangeMTUSize(GF_UINT16 mtu_size);
 	GF_UINT8  mAddrType;
@@ -191,6 +202,8 @@ public:
 	GF_UINT8 mKeySize;
 
 private:
+	GF_VOID CheckProtocolType();
+
 	GF_CHAR   mDevName[BLE_DEVICE_NAME_LENGTH];
 	GF_UINT16 mHandle; //connection handle
 	GF_DEVICE_ROLE mConnRole;
@@ -223,5 +236,9 @@ private:
 	GF_CDatabase* mDatabase;
 
 	GF_UINT8 N;
+
+	/*indicate the protocpl type the device supported. */
+	GF_DeviceProtocolType mDeviceProtocolType;
+	GF_UINT16 mControlCommandHandle;
 };
 #endif

@@ -170,6 +170,7 @@ public:
 	GF_STATUS AddIncSvcIntoPriService(GF_PUINT8 data, GF_UINT8 pair_len);
 
 	GF_CCharacteristic* FindCharacteristicbyIndex(GF_UINT8 index);
+	GF_CCharacteristic* FindCharacteristicbyUUID(GF_UUID uuid);
 	GF_CIncludeService* FindIncluSvcbyIndex(GF_UINT8 index);
 	
 	GF_UINT16 mStartHandle;
