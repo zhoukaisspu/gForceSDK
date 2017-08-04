@@ -28,37 +28,59 @@
  * DAMAGE.
  *
  */
-#include "LogUtils.h"
-#include "BLEHub.h"
-#include "HubManagerImpl.h"
+/*!
+ * \file SimpleProfile.h
+ * \brief Implement the BLE simple profile protocol
+ *
+ * \version 0.1
+ * \date 2017.4.0
+ */
 
-using namespace std;
-using namespace gf;
+#pragma once
 
-mutex HubManagerImpl::mMutex;
-atomic<Hub*> HubManagerImpl::mTheHub;
-gfsPtr<Hub> HubManagerImpl::mTheSharedPtr;
+#include "DeviceProfile.h"
 
-gfsPtr<Hub> HubManagerImpl::getHubInstanceImpl(const tstring& sIdentifier)
+//#define DEBUG_ANALYSE_PACKAGE_LOST
+
+#if (defined(DEBUG) || defined(_DEBUG)) && defined(DEBUG_ANALYSE_PACKAGE_LOST)
+#include <chrono>
+#include <atomic>
+#include <thread>
+#endif
+
+namespace gf
 {
-	Hub* rawPtr = mTheHub.load(memory_order_acquire);
-	if (nullptr == rawPtr || nullptr == mTheSharedPtr || mTheSharedPtr.get() != rawPtr)
+	class BLEHub;
+
+	enum {
+		EVENT_QUATERNION = 0x02,
+		EVENT_GESTURE = 0x0F,
+		EVENT_STATUS = 0x14
+	};
+
+	class SimpleProfile : public DeviceProfile
 	{
-		lock_guard<mutex> lock(mMutex);
-		rawPtr = mTheHub.load(memory_order_relaxed);
-		if (nullptr == rawPtr || nullptr == mTheSharedPtr || mTheSharedPtr.get() != rawPtr)
-		{
-			if (nullptr == mTheSharedPtr)
-			{
-				GF_LOGD("Creating hub instance.");
-				mTheSharedPtr = make_shared<BLEHub>(sIdentifier);
-			}
-			mTheHub.store(mTheSharedPtr.get(), memory_order_release);
-		}
-	}
-	if (nullptr == mTheSharedPtr)
-	{
-		GF_LOGF("getHubInstance error, object is NULL.");
-	}
-	return mTheSharedPtr;
-}
+	public:
+		SimpleProfile(gfwPtr<BLEDevice> device) : DeviceProfile(device) {}
+		virtual ~SimpleProfile() {}
+
+	protected:
+		virtual void onData(GF_UINT8 length, GF_PUINT8 data) override;
+		virtual void onResponse(GF_UINT8 length, GF_PUINT8 data) override;
+		virtual gfsPtr<DeviceSetting> getDeviceSetting() override;
+
+	private:
+		void onQuaternion(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data);
+		void onGesture(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data);
+		void onStatus(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data);
+
+#if (defined(DEBUG) || defined(_DEBUG)) && defined(DEBUG_ANALYSE_PACKAGE_LOST)
+	private:
+		static atomic<GF_UINT32> dataCnt;
+		static atomic<GF_UINT32> lastUpdated;
+		static void timefun();
+		static thread dbgThread;
+#endif
+	};
+
+} // namespace gf

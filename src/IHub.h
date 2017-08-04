@@ -30,6 +30,7 @@
  */
 #pragma once
 
+#include "GFBLETypes.h"
 #include "gfTypes.h"
 #include "Quaternion.h"
 #include <functional>
@@ -42,6 +43,12 @@ namespace gf
 
 	enum class AttributeHandle : GF_UINT16 {
 		Max,
+	};
+	enum class DeviceProtocolType : GF_UINT32 {
+		SimpleProfile = ProtocolType_SimpleProfile,
+		DataProtocol = ProtocolType_DataProtocol,
+		OADService = ProtocolType_OADService,
+		Invalid = ProtocolType_Invalid,
 	};
 	class IHub
 	{
@@ -56,6 +63,8 @@ namespace gf
 		virtual GF_RET_CODE writeCharacteristic(BLEDevice& dev,
 			AttributeHandle attribute_handle, GF_UINT8 data_length, GF_PUINT8 data) = 0;
 		virtual GF_RET_CODE readCharacteristic(BLEDevice& dev, AttributeHandle attribute_handle) = 0;
+		virtual GF_RET_CODE getProtocol(BLEDevice& dev, DeviceProtocolType& type) = 0;
+		virtual GF_RET_CODE sendControlCommand(BLEDevice& dev, GF_UINT8 data_length, GF_PUINT8 data) = 0;
 
 		virtual void notifyOrientationData(BLEDevice& dev, const Quaternion& rotation) = 0;
 		virtual void notifyGestureData(BLEDevice& dev, Gesture gest) = 0;

@@ -170,14 +170,14 @@ public:
 		case Gesture::SpreadFingers:
 			gesture = "SpreadFingers";
 			break;
-		case Gesture::WaveTowardPalm:
-			gesture = "WaveTowardPalm";
+		case Gesture::WaveIn:
+			gesture = "WaveIn";
 			break;
-		case Gesture::WaveBackwardPalm:
-			gesture = "WaveBackwardPalm";
+		case Gesture::WaveOut:
+			gesture = "WaveOut";
 			break;
-		case Gesture::TuckFingers:
-			gesture = "TuckFingers";
+		case Gesture::Pinch:
+			gesture = "Pinch";
 			break;
 		case Gesture::Shoot:
 			gesture = "Shoot";

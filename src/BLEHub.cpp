@@ -31,7 +31,6 @@
 #include "LogUtils.h"
 #include "BLEHub.h"
 #include "HubListener.h"
-#include "GForceDevice.h"
 #include "Utils.h"
 #include "GFBLETypes.h"
 
@@ -104,7 +103,7 @@ GF_RET_CODE BLEHub::init(GF_UINT8 comPort)
 	mAM = GF_CAdapterManagerInterface::GetInstance();
 	if (nullptr == mAM) {
 		GF_LOGD("Memory insurfficient.");
-		return GF_RET_CODE::GF_ERR_NO_RESOURCE;
+		return GF_RET_CODE::GF_ERROR_NO_RESOURCE;
 	}
 	if (GF_OK != mAM->Init(comPort, LOGTYPE_MFC)) {
 		GF_LOGD("Hub init failed.");
@@ -313,7 +312,7 @@ void BLEHub::enumDevices(std::function<bool(WPDEVICE)>& funEnum, bool bConnected
 	lock_guard<mutex> lock(mTaskMutex);
 	for (auto& itor : mConnectedDevices)
 	{
-		if (!funEnum(static_pointer_cast<Device>(itor)))
+		if (!funEnum(itor))
 			return; // if client wants to stop, it will return false in funEnum
 	}
 	if (bConnectedOnly)
@@ -321,7 +320,7 @@ void BLEHub::enumDevices(std::function<bool(WPDEVICE)>& funEnum, bool bConnected
 
 	for (auto& itor : mDisconnDevices)
 	{
-		if (!funEnum(static_pointer_cast<Device>(itor)))
+		if (!funEnum(itor))
 			return; // if client wants to stop, it will return false in funEnum
 	}
 }
@@ -335,14 +334,14 @@ WPDEVICE BLEHub::findDevice(GF_UINT8 addrType, tstring address)
 	for (auto& itor : mConnectedDevices)
 	{
 		if (itor->isMyself(addrType, address))
-			ret = static_pointer_cast<Device>(itor);
+			ret = itor;
 	}
 	if (nullptr != ret)
 		return ret;
 	for (auto& itor : mDisconnDevices)
 	{
 		if (itor->isMyself(addrType, address))
-			ret = static_pointer_cast<Device>(itor);
+			ret = itor;
 	}
 	return ret;
 }
@@ -538,20 +537,10 @@ void BLEHub::onCharacteristicValueRead(GF_STATUS status, GF_UINT16 handle, GF_UI
 	}
 }
 
-#define ATTRIB_HANDLE_GEVENT (0x27)
 
 /*Notification format: data length(1 byte N) + data(N Bytes)*/
 void BLEHub::onNotificationReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
 {
-	// parse data header
-	if (length <= 3)
-		return;
-	GF_UINT16 attrib_handle = data[1] | ((GF_UINT16)data[2] << 8);
-	if (ATTRIB_HANDLE_GEVENT != attrib_handle)
-	{
-		GF_LOGD("%s: not supported event type. attrib_handle is 0x%8.8X", __FUNCTION__, attrib_handle);
-		return;
-	}
 	lock_guard<mutex> lock(mTaskMutex);
 	gfsPtr<BLEDevice> dev;
 	for (auto& itor : mConnectedDevices)
@@ -563,7 +552,23 @@ void BLEHub::onNotificationReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8
 		}
 	}
 	if (nullptr != dev)
-		dev->onData(length - 3, data + 3);
+		dev->onData(length, data);
+}
+
+void BLEHub::onControlResponseReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
+{
+	lock_guard<mutex> lock(mTaskMutex);
+	gfsPtr<BLEDevice> dev;
+	for (auto& itor : mConnectedDevices)
+	{
+		if (itor->getHandle() == handle)
+		{
+			dev = itor;
+			break;
+		}
+	}
+	if (nullptr != dev)
+		dev->onResponse(length, data);
 }
 
 void BLEHub::onComDestory()
@@ -716,6 +721,60 @@ GF_RET_CODE BLEHub::readCharacteristic(BLEDevice& dev, AttributeHandle attribute
 		return GF_RET_CODE::GF_ERROR;
 }
 
+GF_RET_CODE BLEHub::getProtocol(BLEDevice& dev, DeviceProtocolType& type)
+{
+	auto am = mAM;
+	auto handle = dev.getHandle();
+	GF_DeviceProtocolType protoType = ProtocolType_Invalid;
+	if (nullptr == am || INVALID_HANDLE == handle)
+		return GF_RET_CODE::GF_ERROR_BAD_STATE;
+
+	GF_UINT32 status = GF_OK;
+	//executeCommand(make_shared<HubMsg>([&am, handle, &protoType]()
+	//{
+		protoType = am->GetDeviceProtocolSupported(handle);
+		//return static_cast<GF_UINT32>(GF_OK);
+	//}));
+	switch (protoType)
+	{
+	case ProtocolType_SimpleProfile:
+		type = DeviceProtocolType::SimpleProfile;
+		break;
+	case ProtocolType_DataProtocol:
+		type = DeviceProtocolType::DataProtocol;
+		break;
+	case ProtocolType_OADService:
+		type = DeviceProtocolType::OADService;
+		break;
+	default:
+		type = DeviceProtocolType::Invalid;
+	}
+	if (GF_OK == status)
+		return GF_RET_CODE::GF_SUCCESS;
+	else
+		return GF_RET_CODE::GF_ERROR;
+}
+
+GF_RET_CODE BLEHub::sendControlCommand(BLEDevice& dev, GF_UINT8 data_length, GF_PUINT8 data)
+{
+	auto am = mAM;
+	auto handle = dev.getHandle();
+	if (nullptr == am || INVALID_HANDLE == handle)
+		return GF_RET_CODE::GF_ERROR_BAD_STATE;
+
+	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, handle,
+		data_length, data]()
+	{
+		GF_STATUS status = am->SendControlCommand(handle,
+			data_length, data);
+		return static_cast<GF_UINT32>(status);
+	}));
+	if (GF_OK == status)
+		return GF_RET_CODE::GF_SUCCESS;
+	else
+		return GF_RET_CODE::GF_ERROR;
+}
+
 void BLEHub::notifyOrientationData(BLEDevice& dev, const Quaternion& rotation)
 {
 	for (auto& itor : mConnectedDevices)
@@ -752,23 +811,28 @@ void BLEHub::notifyReCenter(BLEDevice& dev)
 	}
 }
 
-const char* gForcePrefix = "gForceBLE";
+const char* gForcePrefix = "gForce";
 
 gfsPtr<BLEDevice> BLEHub::createDeviceBeforeConnect(const GF_BLEDevice& bleDev)
 {
+	gfsPtr<BLEDevice> pDevice;
 	if (nullptr != strstr(bleDev.dev_name, gForcePrefix))
 	{
-		return static_pointer_cast<BLEDevice>(make_shared<GForceDevice>(*this, bleDev));
+		GF_LOGI("Device mathing. %s, rssi = %u", bleDev.dev_name, bleDev.rssi);
+		pDevice = make_shared<BLEDevice>(*this, bleDev);
 	}
 	else
 	{
 #if ONLY_SCAN_GFORCE_DEVICE
-		GF_LOGI("Device unmatch. %s", bleDev.dev_name);
-		return nullptr;
+		GF_LOGI("Device unmatch. %s, rssi = %u", bleDev.dev_name, bleDev.rssi);
 #else
-		return make_shared<BLEDevice>(*this, bleDev);
+		pDevice = make_shared<BLEDevice>(*this, bleDev);
 #endif
 	}
+	if (nullptr == pDevice)
+		return nullptr;
+	pDevice->mMyself = pDevice;
+	return pDevice;
 }
 
 void BLEHub::NotifyHelper::onScanFinished()

@@ -1,19 +1,19 @@
 /*
  * Copyright 2017, OYMotion Inc.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -28,7 +28,7 @@
  * DAMAGE.
  *
  */
-#include "GForceDevice.h"
+#include "SimpleProfile.h"
 #include "Utils.h"
 #include "LogUtils.h"
 #include "Quaternion.h"
@@ -58,29 +58,44 @@ void GForceDevice::timefun()
 }
 #endif
 
-void GForceDevice::onData(GF_UINT8 length, GF_PUINT8 data)
+#define ATTRIB_HANDLE_GEVENT (0x27)
+#define EVENT_RECENTER_MASK		0x01
+
+void SimpleProfile::onData(GF_UINT8 length, GF_PUINT8 data)
 {
-	if (length <= 1)
+	gfsPtr<BLEDevice> device = mDevice.lock();
+	if (nullptr == device)
 		return;
+	// parse data header
+	if (length <= 4)
+		return;
+	GF_UINT32 offset = 1;
+	GF_UINT16 attrib_handle = data[offset] | ((GF_UINT16)data[offset + 1] << 8);
+	if (ATTRIB_HANDLE_GEVENT != attrib_handle)
+	{
+		GF_LOGD("%s: not supported event type. attrib_handle is 0x%4.4X", __FUNCTION__, attrib_handle);
+		return;
+	}
+	offset += 2;
 
 #if (defined(DEBUG) || defined(_DEBUG)) && defined(DEBUG_ANALYSE_PACKAGE_LOST)
 	if (!dbgThread.joinable())
-		dbgThread = thread(GForceDevice::timefun);
+		dbgThread = thread(SimpleProfile::timefun);
 	dataCnt++;
 #endif
-	GF_UINT8 evtType = data[0] & EVENT_MASK;
-	GF_UINT8 packageIdFlag = (data[0] >> 7) & PCKID_FLAG_MASK;
-	GF_UINT8 payloadLength = data[1];
+	GF_UINT8 evtType = data[offset] & EVENT_MASK;
+	GF_UINT8 packageIdFlag = (data[offset] >> 7) & PCKID_FLAG_MASK;
+	offset++;
+	GF_UINT8 payloadLength = data[offset++];
 	GF_UINT16 currPackageId = INVALID_PACKAGE_ID;
 	GF_PUINT8 payload = nullptr;
-	
+
 	if (packageIdFlag != 0)
 	{
-		currPackageId = data[2];
-		payload = &data[3];
+		currPackageId = data[offset++];
 		--payloadLength;
 
-		lock_guard<mutex> lock(mMutex);
+		lock_guard<mutex> lock(device->getLockable());
 		if (mPackageId == INVALID_PACKAGE_ID)
 		{
 			mPackageId = currPackageId;
@@ -100,21 +115,19 @@ void GForceDevice::onData(GF_UINT8 length, GF_PUINT8 data)
 			}
 		}
 	}
-	else
-	{
-		payload = &data[2];
-	}
 
+	BLEDevice& ref = *device.get();
+	payload = &data[offset];
 	switch (evtType)
 	{
 	case EVENT_QUATERNION:
-		onQuaternion(payloadLength, payload);
+		onQuaternion(ref, payloadLength, payload);
 		break;
 	case EVENT_GESTURE:
-		onGesture(payloadLength, payload);
+		onGesture(ref, payloadLength, payload);
 		break;
 	case EVENT_STATUS:
-		onStatus(payloadLength, payload);
+		onStatus(ref, payloadLength, payload);
 		break;
 	default:
 		GF_LOGE("%s: unknown event ID: %2.2X", __FUNCTION__, evtType);
@@ -122,9 +135,19 @@ void GForceDevice::onData(GF_UINT8 length, GF_PUINT8 data)
 	}
 }
 
-void GForceDevice::onQuaternion(GF_UINT8 length, GF_PUINT8 data)
+void SimpleProfile::onResponse(GF_UINT8 length, GF_PUINT8 data)
 {
-	length; data;
+	GF_LOGD("%s: No implementation.", __FUNCTION__);
+}
+
+gfsPtr<DeviceSetting> SimpleProfile::getDeviceSetting()
+{
+	GF_LOGD("%s: No implementation.", __FUNCTION__);
+	return gfsPtr<DeviceSetting>();
+}
+
+void SimpleProfile::onQuaternion(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
+{
 	if (length < 16)
 	{
 		GF_LOGD("%s, length: %u, data insufficient.", __FUNCTION__, length);
@@ -132,14 +155,14 @@ void GForceDevice::onQuaternion(GF_UINT8 length, GF_PUINT8 data)
 	}
 	GF_FLOAT f[4];
 	// prevent align issue
-	memcpy(f, data,  sizeof(f));
+	memcpy(f, data, sizeof(f));
 	Quaternion q(f[0], f[1], f[2], f[3]);
 	// GF_LOGD("Device: %s, Quaternion: %s", utils::tostring(getName()).c_str(), q.toString().c_str());
 
-	mHub.notifyOrientationData(*this, q);
+	device.getHub().notifyOrientationData(device, q);
 }
 
-void GForceDevice::onGesture(GF_UINT8 length, GF_PUINT8 data)
+void SimpleProfile::onGesture(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 	GF_LOGD("%s, length: %u", __FUNCTION__, length);
 	if (length > 0)
@@ -156,14 +179,14 @@ void GForceDevice::onGesture(GF_UINT8 length, GF_PUINT8 data)
 		case static_cast<GF_UINT8>(Gesture::SpreadFingers) :
 			gesture = Gesture::SpreadFingers;
 			break;
-		case static_cast<GF_UINT8>(Gesture::WaveTowardPalm) :
-			gesture = Gesture::WaveTowardPalm;
+		case static_cast<GF_UINT8>(Gesture::WaveIn) :
+			gesture = Gesture::WaveIn;
 			break;
-		case static_cast<GF_UINT8>(Gesture::WaveBackwardPalm) :
-			gesture = Gesture::WaveBackwardPalm;
+		case static_cast<GF_UINT8>(Gesture::WaveOut) :
+			gesture = Gesture::WaveOut;
 			break;
-		case static_cast<GF_UINT8>(Gesture::TuckFingers) :
-			gesture = Gesture::TuckFingers;
+		case static_cast<GF_UINT8>(Gesture::Pinch) :
+			gesture = Gesture::Pinch;
 			break;
 		case static_cast<GF_UINT8>(Gesture::Shoot) :
 			gesture = Gesture::Shoot;
@@ -172,11 +195,11 @@ void GForceDevice::onGesture(GF_UINT8 length, GF_PUINT8 data)
 		default:
 			gesture = Gesture::Undefined;
 		}
-		mHub.notifyGestureData(*this, gesture);
+		device.getHub().notifyGestureData(device, gesture);
 	}
 }
 
-void GForceDevice::onStatus(GF_UINT8 length, GF_PUINT8 data)
+void SimpleProfile::onStatus(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 	GF_LOGD("%s, length: %u", __FUNCTION__, length);
 	if (length > 0)
@@ -184,7 +207,7 @@ void GForceDevice::onStatus(GF_UINT8 length, GF_PUINT8 data)
 		GF_UINT8 status = data[0] & EVENT_RECENTER_MASK;
 		if (1 == status)
 		{
-			mHub.notifyReCenter(*this);
+			device.getHub().notifyReCenter(device);
 		}
 	}
 }

@@ -417,7 +417,7 @@ GFORCE4CS_API GF_UINT hub_register_listener(ListenerCalls* lis)
 		GF_LOGD("Register delegate listener.");
 		ret = GF_RET_CODE::GF_ERROR_BAD_STATE;
 		if (nullptr != _ref.hub)
-			ret = _ref.hub->registerListener(static_pointer_cast<HubListener>(_ref.lt));
+			ret = _ref.hub->registerListener(_ref.lt);
 	}
 	return RETURN_UINT_VALUE_FROM_RET_CODE;
 }
@@ -446,7 +446,7 @@ GFORCE4CS_API GF_UINT hub_unregister_listener(ListenerCalls* lis)
 		GF_LOGD("Unregister delegate listener.");
 		ret = GF_RET_CODE::GF_ERROR_BAD_STATE;
 		if (nullptr != _ref.hub)
-			ret = _ref.hub->unRegisterListener(static_pointer_cast<HubListener>(_ref.lt));
+			ret = _ref.hub->unRegisterListener(_ref.lt);
 	}
 	return RETURN_UINT_VALUE_FROM_RET_CODE;
 }

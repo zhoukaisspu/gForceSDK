@@ -28,17 +28,17 @@
  * DAMAGE.
  *
  */
-#pragma once
+#include "DeviceSettingHandle.h"
+#include "BLEDevice.h"
 
-#include "GForceDevice.h"
+using namespace gf;
 
-namespace gf
+DeviceSettingHandle::DeviceSettingHandle(gfsPtr<BLEDevice> device)
+	: mDevice(device)
 {
+}
 
 
-	class DeviceHelper
-	{
-	public:
-	};
-
-} // namespace gf
+DeviceSettingHandle::~DeviceSettingHandle()
+{
+}

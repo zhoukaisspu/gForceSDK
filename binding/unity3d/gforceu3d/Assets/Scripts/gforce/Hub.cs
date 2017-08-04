@@ -50,11 +50,13 @@ namespace gf
         /// Method is not supported at this time.
         GF_ERROR_NOT_SUPPORT,
         /// Hub is busying on device scan and cannot fulfill the call.
-        GF_ERR_SCAN_BUSY,
+        GF_ERROR_SCAN_BUSY,
         /// Insufficient resource to perform the call.
-        GF_ERR_NO_RESOURCE,
+        GF_ERROR_NO_RESOURCE,
         /// A preset timer is expired.
         GF_ERROR_TIMEOUT,
+	/// Target device is busy and cannot fulfill the call.
+	GF_ERROR_DEVICE_BUSY,
     };
 
     public sealed class Hub : IDisposable

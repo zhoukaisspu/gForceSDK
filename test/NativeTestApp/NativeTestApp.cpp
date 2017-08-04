@@ -182,14 +182,14 @@ class HubListenerImp : public HubListener
 		case Gesture::SpreadFingers:
 			gesture = "SpreadFingers";
 			break;
-		case Gesture::WaveTowardPalm:
-			gesture = "WaveTowardPalm";
+		case Gesture::WaveIn:
+			gesture = "WaveIn";
 			break;
-		case Gesture::WaveBackwardPalm:
-			gesture = "WaveBackwardPalm";
+		case Gesture::WaveOut:
+			gesture = "WaveOut";
 			break;
-		case Gesture::TuckFingers:
-			gesture = "TuckFingers";
+		case Gesture::Pinch:
+			gesture = "Pinch";
 			break;
 		case Gesture::Shoot:
 			gesture = "Shoot";
@@ -363,9 +363,9 @@ int _tmain()
 	GF_LOGI("Hub work mode is %d now.", static_cast<GF_INT>(pHub->getWorkMode()));
 	GF_LOGI("Main thread id is %s.\n", utils::threadIdToString(this_thread::get_id()).c_str());
 
-	listener = static_pointer_cast<HubListener>(make_shared<HubListenerImp>());
+	listener = make_shared<HubListenerImp>();
 	pHub->registerListener(listener);
-	pHub->registerListener(static_pointer_cast<HubListener>(make_shared<HubListenerImp>()));
+	pHub->registerListener(make_shared<HubListenerImp>());
 	//listener = nullptr;
 
 	if (GF_RET_CODE::GF_SUCCESS != pHub->init())

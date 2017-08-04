@@ -1,19 +1,19 @@
 /*
  * Copyright 2017, OYMotion Inc.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -31,6 +31,9 @@
 #include "LogUtils.h"
 #include "BLEDevice.h"
 #include "Utils.h"
+#include "SimpleProfile.h"
+#include "BLEDataProfile3.h"
+
 #include <cstdio>
 
 
@@ -183,6 +186,14 @@ GF_RET_CODE BLEDevice::cancelConnect()
 	return ret;
 }
 
+gfsPtr<DeviceSetting> BLEDevice::getDeviceSetting()
+{
+	if (nullptr == mProfile.get())
+		return gfsPtr<DeviceSetting>();
+	else
+		return mProfile->getDeviceSetting();
+}
+
 void BLEDevice::updateData(const GF_BLEDevice& bleDev)
 {
 	lock_guard<mutex> lock(mMutex);
@@ -225,6 +236,32 @@ void BLEDevice::onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDe
 	}
 #endif
 	mCnntStatus = DeviceConnectionStatus::Connected;
+
+	if (nullptr == mProfile.get())
+	{
+		DeviceProtocolType type = DeviceProtocolType::Invalid;
+		GF_RET_CODE ret = mHub.getProtocol(*this, type);
+		if (GF_RET_CODE::GF_SUCCESS != ret)
+		{
+			GF_LOGE("Get protocol failed.");
+			return;
+		}
+		GF_LOGD("Protocol is %u.", static_cast<GF_UINT>(type));
+		switch (type)
+		{
+		case DeviceProtocolType::SimpleProfile:
+			mProfile = make_shared<SimpleProfile>(mMyself);
+			break;
+		case DeviceProtocolType::DataProtocol:
+			mProfile = make_shared<BLEDataProfile3>(mMyself);
+			break;
+		//case DeviceProtocolType::OADService:
+		//	mProfile = make_shared<OADProfile>(*this);
+		//	break;
+		default:
+			break;
+		}
+	}
 }
 
 void BLEDevice::onDisconnected(GF_STATUS status, GF_UINT8 reason)
@@ -326,7 +363,18 @@ void BLEDevice::onCharacteristicValueRead(GF_STATUS status, GF_UINT8 length, GF_
 	// TODO: notify client
 }
 
-void BLEDevice::onData(GF_UINT8, GF_PUINT8)
+void BLEDevice::onData(GF_UINT8 length, GF_PUINT8 data)
 {
-	// nothing to do
+	if (nullptr != mProfile.get())
+	{
+		mProfile->onData(length, data);
+	}
+}
+
+void BLEDevice::onResponse(GF_UINT8 length, GF_PUINT8 data)
+{
+	if (nullptr != mProfile.get())
+	{
+		mProfile->onResponse(length, data);
+	}
 }
