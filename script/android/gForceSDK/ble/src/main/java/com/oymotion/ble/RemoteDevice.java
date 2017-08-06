@@ -48,6 +48,8 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.LinkedList;
 
 /*RemoteDevice is a abstract of Remote Device.*/
 public class RemoteDevice {
@@ -60,17 +62,35 @@ public class RemoteDevice {
     private BluetoothGatt mBluetoothGatt;
     private List<BluetoothGattService> mGattservices = new ArrayList<BluetoothGattService>();
     private BluetoothGattCharacteristic mCommandCharacteristic = null;
+	private BluetoothGattCharacteristic mControlCommandCharacteristic = null;
+	private BluetoothGattCharacteristic mDataNotifyCharacteristic = null;
+	private byte mProtocolType;
     private BLEService mBleService;
+
+	private final static byte PROTOCOLTYPE_SIMPLEPROFILE = 0x00;
+	private final static byte PROTOCOLTYPE_GFORCEDATAPROTOCOL = 0x01;
+	private final static byte PROTOCOLTYPE_OADSERVICE = 0x02;
+	private final static byte PROTOCOLTYPE_INVALID = (byte)0xFF;
 
     private String mAddress;
     private int mHandle = 0;
     private final static int INVALID_HANDLE = 0xFFFF;
 
     /*UUID TBD*/
-    private final String gForce_Data_Service_UUID = "0000FFE0-0000-1000-8000-00805f9b34fb";
-    private final String gForce_Command_Characteristic_UUID = "0000FFE1-0000-1000-8000-00805f9b34fb";
+    private final String gForce_Data_Protocol_UUID = "f000ffd0-0451-4000-b000-000000000000";
+    private final String gForce_Control_Command_Characteristic_UUID = "f000ffe1-0451-4000-b000-000000000000";
+    private final String gForce_Data_Notify_Characteristic_UUID = "f000ffe2-0451-4000-b000-000000000000";
+	private final String gForce_OAD_Service_UUID = "f000ffc0-0451-4000-b000-000000000000";
+	private final String gForce_Simple_Profile_UUID = "0000fff0-0000-1000-8000-00805f9b34fb";
 
     private int mConnectionState = BluetoothProfile.STATE_DISCONNECTED;
+
+	private Queue<PendingGattOperation> mPendingGattOperations;
+	private boolean mGattBusy;
+	private final static byte GATT_CHARACTERISTIC_READ_REQUEST = 0x00;
+	private final static byte GATT_CHARACTERISTIC_WRITE_REQUEST = 0x01;
+	private final static byte GATT_DESCRIPTOR_READ_REQUEST = 0x02;
+	private final static byte GATT_DESCRIPTOR_WRITE_REQUEST = 0x03;
 
     public RemoteDevice(String address, BLEService service) {
         mBleService = service;
@@ -89,6 +109,10 @@ public class RemoteDevice {
                 Log.e(TAG, "initialize BluetoothAdapter successful.");
             }
         }
+
+		mProtocolType = PROTOCOLTYPE_INVALID;
+		mGattBusy = false;
+        mPendingGattOperations = new LinkedList<PendingGattOperation>();
     }
 
     public String getAddress() {
@@ -96,6 +120,7 @@ public class RemoteDevice {
     }
 
     public int getDeviceState() {
+		Log.i(TAG, "getDeviceState mConnectionState = " + mConnectionState);
         return mConnectionState;
     }
 
@@ -109,14 +134,14 @@ public class RemoteDevice {
 
     public boolean connect(boolean autoConnect) {
         boolean result;
-        Log.d(TAG, "Trying connect to remote device:" + mAddress);
+        Log.d(TAG, "Trying connect to remote device:" + mAddress + "mConnectionState = " + mConnectionState);
         if (mBluetoothAdapter == null) {
             Log.w(TAG, "BluetoothAdapter not initialized.");
             return false;
         }
 
-        if (mAddress == null || mConnectionState != BluetoothProfile.STATE_DISCONNECTED) {
-            Log.w(TAG, "Remote device is in error state = " + mConnectionState);
+        if ((mAddress == null) || (mConnectionState != BluetoothProfile.STATE_DISCONNECTED)) {
+            Log.w(TAG, "Remote device is in error mConnectionState = " + mConnectionState);
             return false;
         }
 
@@ -129,20 +154,27 @@ public class RemoteDevice {
              * re-connection will be triggered once the device is back in range.
              */
             try {
+            	/*change the status to connecting before initial connect, 
+            	* and if initial connect fail, change state back to disconnected.*/
+            	mConnectionState = BluetoothProfile.STATE_CONNECTING;
                 result = mBluetoothGatt.connect();
+
+				/*result == false means re-connect fail, happen on below case.
+	            * 1. connect remote device successful.
+	            * 2. disable & enable bluetooth.
+	            * 3. reconnect remote device.
+	            * */
+	            if (!result) {
+	                mConnectionState = BluetoothProfile.STATE_DISCONNECTED;
+					Log.i(TAG, "connect1 mConnectionState = " + mConnectionState);
+	                return false;
+	            } else {
+					return true;
+				}
             } catch (Exception e) {
                 Log.w(TAG, "connect catch exception + " + e);
+				mConnectionState = BluetoothProfile.STATE_DISCONNECTED;
                 result = false;
-            }
-
-            /*result == false means re-connect fail, happen on below case.
-            * 1. connect remote device successful.
-            * 2. disable & enable bluetooth.
-            * 3. reconnect remote device.
-            * */
-            if (result) {
-                mConnectionState = BluetoothProfile.STATE_CONNECTING;
-                return true;
             }
         }
 
@@ -154,9 +186,10 @@ public class RemoteDevice {
         /*autoConnect indicate Whether to directly connect to the remote device (false)
          *or to automatically connect as soon as the remote device becomes available (true).
          * */
-        mBluetoothGatt = mDevice.connectGatt(mContext, autoConnect, mGattCallback);
         mConnectionState = BluetoothProfile.STATE_CONNECTING;
-
+		Log.i(TAG, "connect2 mConnectionState = " + mConnectionState);
+        mBluetoothGatt = mDevice.connectGatt(mContext, autoConnect, mGattCallback);
+		
         return true;
     }
 
@@ -173,12 +206,13 @@ public class RemoteDevice {
         }
 
 		if (mBluetoothGatt != null) {
+			mConnectionState = BluetoothProfile.STATE_DISCONNECTING;
+			Log.i(TAG, "disconnect mConnectionState = " + mConnectionState);
         	mBluetoothGatt.disconnect();
 		} else {
 			Log.w(TAG, "Remote device is in error state, never connect before.");
+			return false;
 		}
-		
-        mConnectionState = BluetoothProfile.STATE_DISCONNECTING;
 
         return true;
     }
@@ -194,7 +228,7 @@ public class RemoteDevice {
 		return true;
 	}
 
-	public boolean WriteCharacteristic(byte[] data) {
+	public boolean writeCharacteristic(byte[] data) {
         boolean result = false;
         String datatowrite = BLEScanner.getAddressStringFromByte(data);
         Log.w(TAG, "WriteCharacteristic with data:" + datatowrite);
@@ -204,6 +238,34 @@ public class RemoteDevice {
             }
             mCommandCharacteristic.setValue(data);
             result = mBluetoothGatt.writeCharacteristic(mCommandCharacteristic);
+        } else {
+            Log.w(TAG, "Remote device is in error state.");
+            return false;
+        }
+
+        return result;
+    }
+
+	public byte getDeviceProtocolSupported()
+	{
+		if (mConnectionState == BluetoothProfile.STATE_DISCONNECTED) {
+            Log.w(TAG, "Remote device is in error state = " + mConnectionState);
+            return PROTOCOLTYPE_INVALID;
+        }
+
+		return mProtocolType;
+	}
+
+	public boolean sendControlCommand(byte[] data) {
+        boolean result = false;
+        Log.w(TAG, "sendControlCommand with data:" + data[0]);
+        if (mBluetoothGatt != null && (mConnectionState == BluetoothProfile.STATE_CONNECTED)) {
+            if (mControlCommandCharacteristic == null) {
+				Log.w(TAG, "mControlCommandCharacteristic is null.");
+                return false;
+            } else {
+				result = sendGattRequest(GATT_CHARACTERISTIC_WRITE_REQUEST, mControlCommandCharacteristic, null, data);
+			}
         } else {
             Log.w(TAG, "Remote device is in error state.");
             return false;
@@ -227,13 +289,11 @@ public class RemoteDevice {
             if (newState == BluetoothProfile.STATE_CONNECTED && status == BluetoothGatt.GATT_SUCCESS) {
                 if (mConnectionState != BluetoothProfile.STATE_CONNECTING) {
                     Log.i(TAG, "ConnectState changed unexpected!!");
+					Log.e(TAG, "onConnectionStateChange1 mConnectionState = " + mConnectionState);
                 }
                 mConnectionState = BluetoothProfile.STATE_CONNECTED;
+				Log.i(TAG, "onConnectionStateChange2 mConnectionState = " + mConnectionState);
 				mHandle = mBleService.allocDeviceHandle();
-
-				Log.i(TAG, "Connected to GATT server.");
-				/*notify upper level with device connected*/
-				mBleService.onDeivceConnected(mAddress);
                 
                 //Attempts to discover services after successful connection.
                 /*This is an asynchronous operation. Once service discovery is completed,
@@ -244,10 +304,13 @@ public class RemoteDevice {
                 
                 if ( false == mBluetoothGatt.discoverServices()) {
                     Log.e(TAG, "discovery service failed.");
+                    /*todo... how to handle this case?*/
                 }
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
             	Log.i(TAG, "Disconnected from GATT server.");
+				
 				mConnectionState = BluetoothProfile.STATE_DISCONNECTED;
+				Log.w(TAG, "Device state = " + mConnectionState);
 				mBleService.onDeivceDisconnected(mAddress);
 				mBleService.freeDeviceHandle(mHandle);
                 mHandle = INVALID_HANDLE;
@@ -278,10 +341,15 @@ public class RemoteDevice {
                     Log.e(TAG, "Retrieve gatt service failed!");
                 } else {
                     printGattServices();
+					checkProtocolType();
                 }
             } else {
                 Log.e(TAG, "onServicesDiscovered finished with error!");
             }
+
+            Log.i(TAG, "Connected to GATT server.");
+            /*notify upper level with device connected*/
+            mBleService.onDeivceConnected(mAddress);
         }
 
         @Override
@@ -293,16 +361,32 @@ public class RemoteDevice {
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
             byte[] data = characteristic.getValue();
-            String Notify = String.format("%02X:%02X:%02X:%02X:%02X:%02X",
-                    data[0], data[1], data[2], data[3], data[4], data[5]);
-            /*format:length(1 byte) + attribute handle(2 bytes) + data, compatible with window + dongle*/
-            byte[] predata = {0x15, 0x27, 0x00};
+            if (data.length >= 4) {
+                String Notify = String.format("%02X:%02X:%02X:%02X", data[0], data[1], data[2], data[3]);
+                Log.i(TAG, "onCharacteristicChanged with data: " + Notify);
+            }
 
-            byte[] notification = new byte[predata.length + data.length];
-            System.arraycopy(predata, 0, notification, 0, predata.length);
-            System.arraycopy(data, 0, notification, predata.length, data.length);
-            Log.d(TAG, "onNotification received:" + Notify);
-			mBleService.onNotificationReceived(mAddress, notification);
+            Log.i(TAG, "onCharacteristicChanged on characteristic UUID:  " + characteristic.getUuid().toString());
+
+			/*data from control command characteristic, means it is control response.*/
+			if (characteristic.getUuid().toString().equals(gForce_Control_Command_Characteristic_UUID)) {
+                Log.i(TAG, "receive control response.");
+				mBleService.onControlResponseReceived(mAddress, data);
+			} else if (characteristic.getUuid().toString().equals(gForce_Data_Notify_Characteristic_UUID)) {
+                Log.i(TAG, "receive data notify.");
+				byte[] predata = {0x15, 0x27, 0x00};
+				byte[] notification = new byte[predata.length + data.length];
+				System.arraycopy(predata, 0, notification, 0, predata.length);
+				System.arraycopy(data, 0, notification, predata.length, data.length);
+				mBleService.onNotificationReceived(mAddress, notification);
+			} else {
+                Log.i(TAG, "receive notification.");
+				byte[] predata = {0x15, 0x27, 0x00};
+				byte[] notification = new byte[predata.length + data.length];
+				System.arraycopy(predata, 0, notification, 0, predata.length);
+				System.arraycopy(data, 0, notification, predata.length, data.length);
+				mBleService.onNotificationReceived(mAddress, notification);
+			}
         }
 
 		@Override
@@ -321,7 +405,140 @@ public class RemoteDevice {
 	    	Log.d(TAG, "onMtuChanged mtu:" + mtu);
 	    	mBleService.onMTUSizeChanged(mAddress, mtu);
 	    }
+
+		@Override
+		/**
+	     * Callback reporting the result of a characteristic read operation.
+	     *
+	     * @param gatt GATT client invoked {@link BluetoothGatt#readCharacteristic}
+	     * @param characteristic Characteristic that was read from the associated
+	     *                       remote device.
+	     * @param status {@link BluetoothGatt#GATT_SUCCESS} if the read operation
+	     *               was completed successfully.
+	     */
+	    public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic,
+	                                     int status) {
+	    	Log.d(TAG, "onCharacteristicRead status:" + status);
+			mGattBusy = false;
+			if (!mPendingGattOperations.isEmpty()) {
+				dequeueGattRequest();
+			}
+	    }
+
+		@Override
+		/**
+	     * Callback indicating the result of a characteristic write operation.
+	     *
+	     * <p>If this callback is invoked while a reliable write transaction is
+	     * in progress, the value of the characteristic represents the value
+	     * reported by the remote device. An application should compare this
+	     * value to the desired value to be written. If the values don't match,
+	     * the application must abort the reliable write transaction.
+	     *
+	     * @param gatt GATT client invoked {@link BluetoothGatt#writeCharacteristic}
+	     * @param characteristic Characteristic that was written to the associated
+	     *                       remote device.
+	     * @param status The result of the write operation
+	     *               {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
+	     */
+	    public void onCharacteristicWrite(BluetoothGatt gatt,
+	                                      BluetoothGattCharacteristic characteristic, int status) {
+	    	Log.d(TAG, "onCharacteristicWrite status:" + status);
+			mGattBusy = false;
+			if (!mPendingGattOperations.isEmpty()) {
+				dequeueGattRequest();
+			}
+	    }
+
+		@Override
+		/**
+	     * Callback reporting the result of a descriptor read operation.
+	     *
+	     * @param gatt GATT client invoked {@link BluetoothGatt#readDescriptor}
+	     * @param descriptor Descriptor that was read from the associated
+	     *                   remote device.
+	     * @param status {@link BluetoothGatt#GATT_SUCCESS} if the read operation
+	     *               was completed successfully
+	     */
+	    public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor,
+	                                 int status) {
+	    	Log.d(TAG, "onDescriptorRead status:" + status);
+			mGattBusy = false;
+			if (!mPendingGattOperations.isEmpty()) {
+				dequeueGattRequest();
+			}
+	    }
+
+		@Override
+		/**
+	     * Callback indicating the result of a descriptor write operation.
+	     *
+	     * @param gatt GATT client invoked {@link BluetoothGatt#writeDescriptor}
+	     * @param descriptor Descriptor that was writte to the associated
+	     *                   remote device.
+	     * @param status The result of the write operation
+	     *               {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
+	     */
+	    public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor,
+	                                  int status) {
+	    	Log.d(TAG, "onDescriptorWrite status:" + status);
+			mGattBusy = false;
+			if (!mPendingGattOperations.isEmpty()) {
+				dequeueGattRequest();
+			}
+	    }
+
+		@Override
+		/**
+	     * Callback invoked when a reliable write transaction has been completed.
+	     *
+	     * @param gatt GATT client invoked {@link BluetoothGatt#executeReliableWrite}
+	     * @param status {@link BluetoothGatt#GATT_SUCCESS} if the reliable write
+	     *               transaction was executed successfully
+	     */
+	    public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
+	    	Log.d(TAG, "onReliableWriteCompleted status:" + status);
+			mGattBusy = false;
+			if (!mPendingGattOperations.isEmpty()) {
+				dequeueGattRequest();
+			}
+	    }
     };
+
+	private BluetoothGattCharacteristic findCharacteristicByUUID(BluetoothGattService service, String uuid) {
+		Log.i(TAG, "findCharacteristicByUUID" + uuid);
+		for (BluetoothGattCharacteristic gattCharacteristic : service.getCharacteristics()) {
+			if (gattCharacteristic.getUuid().toString().equals(uuid)) {
+				return gattCharacteristic;
+			}
+		}
+
+		return null;
+	}
+
+	private void checkProtocolType() {
+		Log.i(TAG, "checkProtocolType");
+		for (BluetoothGattService service : mGattservices) {
+			/*find gForce data protocol service by match UUID*/
+			if (service.getUuid().toString().equals(gForce_Data_Protocol_UUID)) {
+				mControlCommandCharacteristic = findCharacteristicByUUID(service, gForce_Control_Command_Characteristic_UUID);
+				mDataNotifyCharacteristic = findCharacteristicByUUID(service, gForce_Data_Notify_Characteristic_UUID);
+
+				if ((mControlCommandCharacteristic != null) && (mDataNotifyCharacteristic != null)) {
+					mProtocolType = PROTOCOLTYPE_GFORCEDATAPROTOCOL;
+					return;
+				}
+			} else if (service.getUuid().toString().equals(gForce_OAD_Service_UUID)) {
+				mProtocolType = PROTOCOLTYPE_OADSERVICE;
+				return;
+			} else if (service.getUuid().toString().equals(gForce_Simple_Profile_UUID)) {
+				mProtocolType = PROTOCOLTYPE_SIMPLEPROFILE;
+				return;
+			}
+		}
+
+		mProtocolType = PROTOCOLTYPE_INVALID;
+	}
 
     private void printGattServices() {
         int i = 0;
@@ -356,16 +573,11 @@ public class RemoteDevice {
                         if ((gattCharacteristic.getProperties() | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
                             Log.i(TAG, " enable ccc...  ");
                             mBluetoothGatt.setCharacteristicNotification(gattCharacteristic, true);
-                            des.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                            mBluetoothGatt.writeDescriptor(des);
+							sendGattRequest(GATT_DESCRIPTOR_WRITE_REQUEST, gattCharacteristic, des, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                         }
                     }
                 }
                 j++;
-
-                if (service.equals(gForce_Data_Service_UUID) && gattCharacteristic.equals(gForce_Command_Characteristic_UUID)) {
-                    mCommandCharacteristic = gattCharacteristic;
-                }
             }
 
             List<BluetoothGattService> includedservices = service.getIncludedServices();
@@ -385,4 +597,107 @@ public class RemoteDevice {
             i++;
         }
     }
+
+	public class PendingGattOperation {
+		public byte mOpcode;
+		public BluetoothGattCharacteristic mCharacteristic;
+		public BluetoothGattDescriptor mDescriptor;
+		public byte[] data;
+
+		public PendingGattOperation(byte command, BluetoothGattCharacteristic cha, BluetoothGattDescriptor des, byte[] rapameter) {
+			mOpcode = command;
+			mCharacteristic = cha;
+			mDescriptor = des;
+			data = rapameter;
+		}
+	}
+
+	private boolean enqueueGattRequest(byte command, BluetoothGattCharacteristic cha, BluetoothGattDescriptor des, byte[] parameter) {
+		Log.e(TAG, "enqueueGattRequest");
+		PendingGattOperation pending = new PendingGattOperation(command, cha, des, parameter);
+		mPendingGattOperations.offer(pending);
+		return true;
+	}
+
+	private boolean sendGattRequest(byte command, BluetoothGattCharacteristic cha, BluetoothGattDescriptor des, byte[] parameter)
+	{
+		Log.e(TAG, "sendGattRequest mGattBusy = " + mGattBusy);
+		synchronized (mPendingGattOperations) {
+			if (mGattBusy == false) {
+				/*send the gatt request directly, and set mGattBusy to true.*/
+				switch (command) {
+					case GATT_CHARACTERISTIC_READ_REQUEST:
+					{
+						if (true == mBluetoothGatt.readCharacteristic(cha)){
+							mGattBusy = true;
+						} else {
+							Log.e(TAG, "readCharacteristic fail");
+							return false;
+						}
+						break;
+
+					}
+					case GATT_CHARACTERISTIC_WRITE_REQUEST:
+					{
+						cha.setValue(parameter);
+						if (true == mBluetoothGatt.writeCharacteristic(cha)){
+							mGattBusy = true;
+						} else {
+							Log.e(TAG, "GATT_CHARACTERISTIC_WRITE_REQUEST fail");
+							return false;
+						}
+						break;
+					}
+					case GATT_DESCRIPTOR_READ_REQUEST:
+					{
+						if (true == mBluetoothGatt.readDescriptor(des)){
+							mGattBusy = true;
+						} else {
+							Log.e(TAG, "GATT_DESCRIPTOR_READ_REQUEST fail");
+							return false;
+						}
+						break;
+
+					}
+					case GATT_DESCRIPTOR_WRITE_REQUEST:
+					{
+						des.setValue(parameter);
+						if (true == mBluetoothGatt.writeDescriptor(des)){
+							mGattBusy = true;
+						} else {
+							Log.e(TAG, "GATT_DESCRIPTOR_WRITE_REQUEST fail");
+							return false;
+						}
+						break;
+					}
+
+					default:
+						return false;
+				}
+			}else {
+				/*if gatt request is busy now, add this request to pending list.*/
+				enqueueGattRequest(command, cha, des, parameter);
+				return true;
+			}
+			
+		}
+
+		return true;
+	}
+
+	private boolean dequeueGattRequest() {
+		Log.e(TAG, "dequeueGattRequest mGattBusy = " + mGattBusy);
+		boolean result;
+		synchronized (mPendingGattOperations) {
+			PendingGattOperation pendingGattReqeust;
+			if (null != (pendingGattReqeust = mPendingGattOperations.poll()) && (false == mGattBusy)) {
+				result = sendGattRequest(pendingGattReqeust.mOpcode, pendingGattReqeust.mCharacteristic, pendingGattReqeust.mDescriptor, pendingGattReqeust.data);
+			} else {
+				Log.e(TAG, "No pending Gatt request.");
+				return false;
+			}
+		}
+
+		return result;
+	}
 }

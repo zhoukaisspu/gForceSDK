@@ -47,7 +47,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Iterator;
 
-import com.oym.libble.GlobalContext;
+import com.oymotion.ble.GlobalContext;
 
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = "Test App";
@@ -125,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
                 String address;
                 BTDevice device;
                 int index;
+				byte protocolType;
                 super.handleMessage(msg);
 				switch (msg.what) {
 	                case MESSAGE_DEVICE_CONNECTED:
@@ -147,6 +148,14 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         textview.append("\n device connected: \n" + device.getAddress() + "(handle=" + device.getHandle() + ")");
+
+						protocolType = getProtocolTypeNative(device.getHandle());
+						textview.append("the protocol type is " + protocolType);
+						if (0x01 == protocolType) 
+						{
+							byte command[] = {0x00};
+							sendControlCommandNative(device.getHandle(), (byte)0x01, command);
+						}
 	                	break; 
 					case MESSAGE_DEVICE_DISCONNECTED:
                         int handle = (int)msg.obj;
@@ -307,10 +316,100 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "onNotificationReceived on handle = " + handle + "data :" + noti);
     }
 
+	public void onControlResponseReceived(int handle, byte[] response) {
+        byte command[] = {0x00};
+        byte status = response[0];
+        byte cmdtype = response[1];
+        Log.d(TAG, "onControlResponseReceived on handle = " + handle + " status :" + status + " cmdtype :" + cmdtype);
+        if (cmdtype == 0x00)
+        {
+            Log.d(TAG, "Get Protocol Version: " + response[2] + "." + response[3]);
+            command[0] = 0x01;
+            if(sendControlCommandNative(handle, (byte)0x01, command))
+            {
+                Log.d(TAG, "sendControlCommandNative successful" + command[0]);
+            }
+        } else if (cmdtype == 0x01) {
+            String Feature_Map = String.format("%02X:%02X:%02X:%02X", response[2], response[3], response[4], response[5]);
+            Log.d(TAG, "Get Feature MAP: " + Feature_Map);
+            command[0] = 0x02;
+            if(sendControlCommandNative(handle, (byte)0x01, command))
+            {
+                Log.d(TAG, "sendControlCommandNative successful " + command[0]);
+            }
+        } else if (cmdtype == 0x02) {
+            byte[] name = new byte[response.length - 2];
+            System.arraycopy(response, 2, name, 0, response.length - 2);
+            String dev_name = new String(name);
+            Log.d(TAG, "Get Device Name: " + dev_name);
+            command[0] = 0x03;
+            if(sendControlCommandNative(handle, (byte)0x01, command))
+            {
+                Log.d(TAG, "sendControlCommandNative successful " + command[0]);
+            }
+        } else if (cmdtype == 0x03) {
+            byte[] string = new byte[response.length - 2];
+            System.arraycopy(response, 2, string, 0, response.length - 2);
+            String dev_name = new String(string);
+            Log.d(TAG, "Model Number: " + dev_name);
+            command[0] = 0x04;
+            if (sendControlCommandNative(handle, (byte) 0x01, command)) {
+                Log.d(TAG, "sendControlCommandNative successful " + command[0]);
+            }
+        } else if (cmdtype == 0x04) {
+            byte[] string = new byte[response.length - 2];
+            System.arraycopy(response, 2, string, 0, response.length - 2);
+            String dev_name = new String(string);
+            Log.d(TAG, "Serial Number: " + dev_name);
+            command[0] = 0x05;
+            if(sendControlCommandNative(handle, (byte)0x01, command))
+            {
+                Log.d(TAG, "sendControlCommandNative successful " + command[0]);
+            }
+        } else if (cmdtype == 0x05) {
+            Log.d(TAG, "Hardware Revision: R" + response[2]);
+            command[0] = 0x06;
+            if(sendControlCommandNative(handle, (byte)0x01, command))
+            {
+                Log.d(TAG, "sendControlCommandNative successful " + command[0]);
+            }
+        } else if (cmdtype == 0x06) {
+            Log.d(TAG, "Firmware Revision: R" + response[2] + "." + response[3] + "-" + response[4]);
+            command[0] = 0x07;
+            if(sendControlCommandNative(handle, (byte)0x01, command))
+            {
+                Log.d(TAG, "sendControlCommandNative successful " + command[0]);
+            }
+        } else if (cmdtype == 0x07) {
+            byte[] string = new byte[response.length - 2];
+            System.arraycopy(response, 2, string, 0, response.length - 2);
+            String dev_name = new String(string);
+            Log.d(TAG, "Manufacture Name:" + dev_name);
+            command[0] = 0x08;
+            if(sendControlCommandNative(handle, (byte)0x01, command))
+            {
+                Log.d(TAG, "sendControlCommandNative successful " + command[0]);
+            }
+        } else if (cmdtype == 0x08) {
+            Log.d(TAG, "Battery Level:" + response[2] + "%");
+            command[0] = 0x09;
+            if(sendControlCommandNative(handle, (byte)0x01, command))
+            {
+                Log.d(TAG, "sendControlCommandNative successful " + command[0]);
+            }
+        }
+        else if (cmdtype == 0x09) {
+            if (response.length > 2)
+            {
+                Log.d(TAG, "Temperature Level:" + response[2]);
+            }
+        }
+    }
+
     // Used to load the 'native-lib' library on application startup.
     static {
-        System.loadLibrary("native-lib");
-        System.loadLibrary("ble-lib");
+        System.loadLibrary("native");
+        //System.loadLibrary("ble");
     }
 
     static {
@@ -446,4 +545,6 @@ public class MainActivity extends AppCompatActivity {
 	public native byte getHubStateNative();
 	public native byte getConnectedDevNumNative();
     public native boolean writeCharecteristicNative(byte len, byte[] data);
+	public native byte getProtocolTypeNative(int handle);
+	public native boolean sendControlCommandNative(int handle, byte len, byte[] data);
 }

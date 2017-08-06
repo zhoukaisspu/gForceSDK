@@ -60,6 +60,8 @@ static jmethodID method_GetConnectedDeviceNumber;
 static jmethodID method_GetHubState;
 static jmethodID method_GetHandleByIndex;
 static jmethodID method_GetAddressByIndex;
+static jmethodID method_GetDeviceProtocolSupported;
+static jmethodID method_SendControlCommand;
 
 JavaVM* globalJavaVM;
 
@@ -149,11 +151,13 @@ GF_STATUS GF_CAdapterManager::Init(GF_UINT8 com_num, GF_UINT8 log_type)
     method_CancelConnect = env->GetMethodID(cls,"cancelConnect","([B)Z");
     method_Disconnect = env->GetMethodID(cls,"disconnect","(I)Z");
     method_ConfigMTUSize = env->GetMethodID(cls,"configMTUSize","(II)Z");
-    method_WriteCharacteristic = env->GetMethodID(cls,"WriteCharacteristic","(II[B)Z");
+    method_WriteCharacteristic = env->GetMethodID(cls,"writeCharacteristic","(II[B)Z");
 	method_GetConnectedDeviceNumber = env->GetMethodID(cls,"getConnectedDeviceNumber","()B");
 	method_GetHubState = env->GetMethodID(cls,"getHubState","()B");
 	method_GetHandleByIndex = env->GetMethodID(cls,"getHandleByIndex","(B)I");
 	method_GetAddressByIndex = env->GetMethodID(cls,"getAddressByIndex","(B)Ljava/lang/String;");
+	method_GetDeviceProtocolSupported = env->GetMethodID(cls,"getDeviceProtocolSupported","(I)B");
+	method_SendControlCommand = env->GetMethodID(cls,"sendControlCommand","(II[B)Z");
 
     if(bAttached && globalJavaVM != NULL) {
 		globalJavaVM->DetachCurrentThread();
@@ -487,6 +491,62 @@ GF_STATUS GF_CAdapterManager::GetConnectedDeviceByIndex(GF_UINT8 index, GF_Conne
     return GF_OK;
 }
 
+/*connected_device is output result*/
+GF_DeviceProtocolType GF_CAdapterManager::GetDeviceProtocolSupported(GF_UINT16 conn_handle)
+{
+	JNIEnv *env = NULL;
+	bool bAttached = false;
+	jint handle = 0;
+	jbyte type = 0xFF;
+	if (false == attachEnv(&env, &bAttached)) {
+		return (GF_DeviceProtocolType)type;
+	}
+
+	if (env != NULL) {
+		if (method_GetDeviceProtocolSupported != NULL) {
+			type = env->CallByteMethod(GlobalObject, method_GetDeviceProtocolSupported, conn_handle);
+		}
+	}
+
+	if(bAttached && globalJavaVM != NULL) {
+		globalJavaVM->DetachCurrentThread();
+	}
+
+    return (GF_DeviceProtocolType)type;
+}
+
+GF_STATUS GF_CAdapterManager::SendControlCommand(GF_UINT16 conn_handle, GF_UINT8 data_length, GF_PUINT8 data)
+{
+    JNIEnv *env = NULL;
+	GF_STATUS result = GF_OK;
+	jbyteArray characteristicData = NULL;
+    bool bAttached = false;
+    if (false == attachEnv(&env, &bAttached)) {
+        return GF_FAIL;
+    }
+
+    if (env != NULL) {
+        characteristicData = env->NewByteArray(data_length);
+        if (characteristicData) {
+            env->SetByteArrayRegion(characteristicData, 0, data_length, (jbyte *)data);
+            if (env->CallBooleanMethod(GlobalObject, method_SendControlCommand, (conn_handle & 0x0000FFFF), data_length, characteristicData)) {
+                result = GF_OK;
+            } else {
+                result = GF_FAIL;
+            }
+            env->DeleteLocalRef(characteristicData);
+		} else {
+		    result = GF_FAIL;
+		}
+    }
+
+    if(bAttached && globalJavaVM != NULL) {
+        globalJavaVM->DetachCurrentThread();
+    }
+
+    return result;
+}
+
 static void onDeviceFoundNative(JNIEnv* env, jobject object, jbyteArray val) {
     LOGD("%s:", __FUNCTION__);
     jbyte* array = env->GetByteArrayElements(val, 0);
@@ -499,7 +559,9 @@ static void onDeviceFoundNative(JNIEnv* env, jobject object, jbyteArray val) {
 
 	if (globalClientCallback != NULL) {
 		globalClientCallback->onScanResult(&device);
-	}
+	} else {
+        LOGD("%s: globalClientCallback is NULL!", __FUNCTION__);
+    }
     env->ReleaseByteArrayElements(val, array, JNI_ABORT);
 }
 
@@ -574,6 +636,19 @@ static void onNotificationReceivedNative(JNIEnv* env, jobject object, jbyteArray
     env->ReleaseByteArrayElements(val, array, JNI_ABORT);
 }
 
+static void onControlResponseReceivedNative(JNIEnv* env, jobject object, jbyteArray val, jint handle) {
+    LOGD("%s:", __FUNCTION__);
+    jbyte* array = env->GetByteArrayElements(val, 0);
+    int val_len = env->GetArrayLength(val);
+	
+	if (globalClientCallback != NULL) {
+		globalClientCallback->onControlResponseReceived((handle & 0xFFFF), (val_len & 0xFF), (GF_PUINT8)array);
+	}
+
+    env->ReleaseByteArrayElements(val, array, JNI_ABORT);
+}
+
+
 
 static JNINativeMethod sMethods[] = {
     /* name,            signature,         funcPtr */
@@ -583,9 +658,12 @@ static JNINativeMethod sMethods[] = {
     {"onDeviceDisconnectedNative", "([BIB)V", (void *) onDeviceDisconnectedNative},
     {"onMTUSizeChangedNative", "(BII)V", (void *) onMTUSizeChangedNative},
     {"onNotificationReceivedNative", "([BI)V", (void *) onNotificationReceivedNative},
+    {"onControlResponseReceivedNative", "([BI)V", (void *) onControlResponseReceivedNative},
 };
 
-
+#ifdef DEFINE_TEST_APK
+extern jint Test_Apk_JNI_OnLoad(JavaVM *jvm, void *reserved);
+#endif
 /*
  * JNI Initialization
  */
@@ -595,6 +673,10 @@ jint JNI_OnLoad(JavaVM *jvm, void *reserved)
     globalJavaVM = jvm;
 	jclass cls;
 	LOGD("%s:", __FUNCTION__);
+
+#ifdef DEFINE_TEST_APK
+    Test_Apk_JNI_OnLoad(jvm, reserved);
+#endif
 	
 	// Check JNI version
     if (jvm->GetEnv((void **)&env, JNI_VERSION_1_6)) {

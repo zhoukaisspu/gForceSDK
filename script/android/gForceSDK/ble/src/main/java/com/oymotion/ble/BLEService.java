@@ -292,11 +292,11 @@ public class BLEService {
         }
     }
 
-    public boolean WriteCharacteristic(final int handle, int length, byte[] data) {
-        Log.d(TAG, "WriteCharacteristic");
+    public boolean writeCharacteristic(final int handle, int length, byte[] data) {
+        Log.d(TAG, "writeCharacteristic");
         RemoteDevice remoteDevice = findRemoteDeviceByHandle(handle);
         if (remoteDevice != null && BluetoothAdapter.STATE_CONNECTED == remoteDevice.getDeviceState()) {
-            return remoteDevice.WriteCharacteristic(data);
+            return remoteDevice.writeCharacteristic(data);
         }
         else {
             Log.d(TAG, "connection with handle =  " + handle + " not in connected state!");
@@ -315,6 +315,33 @@ public class BLEService {
         }
 		return result;
 	}
+
+	public byte getDeviceProtocolSupported(final int handle) {
+		Log.d(TAG, "getDeviceProtocolSupported");
+        RemoteDevice remoteDevice = findRemoteDeviceByHandle(handle);
+		int deviceState = remoteDevice.getDeviceState();
+        if (remoteDevice != null && BluetoothAdapter.STATE_CONNECTED == deviceState) {
+            return remoteDevice.getDeviceProtocolSupported();
+        }
+        else {
+            Log.d(TAG, "connection with handle =  " + handle + " not in connected state!");
+			Log.d(TAG, "getDeviceProtocolSupported deviceState = " + deviceState);
+            return (byte)0xFF;
+        }
+    }
+
+	public boolean sendControlCommand(final int handle, int length, byte[] data) {
+        Log.d(TAG, "sendControlCommand");
+        RemoteDevice remoteDevice = findRemoteDeviceByHandle(handle);
+		
+        if (remoteDevice != null && BluetoothAdapter.STATE_CONNECTED == remoteDevice.getDeviceState()) {
+            return remoteDevice.sendControlCommand(data);
+        }
+        else {
+            Log.d(TAG, "connection with handle =  " + handle + " not in connected state!");
+            return false;
+        }
+    }
 
 	public byte getHubState() {
 		byte result = 0;
@@ -398,7 +425,14 @@ public class BLEService {
 	public void onNotificationReceived(String addr, byte[] data) {
 		synchronized (mObject) {
             RemoteDevice device = findRemoteDeviceByAddress(addr);
-			onNotificationReceivedNative(data, device.getHandle());
+			onControlResponseReceivedNative(data, device.getHandle());
+		}
+	}
+
+	public void onControlResponseReceived(String addr, byte[] data) {
+		synchronized (mObject) {
+            RemoteDevice device = findRemoteDeviceByAddress(addr);
+            onControlResponseReceivedNative(data, device.getHandle());
 		}
 	}
 
@@ -526,6 +560,7 @@ public class BLEService {
     public native void onDeviceDisconnectedNative(byte[] address, int handle, byte reason);
     public native void onMTUSizeChangedNative(byte status, int handle, int mtu);
     public native void onNotificationReceivedNative(byte[] data, int handle);
+	public native void onControlResponseReceivedNative(byte[] data, int handle);
     //public native void onBluetoothStateOFF();
 }
 

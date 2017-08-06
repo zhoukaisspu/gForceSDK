@@ -1,33 +1,3 @@
-/*
- * Copyright 2017, OYMotion Inc.
- * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
- * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
- * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
- * DAMAGE.
- *
- */
 #include <string>
 #include <android/log.h>
 #include "jni.h"
@@ -43,7 +13,7 @@
 using namespace std;
 static jclass GlobalClass;
 static jobject GlobalObject;
-JavaVM* globalJavaVM = NULL;
+JavaVM* nativeGlobalJavaVM = NULL;
 
 GF_CAdapterManagerInterface* amInterface;
 
@@ -53,17 +23,18 @@ static jmethodID method_onDeviceConnected;
 static jmethodID method_onDeviceDisconnected;
 static jmethodID method_onMTUSizeChanged;
 static jmethodID method_onNotificationReceived;
+static jmethodID method_onControlResponseReceived;
 
-bool attachEnv(JNIEnv **env, bool* attach) {
-    if (globalJavaVM == NULL) {
-	    LOGE("%s: globalJavaVM is NULL", __FUNCTION__);
+bool nativeAttachEnv(JNIEnv **env, bool* attach) {
+    if (nativeGlobalJavaVM == NULL) {
+	    LOGE("%s: nativeGlobalJavaVM is NULL", __FUNCTION__);
 	    return false;
 	}
 
-    if((globalJavaVM != NULL) && (JNI_OK != globalJavaVM->GetEnv(reinterpret_cast<void**>(env),JNI_VERSION_1_6)))
+    if((nativeGlobalJavaVM != NULL) && (JNI_OK != nativeGlobalJavaVM->GetEnv(reinterpret_cast<void**>(env),JNI_VERSION_1_6)))
     {
         JavaVMAttachArgs args = { JNI_VERSION_1_6, __FUNCTION__, __null };
-        if(JNI_OK != globalJavaVM->AttachCurrentThread(env,&args))
+        if(JNI_OK != nativeGlobalJavaVM->AttachCurrentThread(env,&args))
         {
             LOGE("%s: AttachCurrentThread failed", __FUNCTION__);
             return false;
@@ -87,7 +58,7 @@ public:
 		bool bAttached = false;
 
 		if (method_onScanResult != NULL) {
-            if (false == attachEnv(&env, &bAttached)) {
+            if (false == nativeAttachEnv(&env, &bAttached)) {
                 return ;
             }
 
@@ -106,7 +77,7 @@ public:
             }
 
 			if(bAttached) {
-				globalJavaVM->DetachCurrentThread();
+				nativeGlobalJavaVM->DetachCurrentThread();
 		    }
 
 		    env->DeleteLocalRef(addr);
@@ -119,7 +90,7 @@ Fail:
 	    if (addr) env->DeleteLocalRef(addr);
 	    if (devname) env->DeleteLocalRef(devname);
 	    if(bAttached) {
-        	globalJavaVM->DetachCurrentThread();
+        	nativeGlobalJavaVM->DetachCurrentThread();
         }
 	}
 
@@ -129,7 +100,7 @@ Fail:
 		bool bAttached = false;
 		
 		if (method_onScanResult != NULL) {
-	        if (false == attachEnv(&env, &bAttached)) {
+	        if (false == nativeAttachEnv(&env, &bAttached)) {
 	            return ;
 	        }
 
@@ -138,7 +109,7 @@ Fail:
 	        }
 
 			if(bAttached) {
-				globalJavaVM->DetachCurrentThread();
+				nativeGlobalJavaVM->DetachCurrentThread();
 		    }
 		}
 	}
@@ -150,7 +121,7 @@ Fail:
 		bool bAttached = false;
 
 		if (method_onDeviceDisconnected != NULL) {
-            if (false == attachEnv(&env, &bAttached)) {
+            if (false == nativeAttachEnv(&env, &bAttached)) {
                 return ;
             }
 
@@ -163,7 +134,7 @@ Fail:
             }
 
 			if(bAttached) {
-				globalJavaVM->DetachCurrentThread();
+				nativeGlobalJavaVM->DetachCurrentThread();
 		    }
 
 		    env->DeleteLocalRef(addr);
@@ -174,7 +145,7 @@ Fail:
 Fail:
 	    if (addr) env->DeleteLocalRef(addr);
 	    if(bAttached) {
-        	globalJavaVM->DetachCurrentThread();
+        	nativeGlobalJavaVM->DetachCurrentThread();
         }
 	}
 
@@ -185,7 +156,7 @@ Fail:
 		bool bAttached = false;
 
 		if (method_onDeviceConnected != NULL) {
-            if (false == attachEnv(&env, &bAttached)) {
+            if (false == nativeAttachEnv(&env, &bAttached)) {
                 return ;
             }
 
@@ -198,7 +169,7 @@ Fail:
             }
 
 			if(bAttached) {
-				globalJavaVM->DetachCurrentThread();
+				nativeGlobalJavaVM->DetachCurrentThread();
 		    }
 
 		    env->DeleteLocalRef(addr);
@@ -209,7 +180,7 @@ Fail:
 Fail:
 	    if (addr) env->DeleteLocalRef(addr);
 	    if(bAttached) {
-        	globalJavaVM->DetachCurrentThread();
+        	nativeGlobalJavaVM->DetachCurrentThread();
         }
 	}
 
@@ -219,7 +190,7 @@ Fail:
 		bool bAttached = false;
 
 		if (method_onMTUSizeChanged != NULL) {
-            if (false == attachEnv(&env, &bAttached)) {
+            if (false == nativeAttachEnv(&env, &bAttached)) {
                 return ;
             }
 
@@ -228,7 +199,7 @@ Fail:
             }
 
 			if(bAttached) {
-				globalJavaVM->DetachCurrentThread();
+                nativeGlobalJavaVM->DetachCurrentThread();
 		    }
 
 		    return;
@@ -255,20 +226,20 @@ Fail:
 		bool bAttached = false;
 
 		if (method_onNotificationReceived != NULL) {
-            if (false == attachEnv(&env, &bAttached)) {
+            if (false == nativeAttachEnv(&env, &bAttached)) {
                 return ;
             }
 
             notification = env->NewByteArray(length);
     		if (notification == NULL) goto Fail;
-    		env->SetByteArrayRegion(notification, 0, BT_ADDRESS_SIZE, (jbyte *)data);
+    		env->SetByteArrayRegion(notification, 0, length, (jbyte *)data);
             
             if (env != NULL && GlobalObject != NULL) {
                 env->CallVoidMethod(GlobalObject, method_onNotificationReceived, handle, notification);
             }
 
 			if(bAttached) {
-				globalJavaVM->DetachCurrentThread();
+                nativeGlobalJavaVM->DetachCurrentThread();
 		    }
 
 		    env->DeleteLocalRef(notification);
@@ -279,7 +250,42 @@ Fail:
 Fail:
 	    if (notification) env->DeleteLocalRef(notification);
 	    if(bAttached) {
-        	globalJavaVM->DetachCurrentThread();
+            nativeGlobalJavaVM->DetachCurrentThread();
+        }
+	}
+
+	void onControlResponseReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
+	{
+	    LOGD("%s", __FUNCTION__);
+		jbyteArray response = NULL;
+		bool bAttached = false;
+
+		if (method_onControlResponseReceived != NULL) {
+            if (false == nativeAttachEnv(&env, &bAttached)) {
+                return ;
+            }
+
+            response = env->NewByteArray(length);
+    		if (response == NULL) goto Fail;
+    		env->SetByteArrayRegion(response, 0, length, (jbyte *)data);
+            
+            if (env != NULL && GlobalObject != NULL) {
+                env->CallVoidMethod(GlobalObject, method_onControlResponseReceived, handle, response);
+            }
+
+			if(bAttached) {
+                nativeGlobalJavaVM->DetachCurrentThread();
+		    }
+
+		    env->DeleteLocalRef(response);
+
+		    return;
+		}
+
+Fail:
+	    if (response) env->DeleteLocalRef(response);
+	    if(bAttached) {
+            nativeGlobalJavaVM->DetachCurrentThread();
         }
 	}
 
@@ -304,6 +310,7 @@ static void classInitNative(JNIEnv* env, jclass clazz) {
 	method_onDeviceDisconnected = env->GetMethodID(jniCallbackClass, "onDeviceDisconnected", "([BIB)V");
 	method_onMTUSizeChanged = env->GetMethodID(jniCallbackClass, "onMTUSizeChanged", "(II)V");
 	method_onNotificationReceived = env->GetMethodID(jniCallbackClass, "onNotificationReceived", "(I[B)V");
+	method_onControlResponseReceived = env->GetMethodID(jniCallbackClass, "onControlResponseReceived", "(I[B)V");
 }
 
 static bool initNative(JNIEnv* env, jobject object) {
@@ -315,7 +322,6 @@ static bool initNative(JNIEnv* env, jobject object) {
 			LOGD("%s:Init interface fail", __FUNCTION__);
 			return JNI_FALSE;
 		} else {
-		    LOGD("%s: RegisterClientCallback ", __FUNCTION__);
 			amInterface->RegisterClientCallback(globalCallback);
 			GlobalObject = env->NewGlobalRef(object);
 		}
@@ -427,6 +433,31 @@ static bool writeCharecteristicNative(JNIEnv* env, jobject object, jbyte len, jb
     return JNI_TRUE;
 }
 
+static jbyte getProtocolTypeNative( JNIEnv* env, jobject obj, jint handle) {
+    LOGD("%s:", __FUNCTION__);
+	jbyte result = 0xFF;
+    if (amInterface != NULL) {
+        result = amInterface->GetDeviceProtocolSupported((GF_UINT16)(handle & 0xFFFF));
+    } else {
+        return 0xFF;
+    }
+
+    return result;
+}
+
+static bool sendControlCommandNative(JNIEnv* env, jobject object, jint handle, jbyte len, jbyteArray data) {
+    LOGD("%s:", __FUNCTION__);
+    if (amInterface != NULL) {
+        jbyte* dataArray = env->GetByteArrayElements(data, 0);
+        amInterface->SendControlCommand(handle, len, (GF_PUINT8)dataArray);
+        env->ReleaseByteArrayElements(data, dataArray, JNI_ABORT);
+    } else {
+        return JNI_FALSE;
+    }
+
+    return JNI_TRUE;
+}
+
 static JNINativeMethod sMethods[] = {
     /* name,            signature,         funcPtr */
     {"classInitNative", "()V", (void *) classInitNative},
@@ -441,19 +472,21 @@ static JNINativeMethod sMethods[] = {
     {"getHubStateNative", "()B", (void*) getHubStateNative},
     {"getConnectedDevNumNative", "()B", (void*) getConnectedDevNumNative},
     {"writeCharecteristicNative", "(B[B)Z", (void*) writeCharecteristicNative},
+    {"getProtocolTypeNative", "(I)B", (void*) getProtocolTypeNative},
+    {"sendControlCommandNative", "(IB[B)Z", (void*) sendControlCommandNative},
 };
 
 /*
  * JNI Initialization
  */
-jint JNI_OnLoad(JavaVM *jvm, void *reserved)
+jint Test_Apk_JNI_OnLoad(JavaVM *jvm, void *reserved)
 {
     JNIEnv *env;
     int status;
     jclass cls;
 
     LOGD("Native-Lib : loading JNI\n");
-    globalJavaVM = jvm;
+    nativeGlobalJavaVM = jvm;
 
     // Check JNI version
     if (jvm->GetEnv((void **)&env, JNI_VERSION_1_6)) {
