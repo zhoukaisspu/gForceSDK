@@ -74,13 +74,13 @@ namespace gf
 		/// \brief Get work mode
 		///
 		/// \return The current work mode
-		/// \remark Default work mode is Freerun
+		/// \remark Default work mode is Polling
 		virtual WorkMode getWorkMode() const = 0;
 
 		/// \brief Set work mode
 		///
 		/// \return The current work mode
-		/// \remark Default work mode is Freerun.\n
+		/// \remark Default work mode is Polling.\n
 		///         See Hub::run and WorkMode also.
 		virtual void setWorkMode(WorkMode newMode) = 0;
 

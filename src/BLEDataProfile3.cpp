@@ -45,13 +45,14 @@ BLEDataProfile3::~BLEDataProfile3()
 
 void BLEDataProfile3::onData(GF_UINT8 length, GF_PUINT8 data)
 {
-	GF_LOGD("%s", __FUNCTION__);
+	//GF_LOGD("%s", __FUNCTION__);
 	gfsPtr<BLEDevice> device = mDevice.lock();
 	if (nullptr == device)
 		return;
 	if (length <= 1)
 		return;
 
+	BLEDevice& ref = *device.get();
 	GF_UINT32 offset = 0;
 	GF_UINT8 dataHeader = data[offset++];
 	GF_UINT8 dataType = dataHeader & EVENT_MASK;
@@ -74,47 +75,49 @@ void BLEDataProfile3::onData(GF_UINT8 length, GF_PUINT8 data)
 				mPackageId = 0;
 			if (mPackageId != currPackageId)
 			{
+				GF_LOGE("%s:%s: package id error. id supposed is %u, but now is %u, gap is %u", __FUNCTION__,
+					utils::tostring(ref.getName()).c_str(), mPackageId, currPackageId, (GF_UINT8)(currPackageId - mPackageId));
 				mPackageId = currPackageId;
 			}
 		}
+	}
 
-		BLEDevice& ref = *device.get();
-		GF_PUINT8 payload = data + offset;
-		GF_UINT32 lenPayload = length - offset;
+	GF_PUINT8 payload = data + offset;
+	GF_UINT32 lenPayload = length - offset;
 
-		switch (dataType)
-		{
-		case DT_ACCELERATE:
-			onAccelerateData(ref, lenPayload, payload); break;
-		case DT_GYROSCOPE:
-			onGyroscopeData(ref, lenPayload, payload); break;
-		case DT_MAGNETOMETER:
-			onMagnetometerData(ref, lenPayload, payload); break;
-		case DT_EULERANGLE:
-			onEulerAngleData(ref, lenPayload, payload); break;
-		case DT_QUATERNION:
-			onQuaternionData(ref, lenPayload, payload); break;
-		case DT_ROTATIONMATRIX:
-			onRotationMatrixData(ref, lenPayload, payload); break;
-		case DT_GESTURE:
-			onGestureData(ref, lenPayload, payload); break;
-		case DT_EMGRAW:
-			onEmgRawData(ref, lenPayload, payload); break;
-		case DT_HIDMOUSE:
-			onHIDMouseData(ref, lenPayload, payload); break;
-		case DT_HIDJOYSTICK:
-			onHIDJoystickData(ref, lenPayload, payload); break;
-		case DT_DEVICESTATUS:
-			onDeviceStatusData(ref, lenPayload, payload); break;
-		default:
-			GF_LOGE("Unknown data type: %u", dataType);
-		}
+	switch (dataType)
+	{
+	case DT_ACCELERATE:
+		onAccelerateData(ref, lenPayload, payload); break;
+	case DT_GYROSCOPE:
+		onGyroscopeData(ref, lenPayload, payload); break;
+	case DT_MAGNETOMETER:
+		onMagnetometerData(ref, lenPayload, payload); break;
+	case DT_EULERANGLE:
+		onEulerAngleData(ref, lenPayload, payload); break;
+	case DT_QUATERNION:
+		onQuaternionData(ref, lenPayload, payload); break;
+	case DT_ROTATIONMATRIX:
+		onRotationMatrixData(ref, lenPayload, payload); break;
+	case DT_GESTURE:
+		onGestureData(ref, lenPayload, payload); break;
+	case DT_EMGRAW:
+		onEmgRawData(ref, lenPayload, payload); break;
+	case DT_HIDMOUSE:
+		onHIDMouseData(ref, lenPayload, payload); break;
+	case DT_HIDJOYSTICK:
+		onHIDJoystickData(ref, lenPayload, payload); break;
+	case DT_DEVICESTATUS:
+		onDeviceStatusData(ref, lenPayload, payload); break;
+	default:
+		;//GF_LOGE("Unknown data type: 0x%2.2X", dataType);
 	}
 }
 
 void BLEDataProfile3::onResponse(GF_UINT8 length, GF_PUINT8 data)
 {
-	GF_LOGD("%s: No implementation.", __FUNCTION__);
+	if (nullptr != mDevSetting.get())
+		mDevSetting->onResponse(length, data);
 }
 
 gfsPtr<DeviceSetting> BLEDataProfile3::getDeviceSetting()
@@ -122,8 +125,17 @@ gfsPtr<DeviceSetting> BLEDataProfile3::getDeviceSetting()
 	GF_LOGD("%s", __FUNCTION__);
 	gfsPtr<BLEDevice> device = mDevice.lock();
 	if (nullptr == device)
+	{
+		mDevSetting.reset();
 		return gfsPtr<DeviceSetting>();
-	return make_shared<DeviceSettingDataProfile3>(device);
+	}
+
+	if (nullptr == mDevSetting.get())
+	{
+		mDevSetting = make_shared<DeviceSettingDataProfile3>(device);
+	}
+
+	return mDevSetting;
 }
 
 
@@ -223,7 +235,7 @@ void BLEDataProfile3::onHIDJoystickData(BLEDevice& device, GF_UINT8 length, GF_P
 void BLEDataProfile3::onDeviceStatusData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 	GF_LOGD("%s, length: %u", __FUNCTION__, length);
-	if (length <= 1)
+	if (length < 1)
 		return;
 
 	GF_UINT8 status = data[0];

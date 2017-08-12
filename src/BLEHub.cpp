@@ -1,19 +1,19 @@
 /*
  * Copyright 2017, OYMotion Inc.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -38,7 +38,7 @@ using namespace gf;
 
 BLEHub::BLEHub(const tstring& sIdentifier)
 	: mNotifHelper(*this)
-	, mWorkMode(WorkMode::Freerun)
+	, mWorkMode(WorkMode::Polling)
 {
 	GF_LOGD("BLEHub++: identfiler: %s", utils::tostring(sIdentifier).c_str());
 }
@@ -541,14 +541,16 @@ void BLEHub::onCharacteristicValueRead(GF_STATUS status, GF_UINT16 handle, GF_UI
 /*Notification format: data length(1 byte N) + data(N Bytes)*/
 void BLEHub::onNotificationReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
 {
-	lock_guard<mutex> lock(mTaskMutex);
 	gfsPtr<BLEDevice> dev;
-	for (auto& itor : mConnectedDevices)
 	{
-		if (itor->getHandle() == handle)
+		lock_guard<mutex> lock(mTaskMutex);
+		for (auto& itor : mConnectedDevices)
 		{
-			dev = itor;
-			break;
+			if (itor->getHandle() == handle)
+			{
+				dev = itor;
+				break;
+			}
 		}
 	}
 	if (nullptr != dev)
@@ -557,14 +559,16 @@ void BLEHub::onNotificationReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8
 
 void BLEHub::onControlResponseReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
 {
-	lock_guard<mutex> lock(mTaskMutex);
 	gfsPtr<BLEDevice> dev;
-	for (auto& itor : mConnectedDevices)
 	{
-		if (itor->getHandle() == handle)
+		lock_guard<mutex> lock(mTaskMutex);
+		for (auto& itor : mConnectedDevices)
 		{
-			dev = itor;
-			break;
+			if (itor->getHandle() == handle)
+			{
+				dev = itor;
+				break;
+			}
 		}
 	}
 	if (nullptr != dev)
@@ -732,8 +736,8 @@ GF_RET_CODE BLEHub::getProtocol(BLEDevice& dev, DeviceProtocolType& type)
 	GF_UINT32 status = GF_OK;
 	//executeCommand(make_shared<HubMsg>([&am, handle, &protoType]()
 	//{
-		protoType = am->GetDeviceProtocolSupported(handle);
-		//return static_cast<GF_UINT32>(GF_OK);
+	protoType = am->GetDeviceProtocolSupported(handle);
+	//return static_cast<GF_UINT32>(GF_OK);
 	//}));
 	switch (protoType)
 	{

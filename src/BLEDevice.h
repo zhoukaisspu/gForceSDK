@@ -81,6 +81,7 @@ namespace gf
 			GF_UINT16 slave_latence, GF_UINT16 supervision_timeout);
 		virtual GF_RET_CODE writeCharacteristic(AttributeHandle attribute_handle, GF_UINT8 dataLen, GF_PUINT8 data);
 		virtual GF_RET_CODE readCharacteristic(AttributeHandle attribute_handle);
+		virtual GF_RET_CODE sendControlCommand(GF_UINT8 dataLen, GF_PUINT8 data);
 
 	public:
 		virtual void updateData(const GF_BLEDevice& bleDev);

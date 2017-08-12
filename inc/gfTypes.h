@@ -154,6 +154,8 @@ namespace gf {
 		GF_ERROR_TIMEOUT,
 		/// Target device is busy and cannot fulfill the call.
 		GF_ERROR_DEVICE_BUSY,
+		/// The retrieving data is not ready yet
+		GF_ERROR_NOT_READY,
 	};
 
 	/// \brief Gesture types predefined in the gForce device

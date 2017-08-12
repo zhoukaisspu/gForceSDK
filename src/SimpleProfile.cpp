@@ -165,49 +165,49 @@ void SimpleProfile::onQuaternion(BLEDevice& device, GF_UINT8 length, GF_PUINT8 d
 void SimpleProfile::onGesture(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 	GF_LOGD("%s, length: %u", __FUNCTION__, length);
-	if (length > 0)
+	if (length < 1)
+		return;
+
+	Gesture gesture;
+	switch (data[0])
 	{
-		Gesture gesture;
-		switch (data[0])
-		{
-		case static_cast<GF_UINT8>(Gesture::Relax) :
-			gesture = Gesture::Relax;
-			break;
-		case static_cast<GF_UINT8>(Gesture::Fist) :
-			gesture = Gesture::Fist;
-			break;
-		case static_cast<GF_UINT8>(Gesture::SpreadFingers) :
-			gesture = Gesture::SpreadFingers;
-			break;
-		case static_cast<GF_UINT8>(Gesture::WaveIn) :
-			gesture = Gesture::WaveIn;
-			break;
-		case static_cast<GF_UINT8>(Gesture::WaveOut) :
-			gesture = Gesture::WaveOut;
-			break;
-		case static_cast<GF_UINT8>(Gesture::Pinch) :
-			gesture = Gesture::Pinch;
-			break;
-		case static_cast<GF_UINT8>(Gesture::Shoot) :
-			gesture = Gesture::Shoot;
-			break;
-		case static_cast<GF_UINT8>(Gesture::Undefined) :
-		default:
-			gesture = Gesture::Undefined;
-		}
-		device.getHub().notifyGestureData(device, gesture);
+	case static_cast<GF_UINT8>(Gesture::Relax) :
+		gesture = Gesture::Relax;
+		break;
+	case static_cast<GF_UINT8>(Gesture::Fist) :
+		gesture = Gesture::Fist;
+		break;
+	case static_cast<GF_UINT8>(Gesture::SpreadFingers) :
+		gesture = Gesture::SpreadFingers;
+		break;
+	case static_cast<GF_UINT8>(Gesture::WaveIn) :
+		gesture = Gesture::WaveIn;
+		break;
+	case static_cast<GF_UINT8>(Gesture::WaveOut) :
+		gesture = Gesture::WaveOut;
+		break;
+	case static_cast<GF_UINT8>(Gesture::Pinch) :
+		gesture = Gesture::Pinch;
+		break;
+	case static_cast<GF_UINT8>(Gesture::Shoot) :
+		gesture = Gesture::Shoot;
+		break;
+	case static_cast<GF_UINT8>(Gesture::Undefined) :
+	default:
+		gesture = Gesture::Undefined;
 	}
+	device.getHub().notifyGestureData(device, gesture);
 }
 
 void SimpleProfile::onStatus(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 	GF_LOGD("%s, length: %u", __FUNCTION__, length);
-	if (length > 0)
+	if (length < 1)
+		return;
+
+	GF_UINT8 status = data[0] & EVENT_RECENTER_MASK;
+	if (1 == status)
 	{
-		GF_UINT8 status = data[0] & EVENT_RECENTER_MASK;
-		if (1 == status)
-		{
-			device.getHub().notifyReCenter(device);
-		}
+		device.getHub().notifyReCenter(device);
 	}
 }

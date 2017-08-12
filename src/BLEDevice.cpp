@@ -323,6 +323,17 @@ GF_RET_CODE BLEDevice::readCharacteristic(AttributeHandle attribute_handle)
 	return ret;
 }
 
+GF_RET_CODE BLEDevice::sendControlCommand(GF_UINT8 dataLen, GF_PUINT8 data)
+{
+	GF_LOGD("%s: command: 0x%2.2X", __FUNCTION__, data[0]);
+	GF_RET_CODE ret = GF_RET_CODE::GF_ERROR_BAD_STATE;
+	if (mHandle != INVALID_HANDLE)
+	{
+		ret = mHub.sendControlCommand(*this, dataLen, data);
+	}
+	return ret;
+}
+
 void BLEDevice::onMTUSizeChanged(GF_STATUS status, GF_UINT16 mtu_size)
 {
 	GF_LOGD("%s: status: %u, new MTU size: %u", __FUNCTION__, (GF_UINT)status, (GF_UINT)mtu_size);

@@ -1,19 +1,19 @@
 /*
  * Copyright 2017, OYMotion Inc.
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- *
+ * 
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- *
+ * 
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -28,39 +28,8 @@
  * DAMAGE.
  *
  */
-#pragma once
-
-#include "DeviceSetting.h"
 #include "Utils.h"
-#include <map>
 
-namespace gf
-{
-	class BLEDevice;
+using namespace gf;
 
-	const GF_UINT32 MAX_COMMAND_TIMEOUT = 5000; // ms
-
-	class DeviceSettingHandle : public DeviceSetting
-	{
-	public:
-		DeviceSettingHandle(gfwPtr<BLEDevice> device);
-		virtual ~DeviceSettingHandle();
-		void onResponse(GF_UINT8 length, GF_PUINT8 data);
-
-	protected:
-		gfwPtr<BLEDevice> mDevice;
-
-	protected:
-		//////////////////////////////////////////////////////////////
-		// Message pool to process command and it's response
-		mutex mMutex;
-		SimpleTimer mTimer;
-		map<GF_UINT8, SimpleTimer::TimePoint> mExecutingList;
-		GF_RET_CODE sendCommand(GF_UINT8 dataLen, GF_PUINT8 commandData, bool hasResponse = true);
-
-		void updateTimer();
-		void onTimer();
-		virtual void dispatchResponse(GF_UINT8 command, GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, bool timeout = false) = 0;
-	};
-
-}
+TimerManager<SimpleTimer> TimerManager<SimpleTimer>::mInstance;

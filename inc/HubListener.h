@@ -95,6 +95,14 @@ namespace gf
 		virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason) {}
 
 		/// \brief
+		///     This callback is called when the device information of a device is
+		///     ready to read.
+		/// \param device
+		///     The pointer to the Device object that the hub has connected to.
+        /// \remark A DeviceSetting object can be used to read the device information.
+		virtual void onDeviceInfoUpdated(WPDEVICE device) {}
+
+		/// \brief
         ///     This callback is called when the orientation of the device has
         ///     changed.
 		/// \param device

@@ -1,19 +1,19 @@
 /*
  * Copyright 2017, OYMotion Inc.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -37,10 +37,13 @@
 #include <assert.h>
 #include <condition_variable>
 #include <mutex>
-#include <deque>
+#include <queue>
 #include <functional>
 #include <thread>
 #include <sstream>
+#include <atomic>
+#include <vector>
+#include <chrono>
 using namespace std;
 
 namespace gf {
@@ -73,7 +76,7 @@ namespace gf {
 #ifdef WIN32
 			mbstowcs_s(&convertedChars, p, len, str.c_str(), _TRUNCATE);
 #else // WIN32
-            mbstowcs(p, str.c_str(), str.length()*2);
+			mbstowcs(p, str.c_str(), str.length()*2);
 #endif
 			wstring wstr(p);
 			//setlocale(LC_CTYPE, curLocale.c_str());
@@ -96,7 +99,7 @@ namespace gf {
 #ifdef WIN32
 			wcstombs_s(&convertedChars, p, len, wstr.c_str(), _TRUNCATE);
 #else // WIN32
-            wcstombs(p, wstr.c_str(), len);
+			wcstombs(p, wstr.c_str(), len);
 #endif
 			string str(p);
 			//setlocale(LC_CTYPE, curLocale.c_str());
@@ -192,7 +195,7 @@ namespace gf {
 				lock_guard<mutex> lock(mMutex);
 				mQ.push_back(i);
 			}
-			mCondition.notify_one();
+			mCondition.notify_all();
 		}
 
 		_Type pop()
@@ -234,5 +237,236 @@ namespace gf {
 		mutex mMutex;
 		condition_variable mCondition;
 	};
+
+	// a timer
+	template <class TimerType> class TimerManager;
+
+	template <class TimePointType, class TimeDurationType = typename TimePointType::duration>
+	class GfTimer
+	{
+		using SelfType = GfTimer < TimePointType > ;
+	public:
+		using TimePoint = TimePointType;
+		using TimeDuration = TimeDurationType;
+		using TimerFunc = function < void() > ;
+
+	public:
+		GfTimer()
+			: mRunning(false)
+			, mMgr(TimerManager<SelfType>::getInstance())
+		{
+		}
+		~GfTimer()
+		{
+			stop();
+		}
+		bool start(TimeDuration duration, TimerFunc task)
+		{
+			lock_guard<mutex> lock(mMutex);
+			if (mRunning)
+			{
+				GF_LOGD("Error: Timer is running.");
+				return false;
+			}
+			mTimePoint = chrono::system_clock::now() + duration;
+			mTask = task;
+			mRunning = mMgr.addTimer(*this);
+			return mRunning;
+		}
+		bool stop()
+		{
+			lock_guard<mutex> lock(mMutex);
+			if (!mRunning)
+				return true;
+			if (mMgr.removeTimer(*this))
+			{
+				mRunning = false;
+			}
+			return !mRunning;
+		}
+
+	private:
+		void trigger()
+		{
+			mRunning = false;
+			mTask();
+		}
+
+		mutex mMutex;
+		atomic<bool> mRunning;
+		TimePoint mTimePoint;
+		TimerFunc mTask;
+		TimerManager<SelfType>& mMgr;
+		friend class TimerManager < SelfType > ;
+	};
+
+	template <class TimerType>
+	class TimerManager
+	{
+	public:
+		using Timer = TimerType;
+		using TimePoint = typename Timer::TimePoint;
+		struct TimerParam
+		{
+			Timer* timer;
+			bool operator>(const TimerParam& _Right) const {
+				return timer->mTimePoint > _Right.timer->mTimePoint;
+			}
+		};
+		TimerManager()
+			: mRunning(true)
+		{
+			make_heap(mTimers.begin(), mTimers.end(), greater<TimerParam>());
+			mTimerThread;
+		}
+		~TimerManager()
+		{
+			if (mTimerThread.joinable())
+			{
+				{
+					lock_guard<mutex> lock(mMutexWait);
+				}
+				mRunning = false;
+				mWaitFact.notify_all();
+				mTimerThread.join();
+			}
+		}
+		bool addTimer(Timer& t)
+		{
+			//GF_LOGD("%s", __FUNCTION__);
+			if (!mTimerThread.joinable())
+			{
+				mTimerThread = thread([this](){ this->threadProc(); });
+			}
+			lock_guard<mutex> lock(mMutexTimers);
+			for (auto& tp : mTimers)
+			{
+				if (tp.timer == &t)
+				{
+					// existing
+					return false;
+				}
+			}
+			TimerParam newtp;
+			newtp.timer = &t;
+			// check if the earlest one
+			bool needReset = false;
+			auto& earliest = mTimers.begin();
+			if (earliest != mTimers.end())
+			{
+				if (*earliest > newtp)
+					needReset = true;
+			}
+			else
+			{
+				// the first one
+				needReset = true;
+			}
+			// insert new item
+			mTimers.push_back(newtp);
+			push_heap(mTimers.begin(), mTimers.end(), greater<TimerParam>());
+			// check if need reset timer
+			if (needReset)
+			{
+				{
+					lock_guard<mutex> lock(mMutexWait);
+				}
+				mWaitFact.notify_all();
+			}
+
+			return true;
+		}
+		bool removeTimer(Timer& t)
+		{
+			//GF_LOGD("%s", __FUNCTION__);
+			lock_guard<mutex> lock(mMutexTimers);
+			for (auto tp = mTimers.begin(); tp != mTimers.end(); tp++)
+			{
+				if (tp->timer == &t)
+				{
+					// check if the earlest one
+					bool needReset = false;
+					if (tp == mTimers.begin())
+					{
+						needReset = true;
+					}
+					// existing, remove it
+					mTimers.erase(tp);
+					make_heap(mTimers.begin(), mTimers.end(), greater<TimerParam>());
+					if (needReset)
+					{
+						{
+							lock_guard<mutex> lock(mMutexWait);
+						}
+						mWaitFact.notify_all();
+					}
+					return true;
+				}
+			}
+			return false;
+		}
+		static TimerManager& getInstance()
+		{
+			return mInstance;
+		}
+
+	private:
+		void threadProc()
+		{
+			while (mRunning)
+			{
+				auto now = chrono::system_clock::now();
+				TimePoint earliest;
+				Timer* pTimer = nullptr;
+				{
+					lock_guard<mutex> timerslock(mMutexTimers);
+					auto& first = mTimers.begin();
+					if (first == mTimers.end())
+					{
+						earliest = now;
+					}
+					else
+					{
+						earliest = first->timer->mTimePoint;
+						if (now >= earliest)
+						{
+							// this timer is expired
+							pTimer = first->timer;
+							pop_heap(mTimers.begin(), mTimers.end(), greater<TimerParam>());
+							mTimers.pop_back();
+						}
+					}
+				}
+				if (nullptr != pTimer)
+				{
+					pTimer->trigger();
+				}
+				else if (earliest != now)
+				{
+					// need setup timer
+					unique_lock<mutex> timerlock(mMutexWait);
+					mWaitFact.wait_until(timerlock, earliest);
+				}
+				else
+				{
+					// no timer in list
+					unique_lock<mutex> timerlock(mMutexWait);
+					mWaitFact.wait(timerlock);
+				}
+			};
+		}
+
+	private:
+		static TimerManager mInstance;
+		atomic<bool> mRunning;
+		vector<TimerParam> mTimers;
+		thread mTimerThread;
+		mutex mMutexTimers;
+		mutex mMutexWait;
+		condition_variable mWaitFact;
+	};
+
+	using MilisDuration = chrono::duration < GF_UINT32, milli > ;
+	using SimpleTimer = GfTimer < chrono::system_clock::time_point > ;
 
 } // namespace gf

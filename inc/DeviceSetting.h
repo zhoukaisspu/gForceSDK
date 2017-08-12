@@ -53,15 +53,14 @@ namespace gf
 	public:
 		/////////////////////////////////////////////////////
 		// description
-		virtual GF_RET_CODE getProtocolVer(GF_UINT32& version) const = 0;
-		virtual GF_RET_CODE getFeatureMap(GF_UINT32& featureMap) const = 0;
-		virtual GF_RET_CODE getDeviceName(tstring& name) const = 0;
-		virtual GF_RET_CODE getModelNumber(tstring& modelNumber) const = 0;
-		virtual GF_RET_CODE getSerialNumber(tstring& serialNumber) const = 0;
-		virtual GF_RET_CODE getHWRevision(GF_UINT32& version) const = 0;
-		virtual GF_RET_CODE getFWRevision(GF_UINT32& version) const = 0;
-		virtual GF_RET_CODE getManufacturerName(tstring& name) const = 0;
-		virtual tstring toString() const = 0;
+		virtual GF_RET_CODE getProtocolVer(tstring& version) = 0;
+		virtual GF_RET_CODE getFeatureMap(GF_UINT32& featureMap) = 0;
+		virtual GF_RET_CODE getDeviceName(tstring& name) = 0;
+		virtual GF_RET_CODE getModelNumber(tstring& modelNumber) = 0;
+		virtual GF_RET_CODE getSerialNumber(tstring& serialNumber) = 0;
+		virtual GF_RET_CODE getHWRevision(tstring& version) = 0;
+		virtual GF_RET_CODE getFWRevision(tstring& version) = 0;
+		virtual GF_RET_CODE getManufacturerName(tstring& name) = 0;
 
 	public:
 		/////////////////////////////////////////////////////
@@ -84,8 +83,6 @@ namespace gf
 	public:
 		/////////////////////////////////////////////////////
 		// config
-		// not defined yet
-		//virtual GF_RET_CODE upgradeFirmware() = 0;
 		// C.6
 		virtual GF_RET_CODE sendTrainingModelData(GF_UINT32 length, GF_UINT8 data[]) = 0;
 
@@ -117,12 +114,12 @@ namespace gf
 			/// Data Notify All On
 			DNF_ALL = 0xFFFFFFFF,
 		};
-		virtual GF_RET_CODE setDataNotifConfig(DataNotifFlags flags) = 0;
+		virtual GF_RET_CODE setDataNotifSwitch(DataNotifFlags flags) = 0;
 
 		///////////////////////////////////////////////
-		virtual GF_RET_CODE getBatteryLevel(GF_UINT32& level) const = 0;
+		virtual GF_RET_CODE getBatteryLevel(GF_UINT32& level) = 0;
 		// C.1
-		virtual GF_RET_CODE getTemperature(GF_UINT32& temprature) const = 0;
+		virtual GF_RET_CODE getTemperature(GF_UINT32& temprature) = 0;
 
 		enum class SWOLogLevel : GF_UINT32 {
 			/// All

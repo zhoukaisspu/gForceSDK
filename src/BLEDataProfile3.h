@@ -41,6 +41,7 @@
 
 namespace gf
 {
+	class DeviceSettingDataProfile3;
 
 	class BLEDataProfile3 : public DeviceProfile
 	{
@@ -85,6 +86,9 @@ namespace gf
 		void onHIDMouseData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data);
 		void onHIDJoystickData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data);
 		void onDeviceStatusData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data);
+
+	private:
+		gfsPtr<DeviceSettingDataProfile3> mDevSetting;
 	};
 
 }
