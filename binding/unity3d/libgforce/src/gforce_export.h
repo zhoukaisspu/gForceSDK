@@ -172,7 +172,7 @@ GFORCE4CS_API gf::GF_UINT hub_deinit();
 /// \brief Set work mode
 ///
 /// \return The current work mode
-/// \remark Default work mode is Freerun.
+/// \remark Default work mode is Polling.
 /// \sa
 ///         hub_run\n
 ///         gf::WorkMode
@@ -180,7 +180,7 @@ GFORCE4CS_API gf::GF_UINT hub_set_workmode(gf::GF_UINT newMode);
 /// \brief Get work mode
 ///
 /// \return The current work mode
-/// \remark Default work mode is Freerun
+/// \remark Default work mode is Polling
 /// \sa
 ///         hub_run\n
 ///         gf::WorkMode

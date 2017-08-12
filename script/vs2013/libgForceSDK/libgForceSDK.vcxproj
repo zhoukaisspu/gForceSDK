@@ -19,14 +19,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\src\BLEDataProfile3.cpp" />
     <ClCompile Include="..\..\..\src\BLEDevice.cpp" />
     <ClCompile Include="..\..\..\src\BLEHub.cpp" />
     <ClCompile Include="..\..\..\src\common\src\LogUtil_Win.cpp" />
-    <ClCompile Include="..\..\..\src\GForceDevice.cpp" />
+    <ClCompile Include="..\..\..\src\common\src\Utils.cpp" />
+    <ClCompile Include="..\..\..\src\DeviceSettingDataProfile3.cpp" />
+    <ClCompile Include="..\..\..\src\DeviceSettingHandle.cpp" />
+    <ClCompile Include="..\..\..\src\SimpleProfile.cpp" />
     <ClCompile Include="..\..\..\src\HubManagerImpl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\inc\Device.h" />
+    <ClInclude Include="..\..\..\inc\DeviceSetting.h" />
     <ClInclude Include="..\..\..\inc\gforce.h" />
     <ClInclude Include="..\..\..\inc\gfTypes.h" />
     <ClInclude Include="..\..\..\inc\Hub.h" />
@@ -35,19 +40,22 @@
     <ClInclude Include="..\..\..\inc\Quaternion.h" />
     <ClInclude Include="..\..\..\inc\utils\export.h" />
     <ClInclude Include="..\..\..\inc\utils\logredirect.h" />
+    <ClInclude Include="..\..\..\src\BLEDataProfile3.h" />
     <ClInclude Include="..\..\..\src\BLEDevice.h" />
     <ClInclude Include="..\..\..\src\BLEHub.h" />
     <ClInclude Include="..\..\..\src\ble\inc\AdapterManagerInterface.h" />
     <ClInclude Include="..\..\..\src\ble\inc\ClientCallbackInterface.h" />
     <ClInclude Include="..\..\..\src\common\LogUtils.h" />
+    <ClInclude Include="..\..\..\src\common\Utils.h" />
     <ClInclude Include="..\..\..\src\common\utils\LogUtils_Linux.h" />
     <ClInclude Include="..\..\..\src\common\utils\LogUtil_Android.h" />
     <ClInclude Include="..\..\..\src\common\utils\LogUtil_Win.h" />
-    <ClInclude Include="..\..\..\src\DeviceHelper.h" />
-    <ClInclude Include="..\..\..\src\GForceDevice.h" />
+    <ClInclude Include="..\..\..\src\DeviceProfile.h" />
+    <ClInclude Include="..\..\..\src\DeviceSettingDataProfile3.h" />
+    <ClInclude Include="..\..\..\src\DeviceSettingHandle.h" />
+    <ClInclude Include="..\..\..\src\SimpleProfile.h" />
     <ClInclude Include="..\..\..\src\HubManagerImpl.h" />
     <ClInclude Include="..\..\..\src\IHub.h" />
-    <ClInclude Include="..\..\..\src\Utils.h" />
     <ClInclude Include="..\..\..\src\VirtualDevice.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

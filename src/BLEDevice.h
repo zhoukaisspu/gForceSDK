@@ -46,6 +46,8 @@ namespace gf
 
 	const static GF_UINT16 INVALID_HANDLE = 0xFFFF;
 
+	class DeviceProfile;
+
 	class BLEDevice : public Device
 	{
 	public:
@@ -63,7 +65,7 @@ namespace gf
 		virtual GF_UINT16 getSlavelatency() const { return mSlavelatency; }
 		virtual GF_UINT16 getMTUsize() const { return mMTUsize; }
 
-		virtual GF_RET_CODE identify(int msec = 1000) override;
+		virtual GF_RET_CODE identify(int msec) override;
 
 		virtual DeviceConnectionStatus getConnectionStatus() const override { return mCnntStatus; }
 		virtual GF_RET_CODE setPostion(DevicePosition pos) override;
@@ -72,12 +74,14 @@ namespace gf
 		virtual GF_RET_CODE connect(bool directConn = true) override;
 		virtual GF_RET_CODE disconnect() override;
 		virtual GF_RET_CODE cancelConnect() override;
+		virtual gfsPtr<DeviceSetting> getDeviceSetting() override;
 
 		virtual GF_RET_CODE configMtuSize(GF_UINT16 mtuSize);
 		virtual GF_RET_CODE connectionParameterUpdate(GF_UINT16 conn_interval_min, GF_UINT16 conn_interval_max,
 			GF_UINT16 slave_latence, GF_UINT16 supervision_timeout);
 		virtual GF_RET_CODE writeCharacteristic(AttributeHandle attribute_handle, GF_UINT8 dataLen, GF_PUINT8 data);
 		virtual GF_RET_CODE readCharacteristic(AttributeHandle attribute_handle);
+		virtual GF_RET_CODE sendControlCommand(GF_UINT8 dataLen, GF_PUINT8 data);
 
 	public:
 		virtual void updateData(const GF_BLEDevice& bleDev);
@@ -87,6 +91,7 @@ namespace gf
 		virtual void onConnectionParmeterUpdated(GF_STATUS status, GF_UINT16 conn_int, GF_UINT16 superTO, GF_UINT16 slavelatency);
 		virtual void onCharacteristicValueRead(GF_STATUS status, GF_UINT8 length, GF_PUINT8 data);
 		virtual void onData(GF_UINT8 length, GF_PUINT8 data);
+		virtual void onResponse(GF_UINT8 length, GF_PUINT8 data);
 
 	public:
 		virtual bool operator < (const BLEDevice& devRight) const {
@@ -102,8 +107,19 @@ namespace gf
 		virtual bool isMyself(GF_UINT8 addrType, tstring addr) const;
 		virtual bool takeover(BLEDevice& from);
 
+	public:
+		// provide to profiles
+		IHub& getHub() { return mHub; }
+		mutex& getLockable() { return mMutex; }
+
+		// WPDEVICE ptr for util objects creating
+		// must be assigned right after a device created
+		gfwPtr<BLEDevice> mMyself;
+
 	protected:
 		IHub& mHub;
+		// TODO: thread-safe
+		mutex mMutex;
 
 	protected:
 		DeviceConnectionStatus mCnntStatus = DeviceConnectionStatus::Disconnected;
@@ -119,9 +135,7 @@ namespace gf
 		GF_UINT16	mSlavelatency = 0;
 		GF_UINT16	mMTUsize = 0;
 
-	protected:
-		// TODO: thread-safe
-		mutex mMutex;
+		gfsPtr<DeviceProfile> mProfile;
 	};
 
 } // namespace gf

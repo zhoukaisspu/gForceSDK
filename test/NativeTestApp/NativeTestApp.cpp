@@ -1,19 +1,19 @@
 /*
  * Copyright 2017, OYMotion Inc.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -37,8 +37,9 @@
 #include "HubManager.h"
 #include "Device.h"
 #include "HubListener.h"
+#include "DeviceSetting.h"
 #include "LogUtils.h"
-#include "../Utils.h"
+#include "../common/Utils.h"
 
 #include <atomic>
 #include <list>
@@ -90,6 +91,7 @@ BOOL ctrlhandler(DWORD fdwctrltype)
 void printHelp()
 {
 	GF_LOGI("\tPress Ctrl+C to exit.\n");
+	GF_LOGI("h:\tPrint this help.");
 	GF_LOGI("i:\tInit hub.");
 	GF_LOGI("u:\tDeinit hub.");
 	GF_LOGI("g:\tGet hub status.");
@@ -99,7 +101,12 @@ void printHelp()
 	GF_LOGI("c:\tConnect to device.");
 	GF_LOGI("C:\tCancel connecting to device.");
 	GF_LOGI("d:\tDisconnect device.");
-	GF_LOGI("p:\tPolling mode.\n\n");
+	GF_LOGI("m:\tRetrieve device information.");
+	GF_LOGI("n:\tTurn notification on.");
+	GF_LOGI("x:\tPoweroff.");
+	GF_LOGI("y:\tSwtich to OAD.");
+	GF_LOGI("z:\tDevice system reset.");
+	//GF_LOGI("p:\tPolling mode.\n\n");
 	GF_LOGI("q:\tExit.\n\n");
 }
 
@@ -182,14 +189,14 @@ class HubListenerImp : public HubListener
 		case Gesture::SpreadFingers:
 			gesture = "SpreadFingers";
 			break;
-		case Gesture::WaveTowardPalm:
-			gesture = "WaveTowardPalm";
+		case Gesture::WaveIn:
+			gesture = "WaveIn";
 			break;
-		case Gesture::WaveBackwardPalm:
-			gesture = "WaveBackwardPalm";
+		case Gesture::WaveOut:
+			gesture = "WaveOut";
 			break;
-		case Gesture::TuckFingers:
-			gesture = "TuckFingers";
+		case Gesture::Pinch:
+			gesture = "Pinch";
 			break;
 		case Gesture::Shoot:
 			gesture = "Shoot";
@@ -246,6 +253,9 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 	GF_LOGI("Command %s received.", cmd.c_str());
 	switch (cmd[0])
 	{
+	case 'h':
+		printHelp();
+		break;
 	case 'i':
 		if (GF_RET_CODE::GF_SUCCESS != pHub->init())
 		{
@@ -323,19 +333,114 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 		}
 		break;
 	}
-	case 'p':
+	//case 'p':
+	//{
+	//	// entering polling mode
+	//	pHub->setWorkMode(WorkMode::Polling);
+	//	GF_LOGI("Hub work mode is %d now.", static_cast<GF_INT>(pHub->getWorkMode()));
+	//	GF_LOGI("Main thread id is %s.\n", utils::threadIdToString(this_thread::get_id()).c_str());
+	//
+	//	int tryit = 5;
+	//	while (tryit--)
+	//	{
+	//		pHub->run(2000);
+	//	}
+	//	pHub->setWorkMode(WorkMode::Freerun);
+	//	break;
+	//}
+	case 'm':
 	{
-		// entering polling mode
-		pHub->setWorkMode(WorkMode::Polling);
-		GF_LOGI("Hub work mode is %d now.", static_cast<GF_INT>(pHub->getWorkMode()));
-		GF_LOGI("Main thread id is %s.\n", utils::threadIdToString(this_thread::get_id()).c_str());
-
-		int tryit = 5;
-		while (tryit--)
+		for (auto& itor : listDev)
 		{
-			pHub->run(2000);
+			if (DeviceConnectionStatus::Connected == itor->getConnectionStatus())
+			{
+				auto ds = itor->getDeviceSetting();
+				if (nullptr != ds)
+				{
+					tstring protocolver;
+					GF_UINT32 featuremap = 0;
+					ds->getProtocolVer(protocolver);
+					Sleep(100);
+					ds->getFeatureMap(featuremap);
+					Sleep(100);
+					ds->getDeviceName(protocolver);
+					Sleep(100);
+					ds->getModelNumber(protocolver);
+					Sleep(100);
+					ds->getSerialNumber(protocolver);
+					Sleep(100);
+					ds->getHWRevision(protocolver);
+					Sleep(100);
+					ds->getFWRevision(protocolver);
+					Sleep(100);
+					ds->getManufacturerName(protocolver);
+				}
+			}
 		}
-		pHub->setWorkMode(WorkMode::Freerun);
+		break;
+	}
+	case 'n':
+	{
+		for (auto& itor : listDev)
+		{
+			if (DeviceConnectionStatus::Connected == itor->getConnectionStatus())
+			{
+				auto ds = itor->getDeviceSetting();
+				if (nullptr != ds)
+				{
+					DeviceSetting::DataNotifFlags flags = (DeviceSetting::DataNotifFlags)
+						(DeviceSetting::DNF_QUATERNION
+						| DeviceSetting::DNF_EMG_GESTURE
+						| DeviceSetting::DNF_DEVICE_STATUS);
+					ds->setDataNotifSwitch(flags);
+				}
+			}
+		}
+		break;
+	}
+	case 'x':
+	{
+		for (auto& itor : listDev)
+		{
+			if (DeviceConnectionStatus::Connected == itor->getConnectionStatus())
+			{
+				auto ds = itor->getDeviceSetting();
+				if (nullptr != ds)
+				{
+					ds->powerOff();
+				}
+			}
+		}
+		break;
+	}
+	case 'y':
+	{
+		for (auto& itor : listDev)
+		{
+			if (DeviceConnectionStatus::Connected == itor->getConnectionStatus())
+			{
+				auto ds = itor->getDeviceSetting();
+				if (nullptr != ds)
+				{
+					ds->swithToOAD();
+				}
+			}
+		}
+		break;
+	}
+	case 'z':
+	{
+		for (auto& itor : listDev)
+		{
+			if (DeviceConnectionStatus::Connected == itor->getConnectionStatus())
+			{
+				auto ds = itor->getDeviceSetting();
+				if (nullptr != ds)
+				{
+					ds->systemReset();
+				}
+			}
+		}
 		break;
 	}
 	case 'q':
@@ -358,14 +463,14 @@ int _tmain()
 		GF_LOGE("failed to get hub.");
 		return 0;
 	}
-	
+
 	pHub->setWorkMode(WorkMode::Freerun);
 	GF_LOGI("Hub work mode is %d now.", static_cast<GF_INT>(pHub->getWorkMode()));
 	GF_LOGI("Main thread id is %s.\n", utils::threadIdToString(this_thread::get_id()).c_str());
 
-	listener = static_pointer_cast<HubListener>(make_shared<HubListenerImp>());
+	listener = make_shared<HubListenerImp>();
 	pHub->registerListener(listener);
-	pHub->registerListener(static_pointer_cast<HubListener>(make_shared<HubListenerImp>()));
+	pHub->registerListener(make_shared<HubListenerImp>());
 	//listener = nullptr;
 
 	if (GF_RET_CODE::GF_SUCCESS != pHub->init())

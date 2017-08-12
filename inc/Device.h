@@ -42,6 +42,7 @@
 namespace gf
 {
 	class DeviceListener;
+	class DeviceSetting;
 
 	/// \class Device
 	/// \brief
@@ -148,6 +149,16 @@ namespace gf
         ///     HubListener::onDeviceConnected()
         ///     HubListener::onDeviceDisconnected()
 		virtual GF_RET_CODE cancelConnect() = 0;
+
+		// externsion for new protocol
+
+		/// \brief Get DeviceSetting of a device
+		/// \return
+		///     The device setting handler of this device
+		/// \remark
+		///     A device based on simple BLE protocol has no config options,
+		///     So the method will return an empty object in a simple BLE case.
+		virtual gfsPtr<DeviceSetting> getDeviceSetting() = 0;
 
 	protected:
 		/// \brief Virtual deconstructor
