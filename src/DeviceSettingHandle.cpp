@@ -51,7 +51,7 @@ GF_RET_CODE DeviceSettingHandle::sendCommand(GF_UINT8 dataLen, GF_PUINT8 command
 
 	GF_UINT8 command = commandData[0];
 	auto dev = mDevice.lock();
-	if (nullptr == dev.get())
+	if (nullptr == dev)
 	{
 		GF_LOGD("%s: error: command (0x%2.2X) failed, device is .", __FUNCTION__, command);
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
@@ -96,19 +96,20 @@ void DeviceSettingHandle::onResponse(GF_UINT8 length, GF_PUINT8 data)
 	}
 
 	GF_LOGD("%s. cmd = 0x%2.2X, ret = 0x%2.2X", __FUNCTION__, cmd, ret);
-
-	lock_guard<mutex> lock(mMutex);
-	// check responders
-	if (mExecutingList.find(cmd) == mExecutingList.end())
 	{
-		GF_LOGD("cmd 0x%2.2X is not handled", cmd);
-		// not in list, do nothing
-		return;
+		lock_guard<mutex> lock(mMutex);
+		// check responders
+		if (mExecutingList.find(cmd) == mExecutingList.end())
+		{
+			GF_LOGD("cmd 0x%2.2X is not handled", cmd);
+			// not in list, do nothing
+			return;
+		}
+		mExecutingList.erase(cmd);
+		updateTimer();
 	}
-	auto handler = mExecutingList[cmd];
-	mExecutingList.erase(cmd);
+
 	dispatchResponse(cmd, ret, length - 2, length == 2 ? nullptr : data + 2);
-	updateTimer();
 }
 
 void DeviceSettingHandle::updateTimer()

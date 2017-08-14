@@ -203,8 +203,8 @@ void DeviceSettingDataProfile3::internalGetProtocolVer() {
 	GF_RET_CODE ret = sendCommand(1, &data);
 	if (GF_RET_CODE::GF_SUCCESS != ret)
 	{
-		// turn on mDeviceInfoReady, so client will always get wrong data
-		//mDeviceInfoReady = true;
+		// try next
+		internalGetFeatureMap();
 	}
 }
 void DeviceSettingDataProfile3::internalGetFeatureMap() {
@@ -212,8 +212,8 @@ void DeviceSettingDataProfile3::internalGetFeatureMap() {
 	GF_RET_CODE ret = sendCommand(1, &data);
 	if (GF_RET_CODE::GF_SUCCESS != ret)
 	{
-		// turn on mDeviceInfoReady, so client will always get wrong data
-		//mDeviceInfoReady = true;
+		// try next
+		internalGetDeviceName();
 	}
 }
 void DeviceSettingDataProfile3::internalGetDeviceName() {
@@ -221,8 +221,8 @@ void DeviceSettingDataProfile3::internalGetDeviceName() {
 	GF_RET_CODE ret = sendCommand(1, &data);
 	if (GF_RET_CODE::GF_SUCCESS != ret)
 	{
-		// turn on mDeviceInfoReady, so client will always get wrong data
-		//mDeviceInfoReady = true;
+		// try next
+		internalGetModelNumber();
 	}
 }
 void DeviceSettingDataProfile3::internalGetModelNumber() {
@@ -230,8 +230,8 @@ void DeviceSettingDataProfile3::internalGetModelNumber() {
 	GF_RET_CODE ret = sendCommand(1, &data);
 	if (GF_RET_CODE::GF_SUCCESS != ret)
 	{
-		// turn on mDeviceInfoReady, so client will always get wrong data
-		//mDeviceInfoReady = true;
+		// try next
+		internalGetSerialNumber();
 	}
 }
 void DeviceSettingDataProfile3::internalGetSerialNumber() {
@@ -239,8 +239,8 @@ void DeviceSettingDataProfile3::internalGetSerialNumber() {
 	GF_RET_CODE ret = sendCommand(1, &data);
 	if (GF_RET_CODE::GF_SUCCESS != ret)
 	{
-		// turn on mDeviceInfoReady, so client will always get wrong data
-		//mDeviceInfoReady = true;
+		// try next
+		internalGetHWRevision();
 	}
 }
 void DeviceSettingDataProfile3::internalGetHWRevision() {
@@ -248,8 +248,8 @@ void DeviceSettingDataProfile3::internalGetHWRevision() {
 	GF_RET_CODE ret = sendCommand(1, &data);
 	if (GF_RET_CODE::GF_SUCCESS != ret)
 	{
-		// turn on mDeviceInfoReady, so client will always get wrong data
-		//mDeviceInfoReady = true;
+		// try next
+		internalGetFWRevision();
 	}
 }
 void DeviceSettingDataProfile3::internalGetFWRevision() {
@@ -257,8 +257,8 @@ void DeviceSettingDataProfile3::internalGetFWRevision() {
 	GF_RET_CODE ret = sendCommand(1, &data);
 	if (GF_RET_CODE::GF_SUCCESS != ret)
 	{
-		// turn on mDeviceInfoReady, so client will always get wrong data
-		//mDeviceInfoReady = true;
+		// try next
+		internalGetManufacturerName();
 	}
 }
 void DeviceSettingDataProfile3::internalGetManufacturerName() {
@@ -266,8 +266,9 @@ void DeviceSettingDataProfile3::internalGetManufacturerName() {
 	GF_RET_CODE ret = sendCommand(1, &data);
 	if (GF_RET_CODE::GF_SUCCESS != ret)
 	{
-		// turn on mDeviceInfoReady, so client will always get wrong data
-		//mDeviceInfoReady = true;
+		// turn on mDeviceInfoReady
+		if (!mDeviceInfoReady)
+			mDeviceInfoReady = true;
 	}
 }
 
@@ -276,7 +277,7 @@ GF_RET_CODE DeviceSettingDataProfile3::getProtocolVer(tstring& version)
 	GF_LOGD(__FUNCTION__);
 	if (!mDeviceInfoReady)
 	{
-		internalGetProtocolVer();
+		//internalGetProtocolVer();
 		return GF_RET_CODE::GF_ERROR_NOT_READY;
 	}
 	version = mProtocolVer;
@@ -287,7 +288,7 @@ GF_RET_CODE DeviceSettingDataProfile3::getFeatureMap(GF_UINT32& featureMap)
 	GF_LOGD(__FUNCTION__);
 	if (!mDeviceInfoReady)
 	{
-		internalGetFeatureMap();
+		//internalGetFeatureMap();
 		return GF_RET_CODE::GF_ERROR_NOT_READY;
 	}
 	featureMap = mFeatureMap;
@@ -298,7 +299,7 @@ GF_RET_CODE DeviceSettingDataProfile3::getDeviceName(tstring& name)
 	GF_LOGD(__FUNCTION__);
 	if (!mDeviceInfoReady)
 	{
-		internalGetDeviceName();
+		//internalGetDeviceName();
 		return GF_RET_CODE::GF_ERROR_NOT_READY;
 	}
 	name = mDeviceName;
@@ -309,7 +310,7 @@ GF_RET_CODE DeviceSettingDataProfile3::getModelNumber(tstring& modelNumber)
 	GF_LOGD(__FUNCTION__);
 	if (!mDeviceInfoReady)
 	{
-		internalGetModelNumber();
+		//internalGetModelNumber();
 		return GF_RET_CODE::GF_ERROR_NOT_READY;
 	}
 	modelNumber = mModelNumber;
@@ -320,7 +321,7 @@ GF_RET_CODE DeviceSettingDataProfile3::getSerialNumber(tstring& serialNumber)
 	GF_LOGD(__FUNCTION__);
 	if (!mDeviceInfoReady)
 	{
-		internalGetSerialNumber();
+		//internalGetSerialNumber();
 		return GF_RET_CODE::GF_ERROR_NOT_READY;
 	}
 	serialNumber = mHWRev;
@@ -331,7 +332,7 @@ GF_RET_CODE DeviceSettingDataProfile3::getHWRevision(tstring& version)
 	GF_LOGD(__FUNCTION__);
 	if (!mDeviceInfoReady)
 	{
-		internalGetHWRevision();
+		//internalGetHWRevision();
 		return GF_RET_CODE::GF_ERROR_NOT_READY;
 	}
 	version = mSerialNumber;
@@ -342,7 +343,7 @@ GF_RET_CODE DeviceSettingDataProfile3::getFWRevision(tstring& version)
 	GF_LOGD(__FUNCTION__);
 	if (!mDeviceInfoReady)
 	{
-		internalGetFWRevision();
+		//internalGetFWRevision();
 		return GF_RET_CODE::GF_ERROR_NOT_READY;
 	}
 	version = mFWRev;
@@ -353,7 +354,7 @@ GF_RET_CODE DeviceSettingDataProfile3::getManufacturerName(tstring& name)
 	GF_LOGD(__FUNCTION__);
 	if (!mDeviceInfoReady)
 	{
-		internalGetManufacturerName();
+		//internalGetManufacturerName();
 		return GF_RET_CODE::GF_ERROR_NOT_READY;
 	}
 	name = mManuName;

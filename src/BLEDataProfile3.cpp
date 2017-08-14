@@ -116,7 +116,7 @@ void BLEDataProfile3::onData(GF_UINT8 length, GF_PUINT8 data)
 
 void BLEDataProfile3::onResponse(GF_UINT8 length, GF_PUINT8 data)
 {
-	if (nullptr != mDevSetting.get())
+	if (nullptr != mDevSetting)
 		mDevSetting->onResponse(length, data);
 }
 
@@ -130,9 +130,10 @@ gfsPtr<DeviceSetting> BLEDataProfile3::getDeviceSetting()
 		return gfsPtr<DeviceSetting>();
 	}
 
-	if (nullptr == mDevSetting.get())
+	if (nullptr == mDevSetting)
 	{
 		mDevSetting = make_shared<DeviceSettingDataProfile3>(device);
+		mDevSetting->initialize();
 	}
 
 	return mDevSetting;

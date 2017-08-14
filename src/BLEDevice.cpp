@@ -33,6 +33,7 @@
 #include "Utils.h"
 #include "SimpleProfile.h"
 #include "BLEDataProfile3.h"
+#include "OADProfile.h"
 
 #include <cstdio>
 
@@ -188,7 +189,7 @@ GF_RET_CODE BLEDevice::cancelConnect()
 
 gfsPtr<DeviceSetting> BLEDevice::getDeviceSetting()
 {
-	if (nullptr == mProfile.get())
+	if (nullptr == mProfile)
 		return gfsPtr<DeviceSetting>();
 	else
 		return mProfile->getDeviceSetting();
@@ -237,7 +238,7 @@ void BLEDevice::onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDe
 #endif
 	mCnntStatus = DeviceConnectionStatus::Connected;
 
-	if (nullptr == mProfile.get())
+	if (nullptr == mProfile)
 	{
 		DeviceProtocolType type = DeviceProtocolType::Invalid;
 		GF_RET_CODE ret = mHub.getProtocol(*this, type);
@@ -255,9 +256,9 @@ void BLEDevice::onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDe
 		case DeviceProtocolType::DataProtocol:
 			mProfile = make_shared<BLEDataProfile3>(mMyself);
 			break;
-		//case DeviceProtocolType::OADService:
-		//	mProfile = make_shared<OADProfile>(*this);
-		//	break;
+		case DeviceProtocolType::OADService:
+			mProfile = make_shared<OADProfile>(mMyself);
+			break;
 		default:
 			break;
 		}
@@ -376,7 +377,7 @@ void BLEDevice::onCharacteristicValueRead(GF_STATUS status, GF_UINT8 length, GF_
 
 void BLEDevice::onData(GF_UINT8 length, GF_PUINT8 data)
 {
-	if (nullptr != mProfile.get())
+	if (nullptr != mProfile)
 	{
 		mProfile->onData(length, data);
 	}
@@ -384,7 +385,7 @@ void BLEDevice::onData(GF_UINT8 length, GF_PUINT8 data)
 
 void BLEDevice::onResponse(GF_UINT8 length, GF_PUINT8 data)
 {
-	if (nullptr != mProfile.get())
+	if (nullptr != mProfile)
 	{
 		mProfile->onResponse(length, data);
 	}

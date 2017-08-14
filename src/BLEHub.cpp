@@ -170,6 +170,7 @@ GF_RET_CODE BLEHub::deinit()
 	}
 	mAM = nullptr;
 
+	lock_guard<mutex> locklistener(mMutexListeners);
 	mListeners.clear();
 
 	return ret;
@@ -217,7 +218,7 @@ GF_RET_CODE BLEHub::registerListener(const gfwPtr<HubListener>& listener)
 	if (nullptr == listener.lock())
 		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
 
-	lock_guard<mutex> lock(mTaskMutex);
+	lock_guard<mutex> lock(mMutexListeners);
 	mListeners.insert(listener);
 	cleanInvalidWeakP(mListeners);
 	return GF_RET_CODE::GF_SUCCESS;
@@ -229,7 +230,7 @@ GF_RET_CODE BLEHub::unRegisterListener(const gfwPtr<HubListener>& listener)
 	if (nullptr == listener.lock())
 		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
 
-	lock_guard<mutex> lock(mTaskMutex);
+	lock_guard<mutex> lock(mMutexListeners);
 	mListeners.erase(listener);
 	cleanInvalidWeakP(mListeners);
 	return GF_RET_CODE::GF_SUCCESS;
@@ -334,14 +335,18 @@ WPDEVICE BLEHub::findDevice(GF_UINT8 addrType, tstring address)
 	for (auto& itor : mConnectedDevices)
 	{
 		if (itor->isMyself(addrType, address))
+		{
 			ret = itor;
+			return ret;
+		}
 	}
-	if (nullptr != ret)
-		return ret;
 	for (auto& itor : mDisconnDevices)
 	{
 		if (itor->isMyself(addrType, address))
+		{
 			ret = itor;
+			return ret;
+		}
 	}
 	return ret;
 }
@@ -365,21 +370,25 @@ void BLEHub::onScanResult(GF_BLEDevice* device)
 	if (nullptr == newItem)
 		return;
 
-	lock_guard<mutex> lock(mTaskMutex);
-
-	pair<decltype(mDisconnDevices.begin()), bool> ret = mDisconnDevices.insert(newItem);
-	auto exists = mDisconnDevices.find(newItem);
-	if (ret.second == false)
 	{
-		(*exists)->updateData(*device);
+		lock_guard<mutex> lock(mTaskMutex);
+
+		pair<decltype(mDisconnDevices.begin()), bool> ret = mDisconnDevices.insert(newItem);
+		auto exists = mDisconnDevices.find(newItem);
+		// if an existing device has the same info, it will take place of the new item
+		// then we will only update the existing item: ret.second == false
+		newItem = *exists;
+		if (ret.second == false)
+		{
+			newItem->updateData(*device);
+		}
 	}
-	mNotifHelper.onDeviceFound(*exists);
+	mNotifHelper.onDeviceFound(newItem);
 }
 
 void BLEHub::onScanFinished()
 {
 	GF_LOGD(__FUNCTION__);
-	lock_guard<mutex> lock(mTaskMutex);
 	mNotifHelper.onScanFinished();
 }
 
@@ -398,53 +407,46 @@ void BLEHub::onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device)
 		return;
 	}
 
-	lock_guard<mutex> lock(mTaskMutex);
 	gfsPtr<BLEDevice> dev;
-	for (auto& itor : mDisconnDevices)
 	{
-		if (itor->isMyself(device->address_type, device->address))
-		{
-			dev = itor;
-			mDisconnDevices.erase(itor);
-			break;
-		}
-	}
-	if (nullptr == dev)
-	{
-		GF_LOGW("No device found in disconnect_list. %u:%s",
-			(GF_UINT)device->address_type,
-			utils::deviceAddressToString(device->address, sizeof(device->address)).c_str());
-		for (auto& itor : mConnectedDevices)
+		lock_guard<mutex> lock(mTaskMutex);
+		for (auto& itor : mDisconnDevices)
 		{
 			if (itor->isMyself(device->address_type, device->address))
 			{
 				dev = itor;
+				mDisconnDevices.erase(itor);
 				break;
 			}
 		}
-	}
-	if (nullptr == dev)
-	{
-		GF_LOGW("No device found in connect_list either. %u:%s",
-			(GF_UINT)device->address_type,
-			utils::deviceAddressToString(device->address, sizeof(device->address)).c_str());
+		if (nullptr == dev)
+		{
+			GF_LOGW("No device found in disconnect_list. %u:%s",
+				(GF_UINT)device->address_type,
+				utils::deviceAddressToString(device->address, sizeof(device->address)).c_str());
+			for (auto& itor : mConnectedDevices)
+			{
+				if (itor->isMyself(device->address_type, device->address))
+				{
+					dev = itor;
+					break;
+				}
+			}
+		}
+		if (nullptr == dev)
+		{
+			GF_LOGW("No device found in connect_list either. %u:%s",
+				(GF_UINT)device->address_type,
+				utils::deviceAddressToString(device->address, sizeof(device->address)).c_str());
 
-		// TODO: add new device using GF_ConnectedDevice
-		// need more info to do it
-		return;
+			// TODO: add new device using GF_ConnectedDevice
+			// need more info to do it
+			return;
+		}
+		mConnectedDevices.insert(dev);
 	}
-	mConnectedDevices.insert(dev);
 	dev->onConnected(status, *device);
 	mNotifHelper.onDeviceConnected(dev);
-	// TODO: when a device is found, no later than it is connected, need to find
-	// it's detail information, then specialize it.
-	/*
-	for (GF_UINT16 i = static_cast<GF_UINT16>(AttributeHandle::GATTPrimServiceDeclaration1);
-	i < static_cast<GF_UINT16>(AttributeHandle::Max); ++i)
-	{
-	dev->readCharacteristic(static_cast<AttributeHandle>(i));
-	}
-	*/
 }
 
 void BLEHub::onDeviceDisconnected(GF_STATUS status, GF_ConnectedDevice *device, GF_UINT8 reason)
@@ -455,41 +457,43 @@ void BLEHub::onDeviceDisconnected(GF_STATUS status, GF_ConnectedDevice *device, 
 	if (nullptr == device)
 		return;
 
-	lock_guard<mutex> lock(mTaskMutex);
 	gfsPtr<BLEDevice> dev;
-	for (auto& itor : mConnectedDevices)
 	{
-		if (device->handle == itor->getHandle())
+		lock_guard<mutex> lock(mTaskMutex);
+		for (auto& itor : mConnectedDevices)
 		{
-			dev = itor;
-			mConnectedDevices.erase(itor);
-			break;
-		}
-	}
-	if (nullptr == dev)
-	{
-		GF_LOGW("No device found in connect_list. handle is %u, %u:%s, reason is %u",
-			(GF_UINT)device->handle, (GF_UINT)device->address_type,
-			utils::deviceAddressToString(device->address, sizeof(device->address)).c_str(),
-			(GF_UINT)reason);
-		for (auto& itor : mDisconnDevices)
-		{
-			if (itor->isMyself(device->address_type, device->address))
+			if (device->handle == itor->getHandle())
 			{
 				dev = itor;
+				mConnectedDevices.erase(itor);
 				break;
 			}
 		}
+		if (nullptr == dev)
+		{
+			GF_LOGW("No device found in connect_list. handle is %u, %u:%s, reason is %u",
+				(GF_UINT)device->handle, (GF_UINT)device->address_type,
+				utils::deviceAddressToString(device->address, sizeof(device->address)).c_str(),
+				(GF_UINT)reason);
+			for (auto& itor : mDisconnDevices)
+			{
+				if (itor->isMyself(device->address_type, device->address))
+				{
+					dev = itor;
+					break;
+				}
+			}
+		}
+		if (nullptr == dev)
+		{
+			GF_LOGW("No device found in disconnect_list. either handle is %u, %u:%s, reason is %u",
+				(GF_UINT)device->handle, (GF_UINT)device->address_type,
+				utils::deviceAddressToString(device->address, sizeof(device->address)).c_str(),
+				(GF_UINT)reason);
+			return;
+		}
+		mDisconnDevices.insert(dev);
 	}
-	if (nullptr == dev)
-	{
-		GF_LOGW("No device found in disconnect_list. either handle is %u, %u:%s, reason is %u",
-			(GF_UINT)device->handle, (GF_UINT)device->address_type,
-			utils::deviceAddressToString(device->address, sizeof(device->address)).c_str(),
-			(GF_UINT)reason);
-		return;
-	}
-	mDisconnDevices.insert(dev);
 	dev->onDisconnected(status, reason);
 	mNotifHelper.onDeviceDisconnected(dev, reason);
 }
@@ -499,48 +503,6 @@ void BLEHub::onMTUSizeChanged(GF_STATUS status, GF_UINT16 handle, GF_UINT16 mtu_
 {
 	GF_LOGD(__FUNCTION__);
 
-	lock_guard<mutex> lock(mTaskMutex);
-	for (auto& itor : mConnectedDevices)
-	{
-		if (itor->getHandle() == handle)
-		{
-			itor->onMTUSizeChanged(status, mtu_size);
-		}
-	}
-}
-
-void BLEHub::onConnectionParmeterUpdated(GF_STATUS status, GF_UINT16 handle, GF_UINT16 conn_int, GF_UINT16 superTO, GF_UINT16 slavelatency)
-{
-	GF_LOGD(__FUNCTION__);
-
-	lock_guard<mutex> lock(mTaskMutex);
-	for (auto& itor : mConnectedDevices)
-	{
-		if (itor->getHandle() == handle)
-		{
-			itor->onConnectionParmeterUpdated(status, conn_int, superTO, slavelatency);
-		}
-	}
-}
-
-void BLEHub::onCharacteristicValueRead(GF_STATUS status, GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
-{
-	GF_LOGD(__FUNCTION__);
-
-	lock_guard<mutex> lock(mTaskMutex);
-	for (auto& itor : mConnectedDevices)
-	{
-		if (itor->getHandle() == handle)
-		{
-			itor->onCharacteristicValueRead(status, length, data);
-		}
-	}
-}
-
-
-/*Notification format: data length(1 byte N) + data(N Bytes)*/
-void BLEHub::onNotificationReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
-{
 	gfsPtr<BLEDevice> dev;
 	{
 		lock_guard<mutex> lock(mTaskMutex);
@@ -554,7 +516,64 @@ void BLEHub::onNotificationReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8
 		}
 	}
 	if (nullptr != dev)
-		dev->onData(length, data);
+		dev->onMTUSizeChanged(status, mtu_size);
+}
+
+void BLEHub::onConnectionParmeterUpdated(GF_STATUS status, GF_UINT16 handle, GF_UINT16 conn_int, GF_UINT16 superTO, GF_UINT16 slavelatency)
+{
+	GF_LOGD(__FUNCTION__);
+
+	gfsPtr<BLEDevice> dev;
+	{
+		lock_guard<mutex> lock(mTaskMutex);
+		for (auto& itor : mConnectedDevices)
+		{
+			if (itor->getHandle() == handle)
+			{
+				dev = itor;
+				break;
+			}
+		}
+	}
+	if (nullptr != dev)
+		dev->onConnectionParmeterUpdated(status, conn_int, superTO, slavelatency);
+}
+
+void BLEHub::onCharacteristicValueRead(GF_STATUS status, GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
+{
+	GF_LOGD(__FUNCTION__);
+
+	gfsPtr<BLEDevice> dev;
+	{
+		lock_guard<mutex> lock(mTaskMutex);
+		for (auto& itor : mConnectedDevices)
+		{
+			if (itor->getHandle() == handle)
+			{
+				dev = itor;
+				break;
+			}
+		}
+	}
+	if (nullptr != dev)
+		dev->onCharacteristicValueRead(status, length, data);
+}
+
+
+/*Notification format: data length(1 byte N) + data(N Bytes)*/
+void BLEHub::onNotificationReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
+{
+	/////
+	// NOTE that the notification data has a time-sequential priority, need to protect the whole produce in mTaskMutex
+	lock_guard<mutex> lock(mTaskMutex);
+	for (auto& itor : mConnectedDevices)
+	{
+		if (itor->getHandle() == handle)
+		{
+			itor->onData(length, data);
+			break;
+		}
+	}
 }
 
 void BLEHub::onControlResponseReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
@@ -734,11 +753,11 @@ GF_RET_CODE BLEHub::getProtocol(BLEDevice& dev, DeviceProtocolType& type)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
 	GF_UINT32 status = GF_OK;
-	//executeCommand(make_shared<HubMsg>([&am, handle, &protoType]()
-	//{
-	protoType = am->GetDeviceProtocolSupported(handle);
-	//return static_cast<GF_UINT32>(GF_OK);
-	//}));
+	executeCommand(make_shared<HubMsg>([&am, handle, &protoType]()
+	{
+		protoType = am->GetDeviceProtocolSupported(handle);
+		return static_cast<GF_UINT32>(GF_OK);
+	}));
 	switch (protoType)
 	{
 	case ProtocolType_SimpleProfile:
@@ -781,6 +800,7 @@ GF_RET_CODE BLEHub::sendControlCommand(BLEDevice& dev, GF_UINT8 data_length, GF_
 
 void BLEHub::notifyOrientationData(BLEDevice& dev, const Quaternion& rotation)
 {
+	// time-sequential matter
 	for (auto& itor : mConnectedDevices)
 	{
 		if (itor.get() == &dev)
@@ -793,6 +813,7 @@ void BLEHub::notifyOrientationData(BLEDevice& dev, const Quaternion& rotation)
 
 void BLEHub::notifyGestureData(BLEDevice& dev, Gesture gest)
 {
+	// time-sequential matter
 	for (auto& itor : mConnectedDevices)
 	{
 		if (itor.get() == &dev)
@@ -805,6 +826,7 @@ void BLEHub::notifyGestureData(BLEDevice& dev, Gesture gest)
 
 void BLEHub::notifyReCenter(BLEDevice& dev)
 {
+	// time-sequential matter
 	for (auto& itor : mConnectedDevices)
 	{
 		if (itor.get() == &dev)
@@ -841,6 +863,7 @@ gfsPtr<BLEDevice> BLEHub::createDeviceBeforeConnect(const GF_BLEDevice& bleDev)
 
 void BLEHub::NotifyHelper::onScanFinished()
 {
+	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
 	{
 		for (auto& itor : mHub.mListeners)
@@ -868,6 +891,7 @@ void BLEHub::NotifyHelper::onScanFinished()
 
 void BLEHub::NotifyHelper::onStateChanged(HubState state)
 {
+	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
 	{
 		for (auto& itor : mHub.mListeners)
@@ -894,6 +918,7 @@ void BLEHub::NotifyHelper::onStateChanged(HubState state)
 
 void BLEHub::NotifyHelper::onDeviceFound(WPDEVICE device)
 {
+	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
 	{
 		for (auto& itor : mHub.mListeners)
@@ -920,6 +945,7 @@ void BLEHub::NotifyHelper::onDeviceFound(WPDEVICE device)
 
 void BLEHub::NotifyHelper::onDeviceDiscard(WPDEVICE device)
 {
+	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
 	{
 		for (auto& itor : mHub.mListeners)
@@ -946,6 +972,7 @@ void BLEHub::NotifyHelper::onDeviceDiscard(WPDEVICE device)
 
 void BLEHub::NotifyHelper::onDeviceConnected(WPDEVICE device)
 {
+	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
 	{
 		for (auto& itor : mHub.mListeners)
@@ -972,6 +999,7 @@ void BLEHub::NotifyHelper::onDeviceConnected(WPDEVICE device)
 
 void BLEHub::NotifyHelper::onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason)
 {
+	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
 	{
 		for (auto& itor : mHub.mListeners)
@@ -998,6 +1026,7 @@ void BLEHub::NotifyHelper::onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason
 
 void BLEHub::NotifyHelper::onOrientationData(WPDEVICE device, const Quaternion& rotation)
 {
+	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
 	{
 		for (auto& itor : mHub.mListeners)
@@ -1024,6 +1053,7 @@ void BLEHub::NotifyHelper::onOrientationData(WPDEVICE device, const Quaternion& 
 
 void BLEHub::NotifyHelper::onGestureData(WPDEVICE device, Gesture gest)
 {
+	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
 	{
 		for (auto& itor : mHub.mListeners)
@@ -1050,6 +1080,7 @@ void BLEHub::NotifyHelper::onGestureData(WPDEVICE device, Gesture gest)
 
 void BLEHub::NotifyHelper::onReCenter(WPDEVICE device)
 {
+	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
 	{
 		for (auto& itor : mHub.mListeners)

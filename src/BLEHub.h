@@ -147,6 +147,7 @@ namespace gf
 		set<gfsPtr<BLEDevice>, DevComp<gfsPtr<BLEDevice>>> mDisconnDevices;
 		set<gfsPtr<BLEDevice>, ConnectedDevComp<gfsPtr<BLEDevice>>> mConnectedDevices;
 		set<gfwPtr<HubListener>, WeakPtrComp<HubListener>> mListeners;
+		mutex mMutexListeners;
 
 	protected:
 		//////////////////////////////////////////////////////////////

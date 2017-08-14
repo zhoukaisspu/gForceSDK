@@ -103,6 +103,7 @@ void printHelp()
 	GF_LOGI("d:\tDisconnect device.");
 	GF_LOGI("m:\tRetrieve device information.");
 	GF_LOGI("n:\tTurn notification on.");
+	GF_LOGI("o:\tOAD upgrade.");
 	GF_LOGI("x:\tPoweroff.");
 	GF_LOGI("y:\tSwtich to OAD.");
 	GF_LOGI("z:\tDevice system reset.");
@@ -393,6 +394,37 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 						| DeviceSetting::DNF_EMG_GESTURE
 						| DeviceSetting::DNF_DEVICE_STATUS);
 					ds->setDataNotifSwitch(flags);
+				}
+			}
+		}
+		break;
+	}
+	case 'o':
+	{
+		for (auto& itor : listDev)
+		{
+			if (DeviceConnectionStatus::Connected == itor->getConnectionStatus())
+			{
+				auto ds = itor->getDeviceSetting();
+				if (nullptr != ds)
+				{
+					char* oadfilename = "OAD_test.bin";
+#ifdef WIN32
+					FILE* pf = nullptr;
+					fopen_s(&pf, oadfilename, "rb");
+#else
+					FILE* pf = fopen(oadfilename, "rb");
+#endif
+					if (nullptr == pf)
+					{
+						GF_LOGE("Failed to open OAD bin file: %s", oadfilename);
+						break;
+					}
+					auto ret = ds->oadUpgrade(pf, [](GF_UINT32 percentage) {
+						GF_LOGD("OAD Progress: %u%%", percentage);
+					});
+					GF_LOGD("OAD result: ret = %u", ret);
+					fclose(pf);
 				}
 			}
 		}

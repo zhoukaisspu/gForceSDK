@@ -26,6 +26,7 @@
     <ClCompile Include="..\..\..\src\common\src\Utils.cpp" />
     <ClCompile Include="..\..\..\src\DeviceSettingDataProfile3.cpp" />
     <ClCompile Include="..\..\..\src\DeviceSettingHandle.cpp" />
+    <ClCompile Include="..\..\..\src\OADProfile.cpp" />
     <ClCompile Include="..\..\..\src\SimpleProfile.cpp" />
     <ClCompile Include="..\..\..\src\HubManagerImpl.cpp" />
   </ItemGroup>
@@ -53,6 +54,7 @@
     <ClInclude Include="..\..\..\src\DeviceProfile.h" />
     <ClInclude Include="..\..\..\src\DeviceSettingDataProfile3.h" />
     <ClInclude Include="..\..\..\src\DeviceSettingHandle.h" />
+    <ClInclude Include="..\..\..\src\OADProfile.h" />
     <ClInclude Include="..\..\..\src\SimpleProfile.h" />
     <ClInclude Include="..\..\..\src\HubManagerImpl.h" />
     <ClInclude Include="..\..\..\src\IHub.h" />

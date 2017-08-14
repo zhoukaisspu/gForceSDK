@@ -38,6 +38,8 @@
 #pragma once
 
 #include "gfTypes.h"
+#include <cstdio>
+#include <functional>
 
 namespace gf
 {
@@ -79,6 +81,7 @@ namespace gf
 		};
 		// C.2
 		virtual GF_RET_CODE switchService(DeviceService service) = 0;
+		virtual GF_RET_CODE oadUpgrade(FILE* file, std::function<void(GF_UINT32 percentage)> progress) = 0;
 
 	public:
 		/////////////////////////////////////////////////////
