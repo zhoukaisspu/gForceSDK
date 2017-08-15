@@ -37,11 +37,26 @@ using namespace gf;
 DeviceSettingHandle::DeviceSettingHandle(gfwPtr<BLEDevice> device)
 	: mDevice(device)
 {
+	mRespHandle = [](SPDEVICE device, ResponseType resp, ResponseResult result,
+		GF_UINT32 param0, GF_UINT32 param1, GF_UINT32 param2, GF_UINT32 param3) {
+		string name;
+		if (nullptr != device)
+			name = utils::tostring(device->getName());
+		GF_LOGD("DefaultResponseHandle: device = %s, resp = %u, retval = %u, param = {%u - %u - %u - %u}",
+			name.c_str(), static_cast<GF_UINT32>(resp), static_cast<GF_UINT32>(result), param0, param1, param2, param3);
+	};
 }
 
 
 DeviceSettingHandle::~DeviceSettingHandle()
 {
+}
+
+OnResponseHandle DeviceSettingHandle::registerResponseHandle(OnResponseHandle handle)
+{
+	auto old = mRespHandle;
+	mRespHandle = handle;
+	return old;
 }
 
 GF_RET_CODE DeviceSettingHandle::sendCommand(GF_UINT8 dataLen, GF_PUINT8 commandData, bool hasResponse)
@@ -51,13 +66,39 @@ GF_RET_CODE DeviceSettingHandle::sendCommand(GF_UINT8 dataLen, GF_PUINT8 command
 
 	GF_UINT8 command = commandData[0];
 	auto dev = mDevice.lock();
-	if (nullptr == dev.get())
+	if (nullptr == dev)
 	{
 		GF_LOGD("%s: error: command (0x%2.2X) failed, device is .", __FUNCTION__, command);
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 	}
+#ifdef BLECOMMAND_INTERVAL_ENABLED
+	auto now = chrono::system_clock::now();
+	if (now - mLastExecTime < chrono::milliseconds(BLECOMMAND_INTERVAL))
+	{
+		auto delay = chrono::milliseconds(BLECOMMAND_INTERVAL) - (now - mLastExecTime);
+		auto msdelay = chrono::duration_cast<chrono::milliseconds>(delay).count();
+		GF_LOGD("HOLD: %u", msdelay);
+#ifdef WIN32
+		Sleep((DWORD)msdelay);
+#else
+		sleep(msdelay * 1000);
+#endif
+	}
+	mLastExecTime = chrono::system_clock::now();
+#endif
 
-	lock_guard<mutex> lock(mMutex);
+	unique_lock<mutex> lock;
+	try {
+		lock = unique_lock<mutex>(mMutex);
+	}
+	catch (const system_error& e) {
+		// duplicate lock in the same thread.
+		// try polling mode instead.
+		GF_LOGD("%s: system_error with code %d, meaning %s",
+			__FUNCTION__, e.code().value(), e.what());
+		throw e;
+		return GF_RET_CODE::GF_ERROR_BAD_STATE;;
+	}
 	// first check if there is similar command in the queue,
 	// if yes, reject this request
 	if (hasResponse && mExecutingList.find(command) != mExecutingList.end())
@@ -78,7 +119,7 @@ GF_RET_CODE DeviceSettingHandle::sendCommand(GF_UINT8 dataLen, GF_PUINT8 command
 		return ret;
 
 	// if the command has response, store the expiration of this command
-	mExecutingList[command] = chrono::steady_clock::now() + MilisDuration(MAX_COMMAND_TIMEOUT);
+	mExecutingList[command] = chrono::steady_clock::now() + chrono::milliseconds(MAX_COMMAND_TIMEOUT);
 
 	updateTimer();
 
@@ -96,19 +137,20 @@ void DeviceSettingHandle::onResponse(GF_UINT8 length, GF_PUINT8 data)
 	}
 
 	GF_LOGD("%s. cmd = 0x%2.2X, ret = 0x%2.2X", __FUNCTION__, cmd, ret);
-
-	lock_guard<mutex> lock(mMutex);
-	// check responders
-	if (mExecutingList.find(cmd) == mExecutingList.end())
 	{
-		GF_LOGD("cmd 0x%2.2X is not handled", cmd);
-		// not in list, do nothing
-		return;
+		lock_guard<mutex> lock(mMutex);
+		// check responders
+		if (mExecutingList.find(cmd) == mExecutingList.end())
+		{
+			GF_LOGD("cmd 0x%2.2X is not handled", cmd);
+			// not in list, do nothing
+			return;
+		}
+		mExecutingList.erase(cmd);
+		updateTimer();
 	}
-	auto handler = mExecutingList[cmd];
-	mExecutingList.erase(cmd);
+
 	dispatchResponse(cmd, ret, length - 2, length == 2 ? nullptr : data + 2);
-	updateTimer();
 }
 
 void DeviceSettingHandle::updateTimer()
@@ -118,7 +160,7 @@ void DeviceSettingHandle::updateTimer()
 	mTimer.stop();
 
 	// find the earliest command and set timer
-	auto invalidpoint = now + MilisDuration(MAX_COMMAND_TIMEOUT * 2);
+	auto invalidpoint = now + chrono::milliseconds(MAX_COMMAND_TIMEOUT * 2);
 	auto earliest = invalidpoint;
 	for (auto& itor : mExecutingList)
 	{
@@ -135,7 +177,7 @@ void DeviceSettingHandle::updateTimer()
 	if (earliest < now)
 	{
 		// if there is an item expired, process it next time
-		earliest = now + MilisDuration(1);
+		earliest = now + chrono::milliseconds(1);
 	}
 
 	mTimer.start((earliest - now), [this](){ this->onTimer(); });
@@ -144,20 +186,25 @@ void DeviceSettingHandle::updateTimer()
 
 void DeviceSettingHandle::onTimer()
 {
-	lock_guard<mutex> lock(mMutex);
 	auto now = chrono::steady_clock::now();
-	for (auto& itor : mExecutingList)
+	GF_UINT8 command = 0xFF;
 	{
-		if (itor.second < now)
+		lock_guard<mutex> lock(mMutex);
+		for (auto& itor : mExecutingList)
 		{
-			// find one expired
-			//GF_LOGD("%s: command 0x%2.2X time out.", __FUNCTION__, itor.first);
-			dispatchResponse(itor.first, 0xFF, 0, nullptr, true);
-			// simply remove it and update timer
-			// other possible expired items will be handled next time
-			mExecutingList.erase(itor.first);
-			break;
+			if (itor.second < now)
+			{
+				// find one expired
+				//GF_LOGD("%s: command 0x%2.2X time out.", __FUNCTION__, itor.first);
+				command = itor.first;
+				// simply remove it and update timer
+				// other possible expired items will be handled next time
+				mExecutingList.erase(itor.first);
+				break;
+			}
 		}
 	}
+	if (command != 0xFF)
+		dispatchResponse(command, 0xFF, 0, nullptr, true);
 	updateTimer();
 }

@@ -41,9 +41,9 @@
 
 namespace gf
 {
-	class DeviceSettingDataProfile3;
+	class DeviceSettingDataProfile4;
 
-	class BLEDataProfile3 : public DeviceProfile
+	class BLEDataProfile4 : public DeviceProfile
 	{
 		enum DataType : GF_UINT32 {
 			DT_INVALID = 0,
@@ -66,8 +66,8 @@ namespace gf
 			DSE_MAX
 		};
 	public:
-		BLEDataProfile3(gfwPtr<BLEDevice> device);
-		~BLEDataProfile3();
+		BLEDataProfile4(gfwPtr<BLEDevice> device);
+		~BLEDataProfile4();
 
 	protected:
 		virtual void onData(GF_UINT8 length, GF_PUINT8 data) override;
@@ -88,7 +88,7 @@ namespace gf
 		void onDeviceStatusData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data);
 
 	private:
-		gfsPtr<DeviceSettingDataProfile3> mDevSetting;
+		gfsPtr<DeviceSettingDataProfile4> mDevSetting;
 	};
 
 }

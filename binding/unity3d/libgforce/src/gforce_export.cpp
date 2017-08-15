@@ -300,11 +300,11 @@ SPDEVICE getDeviceFromHandle(GF_HANDLE h)
 {
 	// enum devices to find the given
 	SPDEVICE ret;
-	if (nullptr != _ref.hub)
+	if (nullptr != h && nullptr != _ref.hub)
 	{
 		function<bool(WPDEVICE)> func = [&ret, h](WPDEVICE device){
 			auto sp = device.lock();
-			if (nullptr != sp && h == (GF_HANDLE)sp.get())
+			if (h == (GF_HANDLE)sp.get())
 			{
 				ret = sp;
 				return false;

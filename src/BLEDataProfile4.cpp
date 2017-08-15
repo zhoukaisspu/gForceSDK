@@ -29,21 +29,21 @@
 *
 */
 #include "LogUtils.h"
-#include "BLEDataProfile3.h"
-#include "DeviceSettingDataProfile3.h"
+#include "BLEDataProfile4.h"
+#include "DeviceSettingDataProfile4.h"
 
 using namespace gf;
 
-BLEDataProfile3::BLEDataProfile3(gfwPtr<BLEDevice> device)
+BLEDataProfile4::BLEDataProfile4(gfwPtr<BLEDevice> device)
 	: DeviceProfile(device)
 {
 }
 
-BLEDataProfile3::~BLEDataProfile3()
+BLEDataProfile4::~BLEDataProfile4()
 {
 }
 
-void BLEDataProfile3::onData(GF_UINT8 length, GF_PUINT8 data)
+void BLEDataProfile4::onData(GF_UINT8 length, GF_PUINT8 data)
 {
 	//GF_LOGD("%s", __FUNCTION__);
 	gfsPtr<BLEDevice> device = mDevice.lock();
@@ -114,13 +114,13 @@ void BLEDataProfile3::onData(GF_UINT8 length, GF_PUINT8 data)
 	}
 }
 
-void BLEDataProfile3::onResponse(GF_UINT8 length, GF_PUINT8 data)
+void BLEDataProfile4::onResponse(GF_UINT8 length, GF_PUINT8 data)
 {
-	if (nullptr != mDevSetting.get())
+	if (nullptr != mDevSetting)
 		mDevSetting->onResponse(length, data);
 }
 
-gfsPtr<DeviceSetting> BLEDataProfile3::getDeviceSetting()
+gfsPtr<DeviceSetting> BLEDataProfile4::getDeviceSetting()
 {
 	GF_LOGD("%s", __FUNCTION__);
 	gfsPtr<BLEDevice> device = mDevice.lock();
@@ -130,36 +130,37 @@ gfsPtr<DeviceSetting> BLEDataProfile3::getDeviceSetting()
 		return gfsPtr<DeviceSetting>();
 	}
 
-	if (nullptr == mDevSetting.get())
+	if (nullptr == mDevSetting)
 	{
-		mDevSetting = make_shared<DeviceSettingDataProfile3>(device);
+		mDevSetting = make_shared<DeviceSettingDataProfile4>(device);
+		mDevSetting->initialize();
 	}
 
 	return mDevSetting;
 }
 
 
-void BLEDataProfile3::onAccelerateData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
+void BLEDataProfile4::onAccelerateData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 
 }
 
-void BLEDataProfile3::onGyroscopeData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
+void BLEDataProfile4::onGyroscopeData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 
 }
 
-void BLEDataProfile3::onMagnetometerData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
+void BLEDataProfile4::onMagnetometerData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 
 }
 
-void BLEDataProfile3::onEulerAngleData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
+void BLEDataProfile4::onEulerAngleData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 
 }
 
-void BLEDataProfile3::onQuaternionData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
+void BLEDataProfile4::onQuaternionData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 	if (length < 16)
 	{
@@ -175,12 +176,12 @@ void BLEDataProfile3::onQuaternionData(BLEDevice& device, GF_UINT8 length, GF_PU
 	device.getHub().notifyOrientationData(device, q);
 }
 
-void BLEDataProfile3::onRotationMatrixData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
+void BLEDataProfile4::onRotationMatrixData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 
 }
 
-void BLEDataProfile3::onGestureData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
+void BLEDataProfile4::onGestureData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 	GF_LOGD("%s, length: %u", __FUNCTION__, length);
 	if (length < 1)
@@ -217,22 +218,22 @@ void BLEDataProfile3::onGestureData(BLEDevice& device, GF_UINT8 length, GF_PUINT
 	device.getHub().notifyGestureData(device, gesture);
 }
 
-void BLEDataProfile3::onEmgRawData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
+void BLEDataProfile4::onEmgRawData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 
 }
 
-void BLEDataProfile3::onHIDMouseData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
+void BLEDataProfile4::onHIDMouseData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 
 }
 
-void BLEDataProfile3::onHIDJoystickData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
+void BLEDataProfile4::onHIDJoystickData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 
 }
 
-void BLEDataProfile3::onDeviceStatusData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
+void BLEDataProfile4::onDeviceStatusData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 	GF_LOGD("%s, length: %u", __FUNCTION__, length);
 	if (length < 1)

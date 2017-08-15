@@ -38,19 +38,81 @@
 #pragma once
 
 #include "gfTypes.h"
+#include <cstdio>
+#include <functional>
 
 namespace gf
 {
+
+	/// \brief
+	///     The response type used in command
+	///
+	///
+	enum class ResponseType : GF_UINT32 {
+		RESP_GET_DEVICE_INFO,
+		RESP_GET_BATTERY_LEVEL,
+		RESP_GET_TEMPERATURE,
+		RESP_SET_SWO_LOG_LEVEL,
+		RESP_SET_SWO_LOG_MODULE,
+		RESP_PRINT_KERNEL_MSG,
+		RESP_MOTOR_CONTROL,
+		RESP_LED_CONTROL_TEST,
+		RESP_PACKAGE_ID_CONTROL,
+		RESP_SEND_TRAINING_PACKAGE,
+		RESP_GET_ACCELERATE_CAP,
+		RESP_SET_ACCELERATE_CONFIG,
+		RESP_GET_GYROSCOPE_CAP,
+		RESP_SET_GYROSCOPE_CONFIG,
+		RESP_GET_MAGNETOMETER_CAP,
+		RESP_SET_MAGNETOMETER_CONFIG,
+		RESP_GET_EULER_ANGLE_CAP,
+		RESP_SET_EULER_ANGLE_CONFIG,
+		RESP_GET_QUATERNION_CAP,
+		RESP_SET_QUATERNION_CONFIG,
+		RESP_GET_ROTATION_MATRIX_CAP,
+		RESP_SET_ROTATION_MATRIX_CONFIG,
+		RESP_GET_GESTURE_CAP,
+		RESP_SET_GESTURE_CONFIG,
+		RESP_GET_EMG_RAWDATA_CAP,
+		RESP_SET_EMG_RAWDATA_CONFIG,
+		RESP_GET_MOUSE_DATA_CAP,
+		RESP_SET_MOUSE_DATA_CONFIG,
+		RESP_GET_JOYSTICK_DATA_CAP,
+		RESP_SET_JOYSTICK_DATA_CONFIG,
+		RESP_GET_DEVICE_STATUS_CAP,
+		RESP_SET_DEVICE_STATUS_CONFIG,
+		RESP_SET_DATA_NOTIF_SWITCH,
+		RESP_MAX,
+	};
+
+
+	enum class ResponseResult : GF_UINT32 {
+		RREST_SUCCESS,
+		RREST_NOT_SUPPORT,
+		RREST_BAD_PARAM,
+		RREST_FAILED,
+		RREST_TIMEOUT,
+	};
+
+	using OnResponseHandle = std::function < void(SPDEVICE device, ResponseType resp, ResponseResult result,
+		GF_UINT32 param0, GF_UINT32 param1, GF_UINT32 param2, GF_UINT32 param3) >;
 
 	/// \class DeviceSetting
 	/// \brief
 	///     The abstract of the device setting handler of a gForce device
 	///
-	///     According to 3.x definition.
+	///     According to 4.x definition.
 	///
 	class DeviceSetting
 	{
 	public:
+		/// \brief Register command response handler
+		///    There is only one handler registered in the same time,
+		///    Another call to this method will replace the old one by new one.
+		///
+		/// \param handle The response handler to be registered
+		/// \return The previous registered
+		virtual OnResponseHandle registerResponseHandle(OnResponseHandle handle) = 0;
 		/////////////////////////////////////////////////////
 		// description
 		virtual GF_RET_CODE getProtocolVer(tstring& version) = 0;
@@ -79,6 +141,7 @@ namespace gf
 		};
 		// C.2
 		virtual GF_RET_CODE switchService(DeviceService service) = 0;
+		virtual GF_RET_CODE oadUpgrade(FILE* file, std::function<void(GF_UINT32 percentage)> progress) = 0;
 
 	public:
 		/////////////////////////////////////////////////////
