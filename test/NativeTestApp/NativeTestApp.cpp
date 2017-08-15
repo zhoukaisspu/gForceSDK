@@ -154,6 +154,22 @@ class HubListenerImp : public HubListener
 		auto ptr = device.lock();
 		GF_LOGD("ThreadId: %s: %s: device: %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
+
+		if (nullptr == ptr)
+			return;
+		auto ds = ptr->getDeviceSetting();
+		if (nullptr != ds)
+			ds->registerResponseHandle(
+			[](SPDEVICE device, ResponseType resp, ResponseResult result,
+			GF_UINT32 param0, GF_UINT32 param1, GF_UINT32 param2, GF_UINT32 param3) {
+			string name;
+			if (nullptr != device)
+				name = utils::tostring(device->getName());
+			GF_LOGD("device = %s, resp = %u, retval = %u, param = {%u - %u - %u - %u}",
+				name.c_str(), static_cast<GF_UINT32>(resp), static_cast<GF_UINT32>(result), param0, param1, param2, param3);
+		}
+		);
+
 	}
 	virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason) override
 	{
@@ -358,23 +374,24 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 				auto ds = itor->getDeviceSetting();
 				if (nullptr != ds)
 				{
-					tstring protocolver;
+					tstring str;
 					GF_UINT32 featuremap = 0;
-					ds->getProtocolVer(protocolver);
-					Sleep(100);
+					ds->getProtocolVer(str);
+					GF_LOGD("%s", utils::tostring(str).c_str());
 					ds->getFeatureMap(featuremap);
-					Sleep(100);
-					ds->getDeviceName(protocolver);
-					Sleep(100);
-					ds->getModelNumber(protocolver);
-					Sleep(100);
-					ds->getSerialNumber(protocolver);
-					Sleep(100);
-					ds->getHWRevision(protocolver);
-					Sleep(100);
-					ds->getFWRevision(protocolver);
-					Sleep(100);
-					ds->getManufacturerName(protocolver);
+					GF_LOGD("0x%8.8X", featuremap);
+					ds->getDeviceName(str);
+					GF_LOGD("%s", utils::tostring(str).c_str());
+					ds->getModelNumber(str);
+					GF_LOGD("%s", utils::tostring(str).c_str());
+					ds->getSerialNumber(str);
+					GF_LOGD("%s", utils::tostring(str).c_str());
+					ds->getHWRevision(str);
+					GF_LOGD("%s", utils::tostring(str).c_str());
+					ds->getFWRevision(str);
+					GF_LOGD("%s", utils::tostring(str).c_str());
+					ds->getManufacturerName(str);
+					GF_LOGD("%s", utils::tostring(str).c_str());
 				}
 			}
 		}

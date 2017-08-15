@@ -35,11 +35,11 @@ namespace gf
 {
 	class BLEDevice;
 
-	class DeviceSettingDataProfile3 : public DeviceSettingHandle
+	class DeviceSettingDataProfile4 : public DeviceSettingHandle
 	{
 	public:
-		DeviceSettingDataProfile3(gfwPtr<BLEDevice> device);
-		virtual ~DeviceSettingDataProfile3();
+		DeviceSettingDataProfile4(gfwPtr<BLEDevice> device);
+		virtual ~DeviceSettingDataProfile4();
 
 		void initialize();
 

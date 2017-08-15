@@ -32,7 +32,7 @@
 #include "BLEDevice.h"
 #include "Utils.h"
 #include "SimpleProfile.h"
-#include "BLEDataProfile3.h"
+#include "BLEDataProfile4.h"
 #include "OADProfile.h"
 
 #include <cstdio>
@@ -254,7 +254,7 @@ void BLEDevice::onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDe
 			mProfile = make_shared<SimpleProfile>(mMyself);
 			break;
 		case DeviceProtocolType::DataProtocol:
-			mProfile = make_shared<BLEDataProfile3>(mMyself);
+			mProfile = make_shared<BLEDataProfile4>(mMyself);
 			break;
 		case DeviceProtocolType::OADService:
 			mProfile = make_shared<OADProfile>(mMyself);

@@ -36,6 +36,10 @@
 
 namespace gf
 {
+
+#define BLECOMMAND_INTERVAL_ENABLED
+#define BLECOMMAND_INTERVAL (100) // ms
+
 	class BLEDevice;
 
 	const GF_UINT32 MAX_COMMAND_TIMEOUT = 5000; // ms
@@ -46,6 +50,7 @@ namespace gf
 		DeviceSettingHandle(gfwPtr<BLEDevice> device);
 		virtual ~DeviceSettingHandle();
 		void onResponse(GF_UINT8 length, GF_PUINT8 data);
+		virtual OnResponseHandle registerResponseHandle(OnResponseHandle handle) override;
 
 	public:
 		virtual GF_RET_CODE getProtocolVer(tstring& version) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
@@ -104,6 +109,7 @@ namespace gf
 
 	protected:
 		gfwPtr<BLEDevice> mDevice;
+		OnResponseHandle mRespHandle;
 
 	protected:
 		//////////////////////////////////////////////////////////////
@@ -111,6 +117,9 @@ namespace gf
 		mutex mMutex;
 		SimpleTimer mTimer;
 		map<GF_UINT8, SimpleTimer::TimePoint> mExecutingList;
+#ifdef BLECOMMAND_INTERVAL_ENABLED
+		chrono::system_clock::time_point mLastExecTime;
+#endif
 		GF_RET_CODE sendCommand(GF_UINT8 dataLen, GF_PUINT8 commandData, bool hasResponse = true);
 
 		void updateTimer();

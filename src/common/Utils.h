@@ -67,6 +67,8 @@ namespace gf {
 	{
 		__GF_INLINE__ wstring towstring(const string& str)
 		{
+			if (str.length() == 0)
+				return wstring();
 			size_t convertedChars = 0;
 			GF_SIZE len = str.size() * 2 + 1;
 			//string curLocale = setlocale(LC_CTYPE, "");
@@ -90,6 +92,8 @@ namespace gf {
 
 		__GF_INLINE__ string tostring(const wstring& wstr)
 		{
+			if (wstr.length() == 0)
+				return string();
 			size_t convertedChars = 0;
 			GF_SIZE len = wstr.size() * 4;
 			//string curLocale = setlocale(LC_CTYPE, "");
@@ -466,7 +470,6 @@ namespace gf {
 		condition_variable mWaitFact;
 	};
 
-	using MilisDuration = chrono::duration < GF_UINT32, milli > ;
 	using SimpleTimer = GfTimer < chrono::system_clock::time_point > ;
 
 } // namespace gf
