@@ -374,7 +374,7 @@ public class RemoteDevice {
 				mBleService.onControlResponseReceived(mAddress, data);
 			} else if (characteristic.getUuid().toString().equals(gForce_Data_Notify_Characteristic_UUID)) {
                 Log.i(TAG, "receive data notify.");
-				byte[] predata = {0x15, 0x27, 0x00};
+				byte[] predata = {0x22, 0x00};
 				byte[] notification = new byte[predata.length + data.length];
 				System.arraycopy(predata, 0, notification, 0, predata.length);
 				System.arraycopy(data, 0, notification, predata.length, data.length);

@@ -681,7 +681,7 @@ GF_STATUS GF_CAdapterManager::OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16
 						}
 						else
 						{
-							mClientCallback->onNotificationReceived(handle, length-3, data + 3);
+							mClientCallback->onNotificationReceived(handle, length, data + 4);
 						}
 					}
 					else

@@ -311,9 +311,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onNotificationReceived(int handle, byte[] notification) {
+        Log.d(TAG, "onNotificationReceived on handle = " + handle + "length :" + notification.length);
         String noti;
-        noti = new String(notification);
-        Log.d(TAG, "onNotificationReceived on handle = " + handle + "data :" + noti);
+        if (notification.length > 6)
+        {
+            noti = String.format("%02X:%02X:%02X:%02X:%02X:%02X",
+                    notification[0], notification[1], notification[2], notification[3], notification[4],
+                    notification[5]);
+            Log.d(TAG, "onNotificationReceived with data :" + noti);
+        }
     }
 
 	public void onControlResponseReceived(int handle, byte[] response) {
@@ -392,10 +398,10 @@ public class MainActivity extends AppCompatActivity {
             }
         } else if (cmdtype == 0x08) {
             Log.d(TAG, "Battery Level:" + response[2] + "%");
-            command[0] = 0x09;
-            if(sendControlCommandNative(handle, (byte)0x01, command))
+            byte[] enable_notify= {0x4F, (byte)0xFF, (byte)0xFF, (byte)0xFF, (byte)0xFF};
+            if(sendControlCommandNative(handle, (byte)0x05, enable_notify))
             {
-                Log.d(TAG, "sendControlCommandNative successful " + command[0]);
+                Log.d(TAG, "sendControlCommandNative successful " + enable_notify[0]);
             }
         }
         else if (cmdtype == 0x09) {

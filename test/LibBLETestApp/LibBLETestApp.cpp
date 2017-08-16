@@ -148,7 +148,12 @@ public:
 
 	void onNotificationReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
 	{
-		printf("\n onNotificationReceived \n");
+		GF_UINT8 i = 0;
+		printf("\n onNotificationReceived with length = %d: ", length);
+		for (i = 0; i < length; i++)
+		{
+			printf("0x%x :", data[i]);
+		}
 	}
 
 	void onControlResponseReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
@@ -335,9 +340,9 @@ public:
 				if (status == CONTROL_COMMAND_RESPONSE_OK)
 				{
 					printf("Battery Level: %d%\n", data[2]);
-					printf("\n SendControlCommand cmd type: %d!\n", GET_TEMPERATURE_LEVEL);
-					GF_UINT8 parameter[1] = { GET_TEMPERATURE_LEVEL };
-					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
+					printf("\n SendControlCommand cmd type: %d!\n", 0x4F);
+					GF_UINT8 parameter[5] = { 0x4F, (GF_UINT8)0xFF, (GF_UINT8)0xFF, (GF_UINT8)0xFF, (GF_UINT8)0xFF };
+					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x05, parameter))
 					{
 						printf("\n SendControlCommand sucessful!\n");
 					}
@@ -354,15 +359,8 @@ public:
 				{
 					printf("Temperature Level: %d degree\n", (data[2] - 40));
 					Sleep(1000);
-					/*
-					printf("\n SendControlCommand cmd type: %d!\n", POWER_OFF_REQUEST);
-					GF_UINT8 parameter[1] = { POWER_OFF_REQUEST };
-					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
-					{
-						printf("\n SendControlCommand sucessful!\n");
-					}*/
 
-					mAMInterface->Disconnect(handle);
+					//mAMInterface->Disconnect(handle);
 				}
 				else
 				{
