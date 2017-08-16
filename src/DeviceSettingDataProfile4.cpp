@@ -269,6 +269,7 @@ void DeviceSettingDataProfile4::onTimeout(GF_UINT8 command)
 	case CMD_GET_MANUFACTURER_NAME:
 		// restart the cycle again
 		internalGetProtocolVer();
+		break;
 	default:
 		ResponseType resp = ResponseType::RESP_MAX;
 		for (auto i : ResponseMapping)
@@ -507,7 +508,15 @@ GF_RET_CODE DeviceSettingDataProfile4::printKernelMsg(KernelMsgType type) { retu
 GF_RET_CODE DeviceSettingDataProfile4::vibrateControl(VibrateControlType type) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 // C.5
 GF_RET_CODE DeviceSettingDataProfile4::ledControl(LedControlType type) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-GF_RET_CODE DeviceSettingDataProfile4::packageIdControl(PackageControlType type) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+GF_RET_CODE DeviceSettingDataProfile4::packageIdControl(PackageControlType type)
+{
+	GF_LOGD("%s: %s", __FUNCTION__, type == PackageControlType::Enable ? "Enabled" : "Disabled");
+	const GF_UINT8 length = 2;
+	GF_UINT8 data[length];
+	data[0] = CMD_PACKAGE_ID_CONTROL;
+	data[1] = (type == PackageControlType::Enable ? 0x01 : 0x00);
+	return sendCommand(length, data);
+}
 
 // C.7
 GF_RET_CODE DeviceSettingDataProfile4::getAccelerateCap(GF_UINT32& maxSampleRateHz,
@@ -694,7 +703,11 @@ void DeviceSettingDataProfile4::onSetLogModuleEnabled(GF_UINT8 retval, GF_UINT8 
 void DeviceSettingDataProfile4::onPrintKernelMsg(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
 void DeviceSettingDataProfile4::onVibrateControl(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
 void DeviceSettingDataProfile4::onLedControl(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
-void DeviceSettingDataProfile4::onPackageIdControl(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
+void DeviceSettingDataProfile4::onPackageIdControl(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data)
+{
+	GF_LOGD("%s, retval = %u", __FUNCTION__, retval);
+	mRespHandle(mDevice.lock(), ResponseType::RESP_PACKAGE_ID_CONTROL, responseConvert(retval), 0, 0, 0, 0);
+}
 void DeviceSettingDataProfile4::onGetAccelerateCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
 void DeviceSettingDataProfile4::onSetAccelerateConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
 void DeviceSettingDataProfile4::onGetGyroscopeCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}

@@ -71,6 +71,19 @@ GF_RET_CODE DeviceSettingHandle::sendCommand(GF_UINT8 dataLen, GF_PUINT8 command
 		GF_LOGD("%s: error: command (0x%2.2X) failed, device is .", __FUNCTION__, command);
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 	}
+
+	unique_lock<mutex> lock;
+	try {
+		lock = unique_lock<mutex>(mMutex);
+	}
+	catch (const system_error& e) {
+		// duplicate lock in the same thread.
+		// try polling mode instead.
+		GF_LOGD("%s: system_error with code %d, meaning %s",
+			__FUNCTION__, e.code().value(), e.what());
+		throw e;
+		return GF_RET_CODE::GF_ERROR_BAD_STATE;;
+	}
 #ifdef BLECOMMAND_INTERVAL_ENABLED
 	auto now = chrono::system_clock::now();
 	if (now - mLastExecTime < chrono::milliseconds(BLECOMMAND_INTERVAL))
@@ -86,19 +99,6 @@ GF_RET_CODE DeviceSettingHandle::sendCommand(GF_UINT8 dataLen, GF_PUINT8 command
 	}
 	mLastExecTime = chrono::system_clock::now();
 #endif
-
-	unique_lock<mutex> lock;
-	try {
-		lock = unique_lock<mutex>(mMutex);
-	}
-	catch (const system_error& e) {
-		// duplicate lock in the same thread.
-		// try polling mode instead.
-		GF_LOGD("%s: system_error with code %d, meaning %s",
-			__FUNCTION__, e.code().value(), e.what());
-		throw e;
-		return GF_RET_CODE::GF_ERROR_BAD_STATE;;
-	}
 	// first check if there is similar command in the queue,
 	// if yes, reject this request
 	if (hasResponse && mExecutingList.find(command) != mExecutingList.end())

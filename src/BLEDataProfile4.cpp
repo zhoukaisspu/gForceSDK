@@ -43,6 +43,8 @@ BLEDataProfile4::~BLEDataProfile4()
 {
 }
 
+#define ATTRIB_HANDLE_GEVENT_V4 (0x22)
+
 void BLEDataProfile4::onData(GF_UINT8 length, GF_PUINT8 data)
 {
 	//GF_LOGD("%s", __FUNCTION__);
@@ -51,9 +53,14 @@ void BLEDataProfile4::onData(GF_UINT8 length, GF_PUINT8 data)
 		return;
 	if (length <= 1)
 		return;
+	GF_UINT32 offset = 0;
+
+	GF_UINT16 attrib_handle = data[offset] | (((GF_UINT16)data[offset + 1]) << 8);
+	if (ATTRIB_HANDLE_GEVENT_V4 != attrib_handle)
+		return;
+	offset += 2;
 
 	BLEDevice& ref = *device.get();
-	GF_UINT32 offset = 0;
 	GF_UINT8 dataHeader = data[offset++];
 	GF_UINT8 dataType = dataHeader & EVENT_MASK;
 	GF_UINT8 packageIdFlag = (dataHeader >> 7) & PCKID_FLAG_MASK;
@@ -75,7 +82,7 @@ void BLEDataProfile4::onData(GF_UINT8 length, GF_PUINT8 data)
 				mPackageId = 0;
 			if (mPackageId != currPackageId)
 			{
-				GF_LOGE("%s:%s: package id error. id supposed is %u, but now is %u, gap is %u", __FUNCTION__,
+				GF_LOGE("%s:%s: package id error. id is supposed to be %u, but now is %u, gap is %u", __FUNCTION__,
 					utils::tostring(ref.getName()).c_str(), mPackageId, currPackageId, (GF_UINT8)(currPackageId - mPackageId));
 				mPackageId = currPackageId;
 			}

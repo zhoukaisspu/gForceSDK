@@ -104,6 +104,7 @@ void printHelp()
 	GF_LOGI("m:\tRetrieve device information.");
 	GF_LOGI("n:\tTurn notification on.");
 	GF_LOGI("o:\tOAD upgrade.");
+	GF_LOGI("p:\tPackage ID control.");
 	GF_LOGI("x:\tPoweroff.");
 	GF_LOGI("y:\tSwtich to OAD.");
 	GF_LOGI("z:\tDevice system reset.");
@@ -180,7 +181,7 @@ class HubListenerImp : public HubListener
 	virtual void onOrientationData(WPDEVICE device, const Quaternion& rotation) override
 	{
 		auto now = chrono::steady_clock::now();
-		chrono::duration<GF_UINT32, milli> duration(500);
+		chrono::duration<GF_UINT32, milli> duration(1000);
 		if (mLastPrinted + duration > now)
 			return;
 
@@ -399,6 +400,8 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 	}
 	case 'n':
 	{
+		static bool enabled = false;
+		bool exec = false;
 		for (auto& itor : listDev)
 		{
 			if (DeviceConnectionStatus::Connected == itor->getConnectionStatus())
@@ -406,14 +409,25 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 				auto ds = itor->getDeviceSetting();
 				if (nullptr != ds)
 				{
-					DeviceSetting::DataNotifFlags flags = (DeviceSetting::DataNotifFlags)
-						(DeviceSetting::DNF_QUATERNION
-						| DeviceSetting::DNF_EMG_GESTURE
-						| DeviceSetting::DNF_DEVICE_STATUS);
+					DeviceSetting::DataNotifFlags flags;
+					if (enabled)
+					{
+						flags = DeviceSetting::DNF_OFF;
+					}
+					else
+					{
+						flags = (DeviceSetting::DataNotifFlags)
+							(DeviceSetting::DNF_QUATERNION
+							| DeviceSetting::DNF_EMG_GESTURE
+							| DeviceSetting::DNF_DEVICE_STATUS);
+					}
 					ds->setDataNotifSwitch(flags);
+					exec = true;
 				}
 			}
 		}
+		if (exec)
+			enabled = !enabled;
 		break;
 	}
 	case 'o':
@@ -447,6 +461,26 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 		}
 		break;
 	}
+	case 'p':
+	{
+		static bool bPackageIdOn = true;
+		bool exec = false;
+		for (auto& itor : listDev)
+		{
+			if (DeviceConnectionStatus::Connected == itor->getConnectionStatus())
+			{
+				auto ds = itor->getDeviceSetting();
+				if (nullptr != ds)
+				{
+					ds->packageIdControl(bPackageIdOn ?
+						DeviceSetting::PackageControlType::Enable : DeviceSetting::PackageControlType::Disable);
+					exec = true;
+				}
+			}
+		}if (exec)
+			bPackageIdOn = !bPackageIdOn;
+		break;
+	}
 	case 'x':
 	{
 		for (auto& itor : listDev)
@@ -464,6 +498,23 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 	}
 	case 'y':
 	{
+		GF_LOGD("WARNING: After switching to OAD mode, only reflush fw image can return to normal mode.");
+		GF_LOGD("Press ENTER key to terminate. Press y+ENTER key to continue.");
+		char key;
+		cin >> key;
+		if (key != 'y')
+			break;
+		GF_UINT32 i = 0;
+		for (auto& itor : listDev)
+		{
+			if (DeviceConnectionStatus::Connected == itor->getConnectionStatus())
+				++i;
+		}
+		if (i > 1)
+		{
+			GF_LOGD("Please only connect to one device.");
+			break;
+		}
 		for (auto& itor : listDev)
 		{
 			if (DeviceConnectionStatus::Connected == itor->getConnectionStatus())

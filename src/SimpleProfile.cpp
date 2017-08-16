@@ -108,7 +108,7 @@ void SimpleProfile::onData(GF_UINT8 length, GF_PUINT8 data)
 			if (mPackageId != currPackageId)
 			{
 #if (defined(DEBUG) || defined(_DEBUG)) && defined(DEBUG_ANALYSE_PACKAGE_LOST)
-				GF_LOGE("%s:%s: package id error. id supposed is %u, but now is %u, gap is %u", __FUNCTION__,
+				GF_LOGE("%s:%s: package id error. id is supposed to be %u, but now is %u, gap is %u", __FUNCTION__,
 					utils::tostring(getName()).c_str(), mPackageId, currPackageId, (GF_UINT8)(currPackageId - mPackageId));
 #endif
 				mPackageId = currPackageId;
