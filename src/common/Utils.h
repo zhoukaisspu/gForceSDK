@@ -44,6 +44,7 @@
 #include <atomic>
 #include <vector>
 #include <chrono>
+#include "LogUtils.h"
 using namespace std;
 
 namespace gf {
@@ -317,11 +318,10 @@ namespace gf {
 				return timer->mTimePoint > _Right.timer->mTimePoint;
 			}
 		};
-		TimerManager()
+		TimerManager(int useless)
 			: mRunning(true)
 		{
 			make_heap(mTimers.begin(), mTimers.end(), greater<TimerParam>());
-			mTimerThread;
 		}
 		~TimerManager()
 		{
@@ -355,7 +355,7 @@ namespace gf {
 			newtp.timer = &t;
 			// check if the earlest one
 			bool needReset = false;
-			auto& earliest = mTimers.begin();
+			auto earliest = mTimers.begin();
 			if (earliest != mTimers.end())
 			{
 				if (*earliest > newtp)
@@ -424,7 +424,7 @@ namespace gf {
 				Timer* pTimer = nullptr;
 				{
 					lock_guard<mutex> timerslock(mMutexTimers);
-					auto& first = mTimers.begin();
+					auto first = mTimers.begin();
 					if (first == mTimers.end())
 					{
 						earliest = now;
@@ -471,5 +471,9 @@ namespace gf {
 	};
 
 	using SimpleTimer = GfTimer < chrono::system_clock::time_point > ;
+
+#define TIMERMANAGER_STATIC_INSTANCE(TYPE)							\
+	template<> TimerManager<TYPE> TimerManager<TYPE>::mInstance(0);	\
+	namespace gf { template class TimerManager<TYPE>; }
 
 } // namespace gf

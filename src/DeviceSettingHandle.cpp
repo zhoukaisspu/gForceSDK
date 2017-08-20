@@ -32,7 +32,17 @@
 #include "DeviceSettingHandle.h"
 #include "BLEDevice.h"
 
+#ifdef BLECOMMAND_INTERVAL_ENABLED
+#ifndef WIN32
+#include <unistd.h>
+#endif
+#endif
+
 using namespace gf;
+
+//template<>
+//TimerManager<SimpleTimer> TimerManager<SimpleTimer>::mInstance;
+TIMERMANAGER_STATIC_INSTANCE(SimpleTimer)
 
 DeviceSettingHandle::DeviceSettingHandle(gfwPtr<BLEDevice> device)
 	: mDevice(device)
@@ -90,7 +100,7 @@ GF_RET_CODE DeviceSettingHandle::sendCommand(GF_UINT8 dataLen, GF_PUINT8 command
 	{
 		auto delay = chrono::milliseconds(BLECOMMAND_INTERVAL) - (now - mLastExecTime);
 		auto msdelay = chrono::duration_cast<chrono::milliseconds>(delay).count();
-		GF_LOGD("HOLD: %u", msdelay);
+		GF_LOGD("HOLD: %lld", msdelay);
 #ifdef WIN32
 		Sleep((DWORD)msdelay);
 #else
@@ -119,7 +129,7 @@ GF_RET_CODE DeviceSettingHandle::sendCommand(GF_UINT8 dataLen, GF_PUINT8 command
 		return ret;
 
 	// if the command has response, store the expiration of this command
-	mExecutingList[command] = chrono::steady_clock::now() + chrono::milliseconds(MAX_COMMAND_TIMEOUT);
+	mExecutingList[command] = chrono::system_clock::now() + chrono::milliseconds(MAX_COMMAND_TIMEOUT);
 
 	updateTimer();
 
@@ -155,7 +165,9 @@ void DeviceSettingHandle::onResponse(GF_UINT8 length, GF_PUINT8 data)
 
 void DeviceSettingHandle::updateTimer()
 {
-	auto now = chrono::steady_clock::now();
+	// auto now = chrono::steady_clock::now();
+	// use system_clock in android to prevent build error.
+	auto now = chrono::system_clock::now();
 	// check and reset timer
 	mTimer.stop();
 
@@ -186,7 +198,9 @@ void DeviceSettingHandle::updateTimer()
 
 void DeviceSettingHandle::onTimer()
 {
-	auto now = chrono::steady_clock::now();
+	// auto now = chrono::steady_clock::now();
+	// use system_clock in android to prevent build error.
+	auto now = chrono::system_clock::now();
 	GF_UINT8 command = 0xFF;
 	{
 		lock_guard<mutex> lock(mMutex);

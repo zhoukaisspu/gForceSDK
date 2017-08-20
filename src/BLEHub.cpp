@@ -353,8 +353,6 @@ WPDEVICE BLEHub::findDevice(GF_UINT8 addrType, tstring address)
 
 GF_RET_CODE BLEHub::createVirtualDevice(vector<WPDEVICE> realDevices, WPDEVICE& newDevice)
 {
-	realDevices;
-	newDevice;
 	GF_LOGD(__FUNCTION__);
 	return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; // not implemented
 }
@@ -451,7 +449,6 @@ void BLEHub::onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device)
 
 void BLEHub::onDeviceDisconnected(GF_STATUS status, GF_ConnectedDevice *device, GF_UINT8 reason)
 {
-	status;
 	GF_LOGD(__FUNCTION__);
 	ASSERT_VALID_PTR(device);
 	if (nullptr == device)
@@ -1122,7 +1119,7 @@ GF_RET_CODE BLEHub::run(GF_UINT32 ms, bool once)
 	///
 	lock.unlock();
 	bool loop = !once;
-	auto until = chrono::steady_clock::now() + chrono::duration<GF_UINT32, milli>(ms);
+	auto until = chrono::system_clock::now() + chrono::duration<GF_UINT32, milli>(ms);
 	GF_UINT32 time_last = ms;
 	do {
 		gfsPtr<PollingMsg> msg;

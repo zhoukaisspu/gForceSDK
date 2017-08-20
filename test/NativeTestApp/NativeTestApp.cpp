@@ -180,7 +180,7 @@ class HubListenerImp : public HubListener
 	}
 	virtual void onOrientationData(WPDEVICE device, const Quaternion& rotation) override
 	{
-		auto now = chrono::steady_clock::now();
+		auto now = chrono::system_clock::now();
 		chrono::duration<GF_UINT32, milli> duration(1000);
 		if (mLastPrinted + duration > now)
 			return;
@@ -240,7 +240,7 @@ class HubListenerImp : public HubListener
 	}
 
 private:
-	chrono::steady_clock::time_point mLastPrinted = chrono::steady_clock::now();
+	chrono::system_clock::time_point mLastPrinted = chrono::system_clock::now();
 };
 
 bool enumDevice(WPDEVICE dev)

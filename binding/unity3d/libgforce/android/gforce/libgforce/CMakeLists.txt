@@ -21,7 +21,11 @@ add_library( # Sets the name of the library.
 			 ../../../../../../src/platform/ble/android/cpp/com_oymotion_ble_bleservice.cpp
 			 ../../../../../../src/BLEDevice.cpp
 			 ../../../../../../src/BLEHub.cpp
-			 ../../../../../../src/GForceDevice.cpp
+			 ../../../../../../src/OADProfile.cpp
+			 ../../../../../../src/DeviceSettingHandle.cpp
+			 ../../../../../../src/DeviceSettingDataProfile4.cpp
+			 ../../../../../../src/BLEDataProfile4.cpp
+			 ../../../../../../src/SimpleProfile.cpp
 			 ../../../../../../src/HubManagerImpl.cpp
 			 ../../../../../../src/common/src/LogUtil_Android.cpp)
 

@@ -23,7 +23,6 @@
     <ClCompile Include="..\..\..\src\BLEDevice.cpp" />
     <ClCompile Include="..\..\..\src\BLEHub.cpp" />
     <ClCompile Include="..\..\..\src\common\src\LogUtil_Win.cpp" />
-    <ClCompile Include="..\..\..\src\common\src\Utils.cpp" />
     <ClCompile Include="..\..\..\src\DeviceSettingDataProfile4.cpp" />
     <ClCompile Include="..\..\..\src\DeviceSettingHandle.cpp" />
     <ClCompile Include="..\..\..\src\OADProfile.cpp" />

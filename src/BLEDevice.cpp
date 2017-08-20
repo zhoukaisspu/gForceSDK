@@ -64,9 +64,18 @@ BLEDevice::~BLEDevice()
 
 GF_RET_CODE BLEDevice::identify(int msec)
 {
-	msec;
-	GF_LOGI("%s: Opps, not implemented yet.", __FUNCTION__);
-	return GF_RET_CODE::GF_ERROR_NOT_SUPPORT;
+	auto settings = getDeviceSetting();
+	if (nullptr == settings)
+	{
+		GF_LOGI("%s: Opps, not implemented yet.", __FUNCTION__);
+		return GF_RET_CODE::GF_ERROR_NOT_SUPPORT;
+	}
+	auto ret0 = settings->ledControl(DeviceSetting::LedControlType::On);
+	auto ret1 = settings->vibrateControl(DeviceSetting::VibrateControlType::On);
+	if (ret0 == GF_RET_CODE::GF_SUCCESS || ret1 == GF_RET_CODE::GF_SUCCESS)
+		return GF_RET_CODE::GF_SUCCESS;
+	else
+		return ret0;
 }
 
 GF_RET_CODE BLEDevice::getAddress(GF_UINT8* addr, GF_SIZE bufLen) const

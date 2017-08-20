@@ -32,9 +32,6 @@
     <ClCompile Include="..\..\..\src\DeviceSettingHandle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\common\src\Utils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\OADProfile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
