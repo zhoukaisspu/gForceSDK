@@ -425,7 +425,7 @@ public class BLEService {
 	public void onNotificationReceived(String addr, byte[] data) {
 		synchronized (mObject) {
             RemoteDevice device = findRemoteDeviceByAddress(addr);
-			onControlResponseReceivedNative(data, device.getHandle());
+            onNotificationReceivedNative(data, device.getHandle());
 		}
 	}
 
