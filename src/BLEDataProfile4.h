@@ -72,6 +72,7 @@ namespace gf
 	protected:
 		virtual void onData(GF_UINT8 length, GF_PUINT8 data) override;
 		virtual void onResponse(GF_UINT8 length, GF_PUINT8 data) override;
+		virtual void onDeviceStatus(DeviceConnectionStatus oldStatus, DeviceConnectionStatus newStatus) override;
 		virtual gfsPtr<DeviceSetting> getDeviceSetting() override;
 
 	private:
@@ -86,6 +87,8 @@ namespace gf
 		void onHIDMouseData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data);
 		void onHIDJoystickData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data);
 		void onDeviceStatusData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data);
+
+		void sendExtendData(BLEDevice& device, DeviceDataType dataType, GF_UINT8 length, GF_PUINT8 data);
 
 	private:
 		gfsPtr<DeviceSettingDataProfile4> mDevSetting;

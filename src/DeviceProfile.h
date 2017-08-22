@@ -59,6 +59,7 @@ namespace gf
 		{}
 		virtual void onData(GF_UINT8 length, GF_PUINT8 data) = 0;
 		virtual void onResponse(GF_UINT8 length, GF_PUINT8 data) = 0;
+		virtual void onDeviceStatus(DeviceConnectionStatus oldStatus, DeviceConnectionStatus newStatus) = 0;
 		virtual gfsPtr<DeviceSetting> getDeviceSetting() = 0;
 
 	protected:

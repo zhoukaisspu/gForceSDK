@@ -73,13 +73,13 @@ namespace gf {
 			size_t convertedChars = 0;
 			GF_SIZE len = str.size() * 2 + 1;
 			//string curLocale = setlocale(LC_CTYPE, "");
-			unique_ptr<wchar_t[]> up(new wchar_t[len]);
+			unique_ptr<wchar_t[]> up = make_unique<wchar_t[]>(len);
 			wchar_t* p = up.get();
 			p[len - 1] = L'\0';
 #ifdef WIN32
 			mbstowcs_s(&convertedChars, p, len, str.c_str(), _TRUNCATE);
 #else // WIN32
-			mbstowcs(p, str.c_str(), str.length()*2);
+			mbstowcs(p, str.c_str(), str.length() * 2);
 #endif
 			wstring wstr(p);
 			//setlocale(LC_CTYPE, curLocale.c_str());
@@ -98,7 +98,7 @@ namespace gf {
 			size_t convertedChars = 0;
 			GF_SIZE len = wstr.size() * 4;
 			//string curLocale = setlocale(LC_CTYPE, "");
-			unique_ptr<char[]> up(new char[len + 1]);
+			unique_ptr<char[]> up = make_unique<char[]>(len + 1);
 			char* p = up.get();
 			p[len] = '\0';
 #ifdef WIN32
@@ -130,14 +130,14 @@ namespace gf {
 			if (nullptr == addr)
 				return string();
 			GF_SIZE alloclen = len*(3) + 1;
-			unique_ptr<char[]> up(new char[alloclen]);
+			unique_ptr<char[]> up = make_unique<char[]>(alloclen);
 			char* str = up.get();
 			for (GF_SIZE i = 0; i < len; ++i)
 			{
 #ifdef WIN32
 				sprintf_s(str + (3 * i), alloclen - (3 * i), "%2.2X:", addr[i]);
 #else
-				snprintf(str+ (3 * i), alloclen - (3 * i), "%2.2X:", addr[i]);
+				snprintf(str + (3 * i), alloclen - (3 * i), "%2.2X:", addr[i]);
 #endif
 			}
 			str[alloclen - 2] = '\0';
@@ -207,7 +207,7 @@ namespace gf {
 		{
 			unique_lock<mutex> lock(mMutex);
 			auto& q = mQ;
-			mCondition.wait(lock, [&q](){ return !q.empty(); });
+			mCondition.wait(lock, [&q]() { return !q.empty(); });
 			ASSERT_IF(!q.empty());
 			_Type r = q.front();
 			q.pop_front();
@@ -219,7 +219,7 @@ namespace gf {
 		{
 			unique_lock<mutex> lock(mMutex);
 			auto& q = mQ;
-			bool ret = mCondition.wait_until(lock, tp, [&q](){ return !q.empty(); });
+			bool ret = mCondition.wait_until(lock, tp, [&q]() { return !q.empty(); });
 			if (ret)
 			{
 				r = q.front();
@@ -249,11 +249,11 @@ namespace gf {
 	template <class TimePointType, class TimeDurationType = typename TimePointType::duration>
 	class GfTimer
 	{
-		using SelfType = GfTimer < TimePointType > ;
+		using SelfType = GfTimer < TimePointType >;
 	public:
 		using TimePoint = TimePointType;
 		using TimeDuration = TimeDurationType;
-		using TimerFunc = function < void() > ;
+		using TimerFunc = function < void() >;
 
 	public:
 		GfTimer()
@@ -302,7 +302,7 @@ namespace gf {
 		TimePoint mTimePoint;
 		TimerFunc mTask;
 		TimerManager<SelfType>& mMgr;
-		friend class TimerManager < SelfType > ;
+		friend class TimerManager < SelfType >;
 	};
 
 	template <class TimerType>
@@ -340,7 +340,7 @@ namespace gf {
 			//GF_LOGD("%s", __FUNCTION__);
 			if (!mTimerThread.joinable())
 			{
-				mTimerThread = thread([this](){ this->threadProc(); });
+				mTimerThread = thread([this]() { this->threadProc(); });
 			}
 			lock_guard<mutex> lock(mMutexTimers);
 			for (auto& tp : mTimers)
@@ -470,7 +470,7 @@ namespace gf {
 		condition_variable mWaitFact;
 	};
 
-	using SimpleTimer = GfTimer < chrono::system_clock::time_point > ;
+	using SimpleTimer = GfTimer < chrono::system_clock::time_point >;
 
 #define TIMERMANAGER_STATIC_INSTANCE(TYPE)							\
 	template<> TimerManager<TYPE> TimerManager<TYPE>::mInstance(0);	\

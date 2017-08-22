@@ -124,10 +124,20 @@ bool BLEDevice::takeover(BLEDevice& from)
 	return true;
 }
 
-GF_RET_CODE BLEDevice::setPostion(DevicePosition pos)
+void BLEDevice::connectStatusChanged(DeviceConnectionStatus status)
+{
+	auto old = mCnntStatus;
+	mCnntStatus = status;
+	if (nullptr != mProfile)
+	{
+		mProfile->onDeviceStatus(old, mCnntStatus);
+	}
+}
+
+GF_RET_CODE BLEDevice::setAlias(tstring alias)
 {
 	GF_LOGD(__FUNCTION__);
-	mPosition = pos;
+	mAlias = alias;
 	return GF_RET_CODE::GF_SUCCESS;
 }
 
@@ -148,7 +158,7 @@ GF_RET_CODE BLEDevice::connect(bool directConn)
 	default:;
 	}
 	if (ret == GF_RET_CODE::GF_SUCCESS)
-		mCnntStatus = DeviceConnectionStatus::Connecting;
+		connectStatusChanged(DeviceConnectionStatus::Connecting);
 	return ret;
 }
 
@@ -169,7 +179,7 @@ GF_RET_CODE BLEDevice::disconnect()
 	default:;
 	}
 	if (ret == GF_RET_CODE::GF_SUCCESS)
-		mCnntStatus = DeviceConnectionStatus::Disconnecting;
+		connectStatusChanged(DeviceConnectionStatus::Disconnecting);
 	return ret;
 }
 
@@ -190,7 +200,7 @@ GF_RET_CODE BLEDevice::cancelConnect()
 	}
 	if (ret == GF_RET_CODE::GF_SUCCESS)
 	{
-		mCnntStatus = DeviceConnectionStatus::Disconnecting;
+		connectStatusChanged(DeviceConnectionStatus::Disconnecting);
 		GF_LOGD("Connection cancelling...");
 	}
 	return ret;
@@ -226,7 +236,9 @@ void BLEDevice::updateData(const GF_BLEDevice& bleDev)
 void BLEDevice::onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDevice)
 {
 	lock_guard<mutex> lock(mMutex);
-	GF_LOGD("Device connected: previous state is: %u", static_cast<GF_UINT>(mCnntStatus));
+	GF_LOGD("Device connected: previous state is: %u, conn_int = %u, superTO = %u, slavelatency = %u, mtu size = %u",
+		static_cast<GF_UINT>(mCnntStatus), connedDevice.conn_int,
+		connedDevice.superTO, connedDevice.slavelatency, connedDevice.MTUsize);
 	mHandle = connedDevice.handle;
 	mConnInt = connedDevice.conn_int;
 	mSuperTO = connedDevice.superTO;
@@ -239,13 +251,12 @@ void BLEDevice::onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDe
 		if (GF_RET_CODE::GF_SUCCESS == mHub.disconnect(*this))
 		{
 			// if user selected to cancel connection, make it and no notifiction
-			mCnntStatus = DeviceConnectionStatus::Disconnecting;
+			connectStatusChanged(DeviceConnectionStatus::Disconnecting);
 			GF_LOGD("Trying to disconnect as client sent a cancel order.");
 			return;
 		}
 	}
 #endif
-	mCnntStatus = DeviceConnectionStatus::Connected;
 
 	if (nullptr == mProfile)
 	{
@@ -272,6 +283,7 @@ void BLEDevice::onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDe
 			break;
 		}
 	}
+	connectStatusChanged(DeviceConnectionStatus::Connected);
 }
 
 void BLEDevice::onDisconnected(GF_STATUS status, GF_UINT8 reason)
@@ -279,7 +291,7 @@ void BLEDevice::onDisconnected(GF_STATUS status, GF_UINT8 reason)
 	lock_guard<mutex> lock(mMutex);
 	GF_LOGD("Device disconnected: previous state is: %u, reason is: %u",
 		static_cast<GF_UINT>(mCnntStatus), (GF_UINT)reason);
-	mCnntStatus = DeviceConnectionStatus::Disconnected;
+	connectStatusChanged(DeviceConnectionStatus::Disconnected);
 	mHandle = INVALID_HANDLE;
 	mConnInt = 0;
 	mSuperTO = 0;

@@ -140,6 +140,10 @@ void SimpleProfile::onResponse(GF_UINT8 length, GF_PUINT8 data)
 	GF_LOGD("%s: No implementation.", __FUNCTION__);
 }
 
+void SimpleProfile::onDeviceStatus(DeviceConnectionStatus oldStatus, DeviceConnectionStatus newStatus)
+{
+}
+
 gfsPtr<DeviceSetting> SimpleProfile::getDeviceSetting()
 {
 	GF_LOGD("%s: No implementation.", __FUNCTION__);

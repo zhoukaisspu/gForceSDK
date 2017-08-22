@@ -55,6 +55,10 @@ void OADProfile::onResponse(GF_UINT8 length, GF_PUINT8 data)
 		mDevSetting->onResponse(length, data);
 }
 
+void OADProfile::onDeviceStatus(DeviceConnectionStatus oldStatus, DeviceConnectionStatus newStatus)
+{
+}
+
 gfsPtr<DeviceSetting> OADProfile::getDeviceSetting()
 {
 	gfsPtr<BLEDevice> device = mDevice.lock();

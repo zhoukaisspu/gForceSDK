@@ -68,8 +68,8 @@ namespace gf
 		virtual GF_RET_CODE identify(int msec) override;
 
 		virtual DeviceConnectionStatus getConnectionStatus() const override { return mCnntStatus; }
-		virtual GF_RET_CODE setPostion(DevicePosition pos) override;
-		virtual DevicePosition getPosition() const override { return mPosition; }
+		virtual GF_RET_CODE setAlias(tstring alias) override;
+		virtual tstring getAlias() const override { return mAlias; }
 
 		virtual GF_RET_CODE connect(bool directConn = true) override;
 		virtual GF_RET_CODE disconnect() override;
@@ -107,6 +107,9 @@ namespace gf
 		virtual bool isMyself(GF_UINT8 addrType, tstring addr) const;
 		virtual bool takeover(BLEDevice& from);
 
+	protected:
+		void connectStatusChanged(DeviceConnectionStatus status);
+
 	public:
 		// provide to profiles
 		IHub& getHub() { return mHub; }
@@ -123,7 +126,7 @@ namespace gf
 
 	protected:
 		DeviceConnectionStatus mCnntStatus = DeviceConnectionStatus::Disconnected;
-		DevicePosition mPosition = DevicePosition::NotAssigned;
+		tstring		mAlias;
 		GF_UINT8	mAddrType = 0;
 		GF_UINT8	mAddress[BT_ADDRESS_SIZE];
 		tstring		mName;

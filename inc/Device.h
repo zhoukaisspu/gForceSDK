@@ -90,22 +90,22 @@ namespace gf
 		/// \return DeviceConnectionStatus type of device status.
 		virtual DeviceConnectionStatus getConnectionStatus() const = 0;
 
-		/// \brief Sets the wear position of the device
+		/// \brief Sets an alias to the devie for identification
 		/// \remark
 		///     This method is not implemented yet and can be changed in the
         ///     future.
         /// \sa
-        ///  Device::getPostion()
-		virtual GF_RET_CODE setPostion(DevicePosition pos) = 0;
+        ///  Device::getAlias()
+		virtual GF_RET_CODE setAlias(tstring alias) = 0;
 
-		/// \brief Get the wear position of the device set before
+		/// \brief Get the alias of the device set before
 		///
 		/// \remark
 		///     This method is not implemented yet and can be changed in the
         ///     future.
         /// \sa
-        ///  Device::setPostion()
-		virtual DevicePosition getPosition() const = 0;
+        ///  Device::setAlias()
+		virtual tstring getAlias() const = 0;
 
 		/// \brief Connects to the device
 		/// \param directConn - bool

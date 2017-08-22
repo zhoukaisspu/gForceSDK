@@ -89,53 +89,53 @@ namespace gf
 		virtual GF_RET_CODE packageIdControl(PackageControlType type) override;
 
 		// C.7
-		virtual GF_RET_CODE getAccelerateCap(GF_UINT32& maxSampleRateHz,
-			GF_UINT32& maxScaleRage_g, GF_UINT32& maxPackageDataLength) override;
+		virtual GF_RET_CODE getAccelerateCap(GF_UINT16& maxSampleRateHz,
+			GF_UINT8& maxScaleRange_g, GF_UINT8& maxPackageDataLength) override;
 		// C.7
-		virtual GF_RET_CODE setAccelerateConfig(GF_UINT32 sampleRateHz,
-			GF_UINT32 fullScaleRage_g, GF_UINT32 packageDataLength) override;
+		virtual GF_RET_CODE setAccelerateConfig(GF_UINT16 sampleRateHz,
+			GF_UINT8 fullScaleRange_g, GF_UINT8 packageDataLength) override;
 		// C.8
-		virtual GF_RET_CODE getGyroscopeCap(GF_UINT32& maxSampleRateHz,
-			GF_UINT32& maxScaleRage_dps, GF_UINT32& maxPackageDataLength) override;
+		virtual GF_RET_CODE getGyroscopeCap(GF_UINT16& maxSampleRateHz,
+			GF_UINT16& maxScaleRange_dps, GF_UINT8& maxPackageDataLength) override;
 		// C.8
-		virtual GF_RET_CODE getGyroscopeConfig(GF_UINT32 sampleRateHz,
-			GF_UINT32 fullScaleRage_dps, GF_UINT32 packageDataLength) override;
+		virtual GF_RET_CODE setGyroscopeConfig(GF_UINT16 sampleRateHz,
+			GF_UINT16 fullScaleRange_dps, GF_UINT8 packageDataLength) override;
 		// C.9
-		virtual GF_RET_CODE getMagnetometerCap(GF_UINT32& maxSampleRateHz,
-			GF_UINT32& maxScaleRage_uT, GF_UINT32& maxPackageDataLength) override;
+		virtual GF_RET_CODE getMagnetometerCap(GF_UINT16& maxSampleRateHz,
+			GF_UINT16& maxScaleRange_uT, GF_UINT8& maxPackageDataLength) override;
 		// C.9
-		virtual GF_RET_CODE getMagnetometerConfig(GF_UINT32 sampleRateHz,
-			GF_UINT32 fullScaleRage_uT, GF_UINT32 packageDataLength) override;
+		virtual GF_RET_CODE setMagnetometerConfig(GF_UINT16 sampleRateHz,
+			GF_UINT16 fullScaleRange_uT, GF_UINT8 packageDataLength) override;
 		// C.10
-		virtual GF_RET_CODE getEulerangleCap(GF_UINT32& maxSampleRateHz) override;
+		virtual GF_RET_CODE getEulerangleCap(GF_UINT16& maxSampleRateHz) override;
 		// C.10
-		virtual GF_RET_CODE setEulerangleConfig(GF_UINT32 sampleRateHz) override;
+		virtual GF_RET_CODE setEulerangleConfig(GF_UINT16 sampleRateHz) override;
 		// C.11
-		virtual GF_RET_CODE getQuaternionCap(GF_UINT32& maxSampleRateHz) override;
+		virtual GF_RET_CODE getQuaternionCap(GF_UINT16& maxSampleRateHz) override;
 		// C.11
-		virtual GF_RET_CODE setQuaternionConfig(GF_UINT32 sampleRateHz) override;
+		virtual GF_RET_CODE setQuaternionConfig(GF_UINT16 sampleRateHz) override;
 		// C.12
-		virtual GF_RET_CODE getRotationMatrixCap(GF_UINT32& maxSampleRateHz) override;
+		virtual GF_RET_CODE getRotationMatrixCap(GF_UINT16& maxSampleRateHz) override;
 		// C.12
-		virtual GF_RET_CODE setRotationMatrixConfig(GF_UINT32 sampleRateHz) override;
+		virtual GF_RET_CODE setRotationMatrixConfig(GF_UINT16 sampleRateHz) override;
 		// C.13
 		virtual GF_RET_CODE getGestureCap(GF_UINT32& number, Gesture* supportedGesture, GF_UINT32 dataSize) override;
 		// C.13
 		virtual GF_RET_CODE setGestureConfig(GF_UINT32 number, Gesture interestingGesture[]) override;
 		// C.14
-		virtual GF_RET_CODE getEMGRawDataCap(GF_UINT32& maxSampleRateHz,
-			EMGRowDataChannels& supportedChannels, GF_UINT32& maxPackageDataLength) override;
+		virtual GF_RET_CODE getEMGRawDataCap(GF_UINT16& maxSampleRateHz,
+			EMGRowDataChannels& supportedChannels, GF_UINT8& maxPackageDataLength) override;
 		// C.14
-		virtual GF_RET_CODE setEMGRawDataConfig(GF_UINT32 sampleRateHz,
-			EMGRowDataChannels interestingChannels, GF_UINT32 packageDataLength) override;
+		virtual GF_RET_CODE setEMGRawDataConfig(GF_UINT16 sampleRateHz,
+			EMGRowDataChannels interestingChannels, GF_UINT8 packageDataLength) override;
 		// C.15
-		virtual GF_RET_CODE getMouseDataCap(GF_UINT32& maxSampleRateHz) override;
+		virtual GF_RET_CODE getMouseDataCap(GF_UINT16& maxSampleRateHz) override;
 		// C.15
-		virtual GF_RET_CODE setMouseDataConfig(GF_UINT32 sampleRateHz) override;
+		virtual GF_RET_CODE setMouseDataConfig(GF_UINT16 sampleRateHz) override;
 		// C.16
-		virtual GF_RET_CODE getJoystickDataCap(GF_UINT32& maxSampleRateHz) override;
+		virtual GF_RET_CODE getJoystickDataCap(GF_UINT16& maxSampleRateHz) override;
 		// C.16
-		virtual GF_RET_CODE setJoystickDataConfig(GF_UINT32 sampleRateHz) override;
+		virtual GF_RET_CODE setJoystickDataConfig(GF_UINT16 sampleRateHz) override;
 		// C.17
 		virtual GF_RET_CODE getDeviceStatusCap(DeviceStatusFlags& flags) override;
 		// C.17
@@ -178,9 +178,9 @@ namespace gf
 		virtual void onGetAccelerateCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data);
 		virtual void onSetAccelerateConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data);
 		virtual void onGetGyroscopeCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data);
-		virtual void onGetGyroscopeConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data);
+		virtual void onSetGyroscopeConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data);
 		virtual void onGetMagnetometerCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data);
-		virtual void onGetMagnetometerConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data);
+		virtual void onSetMagnetometerConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data);
 		virtual void onGetEulerangleCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data);
 		virtual void onSetEulerangleConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data);
 		virtual void onGetQuaternionCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data);
@@ -208,6 +208,22 @@ namespace gf
 		tstring mHWRev;
 		tstring mFWRev;
 		tstring mManuName;
+
+		struct Config
+		{
+			atomic<PackageControlType> pkgIdCtrl = PackageControlType::Disable;
+			atomic<DataNotifFlags> dataFlags = DataNotifFlags::DNF_OFF;
+			atomic<GF_UINT32> accelerateCfg = 0;
+			atomic<GF_UINT64> gyroscopeCfg = 0;
+			atomic<GF_UINT64> magnetometerCfg = 0;
+			atomic<GF_UINT64> emgrawCfg = 0;
+		} mCfg, mCfgApplying;
+
+	public:
+		void resetConfig();
+
+	private:
+		void configMtuSize();
 	};
 
 }

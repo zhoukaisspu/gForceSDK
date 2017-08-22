@@ -190,16 +190,22 @@ namespace gf {
 		Connected
 	};
 
-	/// \brief Define where the gForce device is weared.
+	/// \brief Define the data types the device do support
 	///
-	/// \remark Not implmented yet.
-	enum class DevicePosition {
-		NotAssigned,
-		RightArm,
-		LeftArm,
-		RightWrist,
-		LeftWrist,
-		Virtual
+	enum class DeviceDataType : GF_UINT32 {
+		DDT_INVALID = 0,
+		DDT_ACCELERATE,
+		DDT_GYROSCOPE,
+		DDT_MAGNETOMETER,
+		DDT_EULERANGLE,
+		DDT_QUATERNION,
+		DDT_ROTATIONMATRIX,
+		DDT_GESTURE,
+		DDT_EMGRAW,
+		DDT_HIDMOUSE,
+		DDT_HIDJOYSTICK,
+		DDT_DEVICESTATUS,
+		DDT_MAX
 	};
 
 } // namespace gf

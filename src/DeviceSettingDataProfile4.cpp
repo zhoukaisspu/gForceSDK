@@ -217,9 +217,9 @@ void DeviceSettingDataProfile4::dispatchResponse(GF_UINT8 command, GF_UINT8 retv
 		{ CMD_GET_ACCELERATE_CAP, &DeviceSettingDataProfile4::onGetAccelerateCap },
 		{ CMD_SET_ACCELERATE_CONFIG, &DeviceSettingDataProfile4::onSetAccelerateConfig },
 		{ CMD_GET_GYROSCOPE_CAP, &DeviceSettingDataProfile4::onGetGyroscopeCap },
-		{ CMD_SET_GYROSCOPE_CONFIG, &DeviceSettingDataProfile4::onGetGyroscopeConfig },
+		{ CMD_SET_GYROSCOPE_CONFIG, &DeviceSettingDataProfile4::onSetGyroscopeConfig },
 		{ CMD_GET_MAGNETOMETER_CAP, &DeviceSettingDataProfile4::onGetMagnetometerCap },
-		{ CMD_SET_MAGNETOMETER_CONFIG, &DeviceSettingDataProfile4::onGetMagnetometerConfig },
+		{ CMD_SET_MAGNETOMETER_CONFIG, &DeviceSettingDataProfile4::onSetMagnetometerConfig },
 		{ CMD_GET_EULER_ANGLE_CAP, &DeviceSettingDataProfile4::onGetEulerangleCap },
 		{ CMD_SET_EULER_ANGLE_CONFIG, &DeviceSettingDataProfile4::onSetEulerangleConfig },
 		{ CMD_GET_QUATERNION_CAP, &DeviceSettingDataProfile4::onGetQuaternionCap },
@@ -483,6 +483,7 @@ GF_RET_CODE DeviceSettingDataProfile4::switchService(DeviceService service)
 GF_RET_CODE DeviceSettingDataProfile4::setDataNotifSwitch(DataNotifFlags flags)
 {
 	GF_LOGD("%s: flags = 0x%8.8X", __FUNCTION__, flags);
+	mCfgApplying.dataFlags = flags;
 	const GF_UINT8 length = 5;
 	GF_UINT8 data[length];
 	data[0] = CMD_SET_DATA_NOTIF_SWITCH;
@@ -515,73 +516,129 @@ GF_RET_CODE DeviceSettingDataProfile4::packageIdControl(PackageControlType type)
 	GF_UINT8 data[length];
 	data[0] = CMD_PACKAGE_ID_CONTROL;
 	data[1] = (type == PackageControlType::Enable ? 0x01 : 0x00);
+	mCfgApplying.pkgIdCtrl = type;
 	return sendCommand(length, data);
 }
 
 // C.7
-GF_RET_CODE DeviceSettingDataProfile4::getAccelerateCap(GF_UINT32& maxSampleRateHz,
-	GF_UINT32& maxScaleRage_g, GF_UINT32& maxPackageDataLength) {
+GF_RET_CODE DeviceSettingDataProfile4::getAccelerateCap(GF_UINT16& maxSampleRateHz,
+	GF_UINT8& maxScaleRange_g, GF_UINT8& maxPackageDataLength) {
 	return GF_RET_CODE::GF_ERROR_NOT_SUPPORT;
 }
 // C.7
-GF_RET_CODE DeviceSettingDataProfile4::setAccelerateConfig(GF_UINT32 sampleRateHz,
-	GF_UINT32 fullScaleRage_g, GF_UINT32 packageDataLength) {
+GF_RET_CODE DeviceSettingDataProfile4::setAccelerateConfig(GF_UINT16 sampleRateHz,
+	GF_UINT8 fullScaleRange_g, GF_UINT8 packageDataLength) {
+	GF_LOGD("%s: sample rate = %u(Hz), full scale range = %u(g), package data length = %u(bytes)",
+		__FUNCTION__, sampleRateHz, fullScaleRange_g, packageDataLength);
+	const GF_UINT8 length = 5;
+	GF_UINT8 data[length];
+	data[0] = CMD_SET_ACCELERATE_CONFIG;
+	data[1] = (GF_UINT8)(sampleRateHz);
+	data[2] = (GF_UINT8)(sampleRateHz >> 8);
+	data[3] = fullScaleRange_g;
+	data[4] = packageDataLength;
+	GF_UINT32 value;
+	memcpy(&value, &(data[1]), 4);
+	mCfgApplying.accelerateCfg = value;
+	return sendCommand(length, data);
+}
+// C.8
+GF_RET_CODE DeviceSettingDataProfile4::getGyroscopeCap(GF_UINT16& maxSampleRateHz,
+	GF_UINT16& maxScaleRange_dps, GF_UINT8& maxPackageDataLength) {
 	return GF_RET_CODE::GF_ERROR_NOT_SUPPORT;
 }
 // C.8
-GF_RET_CODE DeviceSettingDataProfile4::getGyroscopeCap(GF_UINT32& maxSampleRateHz,
-	GF_UINT32& maxScaleRage_dps, GF_UINT32& maxPackageDataLength) {
-	return GF_RET_CODE::GF_ERROR_NOT_SUPPORT;
+GF_RET_CODE DeviceSettingDataProfile4::setGyroscopeConfig(GF_UINT16 sampleRateHz,
+	GF_UINT16 fullScaleRange_dps, GF_UINT8 packageDataLength) {
+	GF_LOGD("%s: sample rate = %u(Hz), full scale range = %u(g), package data length = %u(bytes)",
+		__FUNCTION__, sampleRateHz, fullScaleRange_dps, packageDataLength);
+	const GF_UINT8 length = 6;
+	GF_UINT8 data[length];
+	data[0] = CMD_SET_GYROSCOPE_CONFIG;
+	data[1] = (GF_UINT8)(sampleRateHz);
+	data[2] = (GF_UINT8)(sampleRateHz >> 8);
+	data[3] = (GF_UINT8)(fullScaleRange_dps);
+	data[4] = (GF_UINT8)(fullScaleRange_dps >> 8);
+	data[5] = packageDataLength;
+	GF_UINT32 hvalue;
+	memcpy(&hvalue, &(data[1]), 4);
+	GF_UINT64 value = (((GF_UINT64)hvalue) << 32) | packageDataLength;
+	mCfgApplying.gyroscopeCfg = value;
+	return sendCommand(length, data);
 }
-// C.8
-GF_RET_CODE DeviceSettingDataProfile4::getGyroscopeConfig(GF_UINT32 sampleRateHz,
-	GF_UINT32 fullScaleRage_dps, GF_UINT32 packageDataLength) {
+// C.9
+GF_RET_CODE DeviceSettingDataProfile4::getMagnetometerCap(GF_UINT16& maxSampleRateHz,
+	GF_UINT16& maxScaleRange_uT, GF_UINT8& maxPackageDataLength) {
 	return GF_RET_CODE::GF_ERROR_NOT_SUPPORT;
 }
 // C.9
-GF_RET_CODE DeviceSettingDataProfile4::getMagnetometerCap(GF_UINT32& maxSampleRateHz,
-	GF_UINT32& maxScaleRage_uT, GF_UINT32& maxPackageDataLength) {
-	return GF_RET_CODE::GF_ERROR_NOT_SUPPORT;
-}
-// C.9
-GF_RET_CODE DeviceSettingDataProfile4::getMagnetometerConfig(GF_UINT32 sampleRateHz,
-	GF_UINT32 fullScaleRage_uT, GF_UINT32 packageDataLength) {
-	return GF_RET_CODE::GF_ERROR_NOT_SUPPORT;
+GF_RET_CODE DeviceSettingDataProfile4::setMagnetometerConfig(GF_UINT16 sampleRateHz,
+	GF_UINT16 fullScaleRange_uT, GF_UINT8 packageDataLength) {
+	GF_LOGD("%s: sample rate = %u(Hz), full scale range = %u(g), package data length = %u(bytes)",
+		__FUNCTION__, sampleRateHz, fullScaleRange_uT, packageDataLength);
+	const GF_UINT8 length = 6;
+	GF_UINT8 data[length];
+	data[0] = CMD_SET_MAGNETOMETER_CONFIG;
+	data[1] = (GF_UINT8)(sampleRateHz);
+	data[2] = (GF_UINT8)(sampleRateHz >> 8);
+	data[3] = (GF_UINT8)(fullScaleRange_uT);
+	data[4] = (GF_UINT8)(fullScaleRange_uT >> 8);
+	data[5] = packageDataLength;
+	GF_UINT32 hvalue;
+	memcpy(&hvalue, &(data[1]), 4);
+	GF_UINT64 value = (((GF_UINT64)hvalue) << 32) | packageDataLength;
+	mCfgApplying.magnetometerCfg = value;
+	return sendCommand(length, data);
 }
 // C.10
-GF_RET_CODE DeviceSettingDataProfile4::getEulerangleCap(GF_UINT32& maxSampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+GF_RET_CODE DeviceSettingDataProfile4::getEulerangleCap(GF_UINT16& maxSampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 // C.10
-GF_RET_CODE DeviceSettingDataProfile4::setEulerangleConfig(GF_UINT32 sampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+GF_RET_CODE DeviceSettingDataProfile4::setEulerangleConfig(GF_UINT16 sampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 // C.11
-GF_RET_CODE DeviceSettingDataProfile4::getQuaternionCap(GF_UINT32& maxSampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+GF_RET_CODE DeviceSettingDataProfile4::getQuaternionCap(GF_UINT16& maxSampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 // C.11
-GF_RET_CODE DeviceSettingDataProfile4::setQuaternionConfig(GF_UINT32 sampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+GF_RET_CODE DeviceSettingDataProfile4::setQuaternionConfig(GF_UINT16 sampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 // C.12
-GF_RET_CODE DeviceSettingDataProfile4::getRotationMatrixCap(GF_UINT32& maxSampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+GF_RET_CODE DeviceSettingDataProfile4::getRotationMatrixCap(GF_UINT16& maxSampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 // C.12
-GF_RET_CODE DeviceSettingDataProfile4::setRotationMatrixConfig(GF_UINT32 sampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+GF_RET_CODE DeviceSettingDataProfile4::setRotationMatrixConfig(GF_UINT16 sampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 // C.13
 GF_RET_CODE DeviceSettingDataProfile4::getGestureCap(GF_UINT32& number, Gesture* supportedGesture, GF_UINT32 dataSize) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 // C.13
 GF_RET_CODE DeviceSettingDataProfile4::setGestureConfig(GF_UINT32 number, Gesture interestingGesture[]) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 // C.14
-GF_RET_CODE DeviceSettingDataProfile4::getEMGRawDataCap(GF_UINT32& maxSampleRateHz,
-	EMGRowDataChannels& supportedChannels, GF_UINT32& maxPackageDataLength) {
+GF_RET_CODE DeviceSettingDataProfile4::getEMGRawDataCap(GF_UINT16& maxSampleRateHz,
+	EMGRowDataChannels& supportedChannels, GF_UINT8& maxPackageDataLength) {
 	return GF_RET_CODE::GF_ERROR_NOT_SUPPORT;
 }
 // C.14
-GF_RET_CODE DeviceSettingDataProfile4::setEMGRawDataConfig(GF_UINT32 sampleRateHz,
-	EMGRowDataChannels interestingChannels, GF_UINT32 packageDataLength) {
-	return GF_RET_CODE::GF_ERROR_NOT_SUPPORT;
+GF_RET_CODE DeviceSettingDataProfile4::setEMGRawDataConfig(GF_UINT16 sampleRateHz,
+	EMGRowDataChannels interestingChannels, GF_UINT8 packageDataLength)
+{
+	GF_LOGD("%s: sample rate = %u(Hz), channels = %u, package data length = %u(bytes)",
+		__FUNCTION__, sampleRateHz, interestingChannels, packageDataLength);
+	const GF_UINT8 length = 6;
+	GF_UINT8 data[length];
+	data[0] = CMD_SET_EMG_RAWDATA_CONFIG;
+	data[1] = (GF_UINT8)(sampleRateHz);
+	data[2] = (GF_UINT8)(sampleRateHz >> 8);
+	data[3] = (GF_UINT8)(interestingChannels);
+	data[4] = (GF_UINT8)(interestingChannels >> 8);
+	data[5] = packageDataLength;
+	GF_UINT32 hvalue;
+	memcpy(&hvalue, &(data[1]), 4);
+	GF_UINT64 value = (((GF_UINT64)hvalue) << 32) | packageDataLength;
+	mCfgApplying.magnetometerCfg = value;
+	return sendCommand(length, data);
 }
 // C.15
-GF_RET_CODE DeviceSettingDataProfile4::getMouseDataCap(GF_UINT32& maxSampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+GF_RET_CODE DeviceSettingDataProfile4::getMouseDataCap(GF_UINT16& maxSampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 // C.15
-GF_RET_CODE DeviceSettingDataProfile4::setMouseDataConfig(GF_UINT32 sampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+GF_RET_CODE DeviceSettingDataProfile4::setMouseDataConfig(GF_UINT16 sampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 // C.16
-GF_RET_CODE DeviceSettingDataProfile4::getJoystickDataCap(GF_UINT32& maxSampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+GF_RET_CODE DeviceSettingDataProfile4::getJoystickDataCap(GF_UINT16& maxSampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 // C.16
-GF_RET_CODE DeviceSettingDataProfile4::setJoystickDataConfig(GF_UINT32 sampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+GF_RET_CODE DeviceSettingDataProfile4::setJoystickDataConfig(GF_UINT16 sampleRateHz) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 // C.17
 GF_RET_CODE DeviceSettingDataProfile4::getDeviceStatusCap(DeviceStatusFlags& flags) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 // C.17
@@ -593,7 +650,7 @@ GF_RET_CODE DeviceSettingDataProfile4::setDeviceStatusConfig(DeviceStatusFlags f
 
 tstring DeviceSettingDataProfile4::getStringCommon(GF_UINT8 length, GF_PUINT8 data)
 {
-	unique_ptr<char[]> up(new char[length + 1]);
+	unique_ptr<char[]> up = make_unique<char[]>(length + 1);
 	char* str = up.get();
 	memcpy(str, data, length);
 	str[length] = '\0';
@@ -691,9 +748,32 @@ void DeviceSettingDataProfile4::onManufacturerName(GF_UINT8 retval, GF_UINT8 len
 	mRespHandle(mDevice.lock(), ResponseType::RESP_GET_DEVICE_INFO, ResponseResult::RREST_SUCCESS, 0, 0, 0, 0);
 }
 void DeviceSettingDataProfile4::onSendTrainingModelData(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
+
+#define MTU_DEFAULT (23)
+#define MTU_HEAD_LENGTH (4)
+#define MTU_QUATERNION (16)
+#define MTU_ROTATIONMATRIX (32)
+#define DNF_MTU_ENLARGE_CFG		(DeviceSetting::DNF_ACCELERATE |	\
+								DeviceSetting::DNF_GYROSCOPE |		\
+								DeviceSetting::DNF_MAGNETOMETER |	\
+								DeviceSetting::DNF_ROTATIONMATRIX |	\
+								DeviceSetting::DNF_EMG_RAW)
+
 void DeviceSettingDataProfile4::onSetDataNotifSwitch(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data)
 {
 	GF_LOGD("%s, retval = %u", __FUNCTION__, retval);
+	if (retval == RC_SUCCESS)
+	{
+		auto applied = mCfgApplying.dataFlags.load();
+		auto previous = mCfg.dataFlags.load();
+		mCfg.dataFlags = applied;
+		// check if need to re-config MTU size
+		if ((applied & DNF_MTU_ENLARGE_CFG) !=
+			(previous & DNF_MTU_ENLARGE_CFG))
+		{
+			configMtuSize();
+		}
+	}
 	mRespHandle(mDevice.lock(), ResponseType::RESP_SET_DATA_NOTIF_SWITCH, responseConvert(retval), 0, 0, 0, 0);
 }
 void DeviceSettingDataProfile4::onGetBatteryLevel(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
@@ -706,14 +786,67 @@ void DeviceSettingDataProfile4::onLedControl(GF_UINT8 retval, GF_UINT8 length, G
 void DeviceSettingDataProfile4::onPackageIdControl(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data)
 {
 	GF_LOGD("%s, retval = %u", __FUNCTION__, retval);
+	if (retval == RC_SUCCESS)
+	{
+		auto applied = mCfgApplying.pkgIdCtrl.load();
+		auto previous = mCfg.pkgIdCtrl.load();
+		mCfg.pkgIdCtrl = applied;
+		// check if need to re-config MTU size
+		if (applied != previous)
+		{
+			configMtuSize();
+		}
+	}
 	mRespHandle(mDevice.lock(), ResponseType::RESP_PACKAGE_ID_CONTROL, responseConvert(retval), 0, 0, 0, 0);
 }
 void DeviceSettingDataProfile4::onGetAccelerateCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
-void DeviceSettingDataProfile4::onSetAccelerateConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
+void DeviceSettingDataProfile4::onSetAccelerateConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data)
+{
+	GF_LOGD("%s, retval = %u", __FUNCTION__, retval);
+	if (retval == RC_SUCCESS)
+	{
+		auto applied = mCfgApplying.accelerateCfg.load();
+		mCfg.accelerateCfg = applied;
+		// check if need to re-config MTU size
+		if (mCfg.dataFlags & DataNotifFlags::DNF_ACCELERATE)
+		{
+			configMtuSize();
+		}
+	}
+	mRespHandle(mDevice.lock(), ResponseType::RESP_SET_ACCELERATE_CONFIG, responseConvert(retval), 0, 0, 0, 0);
+}
 void DeviceSettingDataProfile4::onGetGyroscopeCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
-void DeviceSettingDataProfile4::onGetGyroscopeConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
+void DeviceSettingDataProfile4::onSetGyroscopeConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data)
+{
+	GF_LOGD("%s, retval = %u", __FUNCTION__, retval);
+	if (retval == RC_SUCCESS)
+	{
+		auto applied = mCfgApplying.gyroscopeCfg.load();
+		mCfg.gyroscopeCfg = applied;
+		// check if need to re-config MTU size
+		if (mCfg.dataFlags & DataNotifFlags::DNF_GYROSCOPE)
+		{
+			configMtuSize();
+		}
+	}
+	mRespHandle(mDevice.lock(), ResponseType::RESP_SET_GYROSCOPE_CONFIG, responseConvert(retval), 0, 0, 0, 0);
+}
 void DeviceSettingDataProfile4::onGetMagnetometerCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
-void DeviceSettingDataProfile4::onGetMagnetometerConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
+void DeviceSettingDataProfile4::onSetMagnetometerConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data)
+{
+	GF_LOGD("%s, retval = %u", __FUNCTION__, retval);
+	if (retval == RC_SUCCESS)
+	{
+		auto applied = mCfgApplying.magnetometerCfg.load();
+		mCfg.magnetometerCfg = applied;
+		// check if need to re-config MTU size
+		if (mCfg.dataFlags & DataNotifFlags::DNF_MAGNETOMETER)
+		{
+			configMtuSize();
+		}
+	}
+	mRespHandle(mDevice.lock(), ResponseType::RESP_SET_MAGNETOMETER_CONFIG	, responseConvert(retval), 0, 0, 0, 0);
+}
 void DeviceSettingDataProfile4::onGetEulerangleCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
 void DeviceSettingDataProfile4::onSetEulerangleConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
 void DeviceSettingDataProfile4::onGetQuaternionCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
@@ -723,10 +856,77 @@ void DeviceSettingDataProfile4::onSetRotationMatrixConfig(GF_UINT8 retval, GF_UI
 void DeviceSettingDataProfile4::onGetGestureCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
 void DeviceSettingDataProfile4::onSetGestureConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
 void DeviceSettingDataProfile4::onGetEMGRawDataCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
-void DeviceSettingDataProfile4::onSetEMGRawDataConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
+void DeviceSettingDataProfile4::onSetEMGRawDataConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data)
+{
+	GF_LOGD("%s, retval = %u", __FUNCTION__, retval);
+	if (retval == RC_SUCCESS)
+	{
+		auto applied = mCfgApplying.emgrawCfg.load();
+		mCfg.emgrawCfg = applied;
+		// check if need to re-config MTU size
+		if (mCfg.dataFlags & DataNotifFlags::DNF_EMG_RAW)
+		{
+			configMtuSize();
+		}
+	}
+	mRespHandle(mDevice.lock(), ResponseType::RESP_SET_EMG_RAWDATA_CONFIG, responseConvert(retval), 0, 0, 0, 0);
+}
 void DeviceSettingDataProfile4::onGetMouseDataCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
 void DeviceSettingDataProfile4::onSetMouseDataConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
 void DeviceSettingDataProfile4::onGetJoystickDataCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
 void DeviceSettingDataProfile4::onSetJoystickDataConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
 void DeviceSettingDataProfile4::onGetDeviceStatusCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
 void DeviceSettingDataProfile4::onSetDeviceStatusConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
+
+void DeviceSettingDataProfile4::resetConfig()
+{
+	mCfg.dataFlags = mCfgApplying.dataFlags = DataNotifFlags::DNF_OFF;
+	mCfg.accelerateCfg = mCfgApplying.accelerateCfg = 0;
+	mCfg.gyroscopeCfg = mCfgApplying.gyroscopeCfg = 0;
+	mCfg.magnetometerCfg = mCfgApplying.magnetometerCfg = 0;
+	mCfg.emgrawCfg = mCfgApplying.emgrawCfg = 0;
+}
+
+void DeviceSettingDataProfile4::configMtuSize()
+{
+	auto flags = mCfg.dataFlags.load();
+	// MTU_QUATERNION is the most large one in numbers that smaller than (MTU_DEFAULT-MTU_HEAD_LENGTH-PACKAGEID_BYTE)
+	GF_UINT16 payloadLength = MTU_QUATERNION;
+	// calculate new MTU size
+	if (flags & DeviceSetting::DNF_ACCELERATE)
+	{
+		if (((GF_UINT8)mCfg.accelerateCfg) > payloadLength)
+			payloadLength = (GF_UINT8)mCfg.accelerateCfg;
+	}
+	if (flags & DeviceSetting::DNF_GYROSCOPE)
+	{
+		if (((GF_UINT8)mCfg.gyroscopeCfg) > payloadLength)
+			payloadLength = (GF_UINT8)mCfg.gyroscopeCfg;
+	}
+	if (flags & DeviceSetting::DNF_MAGNETOMETER)
+	{
+		if (((GF_UINT8)mCfg.magnetometerCfg) > payloadLength)
+			payloadLength = (GF_UINT8)mCfg.magnetometerCfg;
+	}
+	if (flags & DeviceSetting::DNF_ROTATIONMATRIX)
+	{
+		if (payloadLength < MTU_ROTATIONMATRIX)
+			payloadLength = MTU_ROTATIONMATRIX;
+	}
+	if (flags & DeviceSetting::DNF_EMG_RAW)
+	{
+		if (((GF_UINT8)mCfg.emgrawCfg) > payloadLength)
+			payloadLength = (GF_UINT8)mCfg.emgrawCfg;
+	}
+	if (PackageControlType::Enable == mCfg.pkgIdCtrl)
+		payloadLength += 1;
+
+	payloadLength += MTU_HEAD_LENGTH;
+
+	GF_UINT16 mtusize = MTU_DEFAULT;
+	if (payloadLength > mtusize)
+		mtusize = payloadLength;
+	auto dev = mDevice.lock();
+	if (nullptr != dev)
+		dev->configMtuSize(mtusize);
+}

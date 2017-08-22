@@ -28,8 +28,8 @@
  * DAMAGE.
  *
  */
-// NativeTestApp.cpp : Defines the entry point for the console application.
-//
+ // NativeTestApp.cpp : Defines the entry point for the console application.
+ //
 #include "stdafx.h"
 
 #define TAG "NativeTestApp"
@@ -161,8 +161,8 @@ class HubListenerImp : public HubListener
 		auto ds = ptr->getDeviceSetting();
 		if (nullptr != ds)
 			ds->registerResponseHandle(
-			[](SPDEVICE device, ResponseType resp, ResponseResult result,
-			GF_UINT32 param0, GF_UINT32 param1, GF_UINT32 param2, GF_UINT32 param3) {
+				[](SPDEVICE device, ResponseType resp, ResponseResult result,
+					GF_UINT32 param0, GF_UINT32 param1, GF_UINT32 param2, GF_UINT32 param3) {
 			string name;
 			if (nullptr != device)
 				name = utils::tostring(device->getName());
@@ -238,6 +238,13 @@ class HubListenerImp : public HubListener
 		GF_LOGD("ThreadId: %s: %s: Gesture position re-centered. device = %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
 	}
+	virtual void onExtendDeviceData(WPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data) override
+	{
+		//auto ptr = device.lock();
+		//GF_LOGD("ThreadId: %s: %s: device = %s, dataType = %u, length = %u, first byte: %2.2X, last byte: %2.2X", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
+		//	(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()), static_cast<GF_UINT32>(dataType),
+		//	dataLength, data[0], data[dataLength -1]);
+	}
 
 private:
 	chrono::system_clock::time_point mLastPrinted = chrono::system_clock::now();
@@ -253,9 +260,9 @@ bool enumDevice(WPDEVICE dev)
 	}
 	else
 	{
-		GF_LOGI("Dev: addrtype: %u, address: %s, name: %s, connstatus: %u, position:%u",
+		GF_LOGI("Dev: addrtype: %u, address: %s, name: %s, connstatus: %u, alias:%s",
 			sp->getAddrType(), utils::tostring(sp->getAddress()).c_str(), utils::tostring(sp->getName()).c_str(),
-			static_cast<GF_UINT>(sp->getConnectionStatus()), static_cast<GF_UINT>(sp->getPosition()));
+			static_cast<GF_UINT>(sp->getConnectionStatus()), utils::tostring(sp->getAlias()).c_str());
 		listDev.push_back(sp);
 	}
 
@@ -372,10 +379,14 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 		{
 			if (DeviceConnectionStatus::Connected == itor->getConnectionStatus())
 			{
+				tstring str;
+				GF_LOGD("Address type: %u", itor->getAddrType());
+				GF_LOGD("Address: %s", utils::tostring(itor->getAddress()).c_str());
+				GF_LOGD("Name: %s", utils::tostring(itor->getName()).c_str());
+				GF_LOGD("Rssi: %u", itor->getRssi());
 				auto ds = itor->getDeviceSetting();
 				if (nullptr != ds)
 				{
-					tstring str;
 					GF_UINT32 featuremap = 0;
 					ds->getProtocolVer(str);
 					GF_LOGD("%s", utils::tostring(str).c_str());
@@ -418,8 +429,9 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 					{
 						flags = (DeviceSetting::DataNotifFlags)
 							(DeviceSetting::DNF_QUATERNION
-							| DeviceSetting::DNF_EMG_GESTURE
-							| DeviceSetting::DNF_DEVICE_STATUS);
+								| DeviceSetting::DNF_EMG_GESTURE
+								| DeviceSetting::DNF_DEVICE_STATUS
+								| DeviceSetting::DNF_ROTATIONMATRIX);
 					}
 					ds->setDataNotifSwitch(flags);
 					exec = true;

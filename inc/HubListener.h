@@ -129,6 +129,12 @@ namespace gf
         ///     quaternion). Please also see <a href="https://support.google.com/daydream/answer/7184599?hl=en">Google Daydram - Re-center your view & cursor</a>
 		virtual void onReCenter(WPDEVICE device) {}
 
+		/// \brief This callback is called when the extend data is recevied
+		/// \param device The Pointer to the Device.
+		/// \param dataType The data type carried
+		/// \param data The data buffer managed by reference
+		virtual void onExtendDeviceData(WPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, std::unique_ptr<GF_UINT8[]> data) {}
+
 		virtual ~HubListener() {}
 	};
 }
