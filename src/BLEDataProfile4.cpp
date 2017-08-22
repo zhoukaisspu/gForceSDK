@@ -160,7 +160,7 @@ gfsPtr<DeviceSetting> BLEDataProfile4::getDeviceSetting()
 void BLEDataProfile4::sendExtendData(BLEDevice& device, DeviceDataType dataType, GF_UINT8 length, GF_PUINT8 data)
 {
 	// TODO: frequently allocate memory causes memory fragmentation
-	unique_ptr<GF_UINT8[]> up = make_unique<GF_UINT8[]>(length);
+	unique_ptr<GF_UINT8[]> up(new GF_UINT8[length]);
 	auto p = up.get();
 	memcpy(p, data, length);
 	device.getHub().notifyExtendData(device, dataType, length, move(up));

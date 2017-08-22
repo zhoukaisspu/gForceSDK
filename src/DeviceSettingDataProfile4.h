@@ -211,12 +211,20 @@ namespace gf
 
 		struct Config
 		{
-			atomic<PackageControlType> pkgIdCtrl = PackageControlType::Disable;
-			atomic<DataNotifFlags> dataFlags = DataNotifFlags::DNF_OFF;
-			atomic<GF_UINT32> accelerateCfg = 0;
-			atomic<GF_UINT64> gyroscopeCfg = 0;
-			atomic<GF_UINT64> magnetometerCfg = 0;
-			atomic<GF_UINT64> emgrawCfg = 0;
+			Config()
+				: pkgIdCtrl(PackageControlType::Disable)
+				, dataFlags(DataNotifFlags::DNF_OFF)
+				, accelerateCfg(0)
+				, gyroscopeCfg(0)
+				, magnetometerCfg(0)
+				, emgrawCfg(0)
+			{}
+			atomic<PackageControlType> pkgIdCtrl;
+			atomic<DataNotifFlags> dataFlags;
+			atomic<GF_UINT32> accelerateCfg;
+			atomic<GF_UINT64> gyroscopeCfg;
+			atomic<GF_UINT64> magnetometerCfg;
+			atomic<GF_UINT64> emgrawCfg;
 		} mCfg, mCfgApplying;
 
 	public:

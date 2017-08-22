@@ -36,7 +36,7 @@ using namespace std;
 using namespace gf;
 
 mutex HubManagerImpl::mMutex;
-atomic<Hub*> HubManagerImpl::mTheHub;
+atomic<Hub*> HubManagerImpl::mTheHub(nullptr);
 gfsPtr<Hub> HubManagerImpl::mTheSharedPtr;
 
 gfsPtr<Hub> HubManagerImpl::getHubInstanceImpl(const tstring& sIdentifier)

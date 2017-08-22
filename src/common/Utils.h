@@ -73,7 +73,7 @@ namespace gf {
 			size_t convertedChars = 0;
 			GF_SIZE len = str.size() * 2 + 1;
 			//string curLocale = setlocale(LC_CTYPE, "");
-			unique_ptr<wchar_t[]> up = make_unique<wchar_t[]>(len);
+			unique_ptr<wchar_t[]> up(new wchar_t[len]);
 			wchar_t* p = up.get();
 			p[len - 1] = L'\0';
 #ifdef WIN32
@@ -98,7 +98,7 @@ namespace gf {
 			size_t convertedChars = 0;
 			GF_SIZE len = wstr.size() * 4;
 			//string curLocale = setlocale(LC_CTYPE, "");
-			unique_ptr<char[]> up = make_unique<char[]>(len + 1);
+			unique_ptr<char[]> up(new char[len + 1]);
 			char* p = up.get();
 			p[len] = '\0';
 #ifdef WIN32
@@ -130,7 +130,7 @@ namespace gf {
 			if (nullptr == addr)
 				return string();
 			GF_SIZE alloclen = len*(3) + 1;
-			unique_ptr<char[]> up = make_unique<char[]>(alloclen);
+			unique_ptr<char[]> up(new char[alloclen]);
 			char* str = up.get();
 			for (GF_SIZE i = 0; i < len; ++i)
 			{

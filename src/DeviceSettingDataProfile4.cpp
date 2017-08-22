@@ -650,7 +650,7 @@ GF_RET_CODE DeviceSettingDataProfile4::setDeviceStatusConfig(DeviceStatusFlags f
 
 tstring DeviceSettingDataProfile4::getStringCommon(GF_UINT8 length, GF_PUINT8 data)
 {
-	unique_ptr<char[]> up = make_unique<char[]>(length + 1);
+	unique_ptr<char[]> up(new char[length + 1]);
 	char* str = up.get();
 	memcpy(str, data, length);
 	str[length] = '\0';
@@ -845,7 +845,7 @@ void DeviceSettingDataProfile4::onSetMagnetometerConfig(GF_UINT8 retval, GF_UINT
 			configMtuSize();
 		}
 	}
-	mRespHandle(mDevice.lock(), ResponseType::RESP_SET_MAGNETOMETER_CONFIG	, responseConvert(retval), 0, 0, 0, 0);
+	mRespHandle(mDevice.lock(), ResponseType::RESP_SET_MAGNETOMETER_CONFIG, responseConvert(retval), 0, 0, 0, 0);
 }
 void DeviceSettingDataProfile4::onGetEulerangleCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
 void DeviceSettingDataProfile4::onSetEulerangleConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data) {}
