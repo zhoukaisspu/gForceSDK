@@ -92,6 +92,7 @@ namespace gf
 
 	private:
 		gfsPtr<DeviceSettingDataProfile4> mDevSetting;
+		GF_UINT16 mPackageIds[DT_MAX];
 	};
 
 }

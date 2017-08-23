@@ -35,11 +35,14 @@
 
 using namespace gf;
 
-#if (defined(DEBUG) || defined(_DEBUG)) && defined(DEBUG_ANALYSE_PACKAGE_LOST)
-atomic<GF_UINT32> GForceDevice::dataCnt = 0;
-atomic<GF_UINT32> GForceDevice::lastUpdated = 0;
-thread GForceDevice::dbgThread;
-void GForceDevice::timefun()
+#if defined(DEBUG_ANALYSE_PACKAGE_LOST)
+#ifndef WIN32
+#include <unistd.h>
+#endif
+atomic<GF_UINT32> SimpleProfile::dataCnt(0);
+atomic<GF_UINT32> SimpleProfile::lastUpdated(0);
+thread SimpleProfile::dbgThread;
+void SimpleProfile::timefun()
 {
 	bool loop = true;
 	while (loop)
@@ -78,7 +81,7 @@ void SimpleProfile::onData(GF_UINT8 length, GF_PUINT8 data)
 	}
 	offset += 2;
 
-#if (defined(DEBUG) || defined(_DEBUG)) && defined(DEBUG_ANALYSE_PACKAGE_LOST)
+#if defined(DEBUG_ANALYSE_PACKAGE_LOST)
 	if (!dbgThread.joinable())
 		dbgThread = thread(SimpleProfile::timefun);
 	dataCnt++;
@@ -90,6 +93,7 @@ void SimpleProfile::onData(GF_UINT8 length, GF_PUINT8 data)
 	GF_UINT16 currPackageId = INVALID_PACKAGE_ID;
 	GF_PUINT8 payload = nullptr;
 
+	BLEDevice& ref = *device.get();
 	if (packageIdFlag != 0)
 	{
 		currPackageId = data[offset++];
@@ -107,16 +111,16 @@ void SimpleProfile::onData(GF_UINT8 length, GF_PUINT8 data)
 				mPackageId = 0;
 			if (mPackageId != currPackageId)
 			{
-#if (defined(DEBUG) || defined(_DEBUG)) && defined(DEBUG_ANALYSE_PACKAGE_LOST)
-				GF_LOGE("%s:%s: package id error. id is supposed to be %u, but now is %u, gap is %u", __FUNCTION__,
-					utils::tostring(getName()).c_str(), mPackageId, currPackageId, (GF_UINT8)(currPackageId - mPackageId));
-#endif
+//#if defined(DEBUG_ANALYSE_PACKAGE_LOST)
+				GF_LOGE("%s:%s: package id error. expect %u, but %u, gap %u", __FUNCTION__,
+					utils::tostring(ref.getName()).c_str(), mPackageId,
+					currPackageId, (GF_UINT8)(currPackageId - mPackageId));
+//#endif
 				mPackageId = currPackageId;
 			}
 		}
 	}
 
-	BLEDevice& ref = *device.get();
 	payload = &data[offset];
 	switch (evtType)
 	{

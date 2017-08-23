@@ -305,6 +305,11 @@ GF_RET_CODE BLEDevice::configMtuSize(GF_UINT16 mtuSize)
 	GF_RET_CODE ret = GF_RET_CODE::GF_ERROR_BAD_STATE;
 	if (mHandle != INVALID_HANDLE)
 	{
+		if (mMTUsize == mtuSize)
+		{
+			GF_LOGD("mtusize is not changed. %u", mMTUsize);
+			return GF_RET_CODE::GF_SUCCESS;
+		}
 		ret = mHub.configMtuSize(*this, mtuSize);
 	}
 	return ret;

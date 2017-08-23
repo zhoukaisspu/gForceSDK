@@ -37,6 +37,8 @@ using namespace gf;
 BLEDataProfile4::BLEDataProfile4(gfwPtr<BLEDevice> device)
 	: DeviceProfile(device)
 {
+	for (auto i : mPackageIds)
+		i = INVALID_PACKAGE_ID;
 }
 
 BLEDataProfile4::~BLEDataProfile4()
@@ -65,26 +67,34 @@ void BLEDataProfile4::onData(GF_UINT8 length, GF_PUINT8 data)
 	GF_UINT8 dataType = dataHeader & EVENT_MASK;
 	GF_UINT8 packageIdFlag = (dataHeader >> 7) & PCKID_FLAG_MASK;
 
+	if (dataType >= DT_MAX)
+	{
+		GF_LOGE("Unknown data type: 0x%2.2X", dataType);
+		return;
+	}
+
 	GF_UINT16 currPackageId = INVALID_PACKAGE_ID;
 	if (packageIdFlag != 0)
 	{
 		currPackageId = data[offset++];
 
 		lock_guard<mutex> lock(device->getLockable());
-		if (mPackageId == INVALID_PACKAGE_ID)
+		auto& lastPackageId = mPackageIds[dataType];
+		if (lastPackageId == INVALID_PACKAGE_ID)
 		{
-			mPackageId = currPackageId;
+			lastPackageId = currPackageId;
 		}
 		else
 		{
-			++mPackageId;
-			if (mPackageId > 0xFF)
-				mPackageId = 0;
-			if (mPackageId != currPackageId)
+			++lastPackageId;
+			if (lastPackageId > 0xFF)
+				lastPackageId = 0;
+			if (lastPackageId != currPackageId)
 			{
-				GF_LOGE("%s:%s: package id error. id is supposed to be %u, but now is %u, gap is %u", __FUNCTION__,
-					utils::tostring(ref.getName()).c_str(), mPackageId, currPackageId, (GF_UINT8)(currPackageId - mPackageId));
-				mPackageId = currPackageId;
+				GF_LOGE("%s:%s: package id error. [%u] expect %u, but %u, gap %u", __FUNCTION__,
+					utils::tostring(ref.getName()).c_str(), dataType,
+					lastPackageId, currPackageId, (GF_UINT8)(currPackageId - lastPackageId));
+				lastPackageId = currPackageId;
 			}
 		}
 	}
@@ -117,7 +127,7 @@ void BLEDataProfile4::onData(GF_UINT8 length, GF_PUINT8 data)
 	case DT_DEVICESTATUS:
 		onDeviceStatusData(ref, lenPayload, payload); break;
 	default:
-		;//GF_LOGE("Unknown data type: 0x%2.2X", dataType);
+		;
 	}
 }
 

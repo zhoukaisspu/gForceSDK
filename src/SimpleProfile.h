@@ -42,7 +42,7 @@
 
 //#define DEBUG_ANALYSE_PACKAGE_LOST
 
-#if (defined(DEBUG) || defined(_DEBUG)) && defined(DEBUG_ANALYSE_PACKAGE_LOST)
+#if defined(DEBUG_ANALYSE_PACKAGE_LOST)
 #include <chrono>
 #include <atomic>
 #include <thread>
@@ -74,8 +74,9 @@ namespace gf
 		void onQuaternion(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data);
 		void onGesture(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data);
 		void onStatus(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data);
+		GF_UINT16 mPackageId = INVALID_PACKAGE_ID;
 
-#if (defined(DEBUG) || defined(_DEBUG)) && defined(DEBUG_ANALYSE_PACKAGE_LOST)
+#if defined(DEBUG_ANALYSE_PACKAGE_LOST)
 	private:
 		static atomic<GF_UINT32> dataCnt;
 		static atomic<GF_UINT32> lastUpdated;

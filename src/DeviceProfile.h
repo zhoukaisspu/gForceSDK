@@ -69,7 +69,6 @@ namespace gf
 
 	protected:
 		gfwPtr<BLEDevice> mDevice;
-		GF_UINT16 mPackageId = INVALID_PACKAGE_ID;
 	};
 
 }
