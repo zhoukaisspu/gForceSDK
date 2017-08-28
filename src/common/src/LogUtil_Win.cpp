@@ -29,9 +29,11 @@
  *
  */
 
+#include <Windows.h>
 #include "LogUtils.h"
 
 using namespace gf;
+using namespace std;
 
 #define GF_LOG_BUF_SIZE 1024
 
@@ -52,8 +54,12 @@ int win_log_print::print(GF_LOG_LEVEL level, const char* tag, const char* fmt, .
 
 	if (CURRENT_LOG_LEVEL > level)
 		return 0;
+	SYSTEMTIME st;
+	GetLocalTime(&st);
 
-	int offset = sprintf_s(buf, "[%c/%s]: ", LevelPrompt[level], tag);
+	int offset = sprintf_s(buf, "(%4.4u-%u-%u %u:%2.2u:%2.2u:%3.3u)[%c/%s]: ",
+		st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds,
+		LevelPrompt[level], tag);
 	if (offset < 0)
 		offset = 0;
 	va_start(ap, fmt);

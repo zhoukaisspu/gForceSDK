@@ -45,6 +45,7 @@ namespace gf {}
 #include "gfTypes.h"
 #include "Quaternion.h"
 #include "HubManager.h"
+#include "DeviceSetting.h"
 #include "HubListener.h"
 #include "Hub.h"
 #include "Device.h"

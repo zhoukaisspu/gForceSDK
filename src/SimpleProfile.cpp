@@ -216,6 +216,6 @@ void SimpleProfile::onStatus(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 	GF_UINT8 status = data[0] & EVENT_RECENTER_MASK;
 	if (1 == status)
 	{
-		device.getHub().notifyReCenter(device);
+		device.getHub().notifyDeviceStatusChanged(device, DeviceStatus::ReCenter);
 	}
 }

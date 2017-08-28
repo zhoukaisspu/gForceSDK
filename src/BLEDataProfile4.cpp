@@ -161,7 +161,6 @@ gfsPtr<DeviceSetting> BLEDataProfile4::getDeviceSetting()
 	if (nullptr == mDevSetting)
 	{
 		mDevSetting = make_shared<DeviceSettingDataProfile4>(device);
-		mDevSetting->initialize();
 	}
 
 	return mDevSetting;
@@ -284,8 +283,19 @@ void BLEDataProfile4::onDeviceStatusData(BLEDevice& device, GF_UINT8 length, GF_
 		return;
 
 	GF_UINT8 status = data[0];
-	if (DSE_RECENTER == status)
+	switch (status)
 	{
-		device.getHub().notifyReCenter(device);
+	case DSE_RECENTER:
+		device.getHub().notifyDeviceStatusChanged(device, DeviceStatus::ReCenter);
+		break;
+	case DSC_USBPLUGGED:
+		device.getHub().notifyDeviceStatusChanged(device, DeviceStatus::UsbPlugged);
+		break;
+	case DSC_USBPULLED:
+		device.getHub().notifyDeviceStatusChanged(device, DeviceStatus::UsbPulled);
+		break;
+	case DSC_MOTIONLESS:
+		device.getHub().notifyDeviceStatusChanged(device, DeviceStatus::Motionless);
+		break;
 	}
 }

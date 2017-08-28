@@ -60,9 +60,12 @@ namespace gf
 			DT_DEVICESTATUS,
 			DT_MAX
 		};
-		enum DeviceStatusEvent : GF_UINT32 {
-			DSE_INVALID = 0,
-			DSE_RECENTER,
+		enum DeviceStatusEvent : GF_UINT8 {
+			DSE_INVALID = 0x00,
+			DSE_RECENTER = 0x01,
+			DSC_USBPLUGGED = 0x02,
+			DSC_USBPULLED = 0x04,
+			DSC_MOTIONLESS = 0x08,
 			DSE_MAX
 		};
 	public:

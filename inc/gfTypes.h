@@ -171,6 +171,16 @@ namespace gf {
 		Undefined = 0xFF
 	};
 
+	/// \brief Device status notification of a gForce device
+	///
+	enum class DeviceStatus : GF_UINT8 {
+		None = 0,
+		ReCenter = 1,
+		UsbPlugged = 2,
+		UsbPulled = 3,
+		Motionless = 4,
+	};
+
 	/// \brief Possible Hub states
 	///
 	enum class HubState{

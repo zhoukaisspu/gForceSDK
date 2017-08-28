@@ -41,8 +41,9 @@ namespace gf
 		OADSetting(gfwPtr<BLEDevice> device)
 			: DeviceSettingHandle(device) {}
 	public:
-		virtual GF_RET_CODE oadUpgrade(FILE* file, function<void(GF_UINT32 percentage)> progress) override;
-		virtual void dispatchResponse(GF_UINT8 command, GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, bool timeout = false) override;
+		virtual GF_RET_CODE oadUpgrade(FILE* file, function<void(ResponseResult res, GF_UINT32 percentage)> progress) override;
+		virtual void dispatchResponse(GF_UINT8 command, GF_UINT8 retval, GF_UINT8 length,
+			GF_PUINT8 data, gfsPtr<void> cb, bool timeout = false) override;
 	};
 
 	class OADProfile :

@@ -43,7 +43,7 @@ namespace gf
 		VirtualDevice() {}
 		virtual GF_RET_CODE setAlias(tstring alias) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 		virtual tstring getAlias() const override {
-			return DevicePosition::Virtual;
+			return _T("");
 		}
 
 		// consider some real devices of this virtual device has been specialized

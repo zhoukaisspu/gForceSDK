@@ -47,14 +47,6 @@ TIMERMANAGER_STATIC_INSTANCE(SimpleTimer)
 DeviceSettingHandle::DeviceSettingHandle(gfwPtr<BLEDevice> device)
 	: mDevice(device)
 {
-	mRespHandle = [](SPDEVICE device, ResponseType resp, ResponseResult result,
-		GF_UINT32 param0, GF_UINT32 param1, GF_UINT32 param2, GF_UINT32 param3) {
-		string name;
-		if (nullptr != device)
-			name = utils::tostring(device->getName());
-		GF_LOGD("DefaultResponseHandle: device = %s, resp = %u, retval = %u, param = {%u - %u - %u - %u}",
-			name.c_str(), static_cast<GF_UINT32>(resp), static_cast<GF_UINT32>(result), param0, param1, param2, param3);
-	};
 }
 
 
@@ -62,14 +54,7 @@ DeviceSettingHandle::~DeviceSettingHandle()
 {
 }
 
-OnResponseHandle DeviceSettingHandle::registerResponseHandle(OnResponseHandle handle)
-{
-	auto old = mRespHandle;
-	mRespHandle = handle;
-	return old;
-}
-
-GF_RET_CODE DeviceSettingHandle::sendCommand(GF_UINT8 dataLen, GF_PUINT8 commandData, bool hasResponse)
+GF_RET_CODE DeviceSettingHandle::sendCommand(GF_UINT8 dataLen, GF_PUINT8 commandData, bool hasResponse, gfsPtr<void> cb)
 {
 	if (nullptr == commandData || 0 == dataLen)
 		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
@@ -129,7 +114,8 @@ GF_RET_CODE DeviceSettingHandle::sendCommand(GF_UINT8 dataLen, GF_PUINT8 command
 		return ret;
 
 	// if the command has response, store the expiration of this command
-	mExecutingList[command] = chrono::system_clock::now() + chrono::milliseconds(MAX_COMMAND_TIMEOUT);
+	mExecutingList[command].t = chrono::system_clock::now() + chrono::milliseconds(MAX_COMMAND_TIMEOUT);
+	mExecutingList[command].cb = cb;
 
 	updateTimer();
 
@@ -140,6 +126,7 @@ void DeviceSettingHandle::onResponse(GF_UINT8 length, GF_PUINT8 data)
 {
 	GF_UINT8 ret = 0xFF;
 	GF_UINT8 cmd = 0xFF;
+	gfsPtr<void> cb;
 	if (length >= 2)
 	{
 		ret = data[0];
@@ -156,11 +143,12 @@ void DeviceSettingHandle::onResponse(GF_UINT8 length, GF_PUINT8 data)
 			// not in list, do nothing
 			return;
 		}
+		cb = mExecutingList[cmd].cb;
 		mExecutingList.erase(cmd);
 		updateTimer();
 	}
 
-	dispatchResponse(cmd, ret, length - 2, length == 2 ? nullptr : data + 2);
+	dispatchResponse(cmd, ret, length - 2, length == 2 ? nullptr : data + 2, cb);
 }
 
 void DeviceSettingHandle::updateTimer()
@@ -176,8 +164,8 @@ void DeviceSettingHandle::updateTimer()
 	auto earliest = invalidpoint;
 	for (auto& itor : mExecutingList)
 	{
-		if (itor.second < earliest)
-			earliest = itor.second;
+		if (itor.second.t < earliest)
+			earliest = itor.second.t;
 	}
 	// if cannot find a reasonable time point, then stop timer
 	if (earliest == invalidpoint)
@@ -201,24 +189,26 @@ void DeviceSettingHandle::onTimer()
 	// auto now = chrono::steady_clock::now();
 	// use system_clock in android to prevent build error.
 	auto now = chrono::system_clock::now();
+	gfsPtr<void> cb;
 	GF_UINT8 command = 0xFF;
 	{
 		lock_guard<mutex> lock(mMutex);
 		for (auto& itor : mExecutingList)
 		{
-			if (itor.second < now)
+			if (itor.second.t < now)
 			{
 				// find one expired
 				//GF_LOGD("%s: command 0x%2.2X time out.", __FUNCTION__, itor.first);
 				command = itor.first;
 				// simply remove it and update timer
 				// other possible expired items will be handled next time
+				cb = mExecutingList[command].cb;
 				mExecutingList.erase(itor.first);
 				break;
 			}
 		}
 	}
 	if (command != 0xFF)
-		dispatchResponse(command, 0xFF, 0, nullptr, true);
+		dispatchResponse(command, 0xFF, 0, nullptr, cb, true);
 	updateTimer();
 }

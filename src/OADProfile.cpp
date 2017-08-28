@@ -33,13 +33,14 @@
 
 using namespace gf;
 
-GF_RET_CODE OADSetting::oadUpgrade(FILE* file, function<void(GF_UINT32 percentage)> progress)
+GF_RET_CODE OADSetting::oadUpgrade(FILE* file, function<void(ResponseResult res, GF_UINT32 percentage)> progress)
 {
 	GF_LOGD("%s coming", __FUNCTION__);
 	return GF_RET_CODE::GF_ERROR_NOT_SUPPORT;
 }
 
-void OADSetting::dispatchResponse(GF_UINT8 command, GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, bool timeout)
+void OADSetting::dispatchResponse(GF_UINT8 command, GF_UINT8 retval, GF_UINT8 length,
+	GF_PUINT8 data, gfsPtr<void> cb, bool timeout)
 {
 
 }

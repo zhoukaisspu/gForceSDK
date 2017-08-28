@@ -43,49 +43,6 @@
 
 namespace gf
 {
-
-	/// \brief
-	///     The response type used in command
-	///
-	///
-	enum class ResponseType : GF_UINT32 {
-		RESP_GET_DEVICE_INFO,
-		RESP_GET_BATTERY_LEVEL,
-		RESP_GET_TEMPERATURE,
-		RESP_SET_SWO_LOG_LEVEL,
-		RESP_SET_SWO_LOG_MODULE,
-		RESP_PRINT_KERNEL_MSG,
-		RESP_MOTOR_CONTROL,
-		RESP_LED_CONTROL_TEST,
-		RESP_PACKAGE_ID_CONTROL,
-		RESP_SEND_TRAINING_PACKAGE,
-		RESP_GET_ACCELERATE_CAP,
-		RESP_SET_ACCELERATE_CONFIG,
-		RESP_GET_GYROSCOPE_CAP,
-		RESP_SET_GYROSCOPE_CONFIG,
-		RESP_GET_MAGNETOMETER_CAP,
-		RESP_SET_MAGNETOMETER_CONFIG,
-		RESP_GET_EULER_ANGLE_CAP,
-		RESP_SET_EULER_ANGLE_CONFIG,
-		RESP_GET_QUATERNION_CAP,
-		RESP_SET_QUATERNION_CONFIG,
-		RESP_GET_ROTATION_MATRIX_CAP,
-		RESP_SET_ROTATION_MATRIX_CONFIG,
-		RESP_GET_GESTURE_CAP,
-		RESP_SET_GESTURE_CONFIG,
-		RESP_GET_EMG_RAWDATA_CAP,
-		RESP_SET_EMG_RAWDATA_CONFIG,
-		RESP_GET_MOUSE_DATA_CAP,
-		RESP_SET_MOUSE_DATA_CONFIG,
-		RESP_GET_JOYSTICK_DATA_CAP,
-		RESP_SET_JOYSTICK_DATA_CONFIG,
-		RESP_GET_DEVICE_STATUS_CAP,
-		RESP_SET_DEVICE_STATUS_CONFIG,
-		RESP_SET_DATA_NOTIF_SWITCH,
-		RESP_MAX,
-	};
-
-
 	enum class ResponseResult : GF_UINT32 {
 		RREST_SUCCESS,
 		RREST_NOT_SUPPORT,
@@ -93,9 +50,6 @@ namespace gf
 		RREST_FAILED,
 		RREST_TIMEOUT,
 	};
-
-	using OnResponseHandle = std::function < void(SPDEVICE device, ResponseType resp, ResponseResult result,
-		GF_UINT32 param0, GF_UINT32 param1, GF_UINT32 param2, GF_UINT32 param3) >;
 
 	/// \class DeviceSetting
 	/// \brief
@@ -106,23 +60,17 @@ namespace gf
 	class DeviceSetting
 	{
 	public:
-		/// \brief Register command response handler
-		///    There is only one handler registered in the same time,
-		///    Another call to this method will replace the old one by new one.
-		///
-		/// \param handle The response handler to be registered
-		/// \return The previous registered
-		virtual OnResponseHandle registerResponseHandle(OnResponseHandle handle) = 0;
 		/////////////////////////////////////////////////////
 		// description
-		virtual GF_RET_CODE getProtocolVer(tstring& version) = 0;
-		virtual GF_RET_CODE getFeatureMap(GF_UINT32& featureMap) = 0;
-		virtual GF_RET_CODE getDeviceName(tstring& name) = 0;
-		virtual GF_RET_CODE getModelNumber(tstring& modelNumber) = 0;
-		virtual GF_RET_CODE getSerialNumber(tstring& serialNumber) = 0;
-		virtual GF_RET_CODE getHWRevision(tstring& version) = 0;
-		virtual GF_RET_CODE getFWRevision(tstring& version) = 0;
-		virtual GF_RET_CODE getManufacturerName(tstring& name) = 0;
+		virtual GF_RET_CODE getProtocolVer(std::function<void(ResponseResult res, tstring version)> cb) = 0;
+		virtual GF_RET_CODE getFeatureMap(std::function<void(ResponseResult res, GF_UINT32 featureMap)> cb) = 0;
+		virtual GF_RET_CODE getDeviceName(std::function<void(ResponseResult res, tstring name)> cb) = 0;
+		virtual GF_RET_CODE getModelNumber(std::function<void(ResponseResult res, tstring modelNumber)> cb) = 0;
+		virtual GF_RET_CODE getSerialNumber(std::function<void(ResponseResult res, tstring serialNumber)> cb) = 0;
+		virtual GF_RET_CODE getHWRevision(std::function<void(ResponseResult res, tstring version)> cb) = 0;
+		virtual GF_RET_CODE getFWRevision(std::function<void(ResponseResult res, tstring version)> cb) = 0;
+		virtual GF_RET_CODE getManufacturerName(std::function<void(ResponseResult res, tstring name)> cb) = 0;
+		virtual GF_RET_CODE getBootloaderVer(std::function<void(ResponseResult res, tstring version)> cb) = 0;
 
 	public:
 		/////////////////////////////////////////////////////
@@ -141,13 +89,13 @@ namespace gf
 		};
 		// C.2
 		virtual GF_RET_CODE switchService(DeviceService service) = 0;
-		virtual GF_RET_CODE oadUpgrade(FILE* file, std::function<void(GF_UINT32 percentage)> progress) = 0;
+		virtual GF_RET_CODE oadUpgrade(FILE* file, std::function<void(ResponseResult res, GF_UINT32 percentage)> progress) = 0;
 
 	public:
 		/////////////////////////////////////////////////////
 		// config
 		// C.6
-		virtual GF_RET_CODE sendTrainingModelData(GF_UINT32 length, GF_UINT8 data[]) = 0;
+		virtual GF_RET_CODE sendTrainingModelData(GF_UINT32 length, GF_UINT8 data[], std::function<void(ResponseResult res, GF_UINT32 percentage)> progress) = 0;
 
 		enum DataNotifFlags {
 			/// Data Notify All Off
@@ -177,12 +125,12 @@ namespace gf
 			/// Data Notify All On
 			DNF_ALL = 0xFFFFFFFF,
 		};
-		virtual GF_RET_CODE setDataNotifSwitch(DataNotifFlags flags) = 0;
+		virtual GF_RET_CODE setDataNotifSwitch(DataNotifFlags flags, std::function<void(ResponseResult res)> cb) = 0;
 
 		///////////////////////////////////////////////
-		virtual GF_RET_CODE getBatteryLevel(GF_UINT32& level) = 0;
+		virtual GF_RET_CODE getBatteryLevel( std::function<void(ResponseResult res, GF_UINT32 percentage)> cb) = 0;
 		// C.1
-		virtual GF_RET_CODE getTemperature(GF_UINT32& temprature) = 0;
+		virtual GF_RET_CODE getTemperature(std::function<void(ResponseResult res, GF_UINT32 temperature)> cb) = 0;
 
 		enum class SWOLogLevel : GF_UINT32 {
 			/// All
@@ -201,9 +149,9 @@ namespace gf
 			None = 0xFF,
 		};
 		// C.3
-		virtual GF_RET_CODE setLogLevel(SWOLogLevel level) = 0;
+		virtual GF_RET_CODE setLogLevel(SWOLogLevel level, std::function<void(ResponseResult res)> cb) = 0;
 
-		enum SWOModule {
+		enum SWOModule : GF_UINT32 {
 			/// None Module Enable
 			SWO_MODULE_NONE = 0x00000000,
 			/// Npi Module Enable
@@ -222,7 +170,7 @@ namespace gf
 			SWO_MODULE_ALL = 0xFFFFFFFF,
 		};
 		// C.3
-		virtual GF_RET_CODE setLogModuleEnabled(GF_UINT32 modules) = 0;
+		virtual GF_RET_CODE setLogModuleEnabled(SWOModule modules, std::function<void(ResponseResult res)> cb) = 0;
 
 		enum class KernelMsgType : GF_UINT32 {
 			/// Print Task List
@@ -231,7 +179,7 @@ namespace gf
 			RuntimeState = 0x01,
 		};
 		// C.3
-		virtual GF_RET_CODE printKernelMsg(KernelMsgType type) = 0;
+		virtual GF_RET_CODE printKernelMsg(KernelMsgType type, std::function<void(ResponseResult res)> cb) = 0;
 
 		enum class VibrateControlType : GF_UINT32 {
 			/// Vibrate Off Test
@@ -244,16 +192,16 @@ namespace gf
 			Enable = 0x03,
 		};
 		// C.4
-		virtual GF_RET_CODE vibrateControl(VibrateControlType type) = 0;
+		virtual GF_RET_CODE vibrateControl(VibrateControlType type, std::function<void(ResponseResult res)> cb) = 0;
 
-		enum class LedControlType : GF_UINT32 {
+		enum class LedControlTestType : GF_UINT32 {
 			/// LED Off Test
 			Off = 0x00,
 			/// LED On Test
 			On = 0x01,
 		};
 		// C.5
-		virtual GF_RET_CODE ledControl(LedControlType type) = 0;
+		virtual GF_RET_CODE ledControlTest(LedControlTestType type, std::function<void(ResponseResult res)> cb) = 0;
 
 		enum class PackageControlType : GF_UINT8 {
 			/// Package ID Disable
@@ -261,35 +209,35 @@ namespace gf
 			/// Package ID Enable
 			Enable = 0x01,
 		};
-		virtual GF_RET_CODE packageIdControl(PackageControlType type) = 0;
+		virtual GF_RET_CODE packageIdControl(PackageControlType type, std::function<void(ResponseResult res)> cb) = 0;
 
 		// C.7
-		virtual GF_RET_CODE getAccelerateCap(GF_UINT16& maxSampleRateHz,
-			GF_UINT8& maxScaleRange_g, GF_UINT8& maxPackageDataLength) = 0;
+		virtual GF_RET_CODE getAccelerateCap(std::function<void(ResponseResult res, GF_UINT16 maxSampleRateHz,
+			GF_UINT8 maxScaleRange_g, GF_UINT8 maxPackageDataLength)> cb) = 0;
 		virtual GF_RET_CODE setAccelerateConfig(GF_UINT16 sampleRateHz,
-			GF_UINT8 fullScaleRange_g, GF_UINT8 packageDataLength) = 0;
+			GF_UINT8 fullScaleRange_g, GF_UINT8 packageDataLength, std::function<void(ResponseResult res)> cb) = 0;
 		// C.8
-		virtual GF_RET_CODE getGyroscopeCap(GF_UINT16& maxSampleRateHz,
-			GF_UINT16& maxScaleRange_dps, GF_UINT8& maxPackageDataLength) = 0;
+		virtual GF_RET_CODE getGyroscopeCap(std::function<void(ResponseResult res, GF_UINT16 maxSampleRateHz,
+			GF_UINT16 maxScaleRange_dps, GF_UINT8 maxPackageDataLength)> cb) = 0;
 		virtual GF_RET_CODE setGyroscopeConfig(GF_UINT16 sampleRateHz,
-			GF_UINT16 fullScaleRange_dps, GF_UINT8 packageDataLength) = 0;
+			GF_UINT16 fullScaleRange_dps, GF_UINT8 packageDataLength, std::function<void(ResponseResult res)> cb) = 0;
 		// C.9
-		virtual GF_RET_CODE getMagnetometerCap(GF_UINT16& maxSampleRateHz,
-			GF_UINT16& maxScaleRange_uT, GF_UINT8& maxPackageDataLength) = 0;
+		virtual GF_RET_CODE getMagnetometerCap(std::function<void(ResponseResult res, GF_UINT16 maxSampleRateHz,
+			GF_UINT16 maxScaleRange_uT, GF_UINT8 maxPackageDataLength)> cb) = 0;
 		virtual GF_RET_CODE setMagnetometerConfig(GF_UINT16 sampleRateHz,
-			GF_UINT16 fullScaleRange_uT, GF_UINT8 packageDataLength) = 0;
+			GF_UINT16 fullScaleRange_uT, GF_UINT8 packageDataLength, std::function<void(ResponseResult res)> cb) = 0;
 		// C.10
-		virtual GF_RET_CODE getEulerangleCap(GF_UINT16& maxSampleRateHz) = 0;
-		virtual GF_RET_CODE setEulerangleConfig(GF_UINT16 sampleRateHz) = 0;
+		virtual GF_RET_CODE getEulerangleCap(std::function<void(ResponseResult res, GF_UINT16 maxSampleRateHz)> cb) = 0;
+		virtual GF_RET_CODE setEulerangleConfig(GF_UINT16 sampleRateHz, std::function<void(ResponseResult res)> cb) = 0;
 		// C.11
-		virtual GF_RET_CODE getQuaternionCap(GF_UINT16& maxSampleRateHz) = 0;
-		virtual GF_RET_CODE setQuaternionConfig(GF_UINT16 sampleRateHz) = 0;
+		virtual GF_RET_CODE getQuaternionCap(std::function<void(ResponseResult res, GF_UINT16 maxSampleRateHz)> cb) = 0;
+		virtual GF_RET_CODE setQuaternionConfig(GF_UINT16 sampleRateHz, std::function<void(ResponseResult res)> cb) = 0;
 		// C.12
-		virtual GF_RET_CODE getRotationMatrixCap(GF_UINT16& maxSampleRateHz) = 0;
-		virtual GF_RET_CODE setRotationMatrixConfig(GF_UINT16 sampleRateHz) = 0;
+		virtual GF_RET_CODE getRotationMatrixCap(std::function<void(ResponseResult res, GF_UINT16 maxSampleRateHz)> cb) = 0;
+		virtual GF_RET_CODE setRotationMatrixConfig(GF_UINT16 sampleRateHz, std::function<void(ResponseResult res)> cb) = 0;
 		// C.13
-		virtual GF_RET_CODE getGestureCap(GF_UINT32& number, Gesture* supportedGesture, GF_UINT32 dataSize) = 0;
-		virtual GF_RET_CODE setGestureConfig(GF_UINT32 number, Gesture interestingGesture[]) = 0;
+		virtual GF_RET_CODE getGestureCap(std::function<void(ResponseResult res, GF_UINT32 number, Gesture supportedGestures[])> cb) = 0;
+		virtual GF_RET_CODE setGestureConfig(GF_UINT32 number, Gesture interestingGesture[], std::function<void(ResponseResult res)> cb) = 0;
 
 		enum EMGRowDataChannels {
 			ERDC_CHANNEL_NONE = 0x0000, /// None Channel supported
@@ -312,26 +260,30 @@ namespace gf
 			ERDC_CHANNEL_ALL = 0xFFFF, /// All Channels supported
 		};
 		// C.14
-		virtual GF_RET_CODE getEMGRawDataCap(GF_UINT16& maxSampleRateHz,
-			EMGRowDataChannels& supportedChannels, GF_UINT8& maxPackageDataLength) = 0;
+		virtual GF_RET_CODE getEMGRawDataCap(std::function<void(ResponseResult res, GF_UINT16 maxSampleRateHz,
+			EMGRowDataChannels supportedChannels, GF_UINT8 maxPackageDataLength)> cb) = 0;
 		virtual GF_RET_CODE setEMGRawDataConfig(GF_UINT16 sampleRateHz,
-			EMGRowDataChannels interestingChannels, GF_UINT8 packageDataLength) = 0;
+			EMGRowDataChannels interestingChannels, GF_UINT8 packageDataLength, std::function<void(ResponseResult res)> cb) = 0;
 		// C.15
-		virtual GF_RET_CODE getMouseDataCap(GF_UINT16& maxSampleRateHz) = 0;
-		virtual GF_RET_CODE setMouseDataConfig(GF_UINT16 sampleRateHz) = 0;
+		virtual GF_RET_CODE getMouseDataCap(std::function<void(ResponseResult res, GF_UINT16 maxSampleRateHz)> cb) = 0;
+		virtual GF_RET_CODE setMouseDataConfig(GF_UINT16 sampleRateHz, std::function<void(ResponseResult res)> cb) = 0;
 		// C.16
-		virtual GF_RET_CODE getJoystickDataCap(GF_UINT16& maxSampleRateHz) = 0;
-		virtual GF_RET_CODE setJoystickDataConfig(GF_UINT16 sampleRateHz) = 0;
+		virtual GF_RET_CODE getJoystickDataCap(std::function<void(ResponseResult res, GF_UINT16 maxSampleRateHz)> cb) = 0;
+		virtual GF_RET_CODE setJoystickDataConfig(GF_UINT16 sampleRateHz, std::function<void(ResponseResult res)> cb) = 0;
 
 		enum DeviceStatusFlags {
 			/// None Status Event supported
 			DSF_NONE = 0x0000,
 			/// Re-center Status Event supported
 			DSF_RECENTER = 0x0001,
+			/// USB plug/unplug Event supported
+			DSF_USBSTATUS = 0x0002,
+			/// Motionless Status Event supported
+			DSF_MOTIONLESS = 0x0004,
 		};
 		// C.17
-		virtual GF_RET_CODE getDeviceStatusCap(DeviceStatusFlags& flags) = 0;
-		virtual GF_RET_CODE setDeviceStatusConfig(DeviceStatusFlags flags) = 0;
+		virtual GF_RET_CODE getDeviceStatusCap(std::function<void(ResponseResult res, DeviceStatusFlags flags)> cb) = 0;
+		virtual GF_RET_CODE setDeviceStatusConfig(DeviceStatusFlags flags, std::function<void(ResponseResult res)> cb) = 0;
 
 	protected:
 		/// \brief Virtual deconstructor

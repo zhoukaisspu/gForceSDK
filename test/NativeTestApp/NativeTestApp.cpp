@@ -101,6 +101,7 @@ void printHelp()
 	GF_LOGI("c:\tConnect to device.");
 	GF_LOGI("C:\tCancel connecting to device.");
 	GF_LOGI("d:\tDisconnect device.");
+	GF_LOGI("f:\tFind device.");
 	GF_LOGI("m:\tRetrieve device information.");
 	GF_LOGI("n:\tTurn notification on.");
 	GF_LOGI("o:\tOAD upgrade.");
@@ -155,22 +156,6 @@ class HubListenerImp : public HubListener
 		auto ptr = device.lock();
 		GF_LOGD("ThreadId: %s: %s: device: %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
-
-		if (nullptr == ptr)
-			return;
-		auto ds = ptr->getDeviceSetting();
-		if (nullptr != ds)
-			ds->registerResponseHandle(
-				[](SPDEVICE device, ResponseType resp, ResponseResult result,
-					GF_UINT32 param0, GF_UINT32 param1, GF_UINT32 param2, GF_UINT32 param3) {
-			string name;
-			if (nullptr != device)
-				name = utils::tostring(device->getName());
-			GF_LOGD("device = %s, resp = %u, retval = %u, param = {%u - %u - %u - %u}",
-				name.c_str(), static_cast<GF_UINT32>(resp), static_cast<GF_UINT32>(result), param0, param1, param2, param3);
-		}
-		);
-
 	}
 	virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason) override
 	{
@@ -232,11 +217,11 @@ class HubListenerImp : public HubListener
 		GF_LOGD("ThreadId: %s: %s: Device: %s, Gesture data received: %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()), gesture.c_str());
 	}
-	virtual void onReCenter(WPDEVICE device) override
+	virtual void onDeviceStatusChanged(WPDEVICE device, DeviceStatus status) override
 	{
 		auto ptr = device.lock();
-		GF_LOGD("ThreadId: %s: %s: Gesture position re-centered. device = %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
-			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
+		GF_LOGD("ThreadId: %s: %s: device status changed. device = %s, status = %u", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
+			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()), static_cast<GF_UINT32>(status));
 	}
 	virtual void onExtendDeviceData(WPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data) override
 	{
@@ -270,6 +255,18 @@ bool enumDevice(WPDEVICE dev)
 	return true;
 }
 
+struct test
+{
+	test()
+	{
+		a = 1;
+	}
+	~test()
+	{
+		a = 0;
+	}
+	int a = 0;
+};
 void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 {
 	if (cmd.length() == 0)
@@ -358,21 +355,38 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 		}
 		break;
 	}
-	//case 'p':
-	//{
-	//	// entering polling mode
-	//	pHub->setWorkMode(WorkMode::Polling);
-	//	GF_LOGI("Hub work mode is %d now.", static_cast<GF_INT>(pHub->getWorkMode()));
-	//	GF_LOGI("Main thread id is %s.\n", utils::threadIdToString(this_thread::get_id()).c_str());
-	//
-	//	int tryit = 5;
-	//	while (tryit--)
-	//	{
-	//		pHub->run(2000);
-	//	}
-	//	pHub->setWorkMode(WorkMode::Freerun);
-	//	break;
-	//}
+	case 'f':
+	{
+		for (auto& itor : listDev)
+		{
+			if (DeviceConnectionStatus::Connected == itor->getConnectionStatus())
+			{
+				itor->identify();
+				break;
+			}
+		}
+		break;
+	}
+	case '0':
+	{
+		gfsPtr<test> t = make_shared<test>();
+		gfsPtr<void> v = static_pointer_cast<void>(t);
+		t = nullptr;
+		v = nullptr;
+		break;
+		//// entering polling mode
+		//pHub->setWorkMode(WorkMode::Polling);
+		//GF_LOGI("Hub work mode is %d now.", static_cast<GF_INT>(pHub->getWorkMode()));
+		//GF_LOGI("Main thread id is %s.\n", utils::threadIdToString(this_thread::get_id()).c_str());
+		//
+		//int tryit = 5;
+		//while (tryit--)
+		//{
+		//	pHub->run(2000);
+		//}
+		//pHub->setWorkMode(WorkMode::Freerun);
+		//break;
+	}
 	case 'm':
 	{
 		for (auto& itor : listDev)
@@ -387,23 +401,29 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 				auto ds = itor->getDeviceSetting();
 				if (nullptr != ds)
 				{
-					GF_UINT32 featuremap = 0;
-					ds->getProtocolVer(str);
-					GF_LOGD("%s", utils::tostring(str).c_str());
-					ds->getFeatureMap(featuremap);
-					GF_LOGD("0x%8.8X", featuremap);
-					ds->getDeviceName(str);
-					GF_LOGD("%s", utils::tostring(str).c_str());
-					ds->getModelNumber(str);
-					GF_LOGD("%s", utils::tostring(str).c_str());
-					ds->getSerialNumber(str);
-					GF_LOGD("%s", utils::tostring(str).c_str());
-					ds->getHWRevision(str);
-					GF_LOGD("%s", utils::tostring(str).c_str());
-					ds->getFWRevision(str);
-					GF_LOGD("%s", utils::tostring(str).c_str());
-					ds->getManufacturerName(str);
-					GF_LOGD("%s", utils::tostring(str).c_str());
+					GF_UINT32 featureMap = 0;
+					ds->getProtocolVer([](ResponseResult res, tstring str) {
+						GF_LOGD("getProtocolVer: retcode=%u, \'%s\'", res, utils::tostring(str).c_str()); });
+					ds->getFeatureMap([](ResponseResult res, GF_UINT32 featuremap) {
+						GF_LOGD("getFeatureMap: retcode=%u, 0x%8.8X", res, featuremap); });
+					ds->getDeviceName([](ResponseResult res, tstring str) {
+						GF_LOGD("getDeviceName: retcode=%u, \'%s\'", res, utils::tostring(str).c_str()); });
+					ds->getModelNumber([](ResponseResult res, tstring str) {
+						GF_LOGD("getModelNumber: retcode=%u, \'%s\'", res, utils::tostring(str).c_str()); });
+					ds->getSerialNumber([](ResponseResult res, tstring str) {
+						GF_LOGD("getSerialNumber: retcode=%u, \'%s\'", res, utils::tostring(str).c_str()); });
+					ds->getHWRevision([](ResponseResult res, tstring str) {
+						GF_LOGD("getHWRevision: retcode=%u, \'%s\'", res, utils::tostring(str).c_str()); });
+					ds->getFWRevision([](ResponseResult res, tstring str) {
+						GF_LOGD("getFWRevision: retcode=%u, \'%s\'", res, utils::tostring(str).c_str()); });
+					ds->getManufacturerName([](ResponseResult res, tstring str) {
+						GF_LOGD("getManufacturerName: retcode=%u, \'%s\'", res, utils::tostring(str).c_str()); });
+					ds->getBootloaderVer([](ResponseResult res, tstring str) {
+						GF_LOGD("getBootloaderVer: retcode=%u, \'%s\'", res, utils::tostring(str).c_str()); });
+					ds->getBatteryLevel([](ResponseResult res, GF_UINT32 batlevel) {
+						GF_LOGD("getBatteryLevel: retcode=%u, %u", res, batlevel); });
+					ds->getTemperature([](ResponseResult res, GF_UINT32 temperature) {
+						GF_LOGD("getTemperature: retcode=%u, %u", res, temperature); });
 				}
 			}
 		}
@@ -433,7 +453,9 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 								| DeviceSetting::DNF_DEVICE_STATUS
 								| DeviceSetting::DNF_ROTATIONMATRIX);
 					}
-					ds->setDataNotifSwitch(flags);
+					ds->setDataNotifSwitch(flags, [](ResponseResult result) {
+						GF_LOGD("setDataNotifSwitch: %u", result);
+					});
 					exec = true;
 				}
 			}
@@ -463,8 +485,8 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 						GF_LOGE("Failed to open OAD bin file: %s", oadfilename);
 						break;
 					}
-					auto ret = ds->oadUpgrade(pf, [](GF_UINT32 percentage) {
-						GF_LOGD("OAD Progress: %u%%", percentage);
+					auto ret = ds->oadUpgrade(pf, [](ResponseResult res, GF_UINT32 percentage) {
+						GF_LOGD("OAD Progress: resultcode=%u, %u%%", res, percentage);
 					});
 					GF_LOGD("OAD result: ret = %u", ret);
 					fclose(pf);
@@ -485,7 +507,16 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 				if (nullptr != ds)
 				{
 					ds->packageIdControl(bPackageIdOn ?
-						DeviceSetting::PackageControlType::Enable : DeviceSetting::PackageControlType::Disable);
+						DeviceSetting::PackageControlType::Enable : DeviceSetting::PackageControlType::Disable,
+#if 0
+						nullptr
+#else
+						[itor](ResponseResult res) {
+						GF_LOGD("packageIdControl result: %s, %u", utils::tostring(itor->getName()).c_str(), res);
+						//GF_LOGD("packageIdControl result: %u", res);
+					}
+#endif
+					);
 					exec = true;
 				}
 			}

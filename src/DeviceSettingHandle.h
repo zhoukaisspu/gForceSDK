@@ -50,81 +50,89 @@ namespace gf
 		DeviceSettingHandle(gfwPtr<BLEDevice> device);
 		virtual ~DeviceSettingHandle();
 		void onResponse(GF_UINT8 length, GF_PUINT8 data);
-		virtual OnResponseHandle registerResponseHandle(OnResponseHandle handle) override;
 
 	public:
-		virtual GF_RET_CODE getProtocolVer(tstring& version) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getFeatureMap(GF_UINT32& featureMap) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getDeviceName(tstring& name) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getModelNumber(tstring& modelNumber) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getSerialNumber(tstring& serialNumber) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getHWRevision(tstring& version) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getFWRevision(tstring& version) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getManufacturerName(tstring& name) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getProtocolVer(function<void(ResponseResult res, tstring version)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getFeatureMap(function<void(ResponseResult res, GF_UINT32 featureMap)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getDeviceName(function<void(ResponseResult res, tstring name)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getModelNumber(function<void(ResponseResult res, tstring modelNumber)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getSerialNumber(function<void(ResponseResult res, tstring serialNumber)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getHWRevision(function<void(ResponseResult res, tstring version)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getFWRevision(function<void(ResponseResult res, tstring version)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getManufacturerName(function<void(ResponseResult res, tstring name)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getBootloaderVer(function<void(ResponseResult res, tstring version)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 		virtual GF_RET_CODE powerOff() override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 		virtual GF_RET_CODE swithToOAD() override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 		virtual GF_RET_CODE systemReset() override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 		virtual GF_RET_CODE switchService(DeviceService service) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE oadUpgrade(FILE* file, function<void(GF_UINT32 percentage)> progress) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE sendTrainingModelData(GF_UINT32 length, GF_UINT8 data[]) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE setDataNotifSwitch(DataNotifFlags flags) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getBatteryLevel(GF_UINT32& level) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getTemperature(GF_UINT32& temprature) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE setLogLevel(SWOLogLevel level) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE setLogModuleEnabled(GF_UINT32 modules) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE printKernelMsg(KernelMsgType type) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE vibrateControl(VibrateControlType type) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE ledControl(LedControlType type) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE packageIdControl(PackageControlType type) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getAccelerateCap(GF_UINT16& maxSampleRateHz,
-			GF_UINT8& maxScaleRange_g, GF_UINT8& maxPackageDataLength) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE oadUpgrade(FILE* file, function<void(ResponseResult res, GF_UINT32 percentage)> progress) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE sendTrainingModelData(GF_UINT32 length, GF_UINT8 data[], function<void(ResponseResult res, GF_UINT32 percentage)> progress) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE setDataNotifSwitch(DataNotifFlags flags, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getBatteryLevel(function<void(ResponseResult res, GF_UINT32 percentage)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getTemperature(function<void(ResponseResult res, GF_UINT32 temperature)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE setLogLevel(SWOLogLevel level, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE setLogModuleEnabled(SWOModule modules, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE printKernelMsg(KernelMsgType type, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE vibrateControl(VibrateControlType type, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE ledControlTest(LedControlTestType type, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE packageIdControl(PackageControlType type, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getAccelerateCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz,
+			GF_UINT8 maxScaleRange_g, GF_UINT8 maxPackageDataLength)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 		virtual GF_RET_CODE setAccelerateConfig(GF_UINT16 sampleRateHz,
-			GF_UINT8 fullScaleRange_g, GF_UINT8 packageDataLength) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getGyroscopeCap(GF_UINT16& maxSampleRateHz,
-			GF_UINT16& maxScaleRange_dps, GF_UINT8& maxPackageDataLength) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+			GF_UINT8 fullScaleRange_g, GF_UINT8 packageDataLength, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getGyroscopeCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz,
+			GF_UINT16 maxScaleRange_dps, GF_UINT8 maxPackageDataLength)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 		virtual GF_RET_CODE setGyroscopeConfig(GF_UINT16 sampleRateHz,
-			GF_UINT16 fullScaleRange_dps, GF_UINT8 packageDataLength) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getMagnetometerCap(GF_UINT16& maxSampleRateHz,
-			GF_UINT16& maxScaleRange_uT, GF_UINT8& maxPackageDataLength) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+			GF_UINT16 fullScaleRange_dps, GF_UINT8 packageDataLength, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getMagnetometerCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz,
+			GF_UINT16 maxScaleRange_uT, GF_UINT8 maxPackageDataLength)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 		virtual GF_RET_CODE setMagnetometerConfig(GF_UINT16 sampleRateHz,
-			GF_UINT16 fullScaleRange_uT, GF_UINT8 packageDataLength) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getEulerangleCap(GF_UINT16& maxSampleRateHz) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE setEulerangleConfig(GF_UINT16 sampleRateHz) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getQuaternionCap(GF_UINT16& maxSampleRateHz) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE setQuaternionConfig(GF_UINT16 sampleRateHz) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getRotationMatrixCap(GF_UINT16& maxSampleRateHz) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE setRotationMatrixConfig(GF_UINT16 sampleRateHz) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getGestureCap(GF_UINT32& number, Gesture* supportedGesture, GF_UINT32 dataSize) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE setGestureConfig(GF_UINT32 number, Gesture interestingGesture[]) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getEMGRawDataCap(GF_UINT16& maxSampleRateHz,
-			EMGRowDataChannels& supportedChannels, GF_UINT8& maxPackageDataLength) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+			GF_UINT16 fullScaleRange_uT, GF_UINT8 packageDataLength, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getEulerangleCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE setEulerangleConfig(GF_UINT16 sampleRateHz, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getQuaternionCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE setQuaternionConfig(GF_UINT16 sampleRateHz, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getRotationMatrixCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE setRotationMatrixConfig(GF_UINT16 sampleRateHz, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getGestureCap(function<void(ResponseResult res, GF_UINT32 number, Gesture supportedGestures[])> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE setGestureConfig(GF_UINT32 number, Gesture interestingGesture[], function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getEMGRawDataCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz,
+			EMGRowDataChannels supportedChannels, GF_UINT8 maxPackageDataLength)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 		virtual GF_RET_CODE setEMGRawDataConfig(GF_UINT16 sampleRateHz,
-			EMGRowDataChannels interestingChannels, GF_UINT8 packageDataLength) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getMouseDataCap(GF_UINT16& maxSampleRateHz) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE setMouseDataConfig(GF_UINT16 sampleRateHz) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getJoystickDataCap(GF_UINT16& maxSampleRateHz) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE setJoystickDataConfig(GF_UINT16 sampleRateHz) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getDeviceStatusCap(DeviceStatusFlags& flags) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE setDeviceStatusConfig(DeviceStatusFlags flags) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+			EMGRowDataChannels interestingChannels, GF_UINT8 packageDataLength, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getMouseDataCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE setMouseDataConfig(GF_UINT16 sampleRateHz, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getJoystickDataCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE setJoystickDataConfig(GF_UINT16 sampleRateHz, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getDeviceStatusCap(function<void(ResponseResult res, DeviceStatusFlags flags)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE setDeviceStatusConfig(DeviceStatusFlags flags, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 
 	protected:
 		gfwPtr<BLEDevice> mDevice;
-		OnResponseHandle mRespHandle;
 
 	protected:
 		//////////////////////////////////////////////////////////////
 		// Message pool to process command and it's response
 		mutex mMutex;
 		SimpleTimer mTimer;
-		map<GF_UINT8, SimpleTimer::TimePoint> mExecutingList;
+		struct CommandHandler
+		{
+			SimpleTimer::TimePoint t;
+			///////////////
+			// store any object of type function<class xxx> as void*,
+			// covert it back to function<class xxx> pointer before call it.
+			gfsPtr<void> cb;
+		};
+		map<GF_UINT8, CommandHandler> mExecutingList;
 #ifdef BLECOMMAND_INTERVAL_ENABLED
 		chrono::system_clock::time_point mLastExecTime;
 #endif
-		GF_RET_CODE sendCommand(GF_UINT8 dataLen, GF_PUINT8 commandData, bool hasResponse = true);
+		GF_RET_CODE sendCommand(GF_UINT8 dataLen, GF_PUINT8 commandData, bool hasResponse = false, gfsPtr<void> cb = nullptr);
 
 		void updateTimer();
 		void onTimer();
-		virtual void dispatchResponse(GF_UINT8 command, GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, bool timeout = false) = 0;
+		virtual void dispatchResponse(GF_UINT8 command, GF_UINT8 retval, GF_UINT8 length,
+			GF_PUINT8 data, gfsPtr<void> cb, bool timeout = false) = 0;
 	};
 
 }

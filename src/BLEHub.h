@@ -134,7 +134,7 @@ namespace gf
 		virtual GF_RET_CODE sendControlCommand(BLEDevice& dev, GF_UINT8 data_length, GF_PUINT8 data) override;
 		virtual void notifyOrientationData(BLEDevice& dev, const Quaternion& rotation) override;
 		virtual void notifyGestureData(BLEDevice& dev, Gesture gest) override;
-		virtual void notifyReCenter(BLEDevice& dev) override;
+		virtual void notifyDeviceStatusChanged(BLEDevice& dev, DeviceStatus status) override;
 		virtual void notifyExtendData(BLEDevice& dev, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data) override;
 
 	protected:
@@ -190,7 +190,7 @@ namespace gf
 
 			virtual void onOrientationData(WPDEVICE device, const Quaternion& rotation);
 			virtual void onGestureData(WPDEVICE device, Gesture gest);
-			virtual void onReCenter(WPDEVICE device);
+			virtual void onDeviceStatusChanged(WPDEVICE device, DeviceStatus status);
 			virtual void onExtendData(WPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data);
 
 			// remove warning

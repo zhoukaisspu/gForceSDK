@@ -1,19 +1,19 @@
 /*
  * Copyright 2017, OYMotion Inc.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -26,8 +26,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
-*
-*/
+ *
+ */
 #include "stdafx.h"
 #include "gforce.h"
 #include <atomic>
@@ -131,6 +131,23 @@ public:
 	virtual void onDeviceConnected(WPDEVICE device) override
 	{
 		cout << __FUNCTION__ << " has been called." << endl;
+		DeviceSetting::DataNotifFlags flags;
+		flags = (DeviceSetting::DataNotifFlags)
+			(DeviceSetting::DNF_QUATERNION
+			| DeviceSetting::DNF_EMG_GESTURE
+			| DeviceSetting::DNF_DEVICE_STATUS
+			| DeviceSetting::DNF_ROTATIONMATRIX);
+		auto sp = device.lock();
+		if (sp)
+		{
+			auto setting = sp->getDeviceSetting();
+			if (nullptr != setting)
+			{
+				setting->setDataNotifSwitch(flags, [](ResponseResult result) {
+					cout << "setDataNotifSwitch: " << static_cast<GF_UINT32>(result) << endl;
+				});
+			}
+		}
 	}
 
 	/// This callback is called when a device has been disconnected from
@@ -196,9 +213,33 @@ public:
 	}
 
 	/// This callback is called when the button on gForce is pressed by user
-	virtual void onReCenter(WPDEVICE device) override
+	virtual void onDeviceStatusChanged(WPDEVICE device, DeviceStatus status) override
 	{
-		cout << __FUNCTION__ << " has been called." << endl;
+		string devicestatus;
+		switch (status)
+		{
+		case DeviceStatus::ReCenter:
+			devicestatus = "ReCenter";
+			break;
+		case DeviceStatus::UsbPlugged:
+			devicestatus = "UsbPlugged";
+			break;
+		case DeviceStatus::UsbPulled:
+			devicestatus = "UsbPulled";
+			break;
+		case DeviceStatus::Motionless:
+			devicestatus = "Motionless";
+			break;
+		default:
+		{
+			devicestatus = "Undefined: ";
+			string s;
+			stringstream ss(s);
+			ss << static_cast<int>(status);
+			devicestatus += ss.str();
+		}
+		}
+		cout << __FUNCTION__ << " has been called. " << devicestatus << endl;
 	}
 
 	// Indicates if we want to exit app

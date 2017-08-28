@@ -70,8 +70,25 @@ GF_RET_CODE BLEDevice::identify(int msec)
 		GF_LOGI("%s: Opps, not implemented yet.", __FUNCTION__);
 		return GF_RET_CODE::GF_ERROR_NOT_SUPPORT;
 	}
-	auto ret0 = settings->ledControl(DeviceSetting::LedControlType::On);
-	auto ret1 = settings->vibrateControl(DeviceSetting::VibrateControlType::On);
+	auto ret0 = settings->ledControlTest(DeviceSetting::LedControlTestType::On, [](ResponseResult r)
+	{
+		GF_LOGD("on response of led control on. %u", r);
+	});
+	auto ret1 = settings->vibrateControl(DeviceSetting::VibrateControlType::On, [](ResponseResult r)
+	{
+		GF_LOGD("on response of vibrate control on. %u", r);
+	});
+#ifdef WIN32
+	Sleep(msec);
+#endif
+	ret0 = settings->ledControlTest(DeviceSetting::LedControlTestType::Off, [](ResponseResult r)
+	{
+		GF_LOGD("on response of led control off. %u", r);
+	});
+	ret1 = settings->vibrateControl(DeviceSetting::VibrateControlType::Off, [](ResponseResult r)
+	{
+		GF_LOGD("on response of vibrate control off. %u", r);
+	});
 	if (ret0 == GF_RET_CODE::GF_SUCCESS || ret1 == GF_RET_CODE::GF_SUCCESS)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
@@ -254,7 +271,7 @@ void BLEDevice::onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDe
 			connectStatusChanged(DeviceConnectionStatus::Disconnecting);
 			GF_LOGD("Trying to disconnect as client sent a cancel order.");
 			return;
-		}
+}
 	}
 #endif
 

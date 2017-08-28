@@ -127,7 +127,7 @@ namespace gf
         ///     device, to use his/her current orientation as the origin of
         ///     his/her coordinate system (i.e. [w=1, x=0, y=0, z=0] in
         ///     quaternion). Please also see <a href="https://support.google.com/daydream/answer/7184599?hl=en">Google Daydram - Re-center your view & cursor</a>
-		virtual void onReCenter(WPDEVICE device) {}
+		virtual void onDeviceStatusChanged(WPDEVICE device, DeviceStatus status) {}
 
 		/// \brief This callback is called when the extend data is recevied
 		/// \param device The Pointer to the Device.

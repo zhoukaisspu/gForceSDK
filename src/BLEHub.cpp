@@ -834,7 +834,7 @@ void BLEHub::notifyGestureData(BLEDevice& dev, Gesture gest)
 		mNotifHelper.onGestureData(device, gest);
 }
 
-void BLEHub::notifyReCenter(BLEDevice& dev)
+void BLEHub::notifyDeviceStatusChanged(BLEDevice& dev, DeviceStatus status)
 {
 	SPDEVICE device;
 	{
@@ -849,7 +849,7 @@ void BLEHub::notifyReCenter(BLEDevice& dev)
 		}
 	}
 	if (nullptr != device)
-		mNotifHelper.onReCenter(device);
+		mNotifHelper.onDeviceStatusChanged(device, status);
 }
 
 void BLEHub::notifyExtendData(BLEDevice& dev, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data)
@@ -1111,7 +1111,7 @@ void BLEHub::NotifyHelper::onGestureData(WPDEVICE device, Gesture gest)
 	}
 }
 
-void BLEHub::NotifyHelper::onReCenter(WPDEVICE device)
+void BLEHub::NotifyHelper::onDeviceStatusChanged(WPDEVICE device, DeviceStatus status)
 {
 	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
@@ -1119,10 +1119,10 @@ void BLEHub::NotifyHelper::onReCenter(WPDEVICE device)
 		for (auto& itor : mHub.mListeners)
 		{
 			mHub.mPollMsgQ.push(make_shared<PollingMsg>(
-				[itor, device]() {
+				[itor, device, status]() {
 				auto sp = itor.lock();
 				if (nullptr != sp)
-					sp->onReCenter(device);
+					sp->onDeviceStatusChanged(device, status);
 			}
 			));
 		}
@@ -1133,7 +1133,7 @@ void BLEHub::NotifyHelper::onReCenter(WPDEVICE device)
 		{
 			auto sp = itor.lock();
 			if (nullptr != sp)
-				sp->onReCenter(device);
+				sp->onDeviceStatusChanged(device, status);
 		}
 	}
 }
