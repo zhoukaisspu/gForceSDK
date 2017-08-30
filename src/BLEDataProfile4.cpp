@@ -172,6 +172,7 @@ void BLEDataProfile4::sendExtendData(BLEDevice& device, DeviceDataType dataType,
 	unique_ptr<GF_UINT8[]> up(new GF_UINT8[length]);
 	auto p = up.get();
 	memcpy(p, data, length);
+	// TODO: fix extend data receiving crash issue.
 	device.getHub().notifyExtendData(device, dataType, length, move(up));
 }
 

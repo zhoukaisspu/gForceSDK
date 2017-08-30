@@ -73,7 +73,7 @@ void throw_exception(unsigned int code, EXCEPTION_POINTERS* ptr)
 }
 #endif
 
-GF_HANDLE getAddrAsHandle(WPDEVICE device);
+GF_HANDLE getAddrAsHandle(SPDEVICE device);
 SPDEVICE getDeviceFromHandle(GF_HANDLE h);
 
 class ListenerTranslate : public HubListener
@@ -122,7 +122,7 @@ public:
 		}
 #endif
 	}
-	virtual void onDeviceFound(WPDEVICE device) override {
+	virtual void onDeviceFound(SPDEVICE device) override {
 		try {
 			for (auto& i : mlc)
 				if (nullptr != i->onDeviceFound)
@@ -139,7 +139,7 @@ public:
 		}
 #endif
 	}
-	virtual void onDeviceDiscard(WPDEVICE device) override {
+	virtual void onDeviceDiscard(SPDEVICE device) override {
 		try {
 			for (auto& i : mlc)
 				if (nullptr != i->onDeviceDiscard)
@@ -156,7 +156,7 @@ public:
 		}
 #endif
 	}
-	virtual void onDeviceConnected(WPDEVICE device) override {
+	virtual void onDeviceConnected(SPDEVICE device) override {
 		try {
 			for (auto& i : mlc)
 				if (nullptr != i->onDeviceConnected)
@@ -173,7 +173,7 @@ public:
 		}
 #endif
 	}
-	virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason) override {
+	virtual void onDeviceDisconnected(SPDEVICE device, GF_UINT8 reason) override {
 		try {
 			for (auto& i : mlc)
 				if (nullptr != i->onDeviceDisconnected)
@@ -190,7 +190,7 @@ public:
 		}
 #endif
 	}
-	virtual void onOrientationData(WPDEVICE device, const Quaternion& orientation) override {
+	virtual void onOrientationData(SPDEVICE device, const Quaternion& orientation) override {
 		try {
 			for (auto& i : mlc)
 				if (nullptr != i->onOrientationData)
@@ -208,7 +208,7 @@ public:
 		}
 #endif
 	}
-	virtual void onGestureData(WPDEVICE device, Gesture gest) override {
+	virtual void onGestureData(SPDEVICE device, Gesture gest) override {
 		try {
 			for (auto& i : mlc)
 				if (nullptr != i->onGestureData)
@@ -225,11 +225,35 @@ public:
 		}
 #endif
 	}
-	virtual void onDeviceStatusChanged(WPDEVICE device, DeviceStatus status) override {
+	virtual void onDeviceStatusChanged(SPDEVICE device, DeviceStatus status) override {
 		try {
 			for (auto& i : mlc)
 				if (nullptr != i->onDeviceStatusChanged)
 					i->onDeviceStatusChanged(getAddrAsHandle(device), static_cast<GF_UINT>(status));
+		}
+#ifdef WIN32
+		catch (gForceException e) {
+			GF_LOGE("%s: callback fn failed. code = %u, ExceptionCode = %u",
+				__FUNCTION__, e.code, e.ptrException->ExceptionRecord->ExceptionCode);
+		}
+#else
+		catch (...) {
+			GF_LOGE("%s: callback fn failed.", __FUNCTION__);
+		}
+#endif
+	}
+	virtual void onExtendDeviceData(SPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data) override {
+
+		GF_UINT8* buffer1 = data.get();
+		GF_LOGD("%u", (GF_UINT32)buffer1[0]);
+		try {
+			for (auto& i : mlc)
+				if (nullptr != i->onExtendDeviceData)
+				{
+					GF_UINT8* buffer = data.get();
+					i->onExtendDeviceData(getAddrAsHandle(device), static_cast<GF_UINT>(dataType),
+						static_cast<GF_UINT>(dataType), buffer);
+				}
 		}
 #ifdef WIN32
 		catch (gForceException e) {
@@ -286,14 +310,9 @@ public:
 static RefHelper _ref;
 
 
-GF_HANDLE getAddrAsHandle(WPDEVICE device)
+GF_HANDLE getAddrAsHandle(SPDEVICE device)
 {
-	auto sp = device.lock();
-	if (nullptr != sp)
-	{
-		return sp.get();
-	}
-	return nullptr;
+	return device.get();
 }
 
 SPDEVICE getDeviceFromHandle(GF_HANDLE h)
@@ -302,11 +321,10 @@ SPDEVICE getDeviceFromHandle(GF_HANDLE h)
 	SPDEVICE ret;
 	if (nullptr != h && nullptr != _ref.hub)
 	{
-		function<bool(WPDEVICE)> func = [&ret, h](WPDEVICE device){
-			auto sp = device.lock();
-			if (h == (GF_HANDLE)sp.get())
+		function<bool(SPDEVICE)> func = [&ret, h](SPDEVICE device){
+			if (h == (GF_HANDLE)device.get())
 			{
-				ret = sp;
+				ret = device;
 				return false;
 			}
 			return true;
@@ -406,7 +424,7 @@ GFORCE4CS_API GF_UINT hub_register_listener(ListenerCalls* lis)
 		GF_LOGE("Failed to add listener.");
 		return RETURN_UINT_VALUE_FROM_RET_CODE;
 	}
-	//_ref.lt->onReCenter(WPDEVICE()); // for test only
+	//_ref.lt->onReCenter(SPDEVICE()); // for test only
 	if (1 < _ref.lt->getNumCallbacks())
 	{
 		GF_LOGD("registering listener OK.");
@@ -480,7 +498,7 @@ GFORCE4CS_API GF_UINT hub_enum_devices(FunEnumDevice fn, bool bConnectedOnly)
 	GF_RET_CODE ret = GF_RET_CODE::GF_ERROR_BAD_STATE;
 	if (nullptr != _ref.hub)
 	{
-		function<bool(WPDEVICE)> func = [fn](WPDEVICE device){
+		function<bool(SPDEVICE)> func = [fn](SPDEVICE device){
 			return fn(getAddrAsHandle(device));
 		};
 		_ref.hub->enumDevices(func, bConnectedOnly);

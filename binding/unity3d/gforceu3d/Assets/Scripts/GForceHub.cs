@@ -347,12 +347,12 @@ public class GForceHub : MonoBehaviour
                     dev.onGestureData(gest);
             }
         }
-        public override void onReCenter(Device device)
+        public override void onDeviceStatusChanged(Device device, Device.Status status)
         {
             foreach (GForceDevice dev in hubcomp.mDeviceComps)
             {
                 if (device == dev.device)
-                    dev.onReCenter();
+                    dev.onDeviceStatusChanged(status);
             }
         }
 

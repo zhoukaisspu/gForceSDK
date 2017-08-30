@@ -301,7 +301,7 @@ GF_RET_CODE BLEHub::stopScan()
 		return GF_RET_CODE::GF_ERROR;
 }
 
-void BLEHub::enumDevices(std::function<bool(WPDEVICE)>& funEnum, bool bConnectedOnly)
+void BLEHub::enumDevices(std::function<bool(SPDEVICE)>& funEnum, bool bConnectedOnly)
 {
 	GF_LOGD(__FUNCTION__);
 	if (nullptr == funEnum)
@@ -326,7 +326,7 @@ void BLEHub::enumDevices(std::function<bool(WPDEVICE)>& funEnum, bool bConnected
 	}
 }
 
-WPDEVICE BLEHub::findDevice(GF_UINT8 addrType, tstring address)
+SPDEVICE BLEHub::findDevice(GF_UINT8 addrType, tstring address)
 {
 	GF_LOGD(__FUNCTION__);
 	gfsPtr<Device> ret;
@@ -351,7 +351,7 @@ WPDEVICE BLEHub::findDevice(GF_UINT8 addrType, tstring address)
 	return ret;
 }
 
-GF_RET_CODE BLEHub::createVirtualDevice(vector<WPDEVICE> realDevices, WPDEVICE& newDevice)
+GF_RET_CODE BLEHub::createVirtualDevice(vector<SPDEVICE> realDevices, SPDEVICE& newDevice)
 {
 	GF_LOGD(__FUNCTION__);
 	return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; // not implemented
@@ -949,7 +949,7 @@ void BLEHub::NotifyHelper::onStateChanged(HubState state)
 	}
 }
 
-void BLEHub::NotifyHelper::onDeviceFound(WPDEVICE device)
+void BLEHub::NotifyHelper::onDeviceFound(SPDEVICE device)
 {
 	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
@@ -976,7 +976,7 @@ void BLEHub::NotifyHelper::onDeviceFound(WPDEVICE device)
 	}
 }
 
-void BLEHub::NotifyHelper::onDeviceDiscard(WPDEVICE device)
+void BLEHub::NotifyHelper::onDeviceDiscard(SPDEVICE device)
 {
 	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
@@ -1003,7 +1003,7 @@ void BLEHub::NotifyHelper::onDeviceDiscard(WPDEVICE device)
 	}
 }
 
-void BLEHub::NotifyHelper::onDeviceConnected(WPDEVICE device)
+void BLEHub::NotifyHelper::onDeviceConnected(SPDEVICE device)
 {
 	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
@@ -1030,7 +1030,7 @@ void BLEHub::NotifyHelper::onDeviceConnected(WPDEVICE device)
 	}
 }
 
-void BLEHub::NotifyHelper::onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason)
+void BLEHub::NotifyHelper::onDeviceDisconnected(SPDEVICE device, GF_UINT8 reason)
 {
 	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
@@ -1057,7 +1057,7 @@ void BLEHub::NotifyHelper::onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason
 	}
 }
 
-void BLEHub::NotifyHelper::onOrientationData(WPDEVICE device, const Quaternion& rotation)
+void BLEHub::NotifyHelper::onOrientationData(SPDEVICE device, const Quaternion& rotation)
 {
 	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
@@ -1084,7 +1084,7 @@ void BLEHub::NotifyHelper::onOrientationData(WPDEVICE device, const Quaternion& 
 	}
 }
 
-void BLEHub::NotifyHelper::onGestureData(WPDEVICE device, Gesture gest)
+void BLEHub::NotifyHelper::onGestureData(SPDEVICE device, Gesture gest)
 {
 	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
@@ -1111,7 +1111,7 @@ void BLEHub::NotifyHelper::onGestureData(WPDEVICE device, Gesture gest)
 	}
 }
 
-void BLEHub::NotifyHelper::onDeviceStatusChanged(WPDEVICE device, DeviceStatus status)
+void BLEHub::NotifyHelper::onDeviceStatusChanged(SPDEVICE device, DeviceStatus status)
 {
 	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
@@ -1138,7 +1138,7 @@ void BLEHub::NotifyHelper::onDeviceStatusChanged(WPDEVICE device, DeviceStatus s
 	}
 }
 
-void BLEHub::NotifyHelper::onExtendData(WPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data)
+void BLEHub::NotifyHelper::onExtendData(SPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data)
 {
 	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)

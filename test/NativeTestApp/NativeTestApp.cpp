@@ -152,6 +152,38 @@ string gestureToString(Gesture gest)
 	return gesture;
 }
 
+string ResponseResultToString(ResponseResult resp)
+{
+	string respText;
+	switch (resp)
+	{
+	case ResponseResult::RREST_SUCCESS:
+		respText = "RREST_SUCCESS->0";
+		break;
+	case ResponseResult::RREST_NOT_SUPPORT:
+		respText = "RREST_NOT_SUPPORT->1";
+		break;
+	case ResponseResult::RREST_BAD_PARAM:
+		respText = "RREST_BAD_PARAM->2";
+		break;
+	case ResponseResult::RREST_FAILED:
+		respText = "RREST_FAILED->3";
+		break;
+	case ResponseResult::RREST_TIMEOUT:
+		respText = "RREST_TIMEOUT->4";
+		break;
+	default:
+	{
+		respText = "Unknown->";
+		string s;
+		stringstream ss(s);
+		ss << static_cast<int>(resp);
+		respText += ss.str();
+	}
+	}
+	return respText;
+}
+
 list<gfsPtr<Device>> listDev;
 gfsPtr<HubListener> listener;
 
@@ -167,42 +199,38 @@ class HubListenerImp : public HubListener
 		GF_LOGI("ThreadId: %s: %s: HubState: %u", utils::threadIdToString(this_thread::get_id()).c_str(),
 			__FUNCTION__, static_cast<GF_UINT>(state));
 	}
-	virtual void onDeviceFound(WPDEVICE device) override
+	virtual void onDeviceFound(SPDEVICE device) override
 	{
-		auto ptr = device.lock();
 		GF_LOGI("ThreadId: %s: %s: Name: %s, RSSI: %u", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
-			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()),
-			(nullptr == ptr ? 0 : ptr->getRssi()));
+			(nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()),
+			(nullptr == device ? 0 : device->getRssi()));
 	}
-	virtual void onDeviceDiscard(WPDEVICE device) override
+	virtual void onDeviceDiscard(SPDEVICE device) override
 	{
-		auto ptr = device.lock();
 		GF_LOGD("ThreadId: %s: %s: device: %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
-			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
+			(nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()));
 		//listDev.erase(remove_if(listDev.begin(), listDev.end(),
-		//	[&ptr](decltype(*listDev.begin()) it){ return (ptr == it); }), listDev.end());
+		//	[&device](decltype(*listDev.begin()) it){ return (device == it); }), listDev.end());
 
 		for (auto itor = listDev.begin(); itor != listDev.end();)
 		{
-			if (ptr == (*itor))
+			if (device == (*itor))
 				listDev.erase(itor++);
 			else
 				++itor;
 		}
 	}
-	virtual void onDeviceConnected(WPDEVICE device) override
+	virtual void onDeviceConnected(SPDEVICE device) override
 	{
-		auto ptr = device.lock();
 		GF_LOGD("ThreadId: %s: %s: device: %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
-			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()));
+			(nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()));
 	}
-	virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason) override
+	virtual void onDeviceDisconnected(SPDEVICE device, GF_UINT8 reason) override
 	{
-		auto ptr = device.lock();
 		GF_LOGD("ThreadId: %s: %s: device: %s, reason: %u", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
-			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()), reason);
+			(nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()), reason);
 	}
-	virtual void onOrientationData(WPDEVICE device, const Quaternion& rotation) override
+	virtual void onOrientationData(SPDEVICE device, const Quaternion& rotation) override
 	{
 		auto now = chrono::system_clock::now();
 		chrono::duration<GF_UINT32, milli> duration(1000);
@@ -210,51 +238,46 @@ class HubListenerImp : public HubListener
 			return;
 
 		mLastPrinted = now;
-		auto ptr = device.lock();
 		GF_LOGD("ThreadId: %s: %s, Quaternion: %s, Eulerian angle: %s",
 			utils::threadIdToString(this_thread::get_id()).c_str(),
-			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()),
+			(nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()),
 			rotation.toString().c_str(), rotation.toEuler().toString().c_str());
 	}
-	virtual void onGestureData(WPDEVICE device, Gesture gest) override
+	virtual void onGestureData(SPDEVICE device, Gesture gest) override
 	{
-		auto ptr = device.lock();
 		string gesture = gestureToString(gest);
 		GF_LOGD("ThreadId: %s: %s: Device: %s, Gesture data received: %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
-			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()), gesture.c_str());
+			(nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()), gesture.c_str());
 	}
-	virtual void onDeviceStatusChanged(WPDEVICE device, DeviceStatus status) override
+	virtual void onDeviceStatusChanged(SPDEVICE device, DeviceStatus status) override
 	{
-		auto ptr = device.lock();
 		GF_LOGD("ThreadId: %s: %s: device status changed. device = %s, status = %u", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
-			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()), static_cast<GF_UINT32>(status));
+			(nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()), static_cast<GF_UINT32>(status));
 	}
-	virtual void onExtendDeviceData(WPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data) override
+	virtual void onExtendDeviceData(SPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data) override
 	{
-		//auto ptr = device.lock();
-		//GF_LOGD("ThreadId: %s: %s: device = %s, dataType = %u, length = %u, first byte: %2.2X, last byte: %2.2X", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
-		//	(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()), static_cast<GF_UINT32>(dataType),
-		//	dataLength, data[0], data[dataLength -1]);
+		GF_LOGD("ThreadId: %s: %s: device = %s, dataType = %u, length = %u, first byte: %2.2X, last byte: %2.2X", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
+			(nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()), static_cast<GF_UINT32>(dataType),
+			dataLength, data[0], data[dataLength -1]);
 	}
 
 private:
 	chrono::system_clock::time_point mLastPrinted = chrono::system_clock::now();
 };
 
-bool enumDevice(WPDEVICE dev)
+bool enumDevice(SPDEVICE device)
 {
-	auto sp = dev.lock();
-	ASSERT_VALID_PTR(sp);
-	if (nullptr == sp)
+	ASSERT_VALID_PTR(device);
+	if (nullptr == device)
 	{
 		GF_LOGW("%s: empty device???", __FUNCTION__);
 	}
 	else
 	{
 		GF_LOGI("Dev: addrtype: %u, address: %s, name: %s, connstatus: %u, alias:%s",
-			sp->getAddrType(), utils::tostring(sp->getAddress()).c_str(), utils::tostring(sp->getName()).c_str(),
-			static_cast<GF_UINT>(sp->getConnectionStatus()), utils::tostring(sp->getAlias()).c_str());
-		listDev.push_back(sp);
+			device->getAddrType(), utils::tostring(device->getAddress()).c_str(), utils::tostring(device->getName()).c_str(),
+			static_cast<GF_UINT>(device->getConnectionStatus()), utils::tostring(device->getAlias()).c_str());
+		listDev.push_back(device);
 	}
 
 	// don't want to break enumerate, so always return true
@@ -321,7 +344,7 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 		GF_LOGI("Total %u devices found, %u of them are connected.",
 			pHub->getNumOfDevices(false), pHub->getNumOfDevices(true));
 		listDev.clear();
-		function<bool(WPDEVICE)> enumFn(enumDevice);
+		function<bool(SPDEVICE)> enumFn(enumDevice);
 		pHub->enumDevices(enumFn, false);
 		break;
 	}
@@ -409,74 +432,74 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 				{
 					GF_UINT32 featureMap = 0;
 					ds->getProtocolVer([](ResponseResult res, tstring str) {
-						GF_LOGD("getProtocolVer: retcode=%u, \'%s\'", res, utils::tostring(str).c_str()); });
+						GF_LOGD("getProtocolVer: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
 					ds->getFeatureMap([](ResponseResult res, GF_UINT32 featuremap) {
-						GF_LOGD("getFeatureMap: retcode=%u, 0x%8.8X", res, featuremap); });
+						GF_LOGD("getFeatureMap: retcode=%s, 0x%8.8X", res, featuremap); });
 					ds->getDeviceName([](ResponseResult res, tstring str) {
-						GF_LOGD("getDeviceName: retcode=%u, \'%s\'", res, utils::tostring(str).c_str()); });
+						GF_LOGD("getDeviceName: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
 					ds->getModelNumber([](ResponseResult res, tstring str) {
-						GF_LOGD("getModelNumber: retcode=%u, \'%s\'", res, utils::tostring(str).c_str()); });
+						GF_LOGD("getModelNumber: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
 					ds->getSerialNumber([](ResponseResult res, tstring str) {
-						GF_LOGD("getSerialNumber: retcode=%u, \'%s\'", res, utils::tostring(str).c_str()); });
+						GF_LOGD("getSerialNumber: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
 					ds->getHWRevision([](ResponseResult res, tstring str) {
-						GF_LOGD("getHWRevision: retcode=%u, \'%s\'", res, utils::tostring(str).c_str()); });
+						GF_LOGD("getHWRevision: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
 					ds->getFWRevision([](ResponseResult res, tstring str) {
-						GF_LOGD("getFWRevision: retcode=%u, \'%s\'", res, utils::tostring(str).c_str()); });
+						GF_LOGD("getFWRevision: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
 					ds->getManufacturerName([](ResponseResult res, tstring str) {
-						GF_LOGD("getManufacturerName: retcode=%u, \'%s\'", res, utils::tostring(str).c_str()); });
+						GF_LOGD("getManufacturerName: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
 					ds->getBootloaderVer([](ResponseResult res, tstring str) {
-						GF_LOGD("getBootloaderVer: retcode=%u, \'%s\'", res, utils::tostring(str).c_str()); });
+						GF_LOGD("getBootloaderVer: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
 					ds->getBatteryLevel([](ResponseResult res, GF_UINT32 batlevel) {
-						GF_LOGD("getBatteryLevel: retcode=%u, %u", res, batlevel); });
+						GF_LOGD("getBatteryLevel: retcode=%s, %u", ResponseResultToString(res).c_str(), batlevel); });
 					ds->getTemperature([](ResponseResult res, GF_UINT32 temperature) {
-						GF_LOGD("getTemperature: retcode=%u, %u", res, temperature); });
+						GF_LOGD("getTemperature: retcode=%s, %u", ResponseResultToString(res).c_str(), temperature); });
 					// get caps
 					ds->getAccelerateCap([](ResponseResult res, GF_UINT16 maxSampleRateHz,
 						GF_UINT8 maxScaleRange_g, GF_UINT8 maxPackageDataLength) {
-						GF_LOGD("getAccelerateCap: retcode=%u, maxSampleRate=%u, maxScaleRange=%u, maxPkgLength=%u",
-							res, maxSampleRateHz, maxScaleRange_g, maxPackageDataLength);
+						GF_LOGD("getAccelerateCap: retcode=%s, maxSampleRate=%u, maxScaleRange=%u, maxPkgLength=%u",
+							ResponseResultToString(res).c_str(), maxSampleRateHz, maxScaleRange_g, maxPackageDataLength);
 					});
 					ds->getGyroscopeCap([](ResponseResult res, GF_UINT16 maxSampleRateHz,
 						GF_UINT16 maxScaleRange_dps, GF_UINT8 maxPackageDataLength) {
-						GF_LOGD("getGyroscopeCap: retcode=%u, maxSampleRate=%u, maxScaleRange=%u, maxPkgLength=%u",
-							res, maxSampleRateHz, maxScaleRange_dps, maxPackageDataLength);
+						GF_LOGD("getGyroscopeCap: retcode=%s, maxSampleRate=%u, maxScaleRange=%u, maxPkgLength=%u",
+							ResponseResultToString(res).c_str(), maxSampleRateHz, maxScaleRange_dps, maxPackageDataLength);
 					});
 					ds->getMagnetometerCap([](ResponseResult res, GF_UINT16 maxSampleRateHz,
 						GF_UINT16 maxScaleRange_uT, GF_UINT8 maxPackageDataLength) {
-						GF_LOGD("getMagnetometerCap: retcode=%u, maxSampleRate=%u, maxScaleRange=%u, maxPkgLength=%u",
-							res, maxSampleRateHz, maxScaleRange_uT, maxPackageDataLength);
+						GF_LOGD("getMagnetometerCap: retcode=%s, maxSampleRate=%u, maxScaleRange=%u, maxPkgLength=%u",
+							ResponseResultToString(res).c_str(), maxSampleRateHz, maxScaleRange_uT, maxPackageDataLength);
 					});
 					ds->getEulerangleCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
-						GF_LOGD("getEulerangleCap: retcode=%u, maxSampleRate=%u", res, maxSampleRateHz);
+						GF_LOGD("getEulerangleCap: retcode=%s, maxSampleRate=%u", ResponseResultToString(res).c_str(), maxSampleRateHz);
 					});
 					ds->getQuaternionCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
-						GF_LOGD("getQuaternionCap: retcode=%u, maxSampleRate=%u", res, maxSampleRateHz);
+						GF_LOGD("getQuaternionCap: retcode=%s, maxSampleRate=%u", ResponseResultToString(res).c_str(), maxSampleRateHz);
 					});
 					ds->getRotationMatrixCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
-						GF_LOGD("getRotationMatrixCap: retcode=%u, maxSampleRate=%u", res, maxSampleRateHz);
+						GF_LOGD("getRotationMatrixCap: retcode=%s, maxSampleRate=%u", ResponseResultToString(res).c_str(), maxSampleRateHz);
 					});
 					ds->getGestureCap([](ResponseResult res, GF_SIZE number, const Gesture supportedGestures[]) {
-						GF_LOGD("getGestureCap: retcode=%u, supported gesture number=%u", res, number);
+						GF_LOGD("getGestureCap: retcode=%s, supported gesture number=%u", ResponseResultToString(res).c_str(), number);
 						for (GF_SIZE i = 0; i < number; i++)
 							GF_LOGD("gesture[%u]: %s", i, gestureToString(supportedGestures[i]).c_str());
 					});
 					ds->getEMGRawDataCap([](ResponseResult res, GF_UINT16 maxSampleRateHz,
 						DeviceSetting::EMGRowDataChannels supportedChannels, GF_UINT8 maxPackageDataLength) {
-						GF_LOGD("getEMGRawDataCap: retcode=%u, maxSampleRate=%u, channelsCombine=0x%4.4X, maxPkgLength=%u",
-							res, maxSampleRateHz, supportedChannels, maxPackageDataLength);
+						GF_LOGD("getEMGRawDataCap: retcode=%s, maxSampleRate=%u, channelsCombine=0x%4.4X, maxPkgLength=%u",
+							ResponseResultToString(res).c_str(), maxSampleRateHz, supportedChannels, maxPackageDataLength);
 					});
 					ds->getMouseDataCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
-						GF_LOGD("getMouseDataCap: retcode=%u, maxSampleRate=%u", res, maxSampleRateHz);
+						GF_LOGD("getMouseDataCap: retcode=%s, maxSampleRate=%u", ResponseResultToString(res).c_str(), maxSampleRateHz);
 					});
 					ds->getJoystickDataCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
-						GF_LOGD("getJoystickDataCap: retcode=%u, maxSampleRate=%u", res, maxSampleRateHz);
+						GF_LOGD("getJoystickDataCap: retcode=%s, maxSampleRate=%u", ResponseResultToString(res).c_str(), maxSampleRateHz);
 					});
 					ds->getDeviceStatusCap([](ResponseResult res, DeviceSetting::DeviceStatusFlags flags) {
-						GF_LOGD("getDeviceStatusCap: retcode=%u, DeviceStatusFlags=%u", res, flags);
+						GF_LOGD("getDeviceStatusCap: retcode=%s, DeviceStatusFlags=%u", ResponseResultToString(res).c_str(), flags);
 					});
 					GF_UINT8 data[100];
 					ds->sendTrainingModelData(100, data, [](ResponseResult res, GF_UINT32 percentage) {
-						GF_LOGD("sendTrainingModelData: retcode=%u, percentage=%u", res, percentage);
+						GF_LOGD("sendTrainingModelData: retcode=%s, percentage=%u", ResponseResultToString(res).c_str(), percentage);
 					});
 				}
 			}
@@ -505,7 +528,7 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 							(DeviceSetting::DNF_QUATERNION
 								| DeviceSetting::DNF_EMG_GESTURE
 								| DeviceSetting::DNF_DEVICE_STATUS
-								| DeviceSetting::DNF_ROTATIONMATRIX);
+								);// | DeviceSetting::DNF_ROTATIONMATRIX);
 					}
 					ds->setDataNotifSwitch(flags, [](ResponseResult result) {
 						GF_LOGD("setDataNotifSwitch: %u", result);
@@ -540,7 +563,7 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 						break;
 					}
 					auto ret = ds->oadUpgrade(pf, [](ResponseResult res, GF_UINT32 percentage) {
-						GF_LOGD("OAD Progress: resultcode=%u, %u%%", res, percentage);
+						GF_LOGD("OAD Progress: resultcode=%s, %u%%", ResponseResultToString(res).c_str(), percentage);
 					});
 					GF_LOGD("OAD result: ret = %u", ret);
 					fclose(pf);
@@ -566,7 +589,7 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 						nullptr
 #else
 						[itor](ResponseResult res) {
-						GF_LOGD("packageIdControl result: %s, %u", utils::tostring(itor->getName()).c_str(), res);
+						GF_LOGD("packageIdControl result: %s, %s", utils::tostring(itor->getName()).c_str(), ResponseResultToString(res).c_str());
 						//GF_LOGD("packageIdControl result: %u", res);
 					}
 #endif

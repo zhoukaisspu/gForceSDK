@@ -55,7 +55,7 @@ namespace gf
         public delegate void onDeviceDisconnected(System.IntPtr hDevice, int reason);
         public delegate void onOrientationData(System.IntPtr hDevice, float w, float x, float y, float z);
         public delegate void onGestureData(System.IntPtr hDevice, Device.Gesture gest);
-        public delegate void onReCenter(System.IntPtr hDevice);
+        public delegate void onDeviceStatusChanged(System.IntPtr hDevice, Device.Status status);
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode, Pack = 1)]
         public struct ListenerDelegate
@@ -77,7 +77,7 @@ namespace gf
             [MarshalAs(UnmanagedType.FunctionPtr)]
             public onGestureData onGestureDataFn;
             [MarshalAs(UnmanagedType.FunctionPtr)]
-            public onReCenter onReCenterFn;
+            public onDeviceStatusChanged onDeviceStatusChangedFn;
         }
 
         [DllImport(GFORCE_DLL, EntryPoint = "gf_set_log_method")]

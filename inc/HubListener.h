@@ -69,7 +69,7 @@ namespace gf
         ///     This callback is called when the hub finds a device during
         ///     scanning.
 		/// \param device The pointer to a Device object that was found.
-		virtual void onDeviceFound(WPDEVICE device) {}
+		virtual void onDeviceFound(SPDEVICE device) {}
 
 		/// \brief
         ///     This callback is called when a previously found but not
@@ -77,14 +77,14 @@ namespace gf
 		/// \param device
         ///     The pointer to the Device object that was previously found and
 		///     passed to the application.
-		virtual void onDeviceDiscard(WPDEVICE device) {}
+		virtual void onDeviceDiscard(SPDEVICE device) {}
 
 		/// \brief
         ///     This callback is called when a device has been connected to
         ///     the hub successfully.
 		/// \param device
         ///     The pointer to the Device object that the hub has connected to.
-		virtual void onDeviceConnected(WPDEVICE device) {}
+		virtual void onDeviceConnected(SPDEVICE device) {}
 
 		/// \brief
         ///     This callback is called when a device has been disconnected from
@@ -92,7 +92,7 @@ namespace gf
 		/// \param device
         ///     The pointer to the Device object that was disconnected.
 		/// \param reason The reason of why device disconnected.
-		virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason) {}
+		virtual void onDeviceDisconnected(SPDEVICE device, GF_UINT8 reason) {}
 
 		/// \brief
 		///     This callback is called when the device information of a device is
@@ -100,7 +100,7 @@ namespace gf
 		/// \param device
 		///     The pointer to the Device object that the hub has connected to.
         /// \remark A DeviceSetting object can be used to read the device information.
-		virtual void onDeviceInfoUpdated(WPDEVICE device) {}
+		virtual void onDeviceInfoUpdated(SPDEVICE device) {}
 
 		/// \brief
         ///     This callback is called when the orientation of the device has
@@ -110,12 +110,12 @@ namespace gf
 		/// \param orientation
         ///     The Quaternion object that indicates the updated orientation of
         ///     the device.
-		virtual void onOrientationData(WPDEVICE device, const Quaternion& orientation) {}
+		virtual void onOrientationData(SPDEVICE device, const Quaternion& orientation) {}
 
 		/// \brief This callback is called when the gesture data is recevied
 		/// \param device The Pointer to the Device.
 		/// \param gest The Gesture object.
-		virtual void onGestureData(WPDEVICE device, Gesture gest) {}
+		virtual void onGestureData(SPDEVICE device, Gesture gest) {}
 
 		/// \brief
         ///     This callback is called when the user has just re-centered the
@@ -127,13 +127,13 @@ namespace gf
         ///     device, to use his/her current orientation as the origin of
         ///     his/her coordinate system (i.e. [w=1, x=0, y=0, z=0] in
         ///     quaternion). Please also see <a href="https://support.google.com/daydream/answer/7184599?hl=en">Google Daydram - Re-center your view & cursor</a>
-		virtual void onDeviceStatusChanged(WPDEVICE device, DeviceStatus status) {}
+		virtual void onDeviceStatusChanged(SPDEVICE device, DeviceStatus status) {}
 
 		/// \brief This callback is called when the extend data is recevied
 		/// \param device The Pointer to the Device.
 		/// \param dataType The data type carried
 		/// \param data The data buffer managed by reference
-		virtual void onExtendDeviceData(WPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, std::unique_ptr<GF_UINT8[]> data) {}
+		virtual void onExtendDeviceData(SPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, std::unique_ptr<GF_UINT8[]> data) {}
 
 		virtual ~HubListener() {}
 	};

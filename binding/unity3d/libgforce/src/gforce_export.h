@@ -133,6 +133,12 @@ struct ListenerCalls
 	/// \param device The handle of a Device sending data
 	/// \sa gf::HubListener::onReCenter
 	void(*onDeviceStatusChanged)(gf::GF_HANDLE device, gf::GF_UINT status) = nullptr;
+	/// \brief
+	///     This callback is called when the user has just re-centered the
+	///     device.
+	/// \param device The handle of a Device sending data
+	/// \sa gf::HubListener::onReCenter
+	void(*onExtendDeviceData)(gf::GF_HANDLE device, gf::GF_UINT dataType, gf::GF_UINT dataLength, gf::GF_UINT8* data) = nullptr;
 };
 #pragma pack(pop)
 

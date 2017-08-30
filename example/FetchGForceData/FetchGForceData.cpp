@@ -111,36 +111,34 @@ public:
 	}
 
 	/// This callback is called when the hub finds a device.
-	virtual void onDeviceFound(WPDEVICE device) override
+	virtual void onDeviceFound(SPDEVICE device) override
 	{
 		// In the sample app, we only connect to one device, so once we got one, we stop scanning.
 		cout << __FUNCTION__ << " has been called." << endl;
-		auto sp = device.lock();
-		if (nullptr != sp)
+		if (nullptr != device)
 		{
 			// only search the first connected device if we connected it before
-			if (nullptr == mDevice || sp == mDevice)
+			if (nullptr == mDevice || device == mDevice)
 			{
-				mDevice = sp;
+				mDevice = device;
 				mHub->stopScan();
 			}
 		}
 	}
 
 	/// This callback is called a device has been connected successfully
-	virtual void onDeviceConnected(WPDEVICE device) override
+	virtual void onDeviceConnected(SPDEVICE device) override
 	{
 		cout << __FUNCTION__ << " has been called." << endl;
 		DeviceSetting::DataNotifFlags flags;
 		flags = (DeviceSetting::DataNotifFlags)
 			(DeviceSetting::DNF_QUATERNION
-			| DeviceSetting::DNF_EMG_GESTURE
-			| DeviceSetting::DNF_DEVICE_STATUS
-			| DeviceSetting::DNF_ROTATIONMATRIX);
-		auto sp = device.lock();
-		if (sp)
+				| DeviceSetting::DNF_EMG_GESTURE
+				| DeviceSetting::DNF_DEVICE_STATUS
+				);
+		if (device)
 		{
-			auto setting = sp->getDeviceSetting();
+			auto setting = device->getDeviceSetting();
 			if (nullptr != setting)
 			{
 				setting->setDataNotifSwitch(flags, [](ResponseResult result) {
@@ -152,29 +150,27 @@ public:
 
 	/// This callback is called when a device has been disconnected from
 	///                                 connection state or failed to connect to
-	virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason) override
+	virtual void onDeviceDisconnected(SPDEVICE device, GF_UINT8 reason) override
 	{
 		// if connection lost, we will try to reconnect again.
 		cout << __FUNCTION__ << " has been called. reason: " << static_cast<GF_UINT32>(reason) << endl;
-		auto sp = device.lock();
-		if (nullptr != sp && sp == mDevice)
+		if (nullptr != device && device == mDevice)
 		{
 			mDevice->connect();
 		}
 	}
 
 	/// This callback is called when the quaternion data is received
-	virtual void onOrientationData(WPDEVICE device, const Quaternion& rotation) override
+	virtual void onOrientationData(SPDEVICE device, const Quaternion& rotation) override
 	{
 		// print the quaternion data
 		cout << __FUNCTION__ << " has been called. " << rotation.toString() << endl;
 	}
 
 	/// This callback is called when the gesture data is recevied
-	virtual void onGestureData(WPDEVICE device, Gesture gest) override
+	virtual void onGestureData(SPDEVICE device, Gesture gest) override
 	{
 		// a gesture event coming.
-		auto sp = device.lock();
 		string gesture;
 		switch (gest)
 		{
@@ -213,7 +209,7 @@ public:
 	}
 
 	/// This callback is called when the button on gForce is pressed by user
-	virtual void onDeviceStatusChanged(WPDEVICE device, DeviceStatus status) override
+	virtual void onDeviceStatusChanged(SPDEVICE device, DeviceStatus status) override
 	{
 		string devicestatus;
 		switch (status)
@@ -240,6 +236,11 @@ public:
 		}
 		}
 		cout << __FUNCTION__ << " has been called. " << devicestatus << endl;
+	}
+	virtual void onExtendDeviceData(SPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data) override
+	{
+		cout << __FUNCTION__ << ": datatype = " << (GF_UINT32)dataType << ", datalength = " << dataLength
+			<< ", first byte: " << (GF_UINT32)data[0] << ", last byte: " << (GF_UINT32)data[dataLength - 1] << endl;
 	}
 
 	// Indicates if we want to exit app

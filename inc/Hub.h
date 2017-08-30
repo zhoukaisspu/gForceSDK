@@ -132,12 +132,12 @@ namespace gf
 		/// false if want to get all devices.
 		/// \remark The return value of funEnum tells gForce if client wants to continue next enumerate
 		/// true to continue enumerate, otherwise stop it.
-		virtual void enumDevices(std::function<bool(WPDEVICE)>& funEnum, bool bConnectedOnly = true) = 0;
+		virtual void enumDevices(std::function<bool(SPDEVICE)>& funEnum, bool bConnectedOnly = true) = 0;
 
 		/// \brief Find a gForce device
 		///
 		/// \return The weak pointer of the device found, nullptr if not found.
-		virtual WPDEVICE findDevice(GF_UINT8 addrType, tstring address) = 0;
+		virtual SPDEVICE findDevice(GF_UINT8 addrType, tstring address) = 0;
 
 		/// \brief create a virtual device with more than one physical gforce devices
 		///
@@ -150,7 +150,7 @@ namespace gf
 		/// \param [out] newDevice New virtual device combined by given devices.
 		/// \return GF_RET_CODE::GF_SUCCESS if succeeded, others otherwise.
 		/// \remark Not implemented yet.
-		virtual GF_RET_CODE createVirtualDevice(std::vector<WPDEVICE> realDevices, WPDEVICE& newDevice) = 0;
+		virtual GF_RET_CODE createVirtualDevice(std::vector<SPDEVICE> realDevices, SPDEVICE& newDevice) = 0;
 
 		/// \brief run message polling
 		///

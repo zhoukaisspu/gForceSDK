@@ -55,8 +55,8 @@ namespace gf
         GF_ERROR_NO_RESOURCE,
         /// A preset timer is expired.
         GF_ERROR_TIMEOUT,
-	/// Target device is busy and cannot fulfill the call.
-	GF_ERROR_DEVICE_BUSY,
+        /// Target device is busy and cannot fulfill the call.
+        GF_ERROR_DEVICE_BUSY,
     };
 
     public sealed class Hub : IDisposable
@@ -153,7 +153,7 @@ namespace gf
                     mListenerDele.onDeviceDisconnectedFn = new libgforce.onDeviceDisconnected(Hub.onDeviceDisconnectedImpl);
                     mListenerDele.onOrientationDataFn = new libgforce.onOrientationData(Hub.onOrientationDataImpl);
                     mListenerDele.onGestureDataFn = new libgforce.onGestureData(Hub.onGestureDataImpl);
-                    mListenerDele.onReCenterFn = new libgforce.onReCenter(Hub.onReCenterImpl);
+                    mListenerDele.onDeviceStatusChangedFn = new libgforce.onDeviceStatusChanged(Hub.onDeviceStatusChangedImpl);
 
                     ret = libgforce.hub_register_listener(ref mListenerDele);
                 }
@@ -418,7 +418,7 @@ namespace gf
             foreach (HubListener l in instance.mListeners)
                 l.onGestureData(d, gest);
         }
-        private static void onReCenterImpl(IntPtr hDevice)
+        private static void onDeviceStatusChangedImpl(IntPtr hDevice, Device.Status status)
         {
             Device d = null;
             if (IntPtr.Zero == hDevice)
@@ -436,7 +436,7 @@ namespace gf
                 return;
             }
             foreach (HubListener l in instance.mListeners)
-                l.onReCenter(d);
+                l.onDeviceStatusChanged(d, status);
         }
     }
 

@@ -83,12 +83,15 @@ public class GForceDevice : MonoBehaviour
             internalGest = gest;
         }
     }
-    public void onReCenter()
+    public void onDeviceStatusChanged(Device.Status status)
     {
-        Debug.LogFormat("onReCenter: {0}", mDevice);
-        lock (mLock)
+        Debug.LogFormat("onDeviceStatusChanged: {0}: {1}", mDevice, status);
+        if (Device.Status.ReCenter == status)
         {
-            recentered = true;
+            lock (mLock)
+            {
+                recentered = true;
+            }
         }
     }
 

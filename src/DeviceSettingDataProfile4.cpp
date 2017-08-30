@@ -596,7 +596,7 @@ GF_RET_CODE DeviceSettingDataProfile4::vibrateControl(VibrateControlType type, f
 // C.5
 GF_RET_CODE DeviceSettingDataProfile4::ledControlTest(LedControlTestType type, function<void(ResponseResult res)> cb)
 {
-	GF_LOGD("%s: type = %u", __FUNCTION__, type);
+	GF_LOGD("%s: type = %u", __FUNCTION__, (GF_UINT32)type);
 	const GF_UINT8 length = 2;
 	GF_UINT8 data[length];
 	data[0] = CMD_LED_CONTROL_TEST;

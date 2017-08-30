@@ -87,13 +87,13 @@ namespace gf
 			else
 				return mDisconnDevices.size() + mConnectedDevices.size();
 		}
-		virtual void enumDevices(std::function<bool(WPDEVICE)>& funEnum, bool bConnectedOnly = true) override;
-		virtual WPDEVICE findDevice(GF_UINT8 addrType, tstring address) override;
+		virtual void enumDevices(std::function<bool(SPDEVICE)>& funEnum, bool bConnectedOnly = true) override;
+		virtual SPDEVICE findDevice(GF_UINT8 addrType, tstring address) override;
 		// set up virtual device, client can combine two or more gdevices positioning in
 		//   defferent location into one virtual device. client still can receive gesture
 		//   data of these devices seperately, and can get one combined gesture
 		//   data if it happens
-		virtual GF_RET_CODE createVirtualDevice(vector<WPDEVICE> realDevices, WPDEVICE& newDevice) override;
+		virtual GF_RET_CODE createVirtualDevice(vector<SPDEVICE> realDevices, SPDEVICE& newDevice) override;
 
 	protected:
 		//////////////////////////////////////////////////////////////
@@ -182,16 +182,16 @@ namespace gf
 			NotifyHelper(BLEHub& theHub) : mHub(theHub) {}
 			virtual void onScanFinished();
 			virtual void onStateChanged(HubState state);
-			virtual void onDeviceFound(WPDEVICE device);
-			virtual void onDeviceDiscard(WPDEVICE device);
+			virtual void onDeviceFound(SPDEVICE device);
+			virtual void onDeviceDiscard(SPDEVICE device);
 			// regarding the device data/status updates
-			virtual void onDeviceConnected(WPDEVICE device);
-			virtual void onDeviceDisconnected(WPDEVICE device, GF_UINT8 reason);
+			virtual void onDeviceConnected(SPDEVICE device);
+			virtual void onDeviceDisconnected(SPDEVICE device, GF_UINT8 reason);
 
-			virtual void onOrientationData(WPDEVICE device, const Quaternion& rotation);
-			virtual void onGestureData(WPDEVICE device, Gesture gest);
-			virtual void onDeviceStatusChanged(WPDEVICE device, DeviceStatus status);
-			virtual void onExtendData(WPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data);
+			virtual void onOrientationData(SPDEVICE device, const Quaternion& rotation);
+			virtual void onGestureData(SPDEVICE device, Gesture gest);
+			virtual void onDeviceStatusChanged(SPDEVICE device, DeviceStatus status);
+			virtual void onExtendData(SPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data);
 
 			// remove warning
 			NotifyHelper& operator = (const NotifyHelper& right) = delete;

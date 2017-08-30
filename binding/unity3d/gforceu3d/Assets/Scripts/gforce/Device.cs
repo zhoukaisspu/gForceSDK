@@ -50,6 +50,15 @@ namespace gf
             Undefined = 0xFF
         };
 
+        public enum Status
+        {
+            None = 0,
+            ReCenter = 1,
+            UsbPlugged = 2,
+            UsbPulled = 3,
+            Motionless = 4,
+        };
+
         public enum ConnectionStatus
         {
             Disconnected,
