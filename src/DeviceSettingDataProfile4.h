@@ -118,7 +118,7 @@ namespace gf
 		// C.12
 		virtual GF_RET_CODE setRotationMatrixConfig(GF_UINT16 sampleRateHz, function<void(ResponseResult res)> cb) override;
 		// C.13
-		virtual GF_RET_CODE getGestureCap(function<void(ResponseResult res, GF_UINT32 number, Gesture supportedGestures[])> cb) override;
+		virtual GF_RET_CODE getGestureCap(function<void(ResponseResult res, GF_SIZE number, const Gesture supportedGestures[])> cb) override;
 		// C.13
 		virtual GF_RET_CODE setGestureConfig(GF_UINT32 number, Gesture interestingGesture[], function<void(ResponseResult res)> cb) override;
 		// C.14
@@ -143,53 +143,54 @@ namespace gf
 	protected:
 		virtual void dispatchResponse(GF_UINT8 command, GF_UINT8 retval, GF_UINT8 length,
 			GF_PUINT8 data, gfsPtr<void> cb, bool timeout = false) override;
-		tstring getStringCommon(GF_UINT8 length, GF_PUINT8 data);
+		static tstring getStringCommon(GF_UINT8 length, GF_PUINT8 data);
 
 
 	protected:
-		virtual void onProtocolVer(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onFeatureMap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onDeviceName(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onModelNumber(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onSerialNumber(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onHWRevision(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onFWRevision(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onManufacturerName(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onBootloaderVer(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onSendTrainingModelData(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onSetDataNotifSwitch(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onGetBatteryLevel(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onGetTemperature(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onSetLogLevel(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onSetLogModuleEnabled(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onPrintKernelMsg(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onVibrateControl(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onLedControlTest(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onPackageIdControl(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onGetAccelerateCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onSetAccelerateConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onGetGyroscopeCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onSetGyroscopeConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onGetMagnetometerCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onSetMagnetometerConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onGetEulerangleCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onSetEulerangleConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onGetQuaternionCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onSetQuaternionConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onGetRotationMatrixCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onSetRotationMatrixConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onGetGestureCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onSetGestureConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onGetEMGRawDataCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onSetEMGRawDataConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onGetMouseDataCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onSetMouseDataConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onGetJoystickDataCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onSetJoystickDataConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onGetDeviceStatusCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
-		virtual void onSetDeviceStatusConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onProtocolVer(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onFeatureMap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onDeviceName(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onModelNumber(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onSerialNumber(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onHWRevision(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onFWRevision(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onManufacturerName(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onBootloaderVer(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onSendTrainingModelData(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onSetDataNotifSwitch(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onGetBatteryLevel(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onGetTemperature(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onSetLogLevel(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onSetLogModuleEnabled(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onPrintKernelMsg(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onVibrateControl(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onLedControlTest(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onPackageIdControl(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onGetAccelerateCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onSetAccelerateConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onGetGyroscopeCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onSetGyroscopeConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onGetMagnetometerCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onSetMagnetometerConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onGetEulerangleCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onSetEulerangleConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onGetQuaternionCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onSetQuaternionConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onGetRotationMatrixCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onSetRotationMatrixConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onGetGestureCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onSetGestureConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onGetEMGRawDataCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onSetEMGRawDataConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onGetMouseDataCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onSetMouseDataConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onGetJoystickDataCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onSetJoystickDataConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onGetDeviceStatusCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
+		void onSetDeviceStatusConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb);
 
 	protected:
+		// TODO: add thread-safe protection for below members
 		tstring mProtocolVer;
 		GF_UINT32 mFeatureMap = 0;
 		tstring mDeviceName;
@@ -223,6 +224,16 @@ namespace gf
 
 	private:
 		void configMtuSize();
+
+	private:
+		// sendTrainingModelData
+		unique_ptr<GF_UINT8[]> mTraingModelBuffer;
+		GF_UINT32 mTraingModelBufferLen = 0;
+		GF_UINT32 mLastSentPercentage = (GF_UINT32)-1;
+		function<void(ResponseResult res, GF_UINT32 percentage)> mTrainingModelCallback;
+		void trainingModelOnResponse(ResponseResult respval, GF_UINT16 nextPkgNo);
+		GF_RET_CODE trainingModelSendNextPackage(GF_UINT16 nextPkgId);
+		void resetTrainingModelData();
 	};
 
 }

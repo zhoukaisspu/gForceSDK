@@ -225,11 +225,11 @@ public:
 		}
 #endif
 	}
-	virtual void onReCenter(WPDEVICE device) override {
+	virtual void onDeviceStatusChanged(WPDEVICE device, DeviceStatus status) override {
 		try {
 			for (auto& i : mlc)
-				if (nullptr != i->onReCenter)
-					i->onReCenter(getAddrAsHandle(device));
+				if (nullptr != i->onDeviceStatusChanged)
+					i->onDeviceStatusChanged(getAddrAsHandle(device), static_cast<GF_UINT>(status));
 		}
 #ifdef WIN32
 		catch (gForceException e) {

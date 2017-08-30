@@ -36,6 +36,94 @@
 
 using namespace gf;
 
+#define DO_SEND_COMMAND_AND_CALLBACK(length, buf)	\
+	do {	\
+		gfsPtr<decltype(cb)> pcb = make_shared<decltype(cb)>(cb);	\
+		gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);	\
+		return sendCommand((length), (buf), true, pvoid);	\
+	} while (false)
+
+#define DO_SEND_GET_COMMAND(cmd)	\
+	do {	\
+		GF_UINT8 data = cmd;	\
+		DO_SEND_COMMAND_AND_CALLBACK(1, &data);	\
+	} while (false)
+
+#define ON_RESPONSE_RESPRESULT_PARAM(callback_type, ...) \
+	do {	\
+		GF_LOGD("%s, retval = %u", __FUNCTION__, retval);	\
+		gfsPtr<function<callback_type>> callback = static_pointer_cast<function<callback_type>>(cb);	\
+		if (callback && *callback.get())	\
+			(*callback.get())(responseConvert(retval), ##__VA_ARGS__);	\
+	} while (false)
+
+#define ON_RESPONSE_RESPRESULT() ON_RESPONSE_RESPRESULT_PARAM(void(ResponseResult))
+
+#define ON_RESPONSE_PARSING(do_parse, data_min_length, callback_type, ...) \
+	do {	\
+		if (retval == RC_SUCCESS)	\
+		{	\
+			if (length >= (data_min_length))	\
+				(do_parse)(length, data);	\
+			else	\
+				retval = RC_FAILED;	\
+		}	\
+		gfsPtr<function<callback_type>> callback = static_pointer_cast<function<callback_type>>(cb);	\
+		if (callback && *callback.get())	\
+			(*callback.get())(responseConvert(retval), ##__VA_ARGS__);	\
+	} while (false)
+
+#define ON_RESPONSE_PARSING_2BYTES(represent_type) \
+	do {	\
+		GF_UINT16 v = 0;	\
+		auto f = [&v](GF_UINT8 length, GF_PUINT8 data) {	\
+			v = data[0] | ((GF_UINT16)data[1] << 8);	\
+		};	\
+		ON_RESPONSE_PARSING(f, 2, void(ResponseResult, represent_type), static_cast<represent_type>(v));	\
+	} while(false)
+
+#define ON_RESPONSE_PARSING_4BYTES(represent_type) \
+	do {	\
+		GF_UINT32 v = 0;	\
+		auto f = [&v](GF_UINT8 length, GF_PUINT8 data) {	\
+			v = (GF_UINT32)(data[0])	\
+				| ((GF_UINT32)(data[1]) << 8)	\
+				| ((GF_UINT32)(data[2]) << 16)	\
+				| ((GF_UINT32)(data[3]) << 24);	\
+		};	\
+		ON_RESPONSE_PARSING(f, 4, void(ResponseResult, represent_type), static_cast<represent_type>(v));	\
+	} while(false)
+
+#define ON_RESPONSE_PARSING_4BYTES_WITH_211() \
+	do {	\
+		GF_UINT16 v1 = 0;	\
+		GF_UINT8 v2 = 0;	\
+		GF_UINT8 v3 = 0;	\
+		auto f = [&v1, &v2, &v3](GF_UINT8 length, GF_PUINT8 data) {	\
+		v1 = data[0] | ((GF_UINT16)data[1] << 8);	\
+		v2 = data[2];	\
+		v3 = data[3];	\
+		};	\
+		ON_RESPONSE_PARSING(f, 4, void(ResponseResult, GF_UINT16, GF_UINT8, GF_UINT8), v1, v2, v3);	\
+	} while(false)
+
+#define ON_RESPONSE_PARSING_5BYTES_WITH_221() \
+	do {	\
+		GF_UINT16 v1 = 0;	\
+		GF_UINT16 v2 = 0;	\
+		GF_UINT8 v3 = 0;	\
+		auto f = [&v1, &v2, &v3](GF_UINT8 length, GF_PUINT8 data) {	\
+		v1 = data[0] | ((GF_UINT16)data[1] << 8);	\
+		v2 = data[2] | ((GF_UINT16)data[3] << 8);	\
+		v3 = data[4];	\
+		};	\
+		ON_RESPONSE_PARSING(f, 5, void(ResponseResult, GF_UINT16, GF_UINT16, GF_UINT8), v1, v2, v3);	\
+	} while(false)
+
+#define ON_RESPONSE_PARSING_UINT16() ON_RESPONSE_PARSING_2BYTES(GF_UINT16)
+#define ON_RESPONSE_PARSING_UINT32() ON_RESPONSE_PARSING_4BYTES(GF_UINT32)
+
+
 enum CommandType {
 	CMD_GET_PROTOCOL_VERSION = 0x00,
 	CMD_GET_FEATURE_MAP = 0x01,
@@ -216,10 +304,7 @@ GF_RET_CODE DeviceSettingDataProfile4::getProtocolVer(function<void(ResponseResu
 			cb(responseConvert(RC_SUCCESS), mProtocolVer);
 		return GF_RET_CODE::GF_SUCCESS;
 	}
-	GF_UINT8 data = CMD_GET_PROTOCOL_VERSION;
-	gfsPtr<function<void(ResponseResult, tstring)>> pcb = make_shared<function<void(ResponseResult, tstring)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(1, &data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_PROTOCOL_VERSION);
 }
 GF_RET_CODE DeviceSettingDataProfile4::getFeatureMap(function<void(ResponseResult res, GF_UINT32 featureMap)> cb)
 {
@@ -230,10 +315,7 @@ GF_RET_CODE DeviceSettingDataProfile4::getFeatureMap(function<void(ResponseResul
 			cb(responseConvert(RC_SUCCESS), mFeatureMap);
 		return GF_RET_CODE::GF_SUCCESS;
 	}
-	GF_UINT8 data = CMD_GET_FEATURE_MAP;
-	gfsPtr<function<void(ResponseResult, GF_UINT32)>> pcb = make_shared<function<void(ResponseResult, GF_UINT32)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(1, &data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_FEATURE_MAP);
 }
 GF_RET_CODE DeviceSettingDataProfile4::getDeviceName(function<void(ResponseResult res, tstring name)> cb)
 {
@@ -244,10 +326,7 @@ GF_RET_CODE DeviceSettingDataProfile4::getDeviceName(function<void(ResponseResul
 			cb(responseConvert(RC_SUCCESS), mDeviceName);
 		return GF_RET_CODE::GF_SUCCESS;
 	}
-	GF_UINT8 data = CMD_GET_DEVICE_NAME;
-	gfsPtr<function<void(ResponseResult, tstring)>> pcb = make_shared<function<void(ResponseResult, tstring)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(1, &data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_DEVICE_NAME);
 }
 GF_RET_CODE DeviceSettingDataProfile4::getModelNumber(function<void(ResponseResult res, tstring modelNumber)> cb)
 {
@@ -258,10 +337,7 @@ GF_RET_CODE DeviceSettingDataProfile4::getModelNumber(function<void(ResponseResu
 			cb(responseConvert(RC_SUCCESS), mModelNumber);
 		return GF_RET_CODE::GF_SUCCESS;
 	}
-	GF_UINT8 data = CMD_GET_MODEL_NUMBER;
-	gfsPtr<function<void(ResponseResult, tstring)>> pcb = make_shared<function<void(ResponseResult, tstring)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(1, &data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_MODEL_NUMBER);
 }
 GF_RET_CODE DeviceSettingDataProfile4::getSerialNumber(function<void(ResponseResult res, tstring serialNumber)> cb)
 {
@@ -272,10 +348,7 @@ GF_RET_CODE DeviceSettingDataProfile4::getSerialNumber(function<void(ResponseRes
 			cb(responseConvert(RC_SUCCESS), mSerialNumber);
 		return GF_RET_CODE::GF_SUCCESS;
 	}
-	GF_UINT8 data = CMD_GET_SERIAL_NUMBER;
-	gfsPtr<function<void(ResponseResult, tstring)>> pcb = make_shared<function<void(ResponseResult, tstring)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(1, &data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_SERIAL_NUMBER);
 }
 GF_RET_CODE DeviceSettingDataProfile4::getHWRevision(function<void(ResponseResult res, tstring version)> cb)
 {
@@ -286,10 +359,7 @@ GF_RET_CODE DeviceSettingDataProfile4::getHWRevision(function<void(ResponseResul
 			cb(responseConvert(RC_SUCCESS), mHWRev);
 		return GF_RET_CODE::GF_SUCCESS;
 	}
-	GF_UINT8 data = CMD_GET_HW_REVISION;
-	gfsPtr<function<void(ResponseResult, tstring)>> pcb = make_shared<function<void(ResponseResult, tstring)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(1, &data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_HW_REVISION);
 }
 GF_RET_CODE DeviceSettingDataProfile4::getFWRevision(function<void(ResponseResult res, tstring version)> cb)
 {
@@ -300,10 +370,7 @@ GF_RET_CODE DeviceSettingDataProfile4::getFWRevision(function<void(ResponseResul
 			cb(responseConvert(RC_SUCCESS), mFWRev);
 		return GF_RET_CODE::GF_SUCCESS;
 	}
-	GF_UINT8 data = CMD_GET_FW_REVISION;
-	gfsPtr<function<void(ResponseResult, tstring)>> pcb = make_shared<function<void(ResponseResult, tstring)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(1, &data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_FW_REVISION);
 }
 GF_RET_CODE DeviceSettingDataProfile4::getManufacturerName(function<void(ResponseResult res, tstring name)> cb)
 {
@@ -314,10 +381,7 @@ GF_RET_CODE DeviceSettingDataProfile4::getManufacturerName(function<void(Respons
 			cb(responseConvert(RC_SUCCESS), mManuName);
 		return GF_RET_CODE::GF_SUCCESS;
 	}
-	GF_UINT8 data = CMD_GET_MANUFACTURER_NAME;
-	gfsPtr<function<void(ResponseResult, tstring)>> pcb = make_shared<function<void(ResponseResult, tstring)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(1, &data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_MANUFACTURER_NAME);
 }
 GF_RET_CODE DeviceSettingDataProfile4::getBootloaderVer(function<void(ResponseResult res, tstring version)> cb)
 {
@@ -328,10 +392,7 @@ GF_RET_CODE DeviceSettingDataProfile4::getBootloaderVer(function<void(ResponseRe
 			cb(responseConvert(RC_SUCCESS), mBootloaderVer);
 		return GF_RET_CODE::GF_SUCCESS;
 	}
-	GF_UINT8 data = CMD_GET_BOOTLOADER_VERSION;
-	gfsPtr<function<void(ResponseResult, tstring)>> pcb = make_shared<function<void(ResponseResult, tstring)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(1, &data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_BOOTLOADER_VERSION);
 }
 
 GF_RET_CODE DeviceSettingDataProfile4::powerOff()
@@ -373,29 +434,121 @@ GF_RET_CODE DeviceSettingDataProfile4::setDataNotifSwitch(DataNotifFlags flags, 
 	data[2] = (GF_UINT8)(flags >> 8);
 	data[3] = (GF_UINT8)(flags >> 16);
 	data[4] = (GF_UINT8)(flags >> 24);
-	gfsPtr<function<void(ResponseResult)>> pcb = make_shared<function<void(ResponseResult)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 
 ///////////////////////////////////////////////
-GF_RET_CODE DeviceSettingDataProfile4::sendTrainingModelData(GF_UINT32 length, GF_UINT8 data[], function<void(ResponseResult res, GF_UINT32 percentage)> progress) { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+#define TRANING_PACKAGE_DATA_LENGTH (16)
+#define INVALID_NEXT_PACKAGE_NUMBER (0xFFFF)
+void DeviceSettingDataProfile4::trainingModelOnResponse(ResponseResult respval, GF_UINT16 nextPkgNo)
+{
+	GF_LOGD("sending model data: respval = %u, nextPkgNo = %u",
+		respval, nextPkgNo);
+	if (respval != ResponseResult::RREST_SUCCESS ||
+		nextPkgNo == 0 || // package number started from 1
+		nextPkgNo == INVALID_NEXT_PACKAGE_NUMBER)
+	{
+		// Failed and stop sending data
+		GF_LOGD("sending data step: error. stop.");
+		mTrainingModelCallback(ResponseResult::RREST_FAILED, 0);
+		resetTrainingModelData();
+		return;
+	}
+	auto ret = trainingModelSendNextPackage(nextPkgNo);
+	if (GF_RET_CODE::GF_SUCCESS != ret)
+	{
+		if (GF_RET_CODE::GF_ERROR_BAD_PARAM == ret)
+		{
+			// data sending completed, tell client that the resut is good
+			mTrainingModelCallback(ResponseResult::RREST_SUCCESS, 100);
+		}
+		else
+		{
+			GF_LOGD("sending model data: error in sending: ret = %u, total size = %u,",
+				ret, mTraingModelBufferLen);
+			mTrainingModelCallback(ResponseResult::RREST_FAILED, 0);
+		}
+		resetTrainingModelData();
+	}
+	else
+	{
+		// calculate progress percentage
+		GF_UINT32 currentStartPos = TRANING_PACKAGE_DATA_LENGTH * (nextPkgNo - 1);
+		GF_UINT32 percentage = currentStartPos * 100 / mTraingModelBufferLen;
+		if (100 <= percentage)
+			percentage = 99; // 100 means completion, it should be sent above
+		if ((GF_UINT32)-1 == mLastSentPercentage || (mLastSentPercentage + 5) <= percentage)
+		{
+			mTrainingModelCallback(ResponseResult::RREST_SUCCESS, percentage);
+			mLastSentPercentage = percentage;
+		}
+
+	}
+}
+GF_RET_CODE DeviceSettingDataProfile4::trainingModelSendNextPackage(GF_UINT16 nextPkgId)
+{
+	if (1 > nextPkgId)
+		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
+	GF_UINT16 pkgNo = nextPkgId - 1;
+	if ((GF_UINT32)(TRANING_PACKAGE_DATA_LENGTH * pkgNo) >= mTraingModelBufferLen)
+		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
+
+	GF_UINT32 remainDataLen = mTraingModelBufferLen - (TRANING_PACKAGE_DATA_LENGTH * pkgNo);
+	const GF_UINT8 cmdlen = TRANING_PACKAGE_DATA_LENGTH + 3;
+	GF_UINT8 cmddata[cmdlen];
+	memset(cmddata, 0, sizeof(cmddata));
+	cmddata[0] = CMD_SEND_TRAINING_PACKAGE;
+	cmddata[1] = (GF_UINT8)nextPkgId;
+	cmddata[2] = (GF_UINT8)(nextPkgId >> 8);
+	// NOTE that package number is started from 1.
+	memcpy(cmddata + 3, mTraingModelBuffer.get() + (TRANING_PACKAGE_DATA_LENGTH * pkgNo),
+		min<GF_UINT32>(TRANING_PACKAGE_DATA_LENGTH, remainDataLen));
+	auto onResponse = [this](ResponseResult respval, GF_UINT16 nextPkgNo) {
+		trainingModelOnResponse(respval, nextPkgNo);
+	};
+	gfsPtr<function<void(ResponseResult, GF_UINT16)>> pcb = make_shared<function<void(ResponseResult, GF_UINT16)>>(onResponse);
+	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
+	return sendCommand(cmdlen, cmddata, true, pvoid);
+}
+void DeviceSettingDataProfile4::resetTrainingModelData()
+{
+	mTraingModelBuffer.reset();
+	mTraingModelBufferLen = 0;
+	mTrainingModelCallback = nullptr;
+	mLastSentPercentage = (GF_UINT32)-1;
+}
+GF_RET_CODE DeviceSettingDataProfile4::sendTrainingModelData(GF_UINT32 length,
+	GF_UINT8 data[], function<void(ResponseResult res, GF_UINT32 percentage)> progress)
+{
+	if (length == 0 || nullptr == data)
+		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
+
+	// first backup data buffer
+	mTraingModelBuffer.reset();
+	mTraingModelBuffer = decltype(mTraingModelBuffer)(new GF_UINT8[length]);
+	memcpy(mTraingModelBuffer.get(), data, length);
+	mTraingModelBufferLen = length;
+	mTrainingModelCallback = progress;
+
+	// send first package
+	auto ret = trainingModelSendNextPackage(1);
+	if (GF_RET_CODE::GF_SUCCESS != ret)
+	{
+		GF_LOGD("sending data step: error in sending: ret = %u, given total size = %u", ret, length);
+		resetTrainingModelData();
+	}
+	return ret;
+}
 GF_RET_CODE DeviceSettingDataProfile4::getBatteryLevel(function<void(ResponseResult res, GF_UINT32 percentage)> cb)
 {
 	GF_LOGD(__FUNCTION__);
-	GF_UINT8 data = CMD_GET_BATTERY_LEVEL;
-	gfsPtr<function<void(ResponseResult, GF_UINT32)>> pcb = make_shared<function<void(ResponseResult, GF_UINT32)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(1, &data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_BATTERY_LEVEL);
 }
 // C.1
 GF_RET_CODE DeviceSettingDataProfile4::getTemperature(function<void(ResponseResult res, GF_UINT32 temperature)> cb)
 {
 	GF_LOGD(__FUNCTION__);
-	GF_UINT8 data = CMD_GET_TEMPERATURE;
-	gfsPtr<function<void(ResponseResult, GF_UINT32)>> pcb = make_shared<function<void(ResponseResult, GF_UINT32)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(1, &data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_TEMPERATURE);
 }
 // C.3
 GF_RET_CODE DeviceSettingDataProfile4::setLogLevel(SWOLogLevel level, function<void(ResponseResult res)> cb)
@@ -405,9 +558,7 @@ GF_RET_CODE DeviceSettingDataProfile4::setLogLevel(SWOLogLevel level, function<v
 	GF_UINT8 data[length];
 	data[0] = CMD_SET_SWO_LOG_LEVEL;
 	data[1] = static_cast<GF_UINT8>(level);
-	gfsPtr<function<void(ResponseResult)>> pcb = make_shared<function<void(ResponseResult)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 // C.3
 GF_RET_CODE DeviceSettingDataProfile4::setLogModuleEnabled(SWOModule modules, function<void(ResponseResult res)> cb)
@@ -420,33 +571,27 @@ GF_RET_CODE DeviceSettingDataProfile4::setLogModuleEnabled(SWOModule modules, fu
 	data[2] = (GF_UINT8)(modules >> 8);
 	data[3] = (GF_UINT8)(modules >> 16);
 	data[4] = (GF_UINT8)(modules >> 24);
-	gfsPtr<function<void(ResponseResult)>> pcb = make_shared<function<void(ResponseResult)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 // C.3
 GF_RET_CODE DeviceSettingDataProfile4::printKernelMsg(KernelMsgType type, function<void(ResponseResult res)> cb)
 {
-	GF_LOGD("%s: type = %u", __FUNCTION__, type);
+	GF_LOGD("%s: type = %u", __FUNCTION__, (GF_UINT32)type);
 	const GF_UINT8 length = 2;
 	GF_UINT8 data[length];
 	data[0] = CMD_PRINT_KERNEL_MSG;
 	data[1] = static_cast<GF_UINT8>(type);
-	gfsPtr<function<void(ResponseResult)>> pcb = make_shared<function<void(ResponseResult)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 // C.4
 GF_RET_CODE DeviceSettingDataProfile4::vibrateControl(VibrateControlType type, function<void(ResponseResult res)> cb)
 {
-	GF_LOGD("%s: type = %u", __FUNCTION__, type);
+	GF_LOGD("%s: type = %u", __FUNCTION__, (GF_UINT32)type);
 	const GF_UINT8 length = 2;
 	GF_UINT8 data[length];
 	data[0] = CMD_MOTOR_CONTROL;
 	data[1] = static_cast<GF_UINT8>(type);
-	gfsPtr<function<void(ResponseResult)>> pcb = make_shared<function<void(ResponseResult)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 // C.5
 GF_RET_CODE DeviceSettingDataProfile4::ledControlTest(LedControlTestType type, function<void(ResponseResult res)> cb)
@@ -456,9 +601,7 @@ GF_RET_CODE DeviceSettingDataProfile4::ledControlTest(LedControlTestType type, f
 	GF_UINT8 data[length];
 	data[0] = CMD_LED_CONTROL_TEST;
 	data[1] = static_cast<GF_UINT8>(type);
-	gfsPtr<function<void(ResponseResult)>> pcb = make_shared<function<void(ResponseResult)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 GF_RET_CODE DeviceSettingDataProfile4::packageIdControl(PackageControlType type, function<void(ResponseResult res)> cb)
 {
@@ -468,9 +611,7 @@ GF_RET_CODE DeviceSettingDataProfile4::packageIdControl(PackageControlType type,
 	data[0] = CMD_PACKAGE_ID_CONTROL;
 	data[1] = (type == PackageControlType::Enable ? 0x01 : 0x00);
 	mCfgApplying.pkgIdCtrl = type;
-	gfsPtr<function<void(ResponseResult)>> pcb = make_shared<function<void(ResponseResult)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 
 // C.7
@@ -478,13 +619,7 @@ GF_RET_CODE DeviceSettingDataProfile4::getAccelerateCap(function<void(ResponseRe
 	GF_UINT8 maxScaleRange_g, GF_UINT8 maxPackageDataLength)> cb)
 {
 	GF_LOGD("%s", __FUNCTION__);
-	const GF_UINT8 length = 1;
-	GF_UINT8 data[length];
-	data[0] = CMD_GET_ACCELERATE_CAP;
-	gfsPtr<function<void(ResponseResult, GF_UINT16, GF_UINT8, GF_UINT8)>> pcb =
-		make_shared<function<void(ResponseResult, GF_UINT16, GF_UINT8, GF_UINT8)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_ACCELERATE_CAP);
 }
 // C.7
 GF_RET_CODE DeviceSettingDataProfile4::setAccelerateConfig(GF_UINT16 sampleRateHz,
@@ -502,22 +637,14 @@ GF_RET_CODE DeviceSettingDataProfile4::setAccelerateConfig(GF_UINT16 sampleRateH
 	GF_UINT32 value;
 	memcpy(&value, &(data[1]), 4);
 	mCfgApplying.accelerateCfg = value;
-	gfsPtr<function<void(ResponseResult)>> pcb = make_shared<function<void(ResponseResult)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 // C.8
 GF_RET_CODE DeviceSettingDataProfile4::getGyroscopeCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz,
 	GF_UINT16 maxScaleRange_dps, GF_UINT8 maxPackageDataLength)> cb)
 {
 	GF_LOGD("%s", __FUNCTION__);
-	const GF_UINT8 length = 1;
-	GF_UINT8 data[length];
-	data[0] = CMD_GET_GYROSCOPE_CAP;
-	gfsPtr<function<void(ResponseResult, GF_UINT16, GF_UINT16, GF_UINT8)>> pcb =
-		make_shared<function<void(ResponseResult, GF_UINT16, GF_UINT16, GF_UINT8)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_GYROSCOPE_CAP);
 }
 // C.8
 GF_RET_CODE DeviceSettingDataProfile4::setGyroscopeConfig(GF_UINT16 sampleRateHz,
@@ -537,22 +664,14 @@ GF_RET_CODE DeviceSettingDataProfile4::setGyroscopeConfig(GF_UINT16 sampleRateHz
 	memcpy(&hvalue, &(data[1]), 4);
 	GF_UINT64 value = (((GF_UINT64)hvalue) << 32) | packageDataLength;
 	mCfgApplying.gyroscopeCfg = value;
-	gfsPtr<function<void(ResponseResult)>> pcb = make_shared<function<void(ResponseResult)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 // C.9
 GF_RET_CODE DeviceSettingDataProfile4::getMagnetometerCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz,
 	GF_UINT16 maxScaleRange_uT, GF_UINT8 maxPackageDataLength)> cb)
 {
 	GF_LOGD("%s", __FUNCTION__);
-	const GF_UINT8 length = 1;
-	GF_UINT8 data[length];
-	data[0] = CMD_GET_MAGNETOMETER_CAP;
-	gfsPtr<function<void(ResponseResult, GF_UINT16, GF_UINT16, GF_UINT8)>> pcb =
-		make_shared<function<void(ResponseResult, GF_UINT16, GF_UINT16, GF_UINT8)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_MAGNETOMETER_CAP);
 }
 // C.9
 GF_RET_CODE DeviceSettingDataProfile4::setMagnetometerConfig(GF_UINT16 sampleRateHz,
@@ -572,21 +691,13 @@ GF_RET_CODE DeviceSettingDataProfile4::setMagnetometerConfig(GF_UINT16 sampleRat
 	memcpy(&hvalue, &(data[1]), 4);
 	GF_UINT64 value = (((GF_UINT64)hvalue) << 32) | packageDataLength;
 	mCfgApplying.magnetometerCfg = value;
-	gfsPtr<function<void(ResponseResult)>> pcb = make_shared<function<void(ResponseResult)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 // C.10
 GF_RET_CODE DeviceSettingDataProfile4::getEulerangleCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz)> cb)
 {
 	GF_LOGD("%s", __FUNCTION__);
-	const GF_UINT8 length = 1;
-	GF_UINT8 data[length];
-	data[0] = CMD_GET_EULER_ANGLE_CAP;
-	gfsPtr<function<void(ResponseResult, GF_UINT16)>> pcb =
-		make_shared<function<void(ResponseResult, GF_UINT16)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_EULER_ANGLE_CAP);
 }
 // C.10
 GF_RET_CODE DeviceSettingDataProfile4::setEulerangleConfig(GF_UINT16 sampleRateHz, function<void(ResponseResult res)> cb)
@@ -597,21 +708,13 @@ GF_RET_CODE DeviceSettingDataProfile4::setEulerangleConfig(GF_UINT16 sampleRateH
 	data[0] = CMD_SET_EULER_ANGLE_CONFIG;
 	data[1] = (GF_UINT8)(sampleRateHz);
 	data[2] = (GF_UINT8)(sampleRateHz >> 8);
-	gfsPtr<function<void(ResponseResult)>> pcb = make_shared<function<void(ResponseResult)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 // C.11
 GF_RET_CODE DeviceSettingDataProfile4::getQuaternionCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz)> cb)
 {
 	GF_LOGD("%s", __FUNCTION__);
-	const GF_UINT8 length = 1;
-	GF_UINT8 data[length];
-	data[0] = CMD_GET_QUATERNION_CAP;
-	gfsPtr<function<void(ResponseResult, GF_UINT16)>> pcb =
-		make_shared<function<void(ResponseResult, GF_UINT16)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_QUATERNION_CAP);
 }
 // C.11
 GF_RET_CODE DeviceSettingDataProfile4::setQuaternionConfig(GF_UINT16 sampleRateHz, function<void(ResponseResult res)> cb)
@@ -622,21 +725,13 @@ GF_RET_CODE DeviceSettingDataProfile4::setQuaternionConfig(GF_UINT16 sampleRateH
 	data[0] = CMD_SET_QUATERNION_CONFIG;
 	data[1] = (GF_UINT8)(sampleRateHz);
 	data[2] = (GF_UINT8)(sampleRateHz >> 8);
-	gfsPtr<function<void(ResponseResult)>> pcb = make_shared<function<void(ResponseResult)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 // C.12
 GF_RET_CODE DeviceSettingDataProfile4::getRotationMatrixCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz)> cb)
 {
 	GF_LOGD("%s", __FUNCTION__);
-	const GF_UINT8 length = 1;
-	GF_UINT8 data[length];
-	data[0] = CMD_GET_ROTATION_MATRIX_CAP;
-	gfsPtr<function<void(ResponseResult, GF_UINT16)>> pcb =
-		make_shared<function<void(ResponseResult, GF_UINT16)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_ROTATION_MATRIX_CAP);
 }
 // C.12
 GF_RET_CODE DeviceSettingDataProfile4::setRotationMatrixConfig(GF_UINT16 sampleRateHz, function<void(ResponseResult res)> cb)
@@ -647,21 +742,13 @@ GF_RET_CODE DeviceSettingDataProfile4::setRotationMatrixConfig(GF_UINT16 sampleR
 	data[0] = CMD_SET_ROTATION_MATRIX_CONFIG;
 	data[1] = (GF_UINT8)(sampleRateHz);
 	data[2] = (GF_UINT8)(sampleRateHz >> 8);
-	gfsPtr<function<void(ResponseResult)>> pcb = make_shared<function<void(ResponseResult)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 // C.13
-GF_RET_CODE DeviceSettingDataProfile4::getGestureCap(function<void(ResponseResult res, GF_UINT32 number, Gesture supportedGestures[])> cb)
+GF_RET_CODE DeviceSettingDataProfile4::getGestureCap(function<void(ResponseResult res, GF_SIZE number, const Gesture supportedGestures[])> cb)
 {
 	GF_LOGD("%s", __FUNCTION__);
-	const GF_UINT8 length = 1;
-	GF_UINT8 data[length];
-	data[0] = CMD_GET_GESTURE_CAP;
-	gfsPtr<function<void(ResponseResult, GF_UINT32, Gesture[])>> pcb =
-		make_shared<function<void(ResponseResult, GF_UINT32, Gesture[])>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_GESTURE_CAP);
 }
 // C.13
 enum GestureMask : GF_UINT32
@@ -708,22 +795,14 @@ GF_RET_CODE DeviceSettingDataProfile4::setGestureConfig(GF_UINT32 number, Gestur
 	data[2] = (GF_UINT8)(mask >> 8);
 	data[3] = (GF_UINT8)(mask >> 16);
 	data[4] = (GF_UINT8)(mask >> 24);
-	gfsPtr<function<void(ResponseResult)>> pcb = make_shared<function<void(ResponseResult)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 // C.14
 GF_RET_CODE DeviceSettingDataProfile4::getEMGRawDataCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz,
 	EMGRowDataChannels supportedChannels, GF_UINT8 maxPackageDataLength)> cb)
 {
 	GF_LOGD("%s", __FUNCTION__);
-	const GF_UINT8 length = 1;
-	GF_UINT8 data[length];
-	data[0] = CMD_GET_EMG_RAWDATA_CAP;
-	gfsPtr<function<void(ResponseResult, GF_UINT16, EMGRowDataChannels, GF_UINT8)>> pcb =
-		make_shared<function<void(ResponseResult, GF_UINT16, EMGRowDataChannels, GF_UINT8)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_EMG_RAWDATA_CAP);
 }
 // C.14
 GF_RET_CODE DeviceSettingDataProfile4::setEMGRawDataConfig(GF_UINT16 sampleRateHz,
@@ -743,20 +822,13 @@ GF_RET_CODE DeviceSettingDataProfile4::setEMGRawDataConfig(GF_UINT16 sampleRateH
 	memcpy(&hvalue, &(data[1]), 4);
 	GF_UINT64 value = (((GF_UINT64)hvalue) << 32) | packageDataLength;
 	mCfgApplying.magnetometerCfg = value;
-	gfsPtr<function<void(ResponseResult)>> pcb = make_shared<function<void(ResponseResult)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 // C.15
 GF_RET_CODE DeviceSettingDataProfile4::getMouseDataCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz)> cb)
 {
 	GF_LOGD("%s", __FUNCTION__);
-	const GF_UINT8 length = 1;
-	GF_UINT8 data[length];
-	data[0] = CMD_GET_MOUSE_DATA_CAP;
-	gfsPtr<function<void(ResponseResult, GF_UINT16)>> pcb = make_shared<function<void(ResponseResult, GF_UINT16)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_MOUSE_DATA_CAP);
 }
 // C.15
 GF_RET_CODE DeviceSettingDataProfile4::setMouseDataConfig(GF_UINT16 sampleRateHz, function<void(ResponseResult res)> cb)
@@ -767,20 +839,13 @@ GF_RET_CODE DeviceSettingDataProfile4::setMouseDataConfig(GF_UINT16 sampleRateHz
 	data[0] = CMD_SET_MOUSE_DATA_CONFIG;
 	data[1] = (GF_UINT8)(sampleRateHz);
 	data[2] = (GF_UINT8)(sampleRateHz >> 8);
-	gfsPtr<function<void(ResponseResult)>> pcb = make_shared<function<void(ResponseResult)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 // C.16
 GF_RET_CODE DeviceSettingDataProfile4::getJoystickDataCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz)> cb)
 {
 	GF_LOGD("%s", __FUNCTION__);
-	const GF_UINT8 length = 1;
-	GF_UINT8 data[length];
-	data[0] = CMD_GET_JOYSTICK_DATA_CAP;
-	gfsPtr<function<void(ResponseResult, GF_UINT16)>> pcb = make_shared<function<void(ResponseResult, GF_UINT16)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_JOYSTICK_DATA_CAP);
 }
 // C.16
 GF_RET_CODE DeviceSettingDataProfile4::setJoystickDataConfig(GF_UINT16 sampleRateHz, function<void(ResponseResult res)> cb)
@@ -791,20 +856,13 @@ GF_RET_CODE DeviceSettingDataProfile4::setJoystickDataConfig(GF_UINT16 sampleRat
 	data[0] = CMD_SET_JOYSTICK_DATA_CONFIG;
 	data[1] = (GF_UINT8)(sampleRateHz);
 	data[2] = (GF_UINT8)(sampleRateHz >> 8);
-	gfsPtr<function<void(ResponseResult)>> pcb = make_shared<function<void(ResponseResult)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 // C.17
 GF_RET_CODE DeviceSettingDataProfile4::getDeviceStatusCap(function<void(ResponseResult res, DeviceStatusFlags flags)> cb)
 {
 	GF_LOGD("%s", __FUNCTION__);
-	const GF_UINT8 length = 1;
-	GF_UINT8 data[length];
-	data[0] = CMD_GET_DEVICE_STATUS_CAP;
-	gfsPtr<function<void(ResponseResult, DeviceStatusFlags)>> pcb = make_shared<function<void(ResponseResult, DeviceStatusFlags)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_GET_COMMAND(CMD_GET_DEVICE_STATUS_CAP);
 }
 // C.17
 GF_RET_CODE DeviceSettingDataProfile4::setDeviceStatusConfig(DeviceStatusFlags flags, function<void(ResponseResult res)> cb)
@@ -815,9 +873,7 @@ GF_RET_CODE DeviceSettingDataProfile4::setDeviceStatusConfig(DeviceStatusFlags f
 	data[0] = CMD_SET_DEVICE_STATUS_CONFIG;
 	data[1] = (GF_UINT8)(flags);
 	data[2] = (GF_UINT8)(flags >> 8);
-	gfsPtr<function<void(ResponseResult)>> pcb = make_shared<function<void(ResponseResult)>>(cb);
-	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(length, data, true, pvoid);
+	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 
 
@@ -835,178 +891,91 @@ tstring DeviceSettingDataProfile4::getStringCommon(GF_UINT8 length, GF_PUINT8 da
 
 void DeviceSettingDataProfile4::onProtocolVer(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	if (retval == RC_SUCCESS)
-	{
-		if (length >= 2)
-		{
-			std::ostringstream stm;
-			stm << 'V' << (GF_UINT32)data[0] << '.' << (GF_UINT32)data[1];
-			mProtocolVer = utils::totstring(stm.str());
-			GF_LOGD("%s: %s", __FUNCTION__, stm.str().c_str());
-		}
-		else
-		{
-			retval = RC_FAILED;
-		}
-	}
-	gfsPtr<function<void(ResponseResult, tstring)>> callback = static_pointer_cast<function<void(ResponseResult, tstring)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval), mProtocolVer);
+	auto& v = mProtocolVer;
+	auto f = [&v](GF_UINT8 length, GF_PUINT8 data) {
+		std::ostringstream stm;
+		stm << 'V' << (GF_UINT32)data[0] << '.' << (GF_UINT32)data[1];
+		v = utils::totstring(stm.str());
+	};
+	ON_RESPONSE_PARSING(f, 2, void(ResponseResult, tstring), mProtocolVer);
 }
 void DeviceSettingDataProfile4::onFeatureMap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	if (retval == RC_SUCCESS)
-	{
-		if (length >= 4)
-		{
-			mFeatureMap = (GF_UINT32)(data[0])
-				| ((GF_UINT32)(data[1]) << 8)
-				| ((GF_UINT32)(data[2]) << 16)
-				| ((GF_UINT32)(data[3]) << 24);
-			GF_LOGD("%s: 0x%8.8X", __FUNCTION__, mFeatureMap);
-		}
-		else
-		{
-			retval = RC_FAILED;
-		}
-	}
-	gfsPtr<function<void(ResponseResult, GF_UINT32)>> callback = static_pointer_cast<function<void(ResponseResult, GF_UINT32)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval), mFeatureMap);
+	GF_UINT32& v = mFeatureMap;
+	auto f = [&v](GF_UINT8 length, GF_PUINT8 data) {
+		v = (GF_UINT32)(data[0])
+			| ((GF_UINT32)(data[1]) << 8)
+			| ((GF_UINT32)(data[2]) << 16)
+			| ((GF_UINT32)(data[3]) << 24);
+	};
+	ON_RESPONSE_PARSING(f, 4, void(ResponseResult, GF_UINT32), mFeatureMap);
 }
 void DeviceSettingDataProfile4::onDeviceName(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	if (retval == RC_SUCCESS)
-	{
-		if (length > 0)
-		{
-			mDeviceName = getStringCommon(length, data);
-			GF_LOGD("%s: %s", __FUNCTION__, utils::tostring(mDeviceName).c_str());
-		}
-		else
-		{
-			retval = RC_FAILED;
-		}
-	}
-	gfsPtr<function<void(ResponseResult, tstring)>> callback = static_pointer_cast<function<void(ResponseResult, tstring)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval), mDeviceName);
+	auto& v = mDeviceName;
+	auto f = [&v](GF_UINT8 length, GF_PUINT8 data) {
+		v = getStringCommon(length, data);
+	};
+	ON_RESPONSE_PARSING(f, 0, void(ResponseResult, tstring), mDeviceName);
 }
 void DeviceSettingDataProfile4::onModelNumber(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	if (retval == RC_SUCCESS)
-	{
-		if (length > 0)
-		{
-			mModelNumber = getStringCommon(length, data);
-			GF_LOGD("%s: %s", __FUNCTION__, utils::tostring(mModelNumber).c_str());
-		}
-		else
-		{
-			retval = RC_FAILED;
-		}
-	}
-	gfsPtr<function<void(ResponseResult, tstring)>> callback = static_pointer_cast<function<void(ResponseResult, tstring)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval), mModelNumber);
+	auto& v = mModelNumber;
+	auto f = [&v](GF_UINT8 length, GF_PUINT8 data) {
+		v = getStringCommon(length, data);
+	};
+	ON_RESPONSE_PARSING(f, 0, void(ResponseResult, tstring), mModelNumber);
 }
 void DeviceSettingDataProfile4::onSerialNumber(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	if (retval == RC_SUCCESS)
-	{
-		if (length > 0)
-		{
-			mSerialNumber = getStringCommon(length, data);
-			GF_LOGD("%s: %s", __FUNCTION__, utils::tostring(mSerialNumber).c_str());
-		}
-		else
-		{
-			retval = RC_FAILED;
-		}
-	}
-	gfsPtr<function<void(ResponseResult, tstring)>> callback = static_pointer_cast<function<void(ResponseResult, tstring)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval), mSerialNumber);
+	auto& v = mSerialNumber;
+	auto f = [&v](GF_UINT8 length, GF_PUINT8 data) {
+		v = getStringCommon(length, data);
+	};
+	ON_RESPONSE_PARSING(f, 0, void(ResponseResult, tstring), mSerialNumber);
 }
 void DeviceSettingDataProfile4::onHWRevision(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	if (retval == RC_SUCCESS)
-	{
-		if (length >= 1)
-		{
-			std::ostringstream stm;
-			stm << 'R' << (GF_UINT32)data[0];
-			mHWRev = utils::totstring(stm.str());
-			GF_LOGD("%s: %s", __FUNCTION__, stm.str().c_str());
-		}
-		else
-		{
-			retval = RC_FAILED;
-		}
-	}
-	gfsPtr<function<void(ResponseResult, tstring)>> callback = static_pointer_cast<function<void(ResponseResult, tstring)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval), mHWRev);
+	auto& v = mHWRev;
+	auto f = [&v](GF_UINT8 length, GF_PUINT8 data) {
+		std::ostringstream stm;
+		stm << 'R' << (GF_UINT32)data[0];
+		v = utils::totstring(stm.str());
+	};
+	ON_RESPONSE_PARSING(f, 1, void(ResponseResult, tstring), mHWRev);
 }
 void DeviceSettingDataProfile4::onFWRevision(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	if (retval == RC_SUCCESS)
-	{
-		if (length >= 3)
-		{
-			std::ostringstream stm;
-			stm << 'V' << (GF_UINT32)data[0] << '.' << (GF_UINT32)data[1] << '-' << (GF_UINT32)data[2];
-			mFWRev = utils::totstring(stm.str());
-			GF_LOGD("%s: %s", __FUNCTION__, stm.str().c_str());
-		}
-		else
-		{
-			retval = RC_FAILED;
-		}
-	}
-	gfsPtr<function<void(ResponseResult, tstring)>> callback = static_pointer_cast<function<void(ResponseResult, tstring)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval), mFWRev);
+	auto& v = mFWRev;
+	auto f = [&v](GF_UINT8 length, GF_PUINT8 data) {
+		std::ostringstream stm;
+		stm << 'V' << (GF_UINT32)data[0] << '.' << (GF_UINT32)data[1] << '-' << (GF_UINT32)data[2];
+		v = utils::totstring(stm.str());
+	};
+	ON_RESPONSE_PARSING(f, 3, void(ResponseResult, tstring), mFWRev);
 }
 void DeviceSettingDataProfile4::onManufacturerName(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	if (retval == RC_SUCCESS)
-	{
-		if (length > 0)
-		{
-			mManuName = getStringCommon(length, data);
-			GF_LOGD("%s: %s", __FUNCTION__, utils::tostring(mManuName).c_str());
-		}
-		else
-		{
-			retval = RC_FAILED;
-		}
-	}
-	gfsPtr<function<void(ResponseResult, tstring)>> callback = static_pointer_cast<function<void(ResponseResult, tstring)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval), mManuName);
+	auto& v = mManuName;
+	auto f = [&v](GF_UINT8 length, GF_PUINT8 data) {
+		v = getStringCommon(length, data);
+	};
+	ON_RESPONSE_PARSING(f, 0, void(ResponseResult, tstring), mManuName);
 }
 void DeviceSettingDataProfile4::onBootloaderVer(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	if (retval == RC_SUCCESS)
-	{
-		if (length >= 3)
-		{
-			std::ostringstream stm;
-			stm << 'V' << (GF_UINT32)data[0] << '.' << (GF_UINT32)data[1] << '-' << (GF_UINT32)data[2];
-			mBootloaderVer = utils::totstring(stm.str());
-			GF_LOGD("%s: %s", __FUNCTION__, stm.str().c_str());
-		}
-		else
-		{
-			retval = RC_FAILED;
-		}
-	}
-	gfsPtr<function<void(ResponseResult, tstring)>> callback = static_pointer_cast<function<void(ResponseResult, tstring)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval), mBootloaderVer);
+	auto& v = mBootloaderVer;
+	auto f = [&v](GF_UINT8 length, GF_PUINT8 data) {
+		std::ostringstream stm;
+		stm << 'V' << (GF_UINT32)data[0] << '.' << (GF_UINT32)data[1] << '-' << (GF_UINT32)data[2];
+		v = utils::totstring(stm.str());
+	};
+	ON_RESPONSE_PARSING(f, 3, void(ResponseResult, tstring), mBootloaderVer);
 }
-void DeviceSettingDataProfile4::onSendTrainingModelData(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
+void DeviceSettingDataProfile4::onSendTrainingModelData(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_PARSING_UINT16();
+}
 
 #define MTU_DEFAULT (23)
 #define MTU_HEAD_LENGTH (4)
@@ -1020,7 +989,6 @@ void DeviceSettingDataProfile4::onSendTrainingModelData(GF_UINT8 retval, GF_UINT
 
 void DeviceSettingDataProfile4::onSetDataNotifSwitch(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	GF_LOGD("%s, retval = %u", __FUNCTION__, retval);
 	if (retval == RC_SUCCESS)
 	{
 		auto applied = mCfgApplying.dataFlags.load();
@@ -1033,69 +1001,48 @@ void DeviceSettingDataProfile4::onSetDataNotifSwitch(GF_UINT8 retval, GF_UINT8 l
 			configMtuSize();
 		}
 	}
-	gfsPtr<function<void(ResponseResult)>> callback = static_pointer_cast<function<void(ResponseResult)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval));
+	ON_RESPONSE_RESPRESULT();
 }
 void DeviceSettingDataProfile4::onGetBatteryLevel(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	GF_UINT8 val = 0;
-	if (retval == RC_SUCCESS)
-	{
-		if (length >= 1)
-		{
-			val = data[0];
-			GF_LOGD("%s: 0x%8.8X", __FUNCTION__, val);
-		}
-		else
-		{
-			retval = RC_FAILED;
-		}
-	}
-	gfsPtr<function<void(ResponseResult, GF_UINT32)>> callback = static_pointer_cast<function<void(ResponseResult, GF_UINT32)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval), val);
+	GF_UINT8 v = 0;
+	auto f = [&v](GF_UINT8 length, GF_PUINT8 data) {
+		v = data[0];
+	};
+	ON_RESPONSE_PARSING(f, 1, void(ResponseResult, GF_UINT32), v);
 }
 void DeviceSettingDataProfile4::onGetTemperature(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	GF_UINT8 val = 0;
-	if (retval == RC_SUCCESS)
-	{
-		if (length >= 1)
-		{
-			// according to the spec, the value should subtract 40
-			val = data[0] - 40;
-			GF_LOGD("%s: 0x%8.8X", __FUNCTION__, val);
-		}
-		else
-		{
-			retval = RC_FAILED;
-		}
-	}
-	gfsPtr<function<void(ResponseResult, GF_UINT32)>> callback = static_pointer_cast<function<void(ResponseResult, GF_UINT32)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval), val);
+	GF_UINT8 v = 0;
+	auto f = [&v](GF_UINT8 length, GF_PUINT8 data) {
+		// according to the spec, the value should subtract 40
+		v = data[0] - 40;
+	};
+	ON_RESPONSE_PARSING(f, 1, void(ResponseResult, GF_UINT32), v);
 }
-void DeviceSettingDataProfile4::onSetLogLevel(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
-void DeviceSettingDataProfile4::onSetLogModuleEnabled(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
-void DeviceSettingDataProfile4::onPrintKernelMsg(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
+
+void DeviceSettingDataProfile4::onSetLogLevel(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_RESPRESULT();
+}
+void DeviceSettingDataProfile4::onSetLogModuleEnabled(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_RESPRESULT();
+}
+void DeviceSettingDataProfile4::onPrintKernelMsg(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_RESPRESULT();
+}
 void DeviceSettingDataProfile4::onVibrateControl(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	GF_LOGD("%s, retval = %u", __FUNCTION__, retval);
-	gfsPtr<function<void(ResponseResult)>> callback = static_pointer_cast<function<void(ResponseResult)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval));
+	ON_RESPONSE_RESPRESULT();
 }
 void DeviceSettingDataProfile4::onLedControlTest(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	GF_LOGD("%s, retval = %u", __FUNCTION__, retval);
-	gfsPtr<function<void(ResponseResult)>> callback = static_pointer_cast<function<void(ResponseResult)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval));
+	ON_RESPONSE_RESPRESULT();
 }
 void DeviceSettingDataProfile4::onPackageIdControl(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	GF_LOGD("%s, retval = %u", __FUNCTION__, retval);
 	if (retval == RC_SUCCESS)
 	{
 		auto applied = mCfgApplying.pkgIdCtrl.load();
@@ -1107,14 +1054,14 @@ void DeviceSettingDataProfile4::onPackageIdControl(GF_UINT8 retval, GF_UINT8 len
 			configMtuSize();
 		}
 	}
-	gfsPtr<function<void(ResponseResult)>> callback = static_pointer_cast<function<void(ResponseResult)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval));
+	ON_RESPONSE_RESPRESULT();
 }
-void DeviceSettingDataProfile4::onGetAccelerateCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
+void DeviceSettingDataProfile4::onGetAccelerateCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_PARSING_4BYTES_WITH_211();
+}
 void DeviceSettingDataProfile4::onSetAccelerateConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	GF_LOGD("%s, retval = %u", __FUNCTION__, retval);
 	if (retval == RC_SUCCESS)
 	{
 		auto applied = mCfgApplying.accelerateCfg.load();
@@ -1125,14 +1072,14 @@ void DeviceSettingDataProfile4::onSetAccelerateConfig(GF_UINT8 retval, GF_UINT8 
 			configMtuSize();
 		}
 	}
-	gfsPtr<function<void(ResponseResult)>> callback = static_pointer_cast<function<void(ResponseResult)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval));
+	ON_RESPONSE_RESPRESULT();
 }
-void DeviceSettingDataProfile4::onGetGyroscopeCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
+void DeviceSettingDataProfile4::onGetGyroscopeCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_PARSING_5BYTES_WITH_221();
+}
 void DeviceSettingDataProfile4::onSetGyroscopeConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	GF_LOGD("%s, retval = %u", __FUNCTION__, retval);
 	if (retval == RC_SUCCESS)
 	{
 		auto applied = mCfgApplying.gyroscopeCfg.load();
@@ -1143,14 +1090,14 @@ void DeviceSettingDataProfile4::onSetGyroscopeConfig(GF_UINT8 retval, GF_UINT8 l
 			configMtuSize();
 		}
 	}
-	gfsPtr<function<void(ResponseResult)>> callback = static_pointer_cast<function<void(ResponseResult)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval));
+	ON_RESPONSE_RESPRESULT();
 }
-void DeviceSettingDataProfile4::onGetMagnetometerCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
+void DeviceSettingDataProfile4::onGetMagnetometerCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_PARSING_5BYTES_WITH_221();
+}
 void DeviceSettingDataProfile4::onSetMagnetometerConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	GF_LOGD("%s, retval = %u", __FUNCTION__, retval);
 	if (retval == RC_SUCCESS)
 	{
 		auto applied = mCfgApplying.magnetometerCfg.load();
@@ -1161,22 +1108,77 @@ void DeviceSettingDataProfile4::onSetMagnetometerConfig(GF_UINT8 retval, GF_UINT
 			configMtuSize();
 		}
 	}
-	gfsPtr<function<void(ResponseResult)>> callback = static_pointer_cast<function<void(ResponseResult)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval));
+	ON_RESPONSE_RESPRESULT();
 }
-void DeviceSettingDataProfile4::onGetEulerangleCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
-void DeviceSettingDataProfile4::onSetEulerangleConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
-void DeviceSettingDataProfile4::onGetQuaternionCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
-void DeviceSettingDataProfile4::onSetQuaternionConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
-void DeviceSettingDataProfile4::onGetRotationMatrixCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
-void DeviceSettingDataProfile4::onSetRotationMatrixConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
-void DeviceSettingDataProfile4::onGetGestureCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
-void DeviceSettingDataProfile4::onSetGestureConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
-void DeviceSettingDataProfile4::onGetEMGRawDataCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
+void DeviceSettingDataProfile4::onGetEulerangleCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_PARSING_UINT16();
+}
+void DeviceSettingDataProfile4::onSetEulerangleConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_RESPRESULT();
+}
+void DeviceSettingDataProfile4::onGetQuaternionCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_PARSING_UINT16();
+}
+void DeviceSettingDataProfile4::onSetQuaternionConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_RESPRESULT();
+}
+void DeviceSettingDataProfile4::onGetRotationMatrixCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_PARSING_UINT16();
+}
+void DeviceSettingDataProfile4::onSetRotationMatrixConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_RESPRESULT();
+}
+void DeviceSettingDataProfile4::onGetGestureCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	GF_UINT32 gestureMap = 0;
+	vector<Gesture> supportedGestures;
+	if (RC_SUCCESS == retval)
+	{
+		if (4 <= length)
+		{
+			gestureMap = (GF_UINT32)(data[0])
+				| ((GF_UINT32)(data[1]) << 8)
+				| ((GF_UINT32)(data[2]) << 16)
+				| ((GF_UINT32)(data[3]) << 24);
+			if (gestureMap | GM_RELAX)
+				supportedGestures.push_back(Gesture::Relax);
+			if (gestureMap | GM_FIST)
+				supportedGestures.push_back(Gesture::Fist);
+			if (gestureMap | GM_SPREAD)
+				supportedGestures.push_back(Gesture::SpreadFingers);
+			if (gestureMap | GM_WAVEIN)
+				supportedGestures.push_back(Gesture::WaveIn);
+			if (gestureMap | GM_WAVEOUT)
+				supportedGestures.push_back(Gesture::WaveOut);
+			if (gestureMap | GM_PINCH)
+				supportedGestures.push_back(Gesture::Pinch);
+			if (gestureMap | GM_SHOOT)
+				supportedGestures.push_back(Gesture::Shoot);
+		}
+		else
+		{
+			retval = RC_FAILED;
+		}
+	}
+	ON_RESPONSE_RESPRESULT_PARAM(void(ResponseResult res, GF_SIZE, const Gesture[]),
+		supportedGestures.size(), supportedGestures.data());
+}
+void DeviceSettingDataProfile4::onSetGestureConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_RESPRESULT();
+}
+void DeviceSettingDataProfile4::onGetEMGRawDataCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_PARSING_5BYTES_WITH_221();
+}
 void DeviceSettingDataProfile4::onSetEMGRawDataConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	GF_LOGD("%s, retval = %u", __FUNCTION__, retval);
 	if (retval == RC_SUCCESS)
 	{
 		auto applied = mCfgApplying.emgrawCfg.load();
@@ -1187,16 +1189,33 @@ void DeviceSettingDataProfile4::onSetEMGRawDataConfig(GF_UINT8 retval, GF_UINT8 
 			configMtuSize();
 		}
 	}
-	gfsPtr<function<void(ResponseResult)>> callback = static_pointer_cast<function<void(ResponseResult)>>(cb);
-	if (callback && *callback.get())
-		(*callback.get())(responseConvert(retval));
+	ON_RESPONSE_RESPRESULT();
 }
-void DeviceSettingDataProfile4::onGetMouseDataCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
-void DeviceSettingDataProfile4::onSetMouseDataConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
-void DeviceSettingDataProfile4::onGetJoystickDataCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
-void DeviceSettingDataProfile4::onSetJoystickDataConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
-void DeviceSettingDataProfile4::onGetDeviceStatusCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
-void DeviceSettingDataProfile4::onSetDeviceStatusConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb) {}
+
+void DeviceSettingDataProfile4::onGetMouseDataCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_PARSING_UINT16();
+}
+void DeviceSettingDataProfile4::onSetMouseDataConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_RESPRESULT();
+}
+void DeviceSettingDataProfile4::onGetJoystickDataCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_PARSING_UINT16();
+}
+void DeviceSettingDataProfile4::onSetJoystickDataConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_RESPRESULT();
+}
+void DeviceSettingDataProfile4::onGetDeviceStatusCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_PARSING_2BYTES(DeviceStatusFlags);
+}
+void DeviceSettingDataProfile4::onSetDeviceStatusConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
+{
+	ON_RESPONSE_RESPRESULT();
+}
 
 void DeviceSettingDataProfile4::resetConfig()
 {

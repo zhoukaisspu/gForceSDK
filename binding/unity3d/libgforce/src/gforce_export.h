@@ -132,7 +132,7 @@ struct ListenerCalls
 	///     device.
 	/// \param device The handle of a Device sending data
 	/// \sa gf::HubListener::onReCenter
-	void(*onReCenter)(gf::GF_HANDLE device) = nullptr;
+	void(*onDeviceStatusChanged)(gf::GF_HANDLE device, gf::GF_UINT status) = nullptr;
 };
 #pragma pack(pop)
 

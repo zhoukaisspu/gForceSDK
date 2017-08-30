@@ -113,6 +113,45 @@ void printHelp()
 	GF_LOGI("q:\tExit.\n\n");
 }
 
+string gestureToString(Gesture gest)
+{
+	string gesture;
+	switch (gest)
+	{
+	case Gesture::Relax:
+		gesture = "Relax";
+		break;
+	case Gesture::Fist:
+		gesture = "Fist";
+		break;
+	case Gesture::SpreadFingers:
+		gesture = "SpreadFingers";
+		break;
+	case Gesture::WaveIn:
+		gesture = "WaveIn";
+		break;
+	case Gesture::WaveOut:
+		gesture = "WaveOut";
+		break;
+	case Gesture::Pinch:
+		gesture = "Pinch";
+		break;
+	case Gesture::Shoot:
+		gesture = "Shoot";
+		break;
+	case Gesture::Undefined:
+	default:
+	{
+		gesture = "Unknown: ";
+		string s;
+		stringstream ss(s);
+		ss << static_cast<int>(gest);
+		gesture += ss.str();
+	}
+	}
+	return gesture;
+}
+
 list<gfsPtr<Device>> listDev;
 gfsPtr<HubListener> listener;
 
@@ -180,40 +219,7 @@ class HubListenerImp : public HubListener
 	virtual void onGestureData(WPDEVICE device, Gesture gest) override
 	{
 		auto ptr = device.lock();
-		string gesture;
-		switch (gest)
-		{
-		case Gesture::Relax:
-			gesture = "Relax";
-			break;
-		case Gesture::Fist:
-			gesture = "Fist";
-			break;
-		case Gesture::SpreadFingers:
-			gesture = "SpreadFingers";
-			break;
-		case Gesture::WaveIn:
-			gesture = "WaveIn";
-			break;
-		case Gesture::WaveOut:
-			gesture = "WaveOut";
-			break;
-		case Gesture::Pinch:
-			gesture = "Pinch";
-			break;
-		case Gesture::Shoot:
-			gesture = "Shoot";
-			break;
-		case Gesture::Undefined:
-		default:
-		{
-			gesture = "Unknown: ";
-			string s;
-			stringstream ss(s);
-			ss << static_cast<int>(gest);
-			gesture += ss.str();
-		}
-		}
+		string gesture = gestureToString(gest);
 		GF_LOGD("ThreadId: %s: %s: Device: %s, Gesture data received: %s", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == ptr ? "__empty__" : utils::tostring(ptr->getName()).c_str()), gesture.c_str());
 	}
@@ -424,6 +430,54 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 						GF_LOGD("getBatteryLevel: retcode=%u, %u", res, batlevel); });
 					ds->getTemperature([](ResponseResult res, GF_UINT32 temperature) {
 						GF_LOGD("getTemperature: retcode=%u, %u", res, temperature); });
+					// get caps
+					ds->getAccelerateCap([](ResponseResult res, GF_UINT16 maxSampleRateHz,
+						GF_UINT8 maxScaleRange_g, GF_UINT8 maxPackageDataLength) {
+						GF_LOGD("getAccelerateCap: retcode=%u, maxSampleRate=%u, maxScaleRange=%u, maxPkgLength=%u",
+							res, maxSampleRateHz, maxScaleRange_g, maxPackageDataLength);
+					});
+					ds->getGyroscopeCap([](ResponseResult res, GF_UINT16 maxSampleRateHz,
+						GF_UINT16 maxScaleRange_dps, GF_UINT8 maxPackageDataLength) {
+						GF_LOGD("getGyroscopeCap: retcode=%u, maxSampleRate=%u, maxScaleRange=%u, maxPkgLength=%u",
+							res, maxSampleRateHz, maxScaleRange_dps, maxPackageDataLength);
+					});
+					ds->getMagnetometerCap([](ResponseResult res, GF_UINT16 maxSampleRateHz,
+						GF_UINT16 maxScaleRange_uT, GF_UINT8 maxPackageDataLength) {
+						GF_LOGD("getMagnetometerCap: retcode=%u, maxSampleRate=%u, maxScaleRange=%u, maxPkgLength=%u",
+							res, maxSampleRateHz, maxScaleRange_uT, maxPackageDataLength);
+					});
+					ds->getEulerangleCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
+						GF_LOGD("getEulerangleCap: retcode=%u, maxSampleRate=%u", res, maxSampleRateHz);
+					});
+					ds->getQuaternionCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
+						GF_LOGD("getQuaternionCap: retcode=%u, maxSampleRate=%u", res, maxSampleRateHz);
+					});
+					ds->getRotationMatrixCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
+						GF_LOGD("getRotationMatrixCap: retcode=%u, maxSampleRate=%u", res, maxSampleRateHz);
+					});
+					ds->getGestureCap([](ResponseResult res, GF_SIZE number, const Gesture supportedGestures[]) {
+						GF_LOGD("getGestureCap: retcode=%u, supported gesture number=%u", res, number);
+						for (GF_SIZE i = 0; i < number; i++)
+							GF_LOGD("gesture[%u]: %s", i, gestureToString(supportedGestures[i]).c_str());
+					});
+					ds->getEMGRawDataCap([](ResponseResult res, GF_UINT16 maxSampleRateHz,
+						DeviceSetting::EMGRowDataChannels supportedChannels, GF_UINT8 maxPackageDataLength) {
+						GF_LOGD("getEMGRawDataCap: retcode=%u, maxSampleRate=%u, channelsCombine=0x%4.4X, maxPkgLength=%u",
+							res, maxSampleRateHz, supportedChannels, maxPackageDataLength);
+					});
+					ds->getMouseDataCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
+						GF_LOGD("getMouseDataCap: retcode=%u, maxSampleRate=%u", res, maxSampleRateHz);
+					});
+					ds->getJoystickDataCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
+						GF_LOGD("getJoystickDataCap: retcode=%u, maxSampleRate=%u", res, maxSampleRateHz);
+					});
+					ds->getDeviceStatusCap([](ResponseResult res, DeviceSetting::DeviceStatusFlags flags) {
+						GF_LOGD("getDeviceStatusCap: retcode=%u, DeviceStatusFlags=%u", res, flags);
+					});
+					GF_UINT8 data[100];
+					ds->sendTrainingModelData(100, data, [](ResponseResult res, GF_UINT32 percentage) {
+						GF_LOGD("sendTrainingModelData: retcode=%u, percentage=%u", res, percentage);
+					});
 				}
 			}
 		}
@@ -490,9 +544,9 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 					});
 					GF_LOGD("OAD result: ret = %u", ret);
 					fclose(pf);
-				}
 			}
 		}
+	}
 		break;
 	}
 	case 'p':
@@ -592,7 +646,7 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 		break;
 	default:;
 		GF_LOGW("Invalid command %s.", cmd.c_str());
-	}
+}
 }
 
 

@@ -94,7 +94,7 @@ namespace gf
 		virtual GF_RET_CODE setQuaternionConfig(GF_UINT16 sampleRateHz, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 		virtual GF_RET_CODE getRotationMatrixCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 		virtual GF_RET_CODE setRotationMatrixConfig(GF_UINT16 sampleRateHz, function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
-		virtual GF_RET_CODE getGestureCap(function<void(ResponseResult res, GF_UINT32 number, Gesture supportedGestures[])> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
+		virtual GF_RET_CODE getGestureCap(function<void(ResponseResult res, GF_SIZE number, const Gesture supportedGestures[])> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 		virtual GF_RET_CODE setGestureConfig(GF_UINT32 number, Gesture interestingGesture[], function<void(ResponseResult res)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }
 		virtual GF_RET_CODE getEMGRawDataCap(function<void(ResponseResult res, GF_UINT16 maxSampleRateHz,
 			EMGRowDataChannels supportedChannels, GF_UINT8 maxPackageDataLength)> cb) override { return GF_RET_CODE::GF_ERROR_NOT_SUPPORT; }

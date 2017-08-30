@@ -172,7 +172,7 @@ namespace gf
 		// C.3
 		virtual GF_RET_CODE setLogModuleEnabled(SWOModule modules, std::function<void(ResponseResult res)> cb) = 0;
 
-		enum class KernelMsgType : GF_UINT32 {
+		enum class KernelMsgType : GF_UINT8 {
 			/// Print Task List
 			TaskList = 0x00,
 			/// Print Runtime State
@@ -181,7 +181,7 @@ namespace gf
 		// C.3
 		virtual GF_RET_CODE printKernelMsg(KernelMsgType type, std::function<void(ResponseResult res)> cb) = 0;
 
-		enum class VibrateControlType : GF_UINT32 {
+		enum class VibrateControlType : GF_UINT8 {
 			/// Vibrate Off Test
 			Off = 0x00,
 			/// Vibrate On Test
@@ -194,7 +194,7 @@ namespace gf
 		// C.4
 		virtual GF_RET_CODE vibrateControl(VibrateControlType type, std::function<void(ResponseResult res)> cb) = 0;
 
-		enum class LedControlTestType : GF_UINT32 {
+		enum class LedControlTestType : GF_UINT8 {
 			/// LED Off Test
 			Off = 0x00,
 			/// LED On Test
@@ -236,10 +236,10 @@ namespace gf
 		virtual GF_RET_CODE getRotationMatrixCap(std::function<void(ResponseResult res, GF_UINT16 maxSampleRateHz)> cb) = 0;
 		virtual GF_RET_CODE setRotationMatrixConfig(GF_UINT16 sampleRateHz, std::function<void(ResponseResult res)> cb) = 0;
 		// C.13
-		virtual GF_RET_CODE getGestureCap(std::function<void(ResponseResult res, GF_UINT32 number, Gesture supportedGestures[])> cb) = 0;
+		virtual GF_RET_CODE getGestureCap(std::function<void(ResponseResult res, GF_SIZE number, const Gesture supportedGestures[])> cb) = 0;
 		virtual GF_RET_CODE setGestureConfig(GF_UINT32 number, Gesture interestingGesture[], std::function<void(ResponseResult res)> cb) = 0;
 
-		enum EMGRowDataChannels {
+		enum EMGRowDataChannels : GF_UINT16 {
 			ERDC_CHANNEL_NONE = 0x0000, /// None Channel supported
 			ERDC_CHANNEL0 = 0x0001, /// Channel 0 supported
 			ERDC_CHANNEL1 = 0x0002, /// Channel 1 supported
@@ -271,7 +271,7 @@ namespace gf
 		virtual GF_RET_CODE getJoystickDataCap(std::function<void(ResponseResult res, GF_UINT16 maxSampleRateHz)> cb) = 0;
 		virtual GF_RET_CODE setJoystickDataConfig(GF_UINT16 sampleRateHz, std::function<void(ResponseResult res)> cb) = 0;
 
-		enum DeviceStatusFlags {
+		enum DeviceStatusFlags : GF_UINT16 {
 			/// None Status Event supported
 			DSF_NONE = 0x0000,
 			/// Re-center Status Event supported

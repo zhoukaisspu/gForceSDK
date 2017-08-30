@@ -1,19 +1,19 @@
 /*
  * Copyright 2017, OYMotion Inc.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -28,13 +28,13 @@
  * DAMAGE.
  *
  */
-/*!
- * \file gfTypes.h
- * \brief The basic type definitions using in gForceSDK
- *
- * \version 0.1
- * \date 2017.4.3
- */
+ /*!
+  * \file gfTypes.h
+  * \brief The basic type definitions using in gForceSDK
+  *
+  * \version 0.1
+  * \date 2017.4.3
+  */
 #pragma once
 
 
@@ -107,10 +107,10 @@ namespace gf {
 
 	/// The weak pointer
 	template <typename T>
-	using gfwPtr = std::weak_ptr < T > ;
+	using gfwPtr = std::weak_ptr < T >;
 	/// The strong pointer
 	template <typename T>
-	using gfsPtr = std::shared_ptr < T > ;
+	using gfsPtr = std::shared_ptr < T >;
 
 	class Device;
 	/// the weak pointer to Device
@@ -135,7 +135,7 @@ namespace gf {
 
 	/// \brief Defines possible return values of methods
 	///
-	enum class GF_RET_CODE : GF_UINT32{
+	enum class GF_RET_CODE : GF_UINT32 {
 		/// Method returns successfully.
 		GF_SUCCESS = 0,
 		/// Method returns with a generic error.
@@ -183,7 +183,7 @@ namespace gf {
 
 	/// \brief Possible Hub states
 	///
-	enum class HubState{
+	enum class HubState {
 		Idle,
 		Scanning,
 		Connecting,
