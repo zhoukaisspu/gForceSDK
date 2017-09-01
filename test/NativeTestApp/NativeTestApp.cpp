@@ -254,11 +254,11 @@ class HubListenerImp : public HubListener
 		GF_LOGD("ThreadId: %s: %s: device status changed. device = %s, status = %u", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()), static_cast<GF_UINT32>(status));
 	}
-	virtual void onExtendDeviceData(SPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data) override
+	virtual void onExtendDeviceData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data) override
 	{
 		GF_LOGD("ThreadId: %s: %s: device = %s, dataType = %u, length = %u, first byte: %2.2X, last byte: %2.2X", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
-			(nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()), static_cast<GF_UINT32>(dataType),
-			dataLength, data[0], data[dataLength -1]);
+			(nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()),
+			static_cast<GF_UINT32>(dataType), data->size(), data->at(0), data->at(data->size()-1));
 	}
 
 private:
@@ -506,6 +506,10 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 		}
 		break;
 	}
+	case 'b':
+	{
+		break;
+	}
 	case 'n':
 	{
 		static bool enabled = false;
@@ -525,10 +529,19 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 					else
 					{
 						flags = (DeviceSetting::DataNotifFlags)
-							(DeviceSetting::DNF_QUATERNION
+							(DeviceSetting::DNF_OFF
+								| DeviceSetting::DNF_ACCELERATE
+								| DeviceSetting::DNF_GYROSCOPE
+								| DeviceSetting::DNF_MAGNETOMETER
+								| DeviceSetting::DNF_EULERANGLE
+								//| DeviceSetting::DNF_QUATERNION
+								| DeviceSetting::DNF_ROTATIONMATRIX
 								| DeviceSetting::DNF_EMG_GESTURE
+								| DeviceSetting::DNF_EMG_RAW
+								| DeviceSetting::DNF_HID_MOUSE
+								| DeviceSetting::DNF_HID_JOYSTICK
 								| DeviceSetting::DNF_DEVICE_STATUS
-								);// | DeviceSetting::DNF_ROTATIONMATRIX);
+								);
 					}
 					ds->setDataNotifSwitch(flags, [](ResponseResult result) {
 						GF_LOGD("setDataNotifSwitch: %u", result);
@@ -567,9 +580,9 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 					});
 					GF_LOGD("OAD result: ret = %u", ret);
 					fclose(pf);
+				}
 			}
 		}
-	}
 		break;
 	}
 	case 'p':
@@ -669,7 +682,7 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 		break;
 	default:;
 		GF_LOGW("Invalid command %s.", cmd.c_str());
-}
+	}
 }
 
 

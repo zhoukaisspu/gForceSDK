@@ -138,7 +138,7 @@ struct ListenerCalls
 	///     device.
 	/// \param device The handle of a Device sending data
 	/// \sa gf::HubListener::onReCenter
-	void(*onExtendDeviceData)(gf::GF_HANDLE device, gf::GF_UINT dataType, gf::GF_UINT dataLength, gf::GF_UINT8* data) = nullptr;
+	void(*onExtendDeviceData)(gf::GF_HANDLE device, gf::GF_UINT dataType, gf::GF_UINT dataLength, const gf::GF_UINT8* data) = nullptr;
 };
 #pragma pack(pop)
 

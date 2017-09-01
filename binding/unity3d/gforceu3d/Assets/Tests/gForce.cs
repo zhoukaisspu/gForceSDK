@@ -196,9 +196,9 @@ public class gForce : MonoBehaviour
         {
             Debug.LogFormat("onGestureData: {0}", gest);
         }
-        public override void onReCenter(Device device)
+        public override void onDeviceStatusChanged(Device device, Device.Status status)
         {
-            Debug.Log("onReCenter");
+            Debug.LogFormat("onDeviceStatusChanged: {0}", status);
         }
 
         public Listener(gForce theObj)

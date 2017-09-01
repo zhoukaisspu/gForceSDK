@@ -32,16 +32,8 @@
 #include "DeviceSettingHandle.h"
 #include "BLEDevice.h"
 
-#ifdef BLECOMMAND_INTERVAL_ENABLED
-#ifndef WIN32
-#include <unistd.h>
-#endif
-#endif
-
 using namespace gf;
 
-//template<>
-//TimerManager<SimpleTimer> TimerManager<SimpleTimer>::mInstance;
 TIMERMANAGER_STATIC_INSTANCE(SimpleTimer)
 
 DeviceSettingHandle::DeviceSettingHandle(gfwPtr<BLEDevice> device)
@@ -79,21 +71,6 @@ GF_RET_CODE DeviceSettingHandle::sendCommand(GF_UINT8 dataLen, GF_PUINT8 command
 		throw e;
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;;
 	}
-#ifdef BLECOMMAND_INTERVAL_ENABLED
-	auto now = chrono::system_clock::now();
-	if (now - mLastExecTime < chrono::milliseconds(BLECOMMAND_INTERVAL))
-	{
-		auto delay = chrono::milliseconds(BLECOMMAND_INTERVAL) - (now - mLastExecTime);
-		auto msdelay = chrono::duration_cast<chrono::milliseconds>(delay).count();
-		GF_LOGD("HOLD: %lld", msdelay);
-#ifdef WIN32
-		Sleep((DWORD)msdelay);
-#else
-		sleep(msdelay * 1000);
-#endif
-	}
-	mLastExecTime = chrono::system_clock::now();
-#endif
 	// first check if there is similar command in the queue,
 	// if yes, reject this request
 	if (hasResponse && mExecutingList.find(command) != mExecutingList.end())
@@ -127,11 +104,13 @@ void DeviceSettingHandle::onResponse(GF_UINT8 length, GF_PUINT8 data)
 	GF_UINT8 ret = 0xFF;
 	GF_UINT8 cmd = 0xFF;
 	gfsPtr<void> cb;
-	if (length >= 2)
+	if (length < 2)
 	{
-		ret = data[0];
-		cmd = data[1];
+		GF_LOGD("%s. invalid buffer length: %u", __FUNCTION__, (GF_UINT32)length);
+		return;
 	}
+	ret = data[0];
+	cmd = data[1];
 
 	GF_LOGD("%s. cmd = 0x%2.2X, ret = 0x%2.2X", __FUNCTION__, cmd, ret);
 	{
@@ -180,7 +159,7 @@ void DeviceSettingHandle::updateTimer()
 		earliest = now + chrono::milliseconds(1);
 	}
 
-	mTimer.start((earliest - now), [this](){ this->onTimer(); });
+	mTimer.start((earliest - now), [this]() { onTimer(); });
 
 }
 

@@ -242,17 +242,18 @@ public:
 		}
 #endif
 	}
-	virtual void onExtendDeviceData(SPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data) override {
-
-		GF_UINT8* buffer1 = data.get();
-		GF_LOGD("%u", (GF_UINT32)buffer1[0]);
+	virtual void onExtendDeviceData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data) override {
+		if (nullptr == data)
+		{
+			GF_LOGE("%s: data is empty.", __FUNCTION__);
+			return;
+		}
 		try {
 			for (auto& i : mlc)
 				if (nullptr != i->onExtendDeviceData)
 				{
-					GF_UINT8* buffer = data.get();
 					i->onExtendDeviceData(getAddrAsHandle(device), static_cast<GF_UINT>(dataType),
-						static_cast<GF_UINT>(dataType), buffer);
+						static_cast<GF_UINT>(data->size()), data->data());
 				}
 		}
 #ifdef WIN32

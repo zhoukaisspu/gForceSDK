@@ -206,11 +206,10 @@ namespace gf {
 		_Type pop()
 		{
 			unique_lock<mutex> lock(mMutex);
-			auto& q = mQ;
-			mCondition.wait(lock, [&q]() { return !q.empty(); });
-			ASSERT_IF(!q.empty());
-			_Type r = q.front();
-			q.pop_front();
+			mCondition.wait(lock, [this]() { return !mQ.empty(); });
+			ASSERT_IF(!mQ.empty());
+			_Type r = mQ.front();
+			mQ.pop_front();
 			return r;
 		}
 
@@ -218,12 +217,11 @@ namespace gf {
 		bool pop_until(_Type& r, const std::chrono::time_point<Clock, Duration>& tp)
 		{
 			unique_lock<mutex> lock(mMutex);
-			auto& q = mQ;
-			bool ret = mCondition.wait_until(lock, tp, [&q]() { return !q.empty(); });
+			bool ret = mCondition.wait_until(lock, tp, [this]() { return !mQ.empty(); });
 			if (ret)
 			{
-				r = q.front();
-				q.pop_front();
+				r = mQ.front();
+				mQ.pop_front();
 				return true;
 			}
 			else
@@ -340,7 +338,7 @@ namespace gf {
 			//GF_LOGD("%s", __FUNCTION__);
 			if (!mTimerThread.joinable())
 			{
-				mTimerThread = thread([this]() { this->threadProc(); });
+				mTimerThread = thread([this]() { threadProc(); });
 			}
 			lock_guard<mutex> lock(mMutexTimers);
 			for (auto& tp : mTimers)

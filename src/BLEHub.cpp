@@ -34,6 +34,12 @@
 #include "Utils.h"
 #include "GFBLETypes.h"
 
+#ifdef BLECOMMAND_INTERVAL_ENABLED
+#ifndef WIN32
+#include <unistd.h>
+#endif
+#endif
+
 using namespace gf;
 
 BLEHub::BLEHub(const tstring& sIdentifier)
@@ -66,7 +72,7 @@ GF_UINT32 BLEHub::executeCommand(gfsPtr<HubMsg> msg)
 		return 0;
 	}
 	mMsgQ.push(msg);
-	msg->syncCallCond.wait(lock, [&msg]()->bool { return msg->executed; });
+	msg->syncCallCond.wait(lock, [msg]()->bool { return msg->executed; });
 	return msg->ret;
 }
 void BLEHub::commandTask()
@@ -124,8 +130,7 @@ GF_RET_CODE BLEHub::deinit()
 	GF_RET_CODE ret = GF_RET_CODE::GF_SUCCESS;
 	GF_LOGD(__FUNCTION__);
 
-	auto am = mAM;
-	if (nullptr == am)
+	if (nullptr == mAM)
 		return ret;
 
 	// get dongle status and stop scan
@@ -135,7 +140,7 @@ GF_RET_CODE BLEHub::deinit()
 	}
 
 	// stop receiving notif from AM
-	am->UnregisterClientCallback();
+	mAM->UnregisterClientCallback();
 
 	unique_lock<mutex> lock(mTaskMutex);
 	// use a new set to handle all devices state change
@@ -165,7 +170,7 @@ GF_RET_CODE BLEHub::deinit()
 	}
 	devices.clear();
 
-	if (GF_OK != am->Deinit()) {
+	if (GF_OK != mAM->Deinit()) {
 		GF_LOGE("Hub deinit failed.");
 	}
 	mAM = nullptr;
@@ -179,13 +184,12 @@ GF_RET_CODE BLEHub::deinit()
 HubState BLEHub::getState()
 {
 	HubState ret = HubState::Unknown;
-	auto am = mAM;
-	if (nullptr == am) {
+	if (nullptr == mAM) {
 		return ret;
 	}
-	GF_HubState state = static_cast<GF_HubState>(executeCommand(make_shared<HubMsg>([&am]()
+	GF_HubState state = static_cast<GF_HubState>(executeCommand(make_shared<HubMsg>([this]()
 	{
-		return static_cast<GF_UINT32>(am->GetHubState());
+		return static_cast<GF_UINT32>(mAM->GetHubState());
 	})));
 
 	switch (state)
@@ -239,26 +243,23 @@ GF_RET_CODE BLEHub::unRegisterListener(const gfwPtr<HubListener>& listener)
 GF_RET_CODE BLEHub::startScan(GF_UINT8 rssiThreshold)
 {
 	GF_LOGD(__FUNCTION__);
-	auto am = mAM;
-	if (nullptr == am)
+	if (nullptr == mAM)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
-	decltype(mNotifHelper)& notif = mNotifHelper;
-	decltype(mDisconnDevices)& dd = mDisconnDevices;
-	GF_UINT32 ret = executeCommand(make_shared<HubMsg>([&am, &notif, &dd, rssiThreshold]()
+	GF_UINT32 ret = executeCommand(make_shared<HubMsg>([this, rssiThreshold]()
 	{
-		GF_UINT32 ret = static_cast<GF_UINT32>(am->StartScan(rssiThreshold));
+		GF_UINT32 ret = static_cast<GF_UINT32>(mAM->StartScan(rssiThreshold));
 		if (GF_OK == ret)
 		{
 			// if scan started, remove all disconnected devices
-			for (auto itor = dd.begin(); itor != dd.end();)
+			for (auto itor = mDisconnDevices.begin(); itor != mDisconnDevices.end();)
 			{
 				if ((*itor)->getConnectionStatus() == DeviceConnectionStatus::Disconnected)
 				{
 					// notify client that the device will be erased.
-					notif.onDeviceDiscard(*itor);
+					mNotifHelper.onDeviceDiscard(*itor);
 					GF_LOGD("Disconnected device removed.");
-					dd.erase(itor++);
+					mDisconnDevices.erase(itor++);
 				}
 				else
 				{
@@ -277,19 +278,17 @@ GF_RET_CODE BLEHub::startScan(GF_UINT8 rssiThreshold)
 GF_RET_CODE BLEHub::stopScan()
 {
 	GF_LOGD(__FUNCTION__);
-	auto am = mAM;
-	if (nullptr == am)
+	if (nullptr == mAM)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
-	decltype(mNotifHelper)& notif = mNotifHelper;
-	GF_UINT32 ret = executeCommand(make_shared<HubMsg>([&am, &notif]()
+	GF_UINT32 ret = executeCommand(make_shared<HubMsg>([this]()
 	{
-		GF_UINT32 ret = static_cast<GF_UINT32>(am->StopScan());
+		GF_UINT32 ret = static_cast<GF_UINT32>(mAM->StopScan());
 		if (GF_OK == ret)
 		{
 			GF_LOGD("Scan stopped.");
 #ifdef WIN32 // TODO: different behavior between win and android
-			notif.onScanFinished();
+			mNotifHelper.onScanFinished();
 #endif
 		}
 		return ret;
@@ -606,8 +605,7 @@ void BLEHub::onComDestory()
 
 GF_RET_CODE BLEHub::connect(BLEDevice& dev, bool directConn)
 {
-	auto am = mAM;
-	if (nullptr == am)
+	if (nullptr == mAM)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
 	GF_UINT8 addr[BT_ADDRESS_SIZE];
@@ -615,9 +613,9 @@ GF_RET_CODE BLEHub::connect(BLEDevice& dev, bool directConn)
 	if (GF_RET_CODE::GF_SUCCESS != ret)
 		return ret;
 	GF_UINT8 type = dev.getAddrType();
-	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, &addr, type, directConn]()
+	GF_UINT32 status = executeCommand(make_shared<HubMsg>([this, &addr, type, directConn]()
 	{
-		GF_STATUS status = am->Connect(addr, type, directConn ? GF_TRUE : GF_FALSE);
+		GF_STATUS status = mAM->Connect(addr, type, directConn ? GF_TRUE : GF_FALSE);
 		return static_cast<GF_UINT32>(status);
 	}));
 	if (GF_OK == status)
@@ -629,17 +627,16 @@ GF_RET_CODE BLEHub::connect(BLEDevice& dev, bool directConn)
 GF_RET_CODE BLEHub::cancelConnect(BLEDevice& dev)
 {
 	GF_RET_CODE ret = GF_RET_CODE::GF_SUCCESS;
-	auto am = mAM;
-	if (nullptr == am)
+	if (nullptr == mAM)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 	GF_UINT8 addr[BT_ADDRESS_SIZE];
 	ret = dev.getAddress(addr, sizeof(addr));
 	if (GF_RET_CODE::GF_SUCCESS != ret)
 		return ret;
 	auto type = dev.getAddrType();
-	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, &addr, type]()
+	GF_UINT32 status = executeCommand(make_shared<HubMsg>([this, &addr, type]()
 	{
-		GF_STATUS status = am->CancelConnect(addr, type);
+		GF_STATUS status = mAM->CancelConnect(addr, type);
 		return static_cast<GF_UINT32>(status);
 	}));
 	if (GF_OK == status)
@@ -650,14 +647,13 @@ GF_RET_CODE BLEHub::cancelConnect(BLEDevice& dev)
 
 GF_RET_CODE BLEHub::disconnect(BLEDevice& dev)
 {
-	auto am = mAM;
 	auto handle = dev.getHandle();
-	if (nullptr == am || INVALID_HANDLE == handle)
+	if (nullptr == mAM || INVALID_HANDLE == handle)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
-	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, handle]()
+	GF_UINT32 status = executeCommand(make_shared<HubMsg>([this, handle]()
 	{
-		GF_STATUS status = am->Disconnect(handle);
+		GF_STATUS status = mAM->Disconnect(handle);
 		return static_cast<GF_UINT32>(status);
 	}));
 	if (GF_OK == status)
@@ -668,14 +664,28 @@ GF_RET_CODE BLEHub::disconnect(BLEDevice& dev)
 
 GF_RET_CODE BLEHub::configMtuSize(BLEDevice& dev, GF_UINT16 mtuSize)
 {
-	auto am = mAM;
 	auto handle = dev.getHandle();
-	if (nullptr == am || INVALID_HANDLE == handle)
+	if (nullptr == mAM || INVALID_HANDLE == handle)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
-	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, handle, mtuSize]()
+#ifdef BLECOMMAND_INTERVAL_ENABLED
+	auto now = chrono::system_clock::now();
+	if (now - mLastExecTime < chrono::milliseconds(BLECOMMAND_INTERVAL))
 	{
-		GF_STATUS status = am->ConfigMtuSize(handle, mtuSize);
+		auto delay = chrono::milliseconds(BLECOMMAND_INTERVAL) - (now - mLastExecTime);
+		auto msdelay = chrono::duration_cast<chrono::milliseconds>(delay).count();
+		GF_LOGD("HOLD: %lld", msdelay);
+#ifdef WIN32
+		Sleep((DWORD)msdelay);
+#else
+		sleep(msdelay * 1000);
+#endif
+	}
+	mLastExecTime = chrono::system_clock::now();
+#endif
+	GF_UINT32 status = executeCommand(make_shared<HubMsg>([this, handle, mtuSize]()
+	{
+		GF_STATUS status = mAM->ConfigMtuSize(handle, mtuSize);
 		return static_cast<GF_UINT32>(status);
 	}));
 	if (GF_OK == status)
@@ -687,15 +697,14 @@ GF_RET_CODE BLEHub::configMtuSize(BLEDevice& dev, GF_UINT16 mtuSize)
 GF_RET_CODE BLEHub::connectionParameterUpdate(BLEDevice& dev, GF_UINT16 conn_interval_min,
 	GF_UINT16 conn_interval_max, GF_UINT16 slave_latence, GF_UINT16 supervision_timeout)
 {
-	auto am = mAM;
 	auto handle = dev.getHandle();
-	if (nullptr == am || INVALID_HANDLE == handle)
+	if (nullptr == mAM || INVALID_HANDLE == handle)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
-	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, handle,
+	GF_UINT32 status = executeCommand(make_shared<HubMsg>([this, handle,
 		conn_interval_min, conn_interval_max, slave_latence, supervision_timeout]()
 	{
-		GF_STATUS status = am->ConnectionParameterUpdate(handle, conn_interval_min,
+		GF_STATUS status = mAM->ConnectionParameterUpdate(handle, conn_interval_min,
 			conn_interval_max, slave_latence, supervision_timeout);
 		return static_cast<GF_UINT32>(status);
 	}));
@@ -708,15 +717,14 @@ GF_RET_CODE BLEHub::connectionParameterUpdate(BLEDevice& dev, GF_UINT16 conn_int
 GF_RET_CODE BLEHub::writeCharacteristic(BLEDevice& dev,
 	AttributeHandle attribute_handle, GF_UINT8 data_length, GF_PUINT8 data)
 {
-	auto am = mAM;
 	auto handle = dev.getHandle();
-	if (nullptr == am || INVALID_HANDLE == handle)
+	if (nullptr == mAM || INVALID_HANDLE == handle)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
-	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, handle,
+	GF_UINT32 status = executeCommand(make_shared<HubMsg>([this, handle,
 		attribute_handle, data_length, data]()
 	{
-		GF_STATUS status = am->WriteCharacteristic(handle, static_cast<GF_UINT16>(attribute_handle),
+		GF_STATUS status = mAM->WriteCharacteristic(handle, static_cast<GF_UINT16>(attribute_handle),
 			data_length, data);
 		return static_cast<GF_UINT32>(status);
 	}));
@@ -728,14 +736,13 @@ GF_RET_CODE BLEHub::writeCharacteristic(BLEDevice& dev,
 
 GF_RET_CODE BLEHub::readCharacteristic(BLEDevice& dev, AttributeHandle attribute_handle)
 {
-	auto am = mAM;
 	auto handle = dev.getHandle();
-	if (nullptr == am || INVALID_HANDLE == handle)
+	if (nullptr == mAM || INVALID_HANDLE == handle)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
-	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, handle, attribute_handle]()
+	GF_UINT32 status = executeCommand(make_shared<HubMsg>([this, handle, attribute_handle]()
 	{
-		GF_STATUS status = am->ReadCharacteristic(handle, static_cast<GF_UINT16>(attribute_handle));
+		GF_STATUS status = mAM->ReadCharacteristic(handle, static_cast<GF_UINT16>(attribute_handle));
 		return static_cast<GF_UINT32>(status);
 	}));
 	if (GF_OK == status)
@@ -746,16 +753,15 @@ GF_RET_CODE BLEHub::readCharacteristic(BLEDevice& dev, AttributeHandle attribute
 
 GF_RET_CODE BLEHub::getProtocol(BLEDevice& dev, DeviceProtocolType& type)
 {
-	auto am = mAM;
 	auto handle = dev.getHandle();
 	GF_DeviceProtocolType protoType = ProtocolType_Invalid;
-	if (nullptr == am || INVALID_HANDLE == handle)
+	if (nullptr == mAM || INVALID_HANDLE == handle)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
 	GF_UINT32 status = GF_OK;
-	executeCommand(make_shared<HubMsg>([&am, handle, &protoType]()
+	executeCommand(make_shared<HubMsg>([this, handle, &protoType]()
 	{
-		protoType = am->GetDeviceProtocolSupported(handle);
+		protoType = mAM->GetDeviceProtocolSupported(handle);
 		return static_cast<GF_UINT32>(GF_OK);
 	}));
 	switch (protoType)
@@ -780,15 +786,29 @@ GF_RET_CODE BLEHub::getProtocol(BLEDevice& dev, DeviceProtocolType& type)
 
 GF_RET_CODE BLEHub::sendControlCommand(BLEDevice& dev, GF_UINT8 data_length, GF_PUINT8 data)
 {
-	auto am = mAM;
 	auto handle = dev.getHandle();
-	if (nullptr == am || INVALID_HANDLE == handle)
+	if (nullptr == mAM || INVALID_HANDLE == handle)
 		return GF_RET_CODE::GF_ERROR_BAD_STATE;
 
-	GF_UINT32 status = executeCommand(make_shared<HubMsg>([&am, handle,
+#ifdef BLECOMMAND_INTERVAL_ENABLED
+	auto now = chrono::system_clock::now();
+	if (now - mLastExecTime < chrono::milliseconds(BLECOMMAND_INTERVAL))
+	{
+		auto delay = chrono::milliseconds(BLECOMMAND_INTERVAL) - (now - mLastExecTime);
+		auto msdelay = chrono::duration_cast<chrono::milliseconds>(delay).count();
+		GF_LOGD("HOLD: %lld", msdelay);
+#ifdef WIN32
+		Sleep((DWORD)msdelay);
+#else
+		sleep(msdelay * 1000);
+#endif
+	}
+	mLastExecTime = chrono::system_clock::now();
+#endif
+	GF_UINT32 status = executeCommand(make_shared<HubMsg>([this, handle,
 		data_length, data]()
 	{
-		GF_STATUS status = am->SendControlCommand(handle,
+		GF_STATUS status = mAM->SendControlCommand(handle,
 			data_length, data);
 		return static_cast<GF_UINT32>(status);
 	}));
@@ -852,7 +872,7 @@ void BLEHub::notifyDeviceStatusChanged(BLEDevice& dev, DeviceStatus status)
 		mNotifHelper.onDeviceStatusChanged(device, status);
 }
 
-void BLEHub::notifyExtendData(BLEDevice& dev, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data)
+void BLEHub::notifyExtendData(BLEDevice& dev, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data)
 {
 	SPDEVICE device;
 	{
@@ -867,7 +887,7 @@ void BLEHub::notifyExtendData(BLEDevice& dev, DeviceDataType dataType, GF_UINT32
 		}
 	}
 	if (nullptr != device)
-		mNotifHelper.onExtendData(device, dataType, dataLength, move(data));
+		mNotifHelper.onExtendData(device, dataType, data);
 }
 
 const char* gForcePrefix = "gForce";
@@ -1138,7 +1158,7 @@ void BLEHub::NotifyHelper::onDeviceStatusChanged(SPDEVICE device, DeviceStatus s
 	}
 }
 
-void BLEHub::NotifyHelper::onExtendData(SPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data)
+void BLEHub::NotifyHelper::onExtendData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data)
 {
 	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
@@ -1146,10 +1166,10 @@ void BLEHub::NotifyHelper::onExtendData(SPDEVICE device, DeviceDataType dataType
 		for (auto& itor : mHub.mListeners)
 		{
 			mHub.mPollMsgQ.push(make_shared<PollingMsg>(
-				[itor, device, dataType, dataLength, &data]() {
+				[itor, device, dataType, data]() {
 				auto sp = itor.lock();
 				if (nullptr != sp)
-					sp->onExtendDeviceData(device, dataType, dataLength, move(data));
+					sp->onExtendDeviceData(device, dataType, data);
 			}
 			));
 		}
@@ -1160,7 +1180,7 @@ void BLEHub::NotifyHelper::onExtendData(SPDEVICE device, DeviceDataType dataType
 		{
 			auto sp = itor.lock();
 			if (nullptr != sp)
-				sp->onExtendDeviceData(device, dataType, dataLength, move(data));
+				sp->onExtendDeviceData(device, dataType, data);
 		}
 	}
 }

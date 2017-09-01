@@ -37,9 +37,6 @@
 namespace gf
 {
 
-#define BLECOMMAND_INTERVAL_ENABLED
-#define BLECOMMAND_INTERVAL (100) // ms
-
 	class BLEDevice;
 
 	const GF_UINT32 MAX_COMMAND_TIMEOUT = 5000; // ms
@@ -124,9 +121,6 @@ namespace gf
 			gfsPtr<void> cb;
 		};
 		map<GF_UINT8, CommandHandler> mExecutingList;
-#ifdef BLECOMMAND_INTERVAL_ENABLED
-		chrono::system_clock::time_point mLastExecTime;
-#endif
 		GF_RET_CODE sendCommand(GF_UINT8 dataLen, GF_PUINT8 commandData, bool hasResponse = false, gfsPtr<void> cb = nullptr);
 
 		void updateTimer();

@@ -139,13 +139,6 @@ void BLEDataProfile4::onResponse(GF_UINT8 length, GF_PUINT8 data)
 
 void BLEDataProfile4::onDeviceStatus(DeviceConnectionStatus oldStatus, DeviceConnectionStatus newStatus)
 {
-	if (oldStatus == DeviceConnectionStatus::Connected && oldStatus != newStatus)
-	{
-		// TODO: shall we apply default setting to device here?
-		//       because if the device has been previously configured, we know nothing about that config
-		if (nullptr != mDevSetting)
-			mDevSetting->resetConfig();
-	}
 }
 
 gfsPtr<DeviceSetting> BLEDataProfile4::getDeviceSetting()
@@ -168,12 +161,9 @@ gfsPtr<DeviceSetting> BLEDataProfile4::getDeviceSetting()
 
 void BLEDataProfile4::sendExtendData(BLEDevice& device, DeviceDataType dataType, GF_UINT8 length, GF_PUINT8 data)
 {
-	// TODO: frequently allocate memory causes memory fragmentation
-	unique_ptr<GF_UINT8[]> up(new GF_UINT8[length]);
-	auto p = up.get();
-	memcpy(p, data, length);
-	// TODO: fix extend data receiving crash issue.
-	device.getHub().notifyExtendData(device, dataType, length, move(up));
+	// TODO: frequently memory allocation causes memory fragmentation?
+	gfsPtr<const vector<GF_UINT8>> buffer = make_shared<const vector<GF_UINT8>>(data, data+length);
+	device.getHub().notifyExtendData(device, dataType, buffer);
 }
 
 void BLEDataProfile4::onAccelerateData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)

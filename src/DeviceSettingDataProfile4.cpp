@@ -36,11 +36,24 @@
 
 using namespace gf;
 
-#define DO_SEND_COMMAND_AND_CALLBACK(length, buf)	\
+#define MTU_DEFAULT (23)
+#define MTU_HEAD_LENGTH (4+1) // +1 to consider package id takes 1 byte when enables
+#define MTU_ROTATIONMATRIX (36)
+
+////////////////////////////////////////////////////////
+// API
+#define DO_SEND_COMMAND_AND_CALLBACK_NO_RETURN(retval, length, buf)	\
 	do {	\
 		gfsPtr<decltype(cb)> pcb = make_shared<decltype(cb)>(cb);	\
 		gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);	\
-		return sendCommand((length), (buf), true, pvoid);	\
+		retval = sendCommand((length), (buf), true, pvoid);	\
+	} while (false)
+
+#define DO_SEND_COMMAND_AND_CALLBACK(length, buf)	\
+	do {	\
+		GF_RET_CODE retval;	\
+		DO_SEND_COMMAND_AND_CALLBACK_NO_RETURN(retval, length, buf);	\
+		return retval;	\
 	} while (false)
 
 #define DO_SEND_GET_COMMAND(cmd)	\
@@ -49,6 +62,8 @@ using namespace gf;
 		DO_SEND_COMMAND_AND_CALLBACK(1, &data);	\
 	} while (false)
 
+////////////////////////////////////////////////////////
+// callback
 #define ON_RESPONSE_RESPRESULT_PARAM(callback_type, ...) \
 	do {	\
 		GF_LOGD("%s, retval = %u", __FUNCTION__, retval);	\
@@ -426,7 +441,9 @@ GF_RET_CODE DeviceSettingDataProfile4::switchService(DeviceService service)
 GF_RET_CODE DeviceSettingDataProfile4::setDataNotifSwitch(DataNotifFlags flags, function<void(ResponseResult res)> cb)
 {
 	GF_LOGD("%s: flags = 0x%8.8X", __FUNCTION__, flags);
-	mCfgApplying.dataFlags = flags;
+	if (flags | DeviceSetting::DNF_ROTATIONMATRIX)
+		configMtuSize(MTU_ROTATIONMATRIX);
+
 	const GF_UINT8 length = 5;
 	GF_UINT8 data[length];
 	data[0] = CMD_SET_DATA_NOTIF_SWITCH;
@@ -520,8 +537,14 @@ void DeviceSettingDataProfile4::resetTrainingModelData()
 GF_RET_CODE DeviceSettingDataProfile4::sendTrainingModelData(GF_UINT32 length,
 	GF_UINT8 data[], function<void(ResponseResult res, GF_UINT32 percentage)> progress)
 {
-	if (length == 0 || nullptr == data)
+	if (0 == length || nullptr == data)
+	{
 		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
+	}
+	if (0 != mTraingModelBufferLen)
+	{
+		return GF_RET_CODE::GF_ERROR_DEVICE_BUSY;
+	}
 
 	// first backup data buffer
 	mTraingModelBuffer.reset();
@@ -610,7 +633,6 @@ GF_RET_CODE DeviceSettingDataProfile4::packageIdControl(PackageControlType type,
 	GF_UINT8 data[length];
 	data[0] = CMD_PACKAGE_ID_CONTROL;
 	data[1] = (type == PackageControlType::Enable ? 0x01 : 0x00);
-	mCfgApplying.pkgIdCtrl = type;
 	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 
@@ -627,6 +649,10 @@ GF_RET_CODE DeviceSettingDataProfile4::setAccelerateConfig(GF_UINT16 sampleRateH
 {
 	GF_LOGD("%s: sample rate = %u(Hz), full scale range = %u(g), package data length = %u(bytes)",
 		__FUNCTION__, sampleRateHz, fullScaleRange_g, packageDataLength);
+
+	// set mtu size first
+	configMtuSize(packageDataLength);
+
 	const GF_UINT8 length = 5;
 	GF_UINT8 data[length];
 	data[0] = CMD_SET_ACCELERATE_CONFIG;
@@ -634,9 +660,6 @@ GF_RET_CODE DeviceSettingDataProfile4::setAccelerateConfig(GF_UINT16 sampleRateH
 	data[2] = (GF_UINT8)(sampleRateHz >> 8);
 	data[3] = fullScaleRange_g;
 	data[4] = packageDataLength;
-	GF_UINT32 value;
-	memcpy(&value, &(data[1]), 4);
-	mCfgApplying.accelerateCfg = value;
 	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 // C.8
@@ -652,6 +675,10 @@ GF_RET_CODE DeviceSettingDataProfile4::setGyroscopeConfig(GF_UINT16 sampleRateHz
 {
 	GF_LOGD("%s: sample rate = %u(Hz), full scale range = %u(g), package data length = %u(bytes)",
 		__FUNCTION__, sampleRateHz, fullScaleRange_dps, packageDataLength);
+
+	// set mtu size first
+	configMtuSize(packageDataLength);
+
 	const GF_UINT8 length = 6;
 	GF_UINT8 data[length];
 	data[0] = CMD_SET_GYROSCOPE_CONFIG;
@@ -660,10 +687,6 @@ GF_RET_CODE DeviceSettingDataProfile4::setGyroscopeConfig(GF_UINT16 sampleRateHz
 	data[3] = (GF_UINT8)(fullScaleRange_dps);
 	data[4] = (GF_UINT8)(fullScaleRange_dps >> 8);
 	data[5] = packageDataLength;
-	GF_UINT32 hvalue;
-	memcpy(&hvalue, &(data[1]), 4);
-	GF_UINT64 value = (((GF_UINT64)hvalue) << 32) | packageDataLength;
-	mCfgApplying.gyroscopeCfg = value;
 	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 // C.9
@@ -679,6 +702,10 @@ GF_RET_CODE DeviceSettingDataProfile4::setMagnetometerConfig(GF_UINT16 sampleRat
 {
 	GF_LOGD("%s: sample rate = %u(Hz), full scale range = %u(g), package data length = %u(bytes)",
 		__FUNCTION__, sampleRateHz, fullScaleRange_uT, packageDataLength);
+
+	// set mtu size first
+	configMtuSize(packageDataLength);
+
 	const GF_UINT8 length = 6;
 	GF_UINT8 data[length];
 	data[0] = CMD_SET_MAGNETOMETER_CONFIG;
@@ -687,10 +714,6 @@ GF_RET_CODE DeviceSettingDataProfile4::setMagnetometerConfig(GF_UINT16 sampleRat
 	data[3] = (GF_UINT8)(fullScaleRange_uT);
 	data[4] = (GF_UINT8)(fullScaleRange_uT >> 8);
 	data[5] = packageDataLength;
-	GF_UINT32 hvalue;
-	memcpy(&hvalue, &(data[1]), 4);
-	GF_UINT64 value = (((GF_UINT64)hvalue) << 32) | packageDataLength;
-	mCfgApplying.magnetometerCfg = value;
 	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 // C.10
@@ -810,6 +833,10 @@ GF_RET_CODE DeviceSettingDataProfile4::setEMGRawDataConfig(GF_UINT16 sampleRateH
 {
 	GF_LOGD("%s: sample rate = %u(Hz), channels = %u, package data length = %u(bytes)",
 		__FUNCTION__, sampleRateHz, interestingChannels, packageDataLength);
+
+	// set mtu size first
+	configMtuSize(packageDataLength);
+
 	const GF_UINT8 length = 6;
 	GF_UINT8 data[length];
 	data[0] = CMD_SET_EMG_RAWDATA_CONFIG;
@@ -818,10 +845,6 @@ GF_RET_CODE DeviceSettingDataProfile4::setEMGRawDataConfig(GF_UINT16 sampleRateH
 	data[3] = (GF_UINT8)(interestingChannels);
 	data[4] = (GF_UINT8)(interestingChannels >> 8);
 	data[5] = packageDataLength;
-	GF_UINT32 hvalue;
-	memcpy(&hvalue, &(data[1]), 4);
-	GF_UINT64 value = (((GF_UINT64)hvalue) << 32) | packageDataLength;
-	mCfgApplying.magnetometerCfg = value;
 	DO_SEND_COMMAND_AND_CALLBACK(length, data);
 }
 // C.15
@@ -977,30 +1000,8 @@ void DeviceSettingDataProfile4::onSendTrainingModelData(GF_UINT8 retval, GF_UINT
 	ON_RESPONSE_PARSING_UINT16();
 }
 
-#define MTU_DEFAULT (23)
-#define MTU_HEAD_LENGTH (4)
-#define MTU_QUATERNION (16)
-#define MTU_ROTATIONMATRIX (32)
-#define DNF_MTU_ENLARGE_CFG		(DeviceSetting::DNF_ACCELERATE |	\
-								DeviceSetting::DNF_GYROSCOPE |		\
-								DeviceSetting::DNF_MAGNETOMETER |	\
-								DeviceSetting::DNF_ROTATIONMATRIX |	\
-								DeviceSetting::DNF_EMG_RAW)
-
 void DeviceSettingDataProfile4::onSetDataNotifSwitch(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	if (retval == RC_SUCCESS)
-	{
-		auto applied = mCfgApplying.dataFlags.load();
-		auto previous = mCfg.dataFlags.load();
-		mCfg.dataFlags = applied;
-		// check if need to re-config MTU size
-		if ((applied & DNF_MTU_ENLARGE_CFG) !=
-			(previous & DNF_MTU_ENLARGE_CFG))
-		{
-			configMtuSize();
-		}
-	}
 	ON_RESPONSE_RESPRESULT();
 }
 void DeviceSettingDataProfile4::onGetBatteryLevel(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
@@ -1043,17 +1044,6 @@ void DeviceSettingDataProfile4::onLedControlTest(GF_UINT8 retval, GF_UINT8 lengt
 }
 void DeviceSettingDataProfile4::onPackageIdControl(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	if (retval == RC_SUCCESS)
-	{
-		auto applied = mCfgApplying.pkgIdCtrl.load();
-		auto previous = mCfg.pkgIdCtrl.load();
-		mCfg.pkgIdCtrl = applied;
-		// check if need to re-config MTU size
-		if (applied != previous)
-		{
-			configMtuSize();
-		}
-	}
 	ON_RESPONSE_RESPRESULT();
 }
 void DeviceSettingDataProfile4::onGetAccelerateCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
@@ -1062,16 +1052,6 @@ void DeviceSettingDataProfile4::onGetAccelerateCap(GF_UINT8 retval, GF_UINT8 len
 }
 void DeviceSettingDataProfile4::onSetAccelerateConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	if (retval == RC_SUCCESS)
-	{
-		auto applied = mCfgApplying.accelerateCfg.load();
-		mCfg.accelerateCfg = applied;
-		// check if need to re-config MTU size
-		if (mCfg.dataFlags & DataNotifFlags::DNF_ACCELERATE)
-		{
-			configMtuSize();
-		}
-	}
 	ON_RESPONSE_RESPRESULT();
 }
 void DeviceSettingDataProfile4::onGetGyroscopeCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
@@ -1080,16 +1060,6 @@ void DeviceSettingDataProfile4::onGetGyroscopeCap(GF_UINT8 retval, GF_UINT8 leng
 }
 void DeviceSettingDataProfile4::onSetGyroscopeConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	if (retval == RC_SUCCESS)
-	{
-		auto applied = mCfgApplying.gyroscopeCfg.load();
-		mCfg.gyroscopeCfg = applied;
-		// check if need to re-config MTU size
-		if (mCfg.dataFlags & DataNotifFlags::DNF_GYROSCOPE)
-		{
-			configMtuSize();
-		}
-	}
 	ON_RESPONSE_RESPRESULT();
 }
 void DeviceSettingDataProfile4::onGetMagnetometerCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
@@ -1098,16 +1068,6 @@ void DeviceSettingDataProfile4::onGetMagnetometerCap(GF_UINT8 retval, GF_UINT8 l
 }
 void DeviceSettingDataProfile4::onSetMagnetometerConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	if (retval == RC_SUCCESS)
-	{
-		auto applied = mCfgApplying.magnetometerCfg.load();
-		mCfg.magnetometerCfg = applied;
-		// check if need to re-config MTU size
-		if (mCfg.dataFlags & DataNotifFlags::DNF_MAGNETOMETER)
-		{
-			configMtuSize();
-		}
-	}
 	ON_RESPONSE_RESPRESULT();
 }
 void DeviceSettingDataProfile4::onGetEulerangleCap(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
@@ -1179,16 +1139,6 @@ void DeviceSettingDataProfile4::onGetEMGRawDataCap(GF_UINT8 retval, GF_UINT8 len
 }
 void DeviceSettingDataProfile4::onSetEMGRawDataConfig(GF_UINT8 retval, GF_UINT8 length, GF_PUINT8 data, gfsPtr<void> cb)
 {
-	if (retval == RC_SUCCESS)
-	{
-		auto applied = mCfgApplying.emgrawCfg.load();
-		mCfg.emgrawCfg = applied;
-		// check if need to re-config MTU size
-		if (mCfg.dataFlags & DataNotifFlags::DNF_EMG_RAW)
-		{
-			configMtuSize();
-		}
-	}
 	ON_RESPONSE_RESPRESULT();
 }
 
@@ -1217,55 +1167,15 @@ void DeviceSettingDataProfile4::onSetDeviceStatusConfig(GF_UINT8 retval, GF_UINT
 	ON_RESPONSE_RESPRESULT();
 }
 
-void DeviceSettingDataProfile4::resetConfig()
+void DeviceSettingDataProfile4::configMtuSize(GF_UINT16 newPayloadLength)
 {
-	mCfg.dataFlags = mCfgApplying.dataFlags = DataNotifFlags::DNF_OFF;
-	mCfg.accelerateCfg = mCfgApplying.accelerateCfg = 0;
-	mCfg.gyroscopeCfg = mCfgApplying.gyroscopeCfg = 0;
-	mCfg.magnetometerCfg = mCfgApplying.magnetometerCfg = 0;
-	mCfg.emgrawCfg = mCfgApplying.emgrawCfg = 0;
-}
-
-void DeviceSettingDataProfile4::configMtuSize()
-{
-	auto flags = mCfg.dataFlags.load();
-	// MTU_QUATERNION is the most large one in numbers that smaller than (MTU_DEFAULT-MTU_HEAD_LENGTH-PACKAGEID_BYTE)
-	GF_UINT16 payloadLength = MTU_QUATERNION;
-	// calculate new MTU size
-	if (flags & DeviceSetting::DNF_ACCELERATE)
-	{
-		if (((GF_UINT8)mCfg.accelerateCfg) > payloadLength)
-			payloadLength = (GF_UINT8)mCfg.accelerateCfg;
-	}
-	if (flags & DeviceSetting::DNF_GYROSCOPE)
-	{
-		if (((GF_UINT8)mCfg.gyroscopeCfg) > payloadLength)
-			payloadLength = (GF_UINT8)mCfg.gyroscopeCfg;
-	}
-	if (flags & DeviceSetting::DNF_MAGNETOMETER)
-	{
-		if (((GF_UINT8)mCfg.magnetometerCfg) > payloadLength)
-			payloadLength = (GF_UINT8)mCfg.magnetometerCfg;
-	}
-	if (flags & DeviceSetting::DNF_ROTATIONMATRIX)
-	{
-		if (payloadLength < MTU_ROTATIONMATRIX)
-			payloadLength = MTU_ROTATIONMATRIX;
-	}
-	if (flags & DeviceSetting::DNF_EMG_RAW)
-	{
-		if (((GF_UINT8)mCfg.emgrawCfg) > payloadLength)
-			payloadLength = (GF_UINT8)mCfg.emgrawCfg;
-	}
-	if (PackageControlType::Enable == mCfg.pkgIdCtrl)
-		payloadLength += 1;
-
-	payloadLength += MTU_HEAD_LENGTH;
-
-	GF_UINT16 mtusize = MTU_DEFAULT;
-	if (payloadLength > mtusize)
-		mtusize = payloadLength;
 	auto dev = mDevice.lock();
-	if (nullptr != dev)
-		dev->configMtuSize(mtusize);
+	if (nullptr == dev)
+		return;
+	GF_UINT16 mtuSize = dev->getMTUsize();
+	GF_UINT16 newSize = newPayloadLength + MTU_HEAD_LENGTH;
+	if (newSize > mtuSize)
+	{
+		dev->configMtuSize(newSize);
+	}
 }

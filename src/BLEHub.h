@@ -46,6 +46,11 @@
 
 #define ONLY_SCAN_GFORCE_DEVICE (1)
 
+#define BLECOMMAND_INTERVAL_ENABLED
+#ifdef BLECOMMAND_INTERVAL_ENABLED
+#define BLECOMMAND_INTERVAL (100) // ms
+#endif
+
 namespace gf
 {
 	class BLEHub :
@@ -135,7 +140,7 @@ namespace gf
 		virtual void notifyOrientationData(BLEDevice& dev, const Quaternion& rotation) override;
 		virtual void notifyGestureData(BLEDevice& dev, Gesture gest) override;
 		virtual void notifyDeviceStatusChanged(BLEDevice& dev, DeviceStatus status) override;
-		virtual void notifyExtendData(BLEDevice& dev, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data) override;
+		virtual void notifyExtendData(BLEDevice& dev, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data) override;
 
 	protected:
 		//////////////////////////////////////////////////////////////
@@ -170,6 +175,9 @@ namespace gf
 		mutex mTaskMutex;
 		thread mCommandThread;
 		BQueue<gfsPtr<HubMsg>> mMsgQ;
+#ifdef BLECOMMAND_INTERVAL_ENABLED
+		chrono::system_clock::time_point mLastExecTime;
+#endif
 
 	public:
 		//////////////////////////////////////////////////////////////
@@ -191,7 +199,7 @@ namespace gf
 			virtual void onOrientationData(SPDEVICE device, const Quaternion& rotation);
 			virtual void onGestureData(SPDEVICE device, Gesture gest);
 			virtual void onDeviceStatusChanged(SPDEVICE device, DeviceStatus status);
-			virtual void onExtendData(SPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data);
+			virtual void onExtendData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data);
 
 			// remove warning
 			NotifyHelper& operator = (const NotifyHelper& right) = delete;

@@ -199,31 +199,10 @@ namespace gf
 		tstring mHWRev;
 		tstring mFWRev;
 		tstring mManuName;
-		tstring mBootloaderVer;
-
-		struct Config
-		{
-			Config()
-				: pkgIdCtrl(PackageControlType::Disable)
-				, dataFlags(DataNotifFlags::DNF_OFF)
-				, accelerateCfg(0)
-				, gyroscopeCfg(0)
-				, magnetometerCfg(0)
-				, emgrawCfg(0)
-			{}
-			atomic<PackageControlType> pkgIdCtrl;
-			atomic<DataNotifFlags> dataFlags;
-			atomic<GF_UINT32> accelerateCfg;
-			atomic<GF_UINT64> gyroscopeCfg;
-			atomic<GF_UINT64> magnetometerCfg;
-			atomic<GF_UINT64> emgrawCfg;
-		} mCfg, mCfgApplying;
-
-	public:
-		void resetConfig();
+		tstring mBootloaderVer;	
 
 	private:
-		void configMtuSize();
+		void configMtuSize(GF_UINT16 newPayloadLength);
 
 	private:
 		// sendTrainingModelData

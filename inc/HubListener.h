@@ -40,6 +40,8 @@
 #include "gfTypes.h"
 #include "Quaternion.h"
 
+#include <vector>
+
 namespace gf
 {
 
@@ -133,7 +135,7 @@ namespace gf
 		/// \param device The Pointer to the Device.
 		/// \param dataType The data type carried
 		/// \param data The data buffer managed by reference
-		virtual void onExtendDeviceData(SPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, std::unique_ptr<GF_UINT8[]> data) {}
+		virtual void onExtendDeviceData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const std::vector<GF_UINT8>> data) {}
 
 		virtual ~HubListener() {}
 	};

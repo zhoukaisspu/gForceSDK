@@ -237,10 +237,10 @@ public:
 		}
 		cout << __FUNCTION__ << " has been called. " << devicestatus << endl;
 	}
-	virtual void onExtendDeviceData(SPDEVICE device, DeviceDataType dataType, GF_UINT32 dataLength, unique_ptr<GF_UINT8[]> data) override
+	virtual void onExtendDeviceData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const std::vector<GF_UINT8>> data) override
 	{
-		cout << __FUNCTION__ << ": datatype = " << (GF_UINT32)dataType << ", datalength = " << dataLength
-			<< ", first byte: " << (GF_UINT32)data[0] << ", last byte: " << (GF_UINT32)data[dataLength - 1] << endl;
+		cout << __FUNCTION__ << ": datatype = " << (GF_UINT32)dataType << ", datalength = " << data->size()
+			<< ", first byte: " << (GF_UINT32)data->at(0) << ", last byte: " << (GF_UINT32)data->at(data->size() - 1) << endl;
 	}
 
 	// Indicates if we want to exit app
