@@ -439,7 +439,7 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 			ds->getProtocolVer([](ResponseResult res, tstring str) {
 				GF_LOGD("getProtocolVer: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
 			ds->getFeatureMap([](ResponseResult res, GF_UINT32 featuremap) {
-				GF_LOGD("getFeatureMap: retcode=%s, 0x%8.8X", res, featuremap); });
+				GF_LOGD("getFeatureMap: retcode=%s, 0x%8.8X", ResponseResultToString(res).c_str(), featuremap); });
 			ds->getDeviceName([](ResponseResult res, tstring str) {
 				GF_LOGD("getDeviceName: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
 			ds->getModelNumber([](ResponseResult res, tstring str) {

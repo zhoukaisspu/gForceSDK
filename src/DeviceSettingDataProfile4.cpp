@@ -482,7 +482,7 @@ void DeviceSettingDataProfile4::trainingModelOnResponse(ResponseResult respval, 
 		else
 		{
 			GF_LOGD("sending model data: error in sending: ret = %u, total size = %u,",
-				ret, mTraingModelBufferLen);
+				ret, mTraingModelBuffer.size());
 			mTrainingModelCallback(ResponseResult::RREST_FAILED, 0);
 		}
 		resetTrainingModelData();
@@ -491,7 +491,7 @@ void DeviceSettingDataProfile4::trainingModelOnResponse(ResponseResult respval, 
 	{
 		// calculate progress percentage
 		GF_UINT32 currentStartPos = TRANING_PACKAGE_DATA_LENGTH * (nextPkgNo - 1);
-		GF_UINT32 percentage = currentStartPos * 100 / mTraingModelBufferLen;
+		GF_UINT32 percentage = (GF_UINT32)(currentStartPos * 100 / mTraingModelBuffer.size());
 		if (100 <= percentage)
 			percentage = 99; // 100 means completion, it should be sent above
 		if ((GF_UINT32)-1 == mLastSentPercentage || (mLastSentPercentage + 5) <= percentage)
@@ -507,10 +507,10 @@ GF_RET_CODE DeviceSettingDataProfile4::trainingModelSendNextPackage(GF_UINT16 ne
 	if (1 > nextPkgId)
 		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
 	GF_UINT16 pkgNo = nextPkgId - 1;
-	if ((GF_UINT32)(TRANING_PACKAGE_DATA_LENGTH * pkgNo) >= mTraingModelBufferLen)
+	if ((GF_UINT32)(TRANING_PACKAGE_DATA_LENGTH * pkgNo) >= mTraingModelBuffer.size())
 		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
 
-	GF_UINT32 remainDataLen = mTraingModelBufferLen - (TRANING_PACKAGE_DATA_LENGTH * pkgNo);
+	GF_UINT32 remainDataLen = (GF_UINT32)(mTraingModelBuffer.size() - (TRANING_PACKAGE_DATA_LENGTH * pkgNo));
 	const GF_UINT8 cmdlen = TRANING_PACKAGE_DATA_LENGTH + 3;
 	GF_UINT8 cmddata[cmdlen];
 	memset(cmddata, 0, sizeof(cmddata));
@@ -518,7 +518,7 @@ GF_RET_CODE DeviceSettingDataProfile4::trainingModelSendNextPackage(GF_UINT16 ne
 	cmddata[1] = (GF_UINT8)nextPkgId;
 	cmddata[2] = (GF_UINT8)(nextPkgId >> 8);
 	// NOTE that package number is started from 1.
-	memcpy(cmddata + 3, mTraingModelBuffer.get() + (TRANING_PACKAGE_DATA_LENGTH * pkgNo),
+	memcpy(cmddata + 3, mTraingModelBuffer.data() + (TRANING_PACKAGE_DATA_LENGTH * pkgNo),
 		min<GF_UINT32>(TRANING_PACKAGE_DATA_LENGTH, remainDataLen));
 	auto onResponse = [this](ResponseResult respval, GF_UINT16 nextPkgNo) {
 		trainingModelOnResponse(respval, nextPkgNo);
@@ -529,8 +529,7 @@ GF_RET_CODE DeviceSettingDataProfile4::trainingModelSendNextPackage(GF_UINT16 ne
 }
 void DeviceSettingDataProfile4::resetTrainingModelData()
 {
-	mTraingModelBuffer.reset();
-	mTraingModelBufferLen = 0;
+	mTraingModelBuffer = vector<GF_UINT8>();
 	mTrainingModelCallback = nullptr;
 	mLastSentPercentage = (GF_UINT32)-1;
 }
@@ -541,16 +540,13 @@ GF_RET_CODE DeviceSettingDataProfile4::sendTrainingModelData(GF_UINT32 length,
 	{
 		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
 	}
-	if (0 != mTraingModelBufferLen)
+	if (!mTraingModelBuffer.empty())
 	{
 		return GF_RET_CODE::GF_ERROR_DEVICE_BUSY;
 	}
 
 	// first backup data buffer
-	mTraingModelBuffer.reset();
-	mTraingModelBuffer = decltype(mTraingModelBuffer)(new GF_UINT8[length]);
-	memcpy(mTraingModelBuffer.get(), data, length);
-	mTraingModelBufferLen = length;
+	mTraingModelBuffer = vector<GF_UINT8>(data, data + length);
 	mTrainingModelCallback = progress;
 
 	// send first package
@@ -905,8 +901,8 @@ GF_RET_CODE DeviceSettingDataProfile4::setDeviceStatusConfig(DeviceStatusFlags f
 
 tstring DeviceSettingDataProfile4::getStringCommon(GF_UINT8 length, GF_PUINT8 data)
 {
-	unique_ptr<char[]> up(new char[length + 1]);
-	char* str = up.get();
+	vector<char> buf((GF_SIZE)(length + 1));
+	char* str = buf.data();
 	memcpy(str, data, length);
 	str[length] = '\0';
 	return utils::totstring(str);

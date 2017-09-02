@@ -206,8 +206,7 @@ namespace gf
 
 	private:
 		// sendTrainingModelData
-		unique_ptr<GF_UINT8[]> mTraingModelBuffer;
-		GF_UINT32 mTraingModelBufferLen = 0;
+		vector<GF_UINT8> mTraingModelBuffer;
 		GF_UINT32 mLastSentPercentage = (GF_UINT32)-1;
 		function<void(ResponseResult res, GF_UINT32 percentage)> mTrainingModelCallback;
 		void trainingModelOnResponse(ResponseResult respval, GF_UINT16 nextPkgNo);

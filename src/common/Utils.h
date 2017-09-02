@@ -73,9 +73,9 @@ namespace gf {
 			size_t convertedChars = 0;
 			GF_SIZE len = str.size() * 2 + 1;
 			//string curLocale = setlocale(LC_CTYPE, "");
-			unique_ptr<wchar_t[]> up(new wchar_t[len]);
-			wchar_t* p = up.get();
-			p[len - 1] = L'\0';
+			vector<wchar_t> buf(len);
+			wchar_t* p = buf.data();
+			p[buf.size() - 1] = L'\0';
 #ifdef WIN32
 			mbstowcs_s(&convertedChars, p, len, str.c_str(), _TRUNCATE);
 #else // WIN32
@@ -98,9 +98,9 @@ namespace gf {
 			size_t convertedChars = 0;
 			GF_SIZE len = wstr.size() * 4;
 			//string curLocale = setlocale(LC_CTYPE, "");
-			unique_ptr<char[]> up(new char[len + 1]);
-			char* p = up.get();
-			p[len] = '\0';
+			vector<char> buf(len + (GF_SIZE)1);
+			char* p = buf.data();
+			p[buf.size() - 1] = '\0';
 #ifdef WIN32
 			wcstombs_s(&convertedChars, p, len, wstr.c_str(), _TRUNCATE);
 #else // WIN32
@@ -130,8 +130,8 @@ namespace gf {
 			if (nullptr == addr)
 				return string();
 			GF_SIZE alloclen = len*(3) + 1;
-			unique_ptr<char[]> up(new char[alloclen]);
-			char* str = up.get();
+			vector<char> buf(alloclen);
+			char* str = buf.data();
 			for (GF_SIZE i = 0; i < len; ++i)
 			{
 #ifdef WIN32
