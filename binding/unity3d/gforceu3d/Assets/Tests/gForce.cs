@@ -28,7 +28,7 @@
  * DAMAGE.
  *
  */
-﻿using System.Collections;
+    ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using gf;
@@ -199,6 +199,10 @@ public class gForce : MonoBehaviour
         public override void onDeviceStatusChanged(Device device, Device.Status status)
         {
             Debug.LogFormat("onDeviceStatusChanged: {0}", status);
+        }
+        public override void onExtendDeviceData(Device device, Device.DataType type, byte[] data)
+        {
+            Debug.LogFormat("onExtendDeviceData: {0}", type);
         }
 
         public Listener(gForce theObj)

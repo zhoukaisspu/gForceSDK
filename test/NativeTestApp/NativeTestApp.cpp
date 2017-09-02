@@ -161,20 +161,20 @@ string ResponseResultToString(ResponseResult resp)
 		respText = "RREST_SUCCESS->0";
 		break;
 	case ResponseResult::RREST_NOT_SUPPORT:
-		respText = "RREST_NOT_SUPPORT->1";
+		respText = "RREST_NOT_SUPPORT->1---********* NOTICE ME ********";
 		break;
 	case ResponseResult::RREST_BAD_PARAM:
-		respText = "RREST_BAD_PARAM->2";
+		respText = "RREST_BAD_PARAM->2---********* NOTICE ME ********";
 		break;
 	case ResponseResult::RREST_FAILED:
-		respText = "RREST_FAILED->3";
+		respText = "RREST_FAILED->3---********* NOTICE ME ********";
 		break;
 	case ResponseResult::RREST_TIMEOUT:
-		respText = "RREST_TIMEOUT->4";
+		respText = "RREST_TIMEOUT->4---********* NOTICE ME ********";
 		break;
 	default:
 	{
-		respText = "Unknown->";
+		respText = "Unknown->---********* NOTICE ME ********";
 		string s;
 		stringstream ss(s);
 		ss << static_cast<int>(resp);
@@ -258,7 +258,10 @@ class HubListenerImp : public HubListener
 	{
 		GF_LOGD("ThreadId: %s: %s: device = %s, dataType = %u, length = %u, first byte: %2.2X, last byte: %2.2X", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()),
-			static_cast<GF_UINT32>(dataType), data->size(), data->at(0), data->at(data->size()-1));
+			static_cast<GF_UINT32>(dataType), data->size(),
+			data->size() > 0 ? data->at(0) : 0xFF,
+			data->size() > 0 ? data->at(data->size() - 1) : 0xFF
+		);
 	}
 
 private:
@@ -420,94 +423,148 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 	{
 		for (auto& itor : listDev)
 		{
-			if (DeviceConnectionStatus::Connected == itor->getConnectionStatus())
-			{
-				tstring str;
-				GF_LOGD("Address type: %u", itor->getAddrType());
-				GF_LOGD("Address: %s", utils::tostring(itor->getAddress()).c_str());
-				GF_LOGD("Name: %s", utils::tostring(itor->getName()).c_str());
-				GF_LOGD("Rssi: %u", itor->getRssi());
-				auto ds = itor->getDeviceSetting();
-				if (nullptr != ds)
-				{
-					GF_UINT32 featureMap = 0;
-					ds->getProtocolVer([](ResponseResult res, tstring str) {
-						GF_LOGD("getProtocolVer: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
-					ds->getFeatureMap([](ResponseResult res, GF_UINT32 featuremap) {
-						GF_LOGD("getFeatureMap: retcode=%s, 0x%8.8X", res, featuremap); });
-					ds->getDeviceName([](ResponseResult res, tstring str) {
-						GF_LOGD("getDeviceName: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
-					ds->getModelNumber([](ResponseResult res, tstring str) {
-						GF_LOGD("getModelNumber: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
-					ds->getSerialNumber([](ResponseResult res, tstring str) {
-						GF_LOGD("getSerialNumber: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
-					ds->getHWRevision([](ResponseResult res, tstring str) {
-						GF_LOGD("getHWRevision: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
-					ds->getFWRevision([](ResponseResult res, tstring str) {
-						GF_LOGD("getFWRevision: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
-					ds->getManufacturerName([](ResponseResult res, tstring str) {
-						GF_LOGD("getManufacturerName: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
-					ds->getBootloaderVer([](ResponseResult res, tstring str) {
-						GF_LOGD("getBootloaderVer: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
-					ds->getBatteryLevel([](ResponseResult res, GF_UINT32 batlevel) {
-						GF_LOGD("getBatteryLevel: retcode=%s, %u", ResponseResultToString(res).c_str(), batlevel); });
-					ds->getTemperature([](ResponseResult res, GF_UINT32 temperature) {
-						GF_LOGD("getTemperature: retcode=%s, %u", ResponseResultToString(res).c_str(), temperature); });
-					// get caps
-					ds->getAccelerateCap([](ResponseResult res, GF_UINT16 maxSampleRateHz,
-						GF_UINT8 maxScaleRange_g, GF_UINT8 maxPackageDataLength) {
-						GF_LOGD("getAccelerateCap: retcode=%s, maxSampleRate=%u, maxScaleRange=%u, maxPkgLength=%u",
-							ResponseResultToString(res).c_str(), maxSampleRateHz, maxScaleRange_g, maxPackageDataLength);
-					});
-					ds->getGyroscopeCap([](ResponseResult res, GF_UINT16 maxSampleRateHz,
-						GF_UINT16 maxScaleRange_dps, GF_UINT8 maxPackageDataLength) {
-						GF_LOGD("getGyroscopeCap: retcode=%s, maxSampleRate=%u, maxScaleRange=%u, maxPkgLength=%u",
-							ResponseResultToString(res).c_str(), maxSampleRateHz, maxScaleRange_dps, maxPackageDataLength);
-					});
-					ds->getMagnetometerCap([](ResponseResult res, GF_UINT16 maxSampleRateHz,
-						GF_UINT16 maxScaleRange_uT, GF_UINT8 maxPackageDataLength) {
-						GF_LOGD("getMagnetometerCap: retcode=%s, maxSampleRate=%u, maxScaleRange=%u, maxPkgLength=%u",
-							ResponseResultToString(res).c_str(), maxSampleRateHz, maxScaleRange_uT, maxPackageDataLength);
-					});
-					ds->getEulerangleCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
-						GF_LOGD("getEulerangleCap: retcode=%s, maxSampleRate=%u", ResponseResultToString(res).c_str(), maxSampleRateHz);
-					});
-					ds->getQuaternionCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
-						GF_LOGD("getQuaternionCap: retcode=%s, maxSampleRate=%u", ResponseResultToString(res).c_str(), maxSampleRateHz);
-					});
-					ds->getRotationMatrixCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
-						GF_LOGD("getRotationMatrixCap: retcode=%s, maxSampleRate=%u", ResponseResultToString(res).c_str(), maxSampleRateHz);
-					});
-					ds->getGestureCap([](ResponseResult res, GF_SIZE number, const Gesture supportedGestures[]) {
-						GF_LOGD("getGestureCap: retcode=%s, supported gesture number=%u", ResponseResultToString(res).c_str(), number);
-						for (GF_SIZE i = 0; i < number; i++)
-							GF_LOGD("gesture[%u]: %s", i, gestureToString(supportedGestures[i]).c_str());
-					});
-					ds->getEMGRawDataCap([](ResponseResult res, GF_UINT16 maxSampleRateHz,
-						DeviceSetting::EMGRowDataChannels supportedChannels, GF_UINT8 maxPackageDataLength) {
-						GF_LOGD("getEMGRawDataCap: retcode=%s, maxSampleRate=%u, channelsCombine=0x%4.4X, maxPkgLength=%u",
-							ResponseResultToString(res).c_str(), maxSampleRateHz, supportedChannels, maxPackageDataLength);
-					});
-					ds->getMouseDataCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
-						GF_LOGD("getMouseDataCap: retcode=%s, maxSampleRate=%u", ResponseResultToString(res).c_str(), maxSampleRateHz);
-					});
-					ds->getJoystickDataCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
-						GF_LOGD("getJoystickDataCap: retcode=%s, maxSampleRate=%u", ResponseResultToString(res).c_str(), maxSampleRateHz);
-					});
-					ds->getDeviceStatusCap([](ResponseResult res, DeviceSetting::DeviceStatusFlags flags) {
-						GF_LOGD("getDeviceStatusCap: retcode=%s, DeviceStatusFlags=%u", ResponseResultToString(res).c_str(), flags);
-					});
-					GF_UINT8 data[100];
-					ds->sendTrainingModelData(100, data, [](ResponseResult res, GF_UINT32 percentage) {
-						GF_LOGD("sendTrainingModelData: retcode=%s, percentage=%u", ResponseResultToString(res).c_str(), percentage);
-					});
-				}
-			}
+			if (DeviceConnectionStatus::Connected != itor->getConnectionStatus())
+				continue;
+
+			tstring str;
+			GF_LOGD("Address type: %u", itor->getAddrType());
+			GF_LOGD("Address: %s", utils::tostring(itor->getAddress()).c_str());
+			GF_LOGD("Name: %s", utils::tostring(itor->getName()).c_str());
+			GF_LOGD("Rssi: %u", itor->getRssi());
+			auto ds = itor->getDeviceSetting();
+			if (nullptr == ds)
+				continue;
+
+			GF_UINT32 featureMap = 0;
+			ds->getProtocolVer([](ResponseResult res, tstring str) {
+				GF_LOGD("getProtocolVer: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
+			ds->getFeatureMap([](ResponseResult res, GF_UINT32 featuremap) {
+				GF_LOGD("getFeatureMap: retcode=%s, 0x%8.8X", res, featuremap); });
+			ds->getDeviceName([](ResponseResult res, tstring str) {
+				GF_LOGD("getDeviceName: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
+			ds->getModelNumber([](ResponseResult res, tstring str) {
+				GF_LOGD("getModelNumber: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
+			ds->getSerialNumber([](ResponseResult res, tstring str) {
+				GF_LOGD("getSerialNumber: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
+			ds->getHWRevision([](ResponseResult res, tstring str) {
+				GF_LOGD("getHWRevision: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
+			ds->getFWRevision([](ResponseResult res, tstring str) {
+				GF_LOGD("getFWRevision: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
+			ds->getManufacturerName([](ResponseResult res, tstring str) {
+				GF_LOGD("getManufacturerName: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
+			ds->getBootloaderVer([](ResponseResult res, tstring str) {
+				GF_LOGD("getBootloaderVer: retcode=%s, \'%s\'", ResponseResultToString(res).c_str(), utils::tostring(str).c_str()); });
+			ds->getBatteryLevel([](ResponseResult res, GF_UINT32 batlevel) {
+				GF_LOGD("getBatteryLevel: retcode=%s, %u", ResponseResultToString(res).c_str(), batlevel); });
+			ds->getTemperature([](ResponseResult res, GF_UINT32 temperature) {
+				GF_LOGD("getTemperature: retcode=%s, %u", ResponseResultToString(res).c_str(), temperature); });
+			// get caps
+			ds->getAccelerateCap([](ResponseResult res, GF_UINT16 maxSampleRateHz,
+				GF_UINT8 maxScaleRange_g, GF_UINT8 maxPackageDataLength) {
+				GF_LOGD("getAccelerateCap: retcode=%s, maxSampleRate=%u, maxScaleRange=%u, maxPkgLength=%u",
+					ResponseResultToString(res).c_str(), maxSampleRateHz, maxScaleRange_g, maxPackageDataLength);
+			});
+			ds->getGyroscopeCap([](ResponseResult res, GF_UINT16 maxSampleRateHz,
+				GF_UINT16 maxScaleRange_dps, GF_UINT8 maxPackageDataLength) {
+				GF_LOGD("getGyroscopeCap: retcode=%s, maxSampleRate=%u, maxScaleRange=%u, maxPkgLength=%u",
+					ResponseResultToString(res).c_str(), maxSampleRateHz, maxScaleRange_dps, maxPackageDataLength);
+			});
+			ds->getMagnetometerCap([](ResponseResult res, GF_UINT16 maxSampleRateHz,
+				GF_UINT16 maxScaleRange_uT, GF_UINT8 maxPackageDataLength) {
+				GF_LOGD("getMagnetometerCap: retcode=%s, maxSampleRate=%u, maxScaleRange=%u, maxPkgLength=%u",
+					ResponseResultToString(res).c_str(), maxSampleRateHz, maxScaleRange_uT, maxPackageDataLength);
+			});
+			ds->getEulerangleCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
+				GF_LOGD("getEulerangleCap: retcode=%s, maxSampleRate=%u", ResponseResultToString(res).c_str(), maxSampleRateHz);
+			});
+			ds->getQuaternionCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
+				GF_LOGD("getQuaternionCap: retcode=%s, maxSampleRate=%u", ResponseResultToString(res).c_str(), maxSampleRateHz);
+			});
+			ds->getRotationMatrixCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
+				GF_LOGD("getRotationMatrixCap: retcode=%s, maxSampleRate=%u", ResponseResultToString(res).c_str(), maxSampleRateHz);
+			});
+			ds->getGestureCap([](ResponseResult res, GF_SIZE number, const Gesture supportedGestures[]) {
+				GF_LOGD("getGestureCap: retcode=%s, supported gesture number=%u", ResponseResultToString(res).c_str(), number);
+				for (GF_SIZE i = 0; i < number; i++)
+					GF_LOGD("gesture[%u]: %s", i, gestureToString(supportedGestures[i]).c_str());
+			});
+			ds->getEMGRawDataCap([](ResponseResult res, GF_UINT16 maxSampleRateHz,
+				DeviceSetting::EMGRowDataChannels supportedChannels, GF_UINT8 maxPackageDataLength) {
+				GF_LOGD("getEMGRawDataCap: retcode=%s, maxSampleRate=%u, channelsCombine=0x%4.4X, maxPkgLength=%u",
+					ResponseResultToString(res).c_str(), maxSampleRateHz, supportedChannels, maxPackageDataLength);
+			});
+			ds->getMouseDataCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
+				GF_LOGD("getMouseDataCap: retcode=%s, maxSampleRate=%u", ResponseResultToString(res).c_str(), maxSampleRateHz);
+			});
+			ds->getJoystickDataCap([](ResponseResult res, GF_UINT16 maxSampleRateHz) {
+				GF_LOGD("getJoystickDataCap: retcode=%s, maxSampleRate=%u", ResponseResultToString(res).c_str(), maxSampleRateHz);
+			});
+			ds->getDeviceStatusCap([](ResponseResult res, DeviceSetting::DeviceStatusFlags flags) {
+				GF_LOGD("getDeviceStatusCap: retcode=%s, DeviceStatusFlags=%u", ResponseResultToString(res).c_str(), flags);
+			});
+			GF_UINT8 data[100];
+			ds->sendTrainingModelData(100, data, [](ResponseResult res, GF_UINT32 percentage) {
+				GF_LOGD("sendTrainingModelData: retcode=%s, percentage=%u", ResponseResultToString(res).c_str(), percentage);
+			});
 		}
 		break;
 	}
 	case 'b':
 	{
+		for (auto& itor : listDev)
+		{
+			if (DeviceConnectionStatus::Connected != itor->getConnectionStatus())
+				continue;
+			auto ds = itor->getDeviceSetting();
+			if (nullptr == ds)
+				continue;
+
+			// set caps
+			ds->setAccelerateConfig(100, 14, 12 * 10, [](ResponseResult res) {
+				GF_LOGD("setAccelerateConfig: retcode=%s", ResponseResultToString(res).c_str());
+			});
+			ds->setGyroscopeConfig(1000, 2000, 12 * 10, [](ResponseResult res) {
+				GF_LOGD("setGyroscopeConfig: retcode=%s", ResponseResultToString(res).c_str());
+			});
+			ds->setMagnetometerConfig(1000, 4800, 12 * 10, [](ResponseResult res) {
+				GF_LOGD("setMagnetometerConfig: retcode=%s", ResponseResultToString(res).c_str());
+			});
+			ds->setEulerangleConfig(10, [](ResponseResult res) {
+				GF_LOGD("setEulerangleConfig: retcode=%s", ResponseResultToString(res).c_str());
+			});
+			ds->setQuaternionConfig(10, [](ResponseResult res) {
+				GF_LOGD("setQuaternionConfig: retcode=%s", ResponseResultToString(res).c_str());
+			});
+			ds->setRotationMatrixConfig(10, [](ResponseResult res) {
+				GF_LOGD("setRotationMatrixConfig: retcode=%s", ResponseResultToString(res).c_str());
+			});
+			Gesture gests[] = {
+				Gesture::Relax,
+				Gesture::Shoot
+			};
+			GF_UINT32 numGestures = sizeof(gests) / sizeof(Gesture);
+			ds->setGestureConfig(numGestures, gests, [](ResponseResult res) {
+				GF_LOGD("setGestureConfig: retcode=%s", ResponseResultToString(res).c_str());
+			});
+			ds->setEMGRawDataConfig(10, (DeviceSetting::EMGRowDataChannels)0xFF, 128, [](ResponseResult res) {
+				GF_LOGD("setEMGRawDataConfig: retcode=%s", ResponseResultToString(res).c_str());
+			});
+			ds->setMouseDataConfig(10, [](ResponseResult res) {
+				GF_LOGD("setMouseDataConfig: retcode=%s", ResponseResultToString(res).c_str());
+			});
+			ds->setJoystickDataConfig(10, [](ResponseResult res) {
+				GF_LOGD("setJoystickDataConfig: retcode=%s", ResponseResultToString(res).c_str());
+			});
+			ds->setDeviceStatusConfig((DeviceSetting::DeviceStatusFlags) (
+				DeviceSetting::DeviceStatusFlags::DSF_NONE
+				| DeviceSetting::DeviceStatusFlags::DSF_RECENTER
+				//| DeviceSetting::DeviceStatusFlags::DSF_USBSTATUS
+				//| DeviceSetting::DeviceStatusFlags::DSF_MOTIONLESS
+				),
+				[](ResponseResult res) {
+				GF_LOGD("setDeviceStatusConfig: retcode=%s", ResponseResultToString(res).c_str());
+			});
+		}
 		break;
 	}
 	case 'n':
@@ -533,13 +590,13 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 								| DeviceSetting::DNF_ACCELERATE
 								| DeviceSetting::DNF_GYROSCOPE
 								| DeviceSetting::DNF_MAGNETOMETER
-								| DeviceSetting::DNF_EULERANGLE
+								//| DeviceSetting::DNF_EULERANGLE
 								//| DeviceSetting::DNF_QUATERNION
-								| DeviceSetting::DNF_ROTATIONMATRIX
+								//| DeviceSetting::DNF_ROTATIONMATRIX
 								| DeviceSetting::DNF_EMG_GESTURE
-								| DeviceSetting::DNF_EMG_RAW
-								| DeviceSetting::DNF_HID_MOUSE
-								| DeviceSetting::DNF_HID_JOYSTICK
+								//| DeviceSetting::DNF_EMG_RAW
+								//| DeviceSetting::DNF_HID_MOUSE
+								//| DeviceSetting::DNF_HID_JOYSTICK
 								| DeviceSetting::DNF_DEVICE_STATUS
 								);
 					}

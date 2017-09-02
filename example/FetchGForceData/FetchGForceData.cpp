@@ -132,8 +132,17 @@ public:
 		cout << __FUNCTION__ << " has been called." << endl;
 		DeviceSetting::DataNotifFlags flags;
 		flags = (DeviceSetting::DataNotifFlags)
-			(DeviceSetting::DNF_QUATERNION
+			(DeviceSetting::DNF_OFF
+				| DeviceSetting::DNF_ACCELERATE
+				//| DeviceSetting::DNF_GYROSCOPE
+				//| DeviceSetting::DNF_MAGNETOMETER
+				//| DeviceSetting::DNF_EULERANGLE
+				//| DeviceSetting::DNF_QUATERNION
+				//| DeviceSetting::DNF_ROTATIONMATRIX
 				| DeviceSetting::DNF_EMG_GESTURE
+				//| DeviceSetting::DNF_EMG_RAW
+				| DeviceSetting::DNF_HID_MOUSE
+				| DeviceSetting::DNF_HID_JOYSTICK
 				| DeviceSetting::DNF_DEVICE_STATUS
 				);
 		if (device)
@@ -240,7 +249,8 @@ public:
 	virtual void onExtendDeviceData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const std::vector<GF_UINT8>> data) override
 	{
 		cout << __FUNCTION__ << ": datatype = " << (GF_UINT32)dataType << ", datalength = " << data->size()
-			<< ", first byte: " << (GF_UINT32)data->at(0) << ", last byte: " << (GF_UINT32)data->at(data->size() - 1) << endl;
+			<< ", first byte: " << hex << (GF_UINT32)((data->size() > 0) ? data->at(0) : 0xFF)
+			<< ", last byte: " << (GF_UINT32)((data->size() > 0) ? data->at(data->size() - 1) : 0xFF) << dec << endl;
 	}
 
 	// Indicates if we want to exit app

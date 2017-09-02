@@ -33,6 +33,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine; // for debug
+using System.Runtime.InteropServices;
 
 
 namespace gf
@@ -154,6 +155,7 @@ namespace gf
                     mListenerDele.onOrientationDataFn = new libgforce.onOrientationData(Hub.onOrientationDataImpl);
                     mListenerDele.onGestureDataFn = new libgforce.onGestureData(Hub.onGestureDataImpl);
                     mListenerDele.onDeviceStatusChangedFn = new libgforce.onDeviceStatusChanged(Hub.onDeviceStatusChangedImpl);
+                    mListenerDele.onExtendDeviceDataFn = new libgforce.onExtendDeviceData(Hub.onExtendDeviceDataImpl);
 
                     ret = libgforce.hub_register_listener(ref mListenerDele);
                 }
@@ -423,7 +425,7 @@ namespace gf
             Device d = null;
             if (IntPtr.Zero == hDevice)
             {
-                Debug.Log("onReCenterImpl: Null hDevice");
+                Debug.Log("onDeviceStatusChangedImpl: Null hDevice");
                 return;
             }
             try
@@ -437,6 +439,28 @@ namespace gf
             }
             foreach (HubListener l in instance.mListeners)
                 l.onDeviceStatusChanged(d, status);
+        }
+        private static void onExtendDeviceDataImpl(IntPtr hDevice, Device.DataType type, int dataLen, IntPtr data)
+        {
+            Device d = null;
+            if (IntPtr.Zero == hDevice)
+            {
+                Debug.Log("onExtendDeviceDataImpl: Null hDevice");
+                return;
+            }
+            try
+            {
+                d = (Device)instance.mDevices[hDevice];
+            }
+            catch
+            {
+                // cannot find
+                return;
+            }
+            byte[] dataarray = new byte[dataLen];
+            Marshal.Copy(data, dataarray, 0, dataLen);
+            foreach (HubListener l in instance.mListeners)
+                l.onExtendDeviceData(d, type, dataarray);
         }
     }
 

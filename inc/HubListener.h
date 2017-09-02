@@ -120,15 +120,17 @@ namespace gf
 		virtual void onGestureData(SPDEVICE device, Gesture gest) {}
 
 		/// \brief
-        ///     This callback is called when the user has just re-centered the
-        ///     device.
+        ///     This callback is called when the device status has been changed
 		/// \param device Pointer to the Device sending data
+		/// \param status What status of the device has been changed
         /// \remark
-        ///     This callback is to notifiy the application of that the user has
+        ///     DeviceStatus::ReCenter: Notifiy the application of that the user has
         ///     re-centered the device, by pressing the button on the gForce
         ///     device, to use his/her current orientation as the origin of
         ///     his/her coordinate system (i.e. [w=1, x=0, y=0, z=0] in
         ///     quaternion). Please also see <a href="https://support.google.com/daydream/answer/7184599?hl=en">Google Daydram - Re-center your view & cursor</a>
+		///     DeviceStatus::Motionless: Notify that the device doesn't detect user motion
+		///     in long time, so it will turn to standby mode.
 		virtual void onDeviceStatusChanged(SPDEVICE device, DeviceStatus status) {}
 
 		/// \brief This callback is called when the extend data is recevied

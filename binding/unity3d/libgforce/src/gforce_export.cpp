@@ -253,7 +253,7 @@ public:
 				if (nullptr != i->onExtendDeviceData)
 				{
 					i->onExtendDeviceData(getAddrAsHandle(device), static_cast<GF_UINT>(dataType),
-						static_cast<GF_UINT>(data->size()), data->data());
+						static_cast<GF_INT>(data->size()), data->data());
 				}
 		}
 #ifdef WIN32

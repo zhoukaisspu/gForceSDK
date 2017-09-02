@@ -1,19 +1,19 @@
 /*
  * Copyright 2017, OYMotion Inc.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -28,13 +28,13 @@
  * DAMAGE.
  *
  */
-/*!
- * \file gforce_export.h
- * \brief API collection for C# calling
- *
- * \version 0.1
- * \date 2017.7.5
- */
+ /*!
+  * \file gforce_export.h
+  * \brief API collection for C# calling
+  *
+  * \version 0.1
+  * \date 2017.7.5
+  */
 #pragma once
 
 #ifdef WIN32
@@ -58,11 +58,11 @@
 
 #include "gfTypes.h"
 
-/// \brief The callback function pointer type for device enumeration
-///
-/// \param handle A device handle indicates the enumeration result
-/// \return The return value tells gForceSDK if client wants to continue
-///			True if client wants to continue enumeration, otherwise stop it
+  /// \brief The callback function pointer type for device enumeration
+  ///
+  /// \param handle A device handle indicates the enumeration result
+  /// \return The return value tells gForceSDK if client wants to continue
+  ///			True if client wants to continue enumeration, otherwise stop it
 typedef bool(*FunEnumDevice)(gf::GF_HANDLE handle);
 
 /// \brief The function pointer type for receiving gForceSDK log to a 3rd party envrionment
@@ -128,17 +128,20 @@ struct ListenerCalls
 	/// \param gest The Gesture object.
 	void(*onGestureData)(gf::GF_HANDLE device, gf::GF_UINT gest) = nullptr;
 	/// \brief
-	///     This callback is called when the user has just re-centered the
+	///     This callback is called when the device status has been changed
 	///     device.
 	/// \param device The handle of a Device sending data
-	/// \sa gf::HubListener::onReCenter
+	/// \param status What status of the device has been changed
+	/// \sa gf::HubListener::onDeviceStatusChanged
 	void(*onDeviceStatusChanged)(gf::GF_HANDLE device, gf::GF_UINT status) = nullptr;
 	/// \brief
-	///     This callback is called when the user has just re-centered the
-	///     device.
+	///     This callback is called when the extend data is recevied
 	/// \param device The handle of a Device sending data
-	/// \sa gf::HubListener::onReCenter
-	void(*onExtendDeviceData)(gf::GF_HANDLE device, gf::GF_UINT dataType, gf::GF_UINT dataLength, const gf::GF_UINT8* data) = nullptr;
+	/// \param dataType The data type carried
+	/// \param dataLength Length of data
+	/// \param data The pointer to the data buffer
+	/// \sa gf::HubListener::onExtendDeviceData
+	void(*onExtendDeviceData)(gf::GF_HANDLE device, gf::GF_UINT dataType, gf::GF_INT dataLength, const gf::GF_UINT8* data) = nullptr;
 };
 #pragma pack(pop)
 

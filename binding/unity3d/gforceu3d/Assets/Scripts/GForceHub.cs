@@ -28,7 +28,7 @@
  * DAMAGE.
  *
  */
-﻿using UnityEngine;
+    ﻿using UnityEngine;
 using System.Threading;
 using System.Collections.Generic;
 using gf;
@@ -62,14 +62,14 @@ public class GForceHub : MonoBehaviour
             mHub = null;
         }
 #if UNITY_ANDROID && !UNITY_EDITOR
-        AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-        var unityActivity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
+            AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+            var unityActivity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
 
-        unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
-            mHub = Hub.Instance;
-            prepare();
-        }));
-        return true;
+            unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
+                mHub = Hub.Instance;
+                prepare();
+            }));
+            return true;
 #else
         mHub = Hub.Instance;
         prepare();
@@ -116,24 +116,24 @@ public class GForceHub : MonoBehaviour
 #if UNITY_EDITOR
             EditorUtility.DisplayDialog("No DeviceComponent child.", errorMessage, "OK");
 #else
-            throw new UnityException (errorMessage);
+                throw new UnityException (errorMessage);
 #endif
         }
 
 #if UNITY_ANDROID && !UNITY_EDITOR
-        AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-        var unityActivity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
+            AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+            var unityActivity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
 
-        var applicationContext = unityActivity.Call<AndroidJavaObject>("getApplicationContext");
+            var applicationContext = unityActivity.Call<AndroidJavaObject>("getApplicationContext");
 
-        // Need to pass the Android Application Context to the jni plugin before initializing the Hub.
-        AndroidJavaClass nativeEventsClass = new AndroidJavaClass("com.oymotion.ble.GlobalContext");
-        nativeEventsClass.CallStatic("setApplicationContext", applicationContext);
+            // Need to pass the Android Application Context to the jni plugin before initializing the Hub.
+            AndroidJavaClass nativeEventsClass = new AndroidJavaClass("com.oymotion.ble.GlobalContext");
+            nativeEventsClass.CallStatic("setApplicationContext", applicationContext);
 
-        unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
-            mHub = Hub.Instance;
-            prepare();
-        }));
+            unityActivity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
+                mHub = Hub.Instance;
+                prepare();
+            }));
 #else
         mHub = Hub.Instance;
         prepare();
@@ -169,7 +169,7 @@ public class GForceHub : MonoBehaviour
     private List<Device> mFoundDevices = new List<Device>();
     private bool mNeedDeviceScan = false;
 #if !UNITY_ANDROID
-    private Hub.logFn logfun = new Hub.logFn(GForceHub.DebugLog);
+        private Hub.logFn logfun = new Hub.logFn(GForceHub.DebugLog);
 #endif
 
     private class Listener : HubListener
@@ -355,6 +355,14 @@ public class GForceHub : MonoBehaviour
                     dev.onDeviceStatusChanged(status);
             }
         }
+        public override void onExtendDeviceData(Device device, Device.DataType type, byte[] data)
+        {
+            foreach (GForceDevice dev in hubcomp.mDeviceComps)
+            {
+                if (device == dev.device)
+                    dev.onExtendDeviceData(type, data);
+            }
+        }
 
         public Listener(GForceHub theObj)
         {
@@ -381,7 +389,7 @@ public class GForceHub : MonoBehaviour
         mFoundDevices.Clear();
         mLsn = new Listener(this);
 #if !UNITY_ANDROID
-        mHub.setClientLogMethod(logfun);
+            mHub.setClientLogMethod(logfun);
 #endif
         RetCode ret = mHub.registerListener(mLsn);
         Debug.LogFormat("registerListener = {0}", ret);
@@ -414,7 +422,7 @@ public class GForceHub : MonoBehaviour
         }
         mHub.unregisterListener(mLsn);
 #if !UNITY_ANDROID
-        mHub.setClientLogMethod(null);
+            mHub.setClientLogMethod(null);
 #endif
         mHub.deinit();
 

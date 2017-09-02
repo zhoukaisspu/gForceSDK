@@ -66,6 +66,23 @@ namespace gf
             Connecting,
             Connected
         };
+
+        public enum DataType
+        {
+            Invalid,
+            Accelerate,
+            Gyroscope,
+            Magnetometer,
+            Eulerangle,
+            Quaternion,
+            Rotationmatrix,
+            Gesture,
+            Emgraw,
+            Hidmouse,
+            Hidjoystick,
+            Devicestatus,
+        };
+
         public Device(IntPtr handle)
         {
             hD = handle;
