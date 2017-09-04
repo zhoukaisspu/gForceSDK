@@ -41,6 +41,6 @@
          public virtual void onOrientationData(Device device, float w, float x, float y, float z) { }
          public virtual void onGestureData(Device device, Device.Gesture gest) { }
          public virtual void onDeviceStatusChanged(Device device, Device.Status status) { }
-         public virtual void onExtendDeviceData(Device device, Device.DataType type, byte[] data) { }
+         public virtual void onExtendedDeviceData(Device device, Device.DataType type, byte[] data) { }
      }
  }

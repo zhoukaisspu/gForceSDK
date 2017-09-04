@@ -91,7 +91,7 @@ namespace gf
 		void onHIDJoystickData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data);
 		void onDeviceStatusData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data);
 
-		void sendExtendData(BLEDevice& device, DeviceDataType dataType, GF_UINT8 length, GF_PUINT8 data);
+		void sendExtendedData(BLEDevice& device, DeviceDataType dataType, GF_UINT8 length, GF_PUINT8 data);
 
 	private:
 		gfsPtr<DeviceSettingDataProfile4> mDevSetting;

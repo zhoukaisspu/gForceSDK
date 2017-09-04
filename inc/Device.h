@@ -78,9 +78,6 @@ namespace gf
 		/// \brief
         ///     Identifies a physical device using vibration or light, if the
         ///     device supports.
-		/// \remark
-		///     This method is not implemented yet and can be changed in the
-        ///     future.
 		/// \return
         ///     A GF_RET_CODE type of return value to indicate if the identify
         ///     command is sent or not.
@@ -91,18 +88,12 @@ namespace gf
 		virtual DeviceConnectionStatus getConnectionStatus() const = 0;
 
 		/// \brief Sets an alias to the devie for identification
-		/// \remark
-		///     This method is not implemented yet and can be changed in the
-        ///     future.
         /// \sa
         ///  Device::getAlias()
 		virtual GF_RET_CODE setAlias(tstring alias) = 0;
 
 		/// \brief Get the alias of the device set before
 		///
-		/// \remark
-		///     This method is not implemented yet and can be changed in the
-        ///     future.
         /// \sa
         ///  Device::setAlias()
 		virtual tstring getAlias() const = 0;

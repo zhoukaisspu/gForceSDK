@@ -254,7 +254,7 @@ class HubListenerImp : public HubListener
 		GF_LOGD("ThreadId: %s: %s: device status changed. device = %s, status = %u", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()), static_cast<GF_UINT32>(status));
 	}
-	virtual void onExtendDeviceData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data) override
+	virtual void onExtendedDeviceData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data) override
 	{
 		GF_LOGD("ThreadId: %s: %s: device = %s, dataType = %u, length = %u, first byte: %2.2X, last byte: %2.2X", utils::threadIdToString(this_thread::get_id()).c_str(), __FUNCTION__,
 			(nullptr == device ? "__empty__" : utils::tostring(device->getName()).c_str()),

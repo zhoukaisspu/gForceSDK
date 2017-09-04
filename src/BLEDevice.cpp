@@ -67,7 +67,6 @@ GF_RET_CODE BLEDevice::identify(int msec)
 	auto settings = getDeviceSetting();
 	if (nullptr == settings)
 	{
-		GF_LOGI("%s: Opps, not implemented yet.", __FUNCTION__);
 		return GF_RET_CODE::GF_ERROR_NOT_SUPPORT;
 	}
 	auto ret0 = settings->ledControlTest(DeviceSetting::LedControlTestType::On, [](ResponseResult r)
@@ -78,9 +77,8 @@ GF_RET_CODE BLEDevice::identify(int msec)
 	{
 		GF_LOGD("on response of vibrate control on. %u", r);
 	});
-#ifdef WIN32
-	Sleep(msec);
-#endif
+	// TODO: implement async version
+	utils::sleep(msec);
 	ret0 = settings->ledControlTest(DeviceSetting::LedControlTestType::Off, [](ResponseResult r)
 	{
 		GF_LOGD("on response of led control off. %u", r);

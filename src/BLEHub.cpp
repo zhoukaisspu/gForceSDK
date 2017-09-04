@@ -675,11 +675,7 @@ GF_RET_CODE BLEHub::configMtuSize(BLEDevice& dev, GF_UINT16 mtuSize)
 		auto delay = chrono::milliseconds(BLECOMMAND_INTERVAL) - (now - mLastExecTime);
 		auto msdelay = chrono::duration_cast<chrono::milliseconds>(delay).count();
 		GF_LOGD("HOLD: %lld", msdelay);
-#ifdef WIN32
-		Sleep((DWORD)msdelay);
-#else
-		sleep(msdelay * 1000);
-#endif
+		utils::sleep((GF_UINT32)msdelay);
 	}
 	mLastExecTime = chrono::system_clock::now();
 #endif
@@ -797,11 +793,7 @@ GF_RET_CODE BLEHub::sendControlCommand(BLEDevice& dev, GF_UINT8 data_length, GF_
 		auto delay = chrono::milliseconds(BLECOMMAND_INTERVAL) - (now - mLastExecTime);
 		auto msdelay = chrono::duration_cast<chrono::milliseconds>(delay).count();
 		GF_LOGD("HOLD: %lld", msdelay);
-#ifdef WIN32
-		Sleep((DWORD)msdelay);
-#else
-		sleep(msdelay * 1000);
-#endif
+		utils::sleep((GF_UINT32)msdelay);
 	}
 	mLastExecTime = chrono::system_clock::now();
 #endif
@@ -872,7 +864,7 @@ void BLEHub::notifyDeviceStatusChanged(BLEDevice& dev, DeviceStatus status)
 		mNotifHelper.onDeviceStatusChanged(device, status);
 }
 
-void BLEHub::notifyExtendData(BLEDevice& dev, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data)
+void BLEHub::notifyExtendedData(BLEDevice& dev, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data)
 {
 	SPDEVICE device;
 	{
@@ -887,7 +879,7 @@ void BLEHub::notifyExtendData(BLEDevice& dev, DeviceDataType dataType, gfsPtr<co
 		}
 	}
 	if (nullptr != device)
-		mNotifHelper.onExtendData(device, dataType, data);
+		mNotifHelper.onExtendedData(device, dataType, data);
 }
 
 const char* gForcePrefix = "gForce";
@@ -1158,7 +1150,7 @@ void BLEHub::NotifyHelper::onDeviceStatusChanged(SPDEVICE device, DeviceStatus s
 	}
 }
 
-void BLEHub::NotifyHelper::onExtendData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data)
+void BLEHub::NotifyHelper::onExtendedData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data)
 {
 	lock_guard<mutex> lock(mHub.mMutexListeners);
 	if (WorkMode::Polling == mHub.mWorkMode)
@@ -1169,7 +1161,7 @@ void BLEHub::NotifyHelper::onExtendData(SPDEVICE device, DeviceDataType dataType
 				[itor, device, dataType, data]() {
 				auto sp = itor.lock();
 				if (nullptr != sp)
-					sp->onExtendDeviceData(device, dataType, data);
+					sp->onExtendedDeviceData(device, dataType, data);
 			}
 			));
 		}
@@ -1180,7 +1172,7 @@ void BLEHub::NotifyHelper::onExtendData(SPDEVICE device, DeviceDataType dataType
 		{
 			auto sp = itor.lock();
 			if (nullptr != sp)
-				sp->onExtendDeviceData(device, dataType, data);
+				sp->onExtendedDeviceData(device, dataType, data);
 		}
 	}
 }

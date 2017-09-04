@@ -47,11 +47,7 @@ void SimpleProfile::timefun()
 	bool loop = true;
 	while (loop)
 	{
-#ifdef WIN32
-		Sleep(1000);
-#else
-		sleep(1);
-#endif
+		utils::sleep(1000);
 		if (lastUpdated < dataCnt)
 		{
 			GF_LOGD("gForce data package rate: %d", dataCnt - lastUpdated);

@@ -520,9 +520,7 @@ GF_RET_CODE DeviceSettingDataProfile4::trainingModelSendNextPackage(GF_UINT16 ne
 	// NOTE that package number is started from 1.
 	memcpy(cmddata + 3, mTraingModelBuffer.data() + (TRANING_PACKAGE_DATA_LENGTH * pkgNo),
 		min<GF_UINT32>(TRANING_PACKAGE_DATA_LENGTH, remainDataLen));
-	auto onResponse = [this](ResponseResult respval, GF_UINT16 nextPkgNo) {
-		trainingModelOnResponse(respval, nextPkgNo);
-	};
+	auto onResponse = bind(&DeviceSettingDataProfile4::trainingModelOnResponse, this, placeholders::_1, placeholders::_2);
 	gfsPtr<function<void(ResponseResult, GF_UINT16)>> pcb = make_shared<function<void(ResponseResult, GF_UINT16)>>(onResponse);
 	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
 	return sendCommand(cmdlen, cmddata, true, pvoid);

@@ -141,7 +141,7 @@ struct ListenerCalls
 	/// \param dataLength Length of data
 	/// \param data The pointer to the data buffer
 	/// \sa gf::HubListener::onExtendDeviceData
-	void(*onExtendDeviceData)(gf::GF_HANDLE device, gf::GF_UINT dataType, gf::GF_INT dataLength, const gf::GF_UINT8* data) = nullptr;
+	void(*onExtendedDeviceData)(gf::GF_HANDLE device, gf::GF_UINT dataType, gf::GF_INT dataLength, const gf::GF_UINT8* data) = nullptr;
 };
 #pragma pack(pop)
 

@@ -30,6 +30,11 @@
  */
 #pragma once
 
+#ifdef WIN32
+#include <Windows.h>
+#else
+#include <unistd.h>
+#endif
 #include "gfTypes.h"
 #include <memory>
 #include <locale.h>
@@ -66,6 +71,15 @@ namespace gf {
 
 	struct utils
 	{
+		__GF_INLINE__ void sleep(GF_UINT32 ms)
+		{
+#ifdef WIN32
+			Sleep(ms);
+#else
+			usleep(ms * 1000);
+#endif
+		}
+
 		__GF_INLINE__ wstring towstring(const string& str)
 		{
 			if (str.length() == 0)

@@ -355,12 +355,12 @@ public class GForceHub : MonoBehaviour
                     dev.onDeviceStatusChanged(status);
             }
         }
-        public override void onExtendDeviceData(Device device, Device.DataType type, byte[] data)
+        public override void onExtendedDeviceData(Device device, Device.DataType type, byte[] data)
         {
             foreach (GForceDevice dev in hubcomp.mDeviceComps)
             {
                 if (device == dev.device)
-                    dev.onExtendDeviceData(type, data);
+                    dev.onExtendedDeviceData(type, data);
             }
         }
 

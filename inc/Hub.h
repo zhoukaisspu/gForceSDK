@@ -139,19 +139,6 @@ namespace gf
 		/// \return The weak pointer of the device found, nullptr if not found.
 		virtual SPDEVICE findDevice(GF_UINT8 addrType, tstring address) = 0;
 
-		/// \brief create a virtual device with more than one physical gforce devices
-		///
-		///   By setting up virtual device, client can combine two or more gForce devices positioning in
-		///   defferent location (such as right arm + left arm) into one virtual device. client still can receive gesture
-		///   data of these devices seperately, and can get one combined gesture
-		///   data (hug for example) if it happens
-		///
-		/// \param realDevices A list of physical gForce devices to combine the virtual devices.
-		/// \param [out] newDevice New virtual device combined by given devices.
-		/// \return GF_RET_CODE::GF_SUCCESS if succeeded, others otherwise.
-		/// \remark Not implemented yet.
-		virtual GF_RET_CODE createVirtualDevice(std::vector<SPDEVICE> realDevices, SPDEVICE& newDevice) = 0;
-
 		/// \brief run message polling
 		///
 		/// \param ms The method will return after ms milliseconds. No matter messages are processed or not.

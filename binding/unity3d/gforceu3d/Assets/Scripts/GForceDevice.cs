@@ -94,13 +94,13 @@ public class GForceDevice : MonoBehaviour
             }
         }
     }
-    public void onExtendDeviceData(Device.DataType type, byte[] data)
+    public void onExtendedDeviceData(Device.DataType type, byte[] data)
     {
         if (0 < data.Length)
-            Debug.LogFormat("onExtendDeviceData: {0}: {1}, length = {2}, data: first byte: {3}, last byte: {4}",
+            Debug.LogFormat("onExtendedDeviceData: {0}: {1}, length = {2}, data: first byte: {3}, last byte: {4}",
                 mDevice, type, data.Length, data[0], data[data.Length - 1]);
         else
-            Debug.LogFormat("onExtendDeviceData: {0}: {1}, length = {2}", mDevice, type, data.Length);
+            Debug.LogFormat("onExtendedDeviceData: {0}: {1}, length = {2}", mDevice, type, data.Length);
     }
 
     private Object mLock = new Object();

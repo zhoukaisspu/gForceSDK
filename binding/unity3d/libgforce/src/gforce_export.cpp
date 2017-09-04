@@ -242,7 +242,7 @@ public:
 		}
 #endif
 	}
-	virtual void onExtendDeviceData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data) override {
+	virtual void onExtendedDeviceData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data) override {
 		if (nullptr == data)
 		{
 			GF_LOGE("%s: data is empty.", __FUNCTION__);
@@ -250,9 +250,9 @@ public:
 		}
 		try {
 			for (auto& i : mlc)
-				if (nullptr != i->onExtendDeviceData)
+				if (nullptr != i->onExtendedDeviceData)
 				{
-					i->onExtendDeviceData(getAddrAsHandle(device), static_cast<GF_UINT>(dataType),
+					i->onExtendedDeviceData(getAddrAsHandle(device), static_cast<GF_UINT>(dataType),
 						static_cast<GF_INT>(data->size()), data->data());
 				}
 		}

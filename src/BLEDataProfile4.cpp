@@ -159,35 +159,35 @@ gfsPtr<DeviceSetting> BLEDataProfile4::getDeviceSetting()
 	return mDevSetting;
 }
 
-void BLEDataProfile4::sendExtendData(BLEDevice& device, DeviceDataType dataType, GF_UINT8 length, GF_PUINT8 data)
+void BLEDataProfile4::sendExtendedData(BLEDevice& device, DeviceDataType dataType, GF_UINT8 length, GF_PUINT8 data)
 {
 	// TODO: frequently memory allocation causes memory fragmentation?
 	gfsPtr<const vector<GF_UINT8>> buffer = make_shared<const vector<GF_UINT8>>(data, data+length);
-	device.getHub().notifyExtendData(device, dataType, buffer);
+	device.getHub().notifyExtendedData(device, dataType, buffer);
 }
 
 void BLEDataProfile4::onAccelerateData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 	// GF_LOGD("%s, length: %u", __FUNCTION__, length);
-	sendExtendData(device, DeviceDataType::DDT_ACCELERATE, length, data);
+	sendExtendedData(device, DeviceDataType::DDT_ACCELERATE, length, data);
 }
 
 void BLEDataProfile4::onGyroscopeData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 	// GF_LOGD("%s, length: %u", __FUNCTION__, length);
-	sendExtendData(device, DeviceDataType::DDT_GYROSCOPE, length, data);
+	sendExtendedData(device, DeviceDataType::DDT_GYROSCOPE, length, data);
 }
 
 void BLEDataProfile4::onMagnetometerData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 	// GF_LOGD("%s, length: %u", __FUNCTION__, length);
-	sendExtendData(device, DeviceDataType::DDT_MAGNETOMETER, length, data);
+	sendExtendedData(device, DeviceDataType::DDT_MAGNETOMETER, length, data);
 }
 
 void BLEDataProfile4::onEulerAngleData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 	// GF_LOGD("%s, length: %u", __FUNCTION__, length);
-	sendExtendData(device, DeviceDataType::DDT_EULERANGLE, length, data);
+	sendExtendedData(device, DeviceDataType::DDT_EULERANGLE, length, data);
 }
 
 void BLEDataProfile4::onQuaternionData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
@@ -209,7 +209,7 @@ void BLEDataProfile4::onQuaternionData(BLEDevice& device, GF_UINT8 length, GF_PU
 void BLEDataProfile4::onRotationMatrixData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 	// GF_LOGD("%s, length: %u", __FUNCTION__, length);
-	sendExtendData(device, DeviceDataType::DDT_ROTATIONMATRIX, length, data);
+	sendExtendedData(device, DeviceDataType::DDT_ROTATIONMATRIX, length, data);
 }
 
 void BLEDataProfile4::onGestureData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
@@ -252,19 +252,19 @@ void BLEDataProfile4::onGestureData(BLEDevice& device, GF_UINT8 length, GF_PUINT
 void BLEDataProfile4::onEmgRawData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 	// GF_LOGD("%s, length: %u", __FUNCTION__, length);
-	sendExtendData(device, DeviceDataType::DDT_EMGRAW, length, data);
+	sendExtendedData(device, DeviceDataType::DDT_EMGRAW, length, data);
 }
 
 void BLEDataProfile4::onHIDMouseData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 	// GF_LOGD("%s, length: %u", __FUNCTION__, length);
-	sendExtendData(device, DeviceDataType::DDT_HIDMOUSE, length, data);
+	sendExtendedData(device, DeviceDataType::DDT_HIDMOUSE, length, data);
 }
 
 void BLEDataProfile4::onHIDJoystickData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)
 {
 	// GF_LOGD("%s, length: %u", __FUNCTION__, length);
-	sendExtendData(device, DeviceDataType::DDT_HIDJOYSTICK, length, data);
+	sendExtendedData(device, DeviceDataType::DDT_HIDJOYSTICK, length, data);
 }
 
 void BLEDataProfile4::onDeviceStatusData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data)

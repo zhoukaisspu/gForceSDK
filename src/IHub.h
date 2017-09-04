@@ -70,7 +70,7 @@ namespace gf
 		virtual void notifyOrientationData(BLEDevice& dev, const Quaternion& rotation) = 0;
 		virtual void notifyGestureData(BLEDevice& dev, Gesture gest) = 0;
 		virtual void notifyDeviceStatusChanged(BLEDevice& dev, DeviceStatus status) = 0;
-		virtual void notifyExtendData(BLEDevice& dev, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data) = 0;
+		virtual void notifyExtendedData(BLEDevice& dev, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data) = 0;
 	};
 } // namespace gf
 

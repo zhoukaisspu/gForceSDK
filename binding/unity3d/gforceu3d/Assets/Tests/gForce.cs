@@ -200,9 +200,9 @@ public class gForce : MonoBehaviour
         {
             Debug.LogFormat("onDeviceStatusChanged: {0}", status);
         }
-        public override void onExtendDeviceData(Device device, Device.DataType type, byte[] data)
+        public override void onExtendedDeviceData(Device device, Device.DataType type, byte[] data)
         {
-            Debug.LogFormat("onExtendDeviceData: {0}", type);
+            Debug.LogFormat("onExtendedDeviceData: {0}", type);
         }
 
         public Listener(gForce theObj)

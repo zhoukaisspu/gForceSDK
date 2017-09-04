@@ -46,7 +46,9 @@
 
 #define ONLY_SCAN_GFORCE_DEVICE (1)
 
-#define BLECOMMAND_INTERVAL_ENABLED
+/////////////////////////////////////
+// disable the below define since AM has already support it.
+//#define BLECOMMAND_INTERVAL_ENABLED
 #ifdef BLECOMMAND_INTERVAL_ENABLED
 #define BLECOMMAND_INTERVAL (100) // ms
 #endif
@@ -94,11 +96,18 @@ namespace gf
 		}
 		virtual void enumDevices(std::function<bool(SPDEVICE)>& funEnum, bool bConnectedOnly = true) override;
 		virtual SPDEVICE findDevice(GF_UINT8 addrType, tstring address) override;
-		// set up virtual device, client can combine two or more gdevices positioning in
-		//   defferent location into one virtual device. client still can receive gesture
-		//   data of these devices seperately, and can get one combined gesture
-		//   data if it happens
-		virtual GF_RET_CODE createVirtualDevice(vector<SPDEVICE> realDevices, SPDEVICE& newDevice) override;
+		// /// \brief create a virtual device with more than one physical gforce devices
+		// ///
+		// ///   By setting up virtual device, client can combine two or more gForce devices positioning in
+		// ///   defferent location (such as right arm + left arm) into one virtual device. client still can receive gesture
+		// ///   data of these devices seperately, and can get one combined gesture
+		// ///   data (hug for example) if it happens
+		// ///
+		// /// \param realDevices A list of physical gForce devices to combine the virtual devices.
+		// /// \param [out] newDevice New virtual device combined by given devices.
+		// /// \return GF_RET_CODE::GF_SUCCESS if succeeded, others otherwise.
+		// /// \remark Not implemented yet.
+		virtual GF_RET_CODE createVirtualDevice(vector<SPDEVICE> realDevices, SPDEVICE& newDevice) /*override*/;
 
 	protected:
 		//////////////////////////////////////////////////////////////
@@ -140,7 +149,7 @@ namespace gf
 		virtual void notifyOrientationData(BLEDevice& dev, const Quaternion& rotation) override;
 		virtual void notifyGestureData(BLEDevice& dev, Gesture gest) override;
 		virtual void notifyDeviceStatusChanged(BLEDevice& dev, DeviceStatus status) override;
-		virtual void notifyExtendData(BLEDevice& dev, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data) override;
+		virtual void notifyExtendedData(BLEDevice& dev, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data) override;
 
 	protected:
 		//////////////////////////////////////////////////////////////
@@ -199,7 +208,7 @@ namespace gf
 			virtual void onOrientationData(SPDEVICE device, const Quaternion& rotation);
 			virtual void onGestureData(SPDEVICE device, Gesture gest);
 			virtual void onDeviceStatusChanged(SPDEVICE device, DeviceStatus status);
-			virtual void onExtendData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data);
+			virtual void onExtendedData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const vector<GF_UINT8>> data);
 
 			// remove warning
 			NotifyHelper& operator = (const NotifyHelper& right) = delete;

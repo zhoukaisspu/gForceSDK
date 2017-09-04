@@ -155,7 +155,7 @@ namespace gf
                     mListenerDele.onOrientationDataFn = new libgforce.onOrientationData(Hub.onOrientationDataImpl);
                     mListenerDele.onGestureDataFn = new libgforce.onGestureData(Hub.onGestureDataImpl);
                     mListenerDele.onDeviceStatusChangedFn = new libgforce.onDeviceStatusChanged(Hub.onDeviceStatusChangedImpl);
-                    mListenerDele.onExtendDeviceDataFn = new libgforce.onExtendDeviceData(Hub.onExtendDeviceDataImpl);
+                    mListenerDele.onExtendedDeviceDataFn = new libgforce.onExtendedDeviceData(Hub.onExtendedDeviceDataImpl);
 
                     ret = libgforce.hub_register_listener(ref mListenerDele);
                 }
@@ -440,12 +440,12 @@ namespace gf
             foreach (HubListener l in instance.mListeners)
                 l.onDeviceStatusChanged(d, status);
         }
-        private static void onExtendDeviceDataImpl(IntPtr hDevice, Device.DataType type, int dataLen, IntPtr data)
+        private static void onExtendedDeviceDataImpl(IntPtr hDevice, Device.DataType type, int dataLen, IntPtr data)
         {
             Device d = null;
             if (IntPtr.Zero == hDevice)
             {
-                Debug.Log("onExtendDeviceDataImpl: Null hDevice");
+                Debug.Log("onExtendedDeviceDataImpl: Null hDevice");
                 return;
             }
             try
@@ -460,7 +460,7 @@ namespace gf
             byte[] dataarray = new byte[dataLen];
             Marshal.Copy(data, dataarray, 0, dataLen);
             foreach (HubListener l in instance.mListeners)
-                l.onExtendDeviceData(d, type, dataarray);
+                l.onExtendedDeviceData(d, type, dataarray);
         }
     }
 

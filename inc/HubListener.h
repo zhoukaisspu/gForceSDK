@@ -97,14 +97,6 @@ namespace gf
 		virtual void onDeviceDisconnected(SPDEVICE device, GF_UINT8 reason) {}
 
 		/// \brief
-		///     This callback is called when the device information of a device is
-		///     ready to read.
-		/// \param device
-		///     The pointer to the Device object that the hub has connected to.
-        /// \remark A DeviceSetting object can be used to read the device information.
-		virtual void onDeviceInfoUpdated(SPDEVICE device) {}
-
-		/// \brief
         ///     This callback is called when the orientation of the device has
         ///     changed.
 		/// \param device
@@ -133,11 +125,11 @@ namespace gf
 		///     in long time, so it will turn to standby mode.
 		virtual void onDeviceStatusChanged(SPDEVICE device, DeviceStatus status) {}
 
-		/// \brief This callback is called when the extend data is recevied
+		/// \brief This callback is called when the extended data is recevied
 		/// \param device The Pointer to the Device.
 		/// \param dataType The data type carried
 		/// \param data The data buffer managed by reference
-		virtual void onExtendDeviceData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const std::vector<GF_UINT8>> data) {}
+		virtual void onExtendedDeviceData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const std::vector<GF_UINT8>> data) {}
 
 		virtual ~HubListener() {}
 	};

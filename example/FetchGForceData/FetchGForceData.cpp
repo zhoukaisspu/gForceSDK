@@ -246,7 +246,7 @@ public:
 		}
 		cout << __FUNCTION__ << " has been called. " << devicestatus << endl;
 	}
-	virtual void onExtendDeviceData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const std::vector<GF_UINT8>> data) override
+	virtual void onExtendedDeviceData(SPDEVICE device, DeviceDataType dataType, gfsPtr<const std::vector<GF_UINT8>> data) override
 	{
 		cout << __FUNCTION__ << ": datatype = " << (GF_UINT32)dataType << ", datalength = " << data->size()
 			<< ", first byte: " << hex << (GF_UINT32)((data->size() > 0) ? data->at(0) : 0xFF)
