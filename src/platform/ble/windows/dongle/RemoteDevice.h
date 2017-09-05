@@ -117,6 +117,8 @@ typedef enum
 #define EVENT_ATT_EXCHANGE_MTU_MSG_LEN_OFFSET (EVENT_ATT_EXCHANGE_MTU_MSG_STATUS_OFFSET + 3)
 #define EVENT_ATT_EXCHANGE_MTU_MSG_DATA_OFFSET (EVENT_ATT_EXCHANGE_MTU_MSG_LEN_OFFSET + 1)
 
+class GF_CCONTROLCOMMANDQUEUE;
+
 class GF_CRemoteDevice:public Runnable
 //class GF_CRemoteDevice
 {
@@ -192,6 +194,7 @@ public:
 	GF_STATUS WriteCharacteristicValue(GF_UINT16 attribute_handle, GF_UINT8 data_length, GF_PUINT8 data);
 	GF_STATUS ReadCharacteristicValue(GF_UINT16 attribute_handle);
 	GF_STATUS SendControlCommand(GF_UINT8 data_length, GF_PUINT8 data);
+	GF_STATUS SendControlCommandInternal(GF_UINT8 data_length, GF_PUINT8 data);
 
 	GF_STATUS ExchangeMTUSize(GF_UINT16 mtu_size);
 	GF_UINT8  mAddrType;
@@ -240,5 +243,111 @@ private:
 	/*indicate the protocpl type the device supported. */
 	GF_DeviceProtocolType mDeviceProtocolType;
 	GF_UINT16 mControlCommandHandle;
+
+	GF_CCONTROLCOMMANDQUEUE* mCommandQueue;
+};
+
+#define MAX_COMMAND_PAYLOAD 50
+class GF_CCONTROLCommand
+{
+public:
+	GF_CCONTROLCommand(GF_UINT8 length, GF_PUINT8 parameter)
+	{
+		dataLength = length;
+		if (dataLength != 0)
+		{
+			data = (GF_PUINT8)new GF_UINT8[length];
+			memcpy(data, parameter, length);
+		}
+	}
+
+	~GF_CCONTROLCommand()
+	{
+		if (dataLength != 0)
+		{
+			delete data;
+		}
+	}
+
+	GF_UINT8 getDataLength()
+	{
+		return dataLength;
+	}
+
+	GF_PUINT8 getData()
+	{
+		return data;
+	}
+private:
+	GF_UINT8 dataLength;
+	GF_PUINT8 data;
+};
+
+class GF_CCONTROLCOMMANDQUEUE
+{
+public:
+	GF_CCONTROLCOMMANDQUEUE(GF_CRemoteDevice* device)
+	{
+		mDevice = device;
+		mBusy = GF_FALSE;
+		InitializeCriticalSection(&mCommandMutex);
+	}
+
+	~GF_CCONTROLCOMMANDQUEUE()
+	{
+		EnterCriticalSection(&mCommandMutex);
+		while (mCommand.size() != 0)
+		{
+			/*means pending command needs to sent out.*/
+			GF_CCONTROLCommand* command = mCommand.front();
+			mCommand.pop_front();
+			delete command;
+		}
+		LeaveCriticalSection(&mCommandMutex);
+	}
+
+	void Enqueue(GF_UINT8 data_length, GF_PUINT8 data)
+	{
+		EnterCriticalSection(&mCommandMutex);
+		if (mBusy != GF_TRUE)
+		{
+			/*no command is ongoing, we can send command to remote devive directly.*/
+			mDevice->SendControlCommandInternal(data_length, data);
+			mBusy = GF_TRUE;
+		}
+		else
+		{
+			/*command is ongoing, we need to enqueue data to list, can not sent them out until last command is finished.*/
+			GF_CCONTROLCommand* command = new GF_CCONTROLCommand(data_length, data);
+			mCommand.push_back(command);
+		}
+		//printf("Enqueue with mBusy = %d£¬ queue size = %d \n", mBusy, mCommand.size());
+		LeaveCriticalSection(&mCommandMutex);
+	}
+
+	void Dequeue()
+	{
+		EnterCriticalSection(&mCommandMutex);
+		if (mCommand.size() != 0)
+		{
+			/*means pending command needs to sent out.*/
+			GF_CCONTROLCommand* command = mCommand.front();
+			mDevice->SendControlCommandInternal(command->getDataLength(), command->getData());
+			mCommand.pop_front();
+			//printf("Dequeue with mBusy = %d£¬ queue size = %d \n", mBusy, mCommand.size());
+			delete command;
+		}
+		else
+		{
+			mBusy = GF_FALSE;
+		}
+		LeaveCriticalSection(&mCommandMutex);
+	}
+
+private:
+	list<GF_CCONTROLCommand*> mCommand;
+	GF_BOOL mBusy;
+	GF_CRemoteDevice* mDevice;
+	CRITICAL_SECTION mCommandMutex;
 };
 #endif

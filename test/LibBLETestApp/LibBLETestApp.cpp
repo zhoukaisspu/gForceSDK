@@ -76,20 +76,44 @@ public:
 
 	void onScanResult(GF_BLEDevice* GF_BLEDevice)
 	{
-		printf("\n onScanResult \n");
+		printf("\n onScanResult RSSI=%d\n", GF_BLEDevice->rssi);
 		GF_CDevice* device = new GF_CDevice;
 		device->address_type = GF_BLEDevice->addr_type;
 		memcpy(device->address, GF_BLEDevice->addr, 6);
 		memcpy(device->name, GF_BLEDevice->dev_name, 50);
+		device->rssi = GF_BLEDevice->rssi;
 		device->state = 0;
 
-		mAvailabeDevice.push_back(device);
+        //insert item based on rssi
+        list<GF_CDevice*>::iterator iter;
+		if(mAvailabeDevice.size() == 0)
+		{
+			mAvailabeDevice.push_front(device);
+		}
+		else
+		{
+			for(iter = mAvailabeDevice.begin(); iter != mAvailabeDevice.end(); iter++)
+			{
+				if(((GF_CDevice*)(*iter))->rssi < device->rssi)
+				{
+					mAvailabeDevice.insert(iter, device);
+					break;
+				}
+			}
+			if (iter == mAvailabeDevice.end())
+			{
+				mAvailabeDevice.push_back(device);
+			}
+		}
+
 	}
 
 	void onScanFinished()
 	{
 		GF_CDevice* device;
-		printf("\n onScanFinished \n");
+		printf("\n onScanFinished ITEM=%d\n", mAvailabeDevice.size());
+        list<GF_CDevice*>::iterator iter;
+
 		if (mAvailabeDevice.size() != 0)
 		{
 			device = mAvailabeDevice.front();
@@ -97,20 +121,25 @@ public:
 		}
 	}
 
+	GF_UINT8 ControlCommandParameter[10][1];
+
 	void onDeviceConnected(GF_STATUS status, GF_ConnectedDevice *device)
 	{
 		printf("\n onDeviceConnected withs status = %d\n", status);
 		if (GF_OK == status)
 		{
 			printf("\n protocol of device is = %d\n", mAMInterface->GetDeviceProtocolSupported(device->handle));
-			GF_UINT8 parameter[1] = { 0x00 };
 			Sleep(1000);
 			if (ProtocolType_DataProtocol == mAMInterface->GetDeviceProtocolSupported(device->handle))
 			{
-				printf("\n SendControlCommand cmd type: %d!\n", 0x00);
-				if (GF_OK == mAMInterface->SendControlCommand(device->handle, 0x01, parameter))
+				for (GF_UINT8 i = 0; i < 10; i++)
 				{
-					printf("\n SendControlCommand sucessful!\n");
+					ControlCommandParameter[i][0] = i;
+					printf("\n SendControlCommand cmd type: %d!\n", ControlCommandParameter[i][0]);
+					if (GF_OK == mAMInterface->SendControlCommand(device->handle, 0x01, ControlCommandParameter[i]))
+					{
+						printf("\n SendControlCommand sucessful!\n");
+					}
 				}
 			}
 		}
@@ -176,12 +205,14 @@ public:
 				{
 					printf("Protocol version: %d.%d\n", data[2], data[3]);
 					//Sleep(1000);
+					/*
 					printf("\n SendControlCommand cmd type: %d!\n", GET_FEATURE_MAP);
 					GF_UINT8 parameter[1] = { GET_FEATURE_MAP };
 					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
 					{
 						printf("\n SendControlCommand sucessful!\n");
 					}
+					*/
 				}
 				else
 				{
@@ -195,12 +226,14 @@ public:
 				{
 					printf("Feature Map: %x:%x:%x:%x\n", data[2], data[3], data[4], data[5]);
 					//Sleep(1000);
+					/*
 					printf("\n SendControlCommand cmd type: %d!\n", GET_DEVICE_NAME);
 					GF_UINT8 parameter[1] = { GET_DEVICE_NAME };
 					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
 					{
 						printf("\n SendControlCommand sucessful!\n");
 					}
+					*/
 				}
 				else
 				{
@@ -217,12 +250,14 @@ public:
 					dev_name[length - 2] = '\0';
 					printf("Device Name: %s\n", dev_name);
 					//Sleep(1000);
+					/*
 					printf("\n SendControlCommand cmd type: %d!\n", GET_MODEL_NUMBER);
 					GF_UINT8 parameter[1] = { GET_MODEL_NUMBER };
 					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
 					{
 						printf("\n SendControlCommand sucessful!\n");
 					}
+					*/
 				}
 				else
 				{
@@ -239,12 +274,14 @@ public:
 					model_num[length - 2] = '\0';
 					printf("Model Number: %s\n", model_num);
 					//Sleep(1000);
+					/*
 					printf("\n SendControlCommand cmd type: %d!\n", GET_SERIAL_NUMBER);
 					GF_UINT8 parameter[1] = { GET_SERIAL_NUMBER };
 					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
 					{
 						printf("\n SendControlCommand sucessful!\n");
 					}
+					*/
 				}
 				else
 				{
@@ -261,12 +298,14 @@ public:
 					serial_num[length - 2] = '\0';
 					printf("Serial Number: %s\n", serial_num);
 					//Sleep(1000);
+					/*
 					printf("\n SendControlCommand cmd type: %d!\n", GET_HARDWARE_REVISION);
 					GF_UINT8 parameter[1] = { GET_HARDWARE_REVISION };
 					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
 					{
 						printf("\n SendControlCommand sucessful!\n");
 					}
+					*/
 				}
 				else
 				{
@@ -281,12 +320,14 @@ public:
 				{
 					printf("Hardware Revision R%d\n", data[2]);
 					//Sleep(1000);
+					/*
 					printf("\n SendControlCommand cmd type: %d!\n", GET_FIRMWARE_REVISION);
 					GF_UINT8 parameter[1] = { GET_FIRMWARE_REVISION };
 					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
 					{
 						printf("\n SendControlCommand sucessful!\n");
 					}
+					*/
 				}
 				else
 				{
@@ -301,12 +342,14 @@ public:
 				{
 					printf("Firmware Revision R%d.%d-%d\n", data[2], data[3], data[4]);
 					//Sleep(1000);
+					/*
 					printf("\n SendControlCommand cmd type: %d!\n", GET_MANUFACTURER_NAME);
 					GF_UINT8 parameter[1] = { GET_MANUFACTURER_NAME };
 					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
 					{
 						printf("\n SendControlCommand sucessful!\n");
 					}
+					*/
 				}
 				else
 				{
@@ -322,12 +365,14 @@ public:
 					memcpy(manu_name, data + 2, length - 2);
 					manu_name[length - 2] = '\0';
 					printf("Manufacturer Name: %s\n", manu_name);
+					/*
 					printf("\n SendControlCommand cmd type: %d!\n", GET_BATTERY_LEVEL);
 					GF_UINT8 parameter[1] = { GET_BATTERY_LEVEL };
 					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x01, parameter))
 					{
 						printf("\n SendControlCommand sucessful!\n");
 					}
+					*/
 				}
 				else
 				{
@@ -340,12 +385,14 @@ public:
 				if (status == CONTROL_COMMAND_RESPONSE_OK)
 				{
 					printf("Battery Level: %d%\n", data[2]);
+					/*
 					printf("\n SendControlCommand cmd type: %d!\n", 0x4F);
 					GF_UINT8 parameter[5] = { 0x4F, (GF_UINT8)0xFF, (GF_UINT8)0xFF, (GF_UINT8)0xFF, (GF_UINT8)0xFF };
 					if (GF_OK == mAMInterface->SendControlCommand(handle, 0x05, parameter))
 					{
 						printf("\n SendControlCommand sucessful!\n");
 					}
+					*/
 				}
 				else
 				{
