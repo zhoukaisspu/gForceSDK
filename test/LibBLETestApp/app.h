@@ -45,4 +45,5 @@ public:
 	GF_UINT8 name[50];
 	GF_UINT8 cod;
 	GF_UINT8 state;
+	GF_UINT8 rssi;
 };

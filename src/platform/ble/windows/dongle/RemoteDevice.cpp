@@ -198,6 +198,7 @@ GF_VOID GF_CRemoteDevice::Init()
 	mNeedSaveService = GF_TRUE;
 	mHandle = INVALID_HANDLE;
 	mMessage.clear();
+	mCommandQueue = NULL;
 }
 
 GF_VOID GF_CRemoteDevice::DeInit()
@@ -213,6 +214,10 @@ GF_VOID GF_CRemoteDevice::DeInit()
 	
 	mState = GF_DEVICE_STATE_IDLE;
 	mMessage.clear();
+	if (mCommandQueue != NULL)
+	{
+		delete mCommandQueue;
+	}
 }
 
 GF_STATUS GF_CRemoteDevice::OnDeviceConnected(GF_PUINT8 data, GF_UINT16 length)
@@ -1188,6 +1193,7 @@ GF_STATUS GF_CRemoteDevice::W4GattReadCharcDesValueStateProcessMessage(GF_DEVICE
 				if (mCallback != NULL)
 				{
 					GF_UINT8 data[2] = {mHandle&0xFF, ((mHandle&0xFF00)>>8)};
+					mCommandQueue = new GF_CCONTROLCOMMANDQUEUE(this);
 					mCallback->OnEvent(EVENT_MASK_DEVICE_CONNECTED, data, 2);
 				}
 			}
@@ -1215,6 +1221,7 @@ GF_STATUS GF_CRemoteDevice::W4GattReadCharcDesValueStateProcessMessage(GF_DEVICE
 				if (mCallback != NULL)
 				{
 					GF_UINT8 data[2] = {mHandle&0xFF, ((mHandle&0xFF00)>>8)};
+					mCommandQueue = new GF_CCONTROLCOMMANDQUEUE(this);
 					mCallback->OnEvent(EVENT_MASK_DEVICE_CONNECTED, data, 2);
 				}
 			}
@@ -1257,6 +1264,15 @@ GF_STATUS GF_CRemoteDevice::DeviceConnectedStateProcessMessage(GF_DEVICE_EVENT e
 
 			mMTUSize = min(Server_MTU_Size, LOCAL_GATT_CLIENT_MTU_SIZE);
 		 }
+
+		case GF_DEVICE_EVENT_ATT_WRITE_MSG:
+		{
+			LOGDEBUG(mTag, "GF_DEVICE_EVENT_ATT_WRITE_MSG! \n");
+			if (mCommandQueue != NULL)
+			{
+				mCommandQueue->Dequeue();
+			}
+		}
 		default:
 			break;
 	}
@@ -1534,6 +1550,22 @@ GF_STATUS GF_CRemoteDevice::ExchangeMTUSize(GF_UINT16 mtu_size)
 
 GF_STATUS GF_CRemoteDevice::SendControlCommand(GF_UINT8 data_length, GF_PUINT8 data)
 {
+	LOGDEBUG(mTag, "SendControlCommand");
+	if (mCommandQueue != NULL)
+	{
+		mCommandQueue->Enqueue(data_length, data);
+		return GF_OK;
+	}
+	else
+	{
+		LOGDEBUG(mTag, "SendControlCommand is NULL!!!");
+		return GF_FAIL;
+	}
+}
+
+GF_STATUS GF_CRemoteDevice::SendControlCommandInternal(GF_UINT8 data_length, GF_PUINT8 data)
+{
+	LOGDEBUG(mTag, "SendControlCommandInternal");
 	if (mInterface != NULL && mState == GF_DEVICE_STATE_CONNECTED && mControlCommandHandle != INVALID_HANDLE)
 	{
 		return mInterface->WriteCharacValue(mHandle, mControlCommandHandle, data, data_length);
