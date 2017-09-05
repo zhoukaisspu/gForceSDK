@@ -177,19 +177,6 @@ namespace gf {
 		}
 	};
 
-	template <class _T> struct ConnectedDevComp {
-		bool operator ()(const _T& left, const _T& right) const {
-			return left->getHandle() < right->getHandle();
-		}
-	};
-
-	template <class _T> struct WeakPtrComp {
-		bool operator ()(const gfwPtr<_T>& left, const gfwPtr<_T>& right) const {
-			auto sl = left.lock(); auto sr = right.lock();
-			return sl < sr;
-		}
-	};
-
 	template <class _T> void cleanInvalidWeakP(_T& container) {
 		for (auto itor = container.begin(); itor != container.end();) {
 			if (nullptr == itor->lock()) {

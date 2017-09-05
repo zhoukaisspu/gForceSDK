@@ -94,15 +94,7 @@ namespace gf
 		virtual void onResponse(GF_UINT8 length, GF_PUINT8 data);
 
 	public:
-		virtual bool operator < (const BLEDevice& devRight) const {
-			if (mAddrType == devRight.mAddrType) {
-				return ((0 > memcmp(mAddress, devRight.mAddress, sizeof(mAddress))) ?
-					true : false);
-			}
-			else {
-				return (mAddrType < devRight.mAddrType ? true : false);
-			}
-		}
+		virtual bool operator < (const BLEDevice& devRight) const;
 		virtual bool isMyself(GF_UINT8 addrType, GF_UINT8 addr[]) const;
 		virtual bool isMyself(GF_UINT8 addrType, tstring addr) const;
 		virtual bool takeover(BLEDevice& from);

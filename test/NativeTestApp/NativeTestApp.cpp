@@ -760,6 +760,10 @@ int _tmain()
 
 	listener = make_shared<HubListenerImp>();
 	pHub->registerListener(listener);
+	auto another = listener;
+	pHub->registerListener(another);
+	gfwPtr<HubListenerImp> wp = static_pointer_cast<HubListenerImp>(another);
+	pHub->registerListener(wp);
 	pHub->registerListener(make_shared<HubListenerImp>());
 	//listener = nullptr;
 

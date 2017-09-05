@@ -160,8 +160,8 @@ namespace gf
 		// generic members
 		GF_CAdapterManagerInterface* mAM = nullptr;
 		set<gfsPtr<BLEDevice>, DevComp<gfsPtr<BLEDevice>>> mDisconnDevices;
-		set<gfsPtr<BLEDevice>, ConnectedDevComp<gfsPtr<BLEDevice>>> mConnectedDevices;
-		set<gfwPtr<HubListener>, WeakPtrComp<HubListener>> mListeners;
+		set<gfsPtr<BLEDevice>, DevComp<gfsPtr<BLEDevice>>> mConnectedDevices;
+		set<gfwPtr<HubListener>, owner_less<gfwPtr<HubListener>>> mListeners;
 		mutex mMutexListeners;
 
 	protected:
