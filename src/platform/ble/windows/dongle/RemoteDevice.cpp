@@ -1263,6 +1263,12 @@ GF_STATUS GF_CRemoteDevice::DeviceConnectedStateProcessMessage(GF_DEVICE_EVENT e
 			}
 
 			mMTUSize = min(Server_MTU_Size, LOCAL_GATT_CLIENT_MTU_SIZE);
+
+			if (mCommandQueue != NULL)
+			{
+				mCommandQueue->Dequeue();
+			}
+			break;
 		 }
 
 		case GF_DEVICE_EVENT_ATT_WRITE_MSG:
@@ -1537,6 +1543,22 @@ GF_STATUS GF_CRemoteDevice::ProcessCharacteristicConfiguration(GF_UINT8 currentp
 
 GF_STATUS GF_CRemoteDevice::ExchangeMTUSize(GF_UINT16 mtu_size)
 {
+	LOGDEBUG(mTag, "ExchangeMTUSize");
+	if (mCommandQueue != NULL)
+	{
+		GF_UINT8 data[2] = { (GF_UINT8)(mtu_size & 0x00FF), (GF_UINT8)((mtu_size & 0xFF00)>>8) };
+		mCommandQueue->Enqueue(GATT_TYPE_EXCHANGE_MTU_SIZE, 2, data);
+		return GF_OK;
+	}
+	else
+	{
+		LOGDEBUG(mTag, "SendControlCommand is NULL!!!");
+		return GF_FAIL;
+	}
+}
+
+GF_STATUS GF_CRemoteDevice::ExchangeMTUSizeInternal(GF_UINT16 mtu_size)
+{
 	if (mInterface != NULL && mState == GF_DEVICE_STATE_CONNECTED)
 	{
 		mMTUSize = mtu_size;
@@ -1553,7 +1575,7 @@ GF_STATUS GF_CRemoteDevice::SendControlCommand(GF_UINT8 data_length, GF_PUINT8 d
 	LOGDEBUG(mTag, "SendControlCommand");
 	if (mCommandQueue != NULL)
 	{
-		mCommandQueue->Enqueue(data_length, data);
+		mCommandQueue->Enqueue(GATT_TYPE_SEND_CONTROL_COMMAND, data_length, data);
 		return GF_OK;
 	}
 	else
