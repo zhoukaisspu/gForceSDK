@@ -312,7 +312,15 @@ void NPI_RX::Run(void)
 				}
 				Sleep(0);
 			}
-			m_evtQue.Push(pEvt);
+			if((pEvt->type != HCI_CMD_PACKET)
+			 && (pEvt->type != HCI_ACL_DATA_PACKET)
+			 && (pEvt->type != HCI_SCO_DATA_PACKET)
+			 && (pEvt->type != HCI_EVENT_PACKET)){
+			   ::LogW(L"Wrong type (%d) and len(%d)\n", pEvt->type, pEvt->len);
+			   delete pEvt;
+		    }else{
+			   m_evtQue.Push(pEvt);
+		    }
 			state = READ_TYPE_STATE;
 			break;
 		default:
