@@ -931,7 +931,7 @@ void DeviceSettingDataProfile4::onDeviceName(GF_UINT8 retval, GF_UINT8 length, G
 {
 	auto& v = mDeviceName;
 	auto f = [&v](GF_UINT8 length, GF_PUINT8 data) {
-		v = getStringCommon(length, data);
+		//v = getStringCommon(length, data);
 	};
 	ON_RESPONSE_PARSING(f, 0, void(ResponseResult, tstring), mDeviceName);
 }
@@ -939,7 +939,7 @@ void DeviceSettingDataProfile4::onModelNumber(GF_UINT8 retval, GF_UINT8 length, 
 {
 	auto& v = mModelNumber;
 	auto f = [&v](GF_UINT8 length, GF_PUINT8 data) {
-		v = getStringCommon(length, data);
+		//v = getStringCommon(length, data);
 	};
 	ON_RESPONSE_PARSING(f, 0, void(ResponseResult, tstring), mModelNumber);
 }
@@ -947,7 +947,7 @@ void DeviceSettingDataProfile4::onSerialNumber(GF_UINT8 retval, GF_UINT8 length,
 {
 	auto& v = mSerialNumber;
 	auto f = [&v](GF_UINT8 length, GF_PUINT8 data) {
-		v = getStringCommon(length, data);
+	//	v = getStringCommon(length, data);
 	};
 	ON_RESPONSE_PARSING(f, 0, void(ResponseResult, tstring), mSerialNumber);
 }
@@ -975,7 +975,7 @@ void DeviceSettingDataProfile4::onManufacturerName(GF_UINT8 retval, GF_UINT8 len
 {
 	auto& v = mManuName;
 	auto f = [&v](GF_UINT8 length, GF_PUINT8 data) {
-		v = getStringCommon(length, data);
+		//v = getStringCommon(length, data);
 	};
 	ON_RESPONSE_PARSING(f, 0, void(ResponseResult, tstring), mManuName);
 }
