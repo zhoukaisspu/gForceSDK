@@ -18,18 +18,18 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h">
+    <ClInclude Include="..\..\..\test\gtestForgForceSDK\stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="targetver.h">
+    <ClInclude Include="..\..\..\test\gtestForgForceSDK\targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="..\..\..\test\gtestForgForceSDK\gtestForGF.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gtestForGF.cpp">
+    <ClCompile Include="..\..\..\test\gtestForgForceSDK\stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
