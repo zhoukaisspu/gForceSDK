@@ -223,9 +223,12 @@ GF_RET_CODE BLEHub::registerListener(const gfwPtr<HubListener>& listener)
 		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
 
 	lock_guard<mutex> lock(mMutexListeners);
-	mListeners.insert(listener);
+	auto ret = mListeners.insert(listener);
 	cleanInvalidWeakP(mListeners);
-	return GF_RET_CODE::GF_SUCCESS;
+	if (ret.second)
+		return GF_RET_CODE::GF_SUCCESS;
+	else
+		return GF_RET_CODE::GF_ERROR;
 }
 
 GF_RET_CODE BLEHub::unRegisterListener(const gfwPtr<HubListener>& listener)
@@ -235,9 +238,13 @@ GF_RET_CODE BLEHub::unRegisterListener(const gfwPtr<HubListener>& listener)
 		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
 
 	lock_guard<mutex> lock(mMutexListeners);
-	mListeners.erase(listener);
+	auto before = mListeners.size();
+	auto after = mListeners.erase(listener);
 	cleanInvalidWeakP(mListeners);
-	return GF_RET_CODE::GF_SUCCESS;
+	if (before != after)
+		return GF_RET_CODE::GF_SUCCESS;
+	else
+		return GF_RET_CODE::GF_ERROR;
 }
 
 GF_RET_CODE BLEHub::startScan(GF_UINT8 rssiThreshold)

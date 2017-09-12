@@ -269,7 +269,7 @@ void BLEDevice::onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDe
 			connectStatusChanged(DeviceConnectionStatus::Disconnecting);
 			GF_LOGD("Trying to disconnect as client sent a cancel order.");
 			return;
-}
+		}
 	}
 #endif
 
@@ -429,5 +429,24 @@ void BLEDevice::onResponse(GF_UINT8 length, GF_PUINT8 data)
 	if (nullptr != mProfile)
 	{
 		mProfile->onResponse(length, data);
+	}
+}
+
+bool BLEDevice::operator < (const BLEDevice& devRight) const
+{
+	if (mCnntStatus == devRight.mCnntStatus
+		&& DeviceConnectionStatus::Connected == mCnntStatus)
+	{
+		return mHandle < devRight.mHandle;
+	}
+	else
+	{
+		if (mAddrType == devRight.mAddrType) {
+			return ((0 > memcmp(mAddress, devRight.mAddress, sizeof(mAddress))) ?
+				true : false);
+		}
+		else {
+			return (mAddrType < devRight.mAddrType ? true : false);
+		}
 	}
 }
