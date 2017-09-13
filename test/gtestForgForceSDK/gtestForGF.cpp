@@ -14,7 +14,6 @@
 
 #include "gtest/gtest.h"
 
-
 #include <windows.h>
 #include <tchar.h>
 #include <list>
@@ -419,7 +418,6 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	pHub = HubManager::getHubInstance(_T("TestApp"));
 	pHub->setWorkMode(WorkMode::Freerun);
-	
 	testing::InitGoogleTest(&argc, argv);
 	RUN_ALL_TESTS();
 	system("PAUSE");

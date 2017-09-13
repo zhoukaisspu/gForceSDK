@@ -57,13 +57,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\inc;$(ProjectDir)..\..\..\src\common;$(ProjectDir)..\..\..\external\gtest\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\inc;$(ProjectDir)..\..\..\src\common;$(ProjectDir)..\..\..\external\googletest\googletest\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\..\lib\windows\;$(SolutionDir)..\..\external\gtest\lib\win32_debug</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\lib\windows\;$(SolutionDir)..\..\external\googletest\googletest\msvc\2010\gtest\$(Platform)-$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>gforce32d.lib;gtestd.lib;gtest_maind.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
