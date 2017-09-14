@@ -38,6 +38,23 @@ building and running the example code:
 6. Run the executable file of previously built `FetchGForceData`, you will be
     able to see the gesture and quaternion data printed in the console.
 
+## Build and run Test Project
+In gForceSDK,[googletest](https://github.com/google/googletest) is used as test
+framework, we add it as a submodule of the repository that we're working on.
+When you clone [gForceSDK](https://github.com/oymotion/gForceSDK),by default you
+get the directories that contain submodule, but none of the files within them.
+You must run two commands:```git submodule init``` and ```git submodule update```.
+
+```
+$ git submodule init
+Submodule 'external/googletest' (https://github.com/google/googletest.git) registered for path 'external/googletest'
+$ git submodule update
+Cloning into 'E:/tempFile/gForceSDK/external/googletest'...
+Submodule path 'external/googletest': checked out '61330388862cf011fa956f7f59082b9923e6be0e'
+```
+***Note:*** we should compile the `gtest` in```./external/googletest``` before compile the 
+`gtestForgForceSDK` in VisualStudio 2013.  
+
 ## API documentation
 Please see `doc/html/index.html`.
 
