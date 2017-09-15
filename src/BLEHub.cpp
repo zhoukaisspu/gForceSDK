@@ -238,10 +238,9 @@ GF_RET_CODE BLEHub::unRegisterListener(const gfwPtr<HubListener>& listener)
 		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
 
 	lock_guard<mutex> lock(mMutexListeners);
-	auto before = mListeners.size();
-	auto after = mListeners.erase(listener);
+	auto eraseSize = mListeners.erase(listener);
 	cleanInvalidWeakP(mListeners);
-	if (before != after)
+	if (eraseSize)
 		return GF_RET_CODE::GF_SUCCESS;
 	else
 		return GF_RET_CODE::GF_ERROR;
